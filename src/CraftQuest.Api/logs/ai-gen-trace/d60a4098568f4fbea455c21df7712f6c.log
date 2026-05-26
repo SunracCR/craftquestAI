@@ -1,0 +1,531 @@
+﻿=== AI generation trace started ===
+Utc: 2026-05-22T20:25:32.8921437Z
+Log file: C:\Users\cperaza_ga\Proyectos\CraftQuest\src\CraftQuest.Api\logs/ai-gen-trace\d60a4098568f4fbea455c21df7712f6c.log
+[job.input] Generation parameters | {"StudyMaterialId":"973d3151-23ca-4435-9947-68df2494397b","QuestionCount":10,"Language":"es","Difficulty":"hard","AllowedQuestionTypes":["single_choice","multiple_choice"],"PageFrom":1,"PageTo":8,"TopicFocus":"Para ni\u00F1os de primaria","Preset":"deep_practice","sourceChars":10067}
+[provider.start] GenerateAsync | {"sourceChars":10067,"chunkCount":1,"requestedQuestions":10,"allowedTypes":["single_choice","multiple_choice"],"pages":"1-8","language":"es"}
+--- PROMPT: outline (len=10601) ---
+You are a curriculum planner for CraftQuest. Output JSON only (no markdown).
+Return shape (example): { "items": [ { "index": 1, "topic": "...", "suggestedType": "single_choice", "chunkIndex": 1 } ] }
+Rules:
+- Exactly 10 items in "items".
+- chunkIndex must be between 1 and 1 (match --- Page N --- sections when present).
+- suggestedType must be one of: single_choice, multiple_choice.
+- Topics must be distinct and cover the material evenly.
+- Language for topic text: "es".
+- Difficulty target: hard.
+- Pedagogical goal: review.
+
+SOURCE EXCERPT:
+Focus topic: Para niños de primaria
+
+--- Page 1 ---
+HISTORIA Y LORE DE REGRETEVATOR: Un Análisis Completo
+1. Introducción: ¿Qué es Regretevator?
+Regretevator es un popular juego de la plataforma Roblox creado por el grupo de desarrollo The Axolotl Sun. A primera vista, el juego se presenta como un simulador de elevador, un género clásico en Roblox que se popularizó con títulos como The Normal Elevator. Sin embargo, Regretevator toma esta premisa básica y la transforma en una experiencia profundamente surrealista, caótica y rica en historia.
+En lugar de ser un simple viaje de piso en piso donde ocurren eventos aleatorios sin conexión, Regretevator construye un ecosistema vivo. A medida que los jugadores viajan en el ascensor, las puertas se abren a diversos minijuegos, acertijos y escenarios absurdos. Pero el verdadero corazón del juego radica en sus NPCs (Personajes No Jugables), quienes abordan el elevador, interactúan entre sí, tienen historias de fondo complejas, relaciones dinámicas y un lore oscuro que contrasta marcadamente con la estética colorida, a menudo descrita como weirdcore, dreamcore o inspirada en la internet de los años 2000 (Y2K).
+El título del juego es un juego de palabras entre "Regret" (arrepentimiento) y "Elevator" (ascensor), lo que sirve como presagio temático de las historias melancólicas o trágicas que muchos de sus personajes ocultan.
+2. El Elevador y el Entorno: El Espacio Liminal
+El elevador en sí funciona como un espacio liminal, un área de transición que sirve como "zona segura" para los jugadores. Es el lugar donde la comunidad socializa, se tiran bolas de nieve, se lanzan pasteles y, lo más importante, se observa la interacción de los personajes.
+
+--- Page 2 ---
+La Mecánica de Supervivencia y Colección
+A lo largo de los pisos, los jugadores deben sobrevivir a diferentes amenazas para ganar monedas y "Tickets". Las monedas se usan en el piso de la tienda (Shop Floor) para comprar objetos interactivos temporales (linternas, paraguas, comida), mientras que los tickets permiten comprar accesorios permanentes, mascotas o alterar la música del elevador.
+El entorno está diseñado para desorientar. Los pisos pueden variar desde un apacible supermercado o una pista de baile, hasta laberintos oscuros habitados por entidades hostiles, o la oficina de un psiquiatra. Esta desconexión espacial refuerza la idea de que el elevador viaja a través de dimensiones o sueños, más que por un edificio físico.
+3. Personajes Principales y sus Dinámicas (El Corazón del Lore)
+Lo que eleva a Regretevator por encima de otros juegos de su género es su extenso elenco de personajes. Cada NPC que entra al ascensor tiene su propia personalidad, animaciones y líneas de diálogo que cambian dependiendo de qué otros personajes estén presentes.
+
+--- Page 3 ---
+Poob y Pest: La Luz y la Sombra
+Poob: Es quizás la cara más reconocible del juego. Lleva un gorro de fiesta, habla con un tono optimista y siempre busca celebrar. Poob es la encarnación de la ingenuidad y la alegría, aunque su constante necesidad de atención puede resultar molesta para otros personajes.
+Pest: En contraste directo, Pest es un escarabajo humanoide estoico, cleptómano y antisocial originario de la zona de "The Backrooms" o laberintos similares. Pest suele robarle monedas a los jugadores. La dinámica entre Poob y Pest es de las más queridas por la comunidad: Poob intenta constantemente ser amigo de Pest, mientras que Pest lo rechaza, aunque en el fondo existe una tolerancia tácita.
+
+--- Page 4 ---
+Split y Bive: La Amabilidad y la Paranoia
+Split: Una figura amarilla, alta, amigable y que trabaja en el supermercado del juego. Está literalmente partida por la mitad (de ahí su nombre, Split) pero se mantiene unida por la física de los videojuegos. Es extremadamente dulce y siempre busca el bienestar de los demás.
+Bive: Una entidad cubierta completamente de pelo oscuro, que sufre de paranoia extrema y teorías de conspiración. Bive está convencida de que todos los persiguen o de que el mundo es una farsa. Split es el único personaje que actúa como un ancla emocional para Bive, cuidando de ella. Ambas comparten un vínculo romántico/platónico fuertemente respaldado por los desarrolladores.
+
+--- Page 5 ---
+Gnarpy: El Alienígena y la Controversia
+Gnarpy: Es un alienígena verde con apariencia felina que utiliza pronombres neutros (xe/xem). Gnarpy es arrogante, militarista y considera a los humanos y otros seres como especies inferiores. El lore de Gnarpy revela que pertenece a una especie extraterrestre avanzada que experimenta con otras razas.
+El Rediseño (Contexto de Desarrollo): Gnarpy sufrió un rediseño radical en 2024. Originalmente, el personaje fue creado por un colaborador externo. Tras surgir serias controversias y acusaciones reales de mala conducta contra ese colaborador, The Axolotl Sun eliminó todo rastro del diseño original y reintrodujo a Gnarpy con un aspecto completamente nuevo, demostrando la postura de tolerancia cero del 
+
+[... middle of source omitted for outline ...]
+
+dad.
+
+--- Page 6 ---
+Pilby y Spud!: La Tragedia Oculta
+Pilby: Un personaje que parece ser una oruga o bicho melancólico, siempre llorando y pidiendo disculpas por existir. El lore sugiere un pasado de abandono o de intenso aislamiento. Los jugadores a menudo intentan abrazar a Pilby en el juego para animarlo.
+Spud!: Un personaje que habita en un campamento de verano y parece estar profundamente traumatizado. Le faltan los brazos y tiene un parche en el ojo. La historia sugiere que Spud! fue atacado salvajemente por un oso en el campamento, aunque teorías más oscuras del lore conectan las mutilaciones de Spud! con experimentos realizados por la especie de Gnarpy.
+
+--- Page 7 ---
+Otros Pasajeros Notables
+Infected: Un skater que ha sido víctima de una "infección de sonrisas" (un tropo clásico de internet), pero a diferencia del tropo de terror habitual, él mantiene una actitud relajada y amigable ("chill"), aceptando su destino.
+Wallter y Mark: Wallter es un ser gris que ama el cemento y la construcción industrial. Mark es su contraparte, que ama la madera. Sus interacciones son debates constantes sobre cuál material de construcción es superior, una rivalidad cómica y absurda.
+Prototype y Scag: Un robot (Prototype) que lucha con la comprensión de sus propias emociones y sintiencia, acompañado a menudo por una entidad ruidosa y caótica llamada Scag.
+Dr. Retro: Un gato psiquiatra/médico colorido con estética de los años 90 que parece saber más sobre la naturaleza surrealista del universo de lo que aparenta.
+4. La Trama Principal: Folly y el Entramado del Terror
+A medida que el juego evolucionó, The Axolotl Sun comenzó a introducir una narrativa más serializada, alejándose de la simple aleatoriedad. Aquí es donde entra Folly.
+¿Quién es Folly?
+Folly es una entidad cósmica, oscura y malévola que actúa como el principal antagonista en el lore de Regretevator. Representa las pesadillas, el trauma y la alteración de la realidad. A diferencia de los otros NPCs que simplemente existen en sus pisos, Folly tiene el poder de manipular el tejido mismo del juego.
+
+--- Page 8 ---
+La Influencia de Folly
+Durante ciertos eventos de actualización, Folly comenzó a infiltrarse en el elevador. Su presencia se caracteriza por estática en la pantalla, colores distorsionados, música tétrica y diálogos ominosos. Folly parece disfrutar torturando psicológicamente a los personajes, alimentándose de sus miedos (por ejemplo, explotando la paranoia de Bive o el trauma de Pilby).
+El lore insinúa que el elevador funciona como una especie de contención o purgatorio, y entidades como Folly buscan romper esas barreras. Folly no es solo un monstruo; es una representación de los pensamientos intrusivos y el "arrepentimiento" (Regret) que da nombre al juego. La llegada de Folly unió a la comunidad de jugadores para resolver acertijos estilo ARG (Juego de Realidad Alternativa) dentro del juego, descubriendo mensajes ocultos y códigos morse para entender el origen de esta entidad.
+5. El Desarrollo y el Impacto en la Comunidad
+La historia de Regretevator no está completa sin mencionar a su comunidad. Lanzado silenciosamente, el juego ganó tracción masiva en plataformas como TikTok y YouTube debido a su humor absurdo y su "lore oculto".
+Estética Musical y Visual: La banda sonora del juego es fundamental. Creada por varios artistas de la comunidad, combina música chiptune, melodías de caja de música melancólicas, y breakcore frenético. Visualmente, el uso deliberado de texturas de baja resolución y modelos nostálgicos evoca un sentimiento de "liminalidad" que atrae profundamente a la Generación Z y Alpha.
+Actualizaciones Constantes: The Axolotl Sun mantiene el juego vivo añadiendo pisos y diálogos nuevos cada pocas semanas. Esto significa que las relaciones entre los personajes están en constante evolución. Si dos personajes se pelean en una actualización, pueden reconciliarse en la siguiente, lo que hace que el mundo se sienta dinámico.
+Inclusividad y Representación: El juego es muy celebrado por su representación orgánica de neurodivergencias, diversas identidades de género y sexualidades a través de sus personajes, creando un espacio donde muchos jugadores jóvenes se sienten identificados y seguros.
+6. Conclusión
+Regretevator es mucho más que un juego de ascensor en Roblox. Es una clase magistral de narrativa fragmentada. Al no forzar una historia lineal sobre el jugador, sino permitirle observar conversaciones y explorar escenarios surrealistas, crea un misterio que invita a la investigación profunda.
+Desde la tragedia del campamento de Spud!, pasando por la dulce relación entre Split y Bive, hasta las aterradoras intrusiones de Folly, el juego equilibra perfectamente el humor absurdo de internet con temas profundos de aislamiento, amistad y arrepentimiento. Es este delicado equilibrio lo que ha cementado a Regretevator como una de las experiencias más únicas y artísticas dentro del vasto ecosistema de Roblox en la década de 2020.
+--- GEMINI RESPONSE: outline model=gemini-2.5-flash-lite len=2198 parsedQuestions=10 ---
+Parse: outline parsed
+{
+  "items": [
+    {
+      "index": 1,
+      "topic": "¿Cuál es el significado del nombre 'Regretevator' y cómo se relaciona con la temática del juego?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 2,
+      "topic": "Describe la función del elevador en Regretevator y su relación con el concepto de 'espacio liminal'.",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 3,
+      "topic": "¿Cómo se diferencian las mecánicas de supervivencia y recolección en Regretevator, y qué propósito cumplen las monedas y los tickets?",
+      "suggestedType": "multiple_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 4,
+      "topic": "Compara y contrasta las personalidades y dinámicas de Poob y Pest.",
+      "suggestedType": "single_choice",
+      "chunkIndex": 3
+    },
+    {
+      "index": 5,
+      "topic": "Explica la relación entre Split y Bive, y cómo Split actúa como un ancla emocional para Bive.",
+      "suggestedType": "single_choice",
+      "chunkIndex": 4
+    },
+    {
+      "index": 6,
+      "topic": "¿Cuál es la controversia que rodea al personaje Gnarpy y cómo afectó su diseño y lore en el juego?",
+      "suggestedType": "multiple_choice",
+      "chunkIndex": 5
+    },
+    {
+      "index": 7,
+      "topic": "Detalla el lore y las posibles tragedias ocultas detrás de los personajes Pilby y Spud!.",
+      "suggestedType": "single_choice",
+      "chunkIndex": 6
+    },
+    {
+      "index": 8,
+      "topic": "Identifica al antagonista principal de Regretevator y describe sus métodos de manipulación y su conexión con el 'arrepentimiento'.",
+      "suggestedType": "single_choice",
+      "chunkIndex": 7
+    },
+    {
+      "index": 9,
+      "topic": "¿Cómo influye Folly en la narrativa del juego y qué tipo de eventos o fenómenos se asocian con su presencia?",
+      "suggestedType": "multiple_choice",
+      "chunkIndex": 8
+    },
+    {
+      "index": 10,
+      "topic": "Analiza el impacto de la comunidad, la estética visual/musical y las actualizaciones constantes en la longevidad y el éxito de Regretevator.",
+      "suggestedType": "single_choice",
+      "chunkIndex": 8
+    }
+  ]
+}
+[outline.ok] Outline plan ready | {"itemCount":10}
+[chunk.single] Single-chunk generation | {"questionCount":10,"chunkIndex":1,"chunkTotal":1}
+--- PROMPT: single-chunk (len=12434) ---
+You are CraftQuest quiz generator. Output valid CQIF JSON 2.0 only (no markdown).
+Root object MUST include: cqifVersion, quiz, questions (array).
+cqifVersion must be "2.0".
+Generate exactly 10 questions in language "es".
+QUESTION PLAN (follow this order and focus; one question per line):
+- Q1: ¿Cuál es el significado del nombre 'Regretevator' y cómo se relaciona con la temática del juego? (prefer type: single_choice)
+- Q2: Describe la función del elevador en Regretevator y su relación con el concepto de 'espacio liminal'. (prefer type: single_choice)
+- Q3: ¿Cómo se diferencian las mecánicas de supervivencia y recolección en Regretevator, y qué propósito cumplen las monedas y los tickets? (prefer type: multiple_choice)
+- Q4: Compara y contrasta las personalidades y dinámicas de Poob y Pest. (prefer type: single_choice)
+- Q5: Explica la relación entre Split y Bive, y cómo Split actúa como un ancla emocional para Bive. (prefer type: single_choice)
+- Q6: ¿Cuál es la controversia que rodea al personaje Gnarpy y cómo afectó su diseño y lore en el juego? (prefer type: multiple_choice)
+- Q7: Detalla el lore y las posibles tragedias ocultas detrás de los personajes Pilby y Spud!. (prefer type: single_choice)
+- Q8: Identifica al antagonista principal de Regretevator y describe sus métodos de manipulación y su conexión con el 'arrepentimiento'. (prefer type: single_choice)
+- Q9: ¿Cómo influye Folly en la narrativa del juego y qué tipo de eventos o fenómenos se asocian con su presencia? (prefer type: multiple_choice)
+- Q10: Analiza el impacto de la comunidad, la estética visual/musical y las actualizaciones constantes en la longevidad y el éxito de Regretevator. (prefer type: single_choice)
+Language for question text: "es".
+Difficulty mode: hard.
+Pedagogical goal: review.
+Allowed question types ONLY: single_choice, multiple_choice.
+NEVER use image_choice or image_based_question.
+Do not reference images, diagrams, or figures not described in text.
+Topic focus: Para niños de primaria.
+Use ONLY facts explicitly present in SOURCE. Do not invent.
+Each question needs: text, type, answerOptions (min 2) with unique key fields,
+correctAnswerKeys as JSON array referencing those keys (never a single string).
+For true_false use keys "true" and "false".
+Assign unique externalId per question (e.g. "q-1", "q-2").
+Omit justifications.
+
+SOURCE:
+Focus topic: Para niños de primaria
+
+--- Page 1 ---
+HISTORIA Y LORE DE REGRETEVATOR: Un Análisis Completo
+1. Introducción: ¿Qué es Regretevator?
+Regretevator es un popular juego de la plataforma Roblox creado por el grupo de desarrollo The Axolotl Sun. A primera vista, el juego se presenta como un simulador de elevador, un género clásico en Roblox que se popularizó con títulos como The Normal Elevator. Sin embargo, Regretevator toma esta premisa básica y la transforma en una experiencia profundamente surrealista, caótica y rica en historia.
+En lugar de ser un simple viaje de piso en piso donde ocurren eventos aleatorios sin conexión, Regretevator construye un ecosistema vivo. A medida que los jugadores viajan en el ascensor, las puertas se abren a diversos minijuegos, acertijos y escenarios absurdos. Pero el verdadero corazón del juego radica en sus NPCs (Personajes No Jugables), quienes abordan el elevador, interactúan entre sí, tienen historias de fondo complejas, relaciones dinámicas y un lore oscuro que contrasta marcadamente con la estética colorida, a menudo descrita como weirdcore, dreamcore o inspirada en la internet de los años 2000 (Y2K).
+El título del juego es un juego de palabras entre "Regret" (arrepentimiento) y "Elevator" (ascensor), lo que sirve como presagio temático de las historias melancólicas o trágicas que muchos de sus personajes ocultan.
+2. El Elevador y el Entorno: El Espacio Liminal
+El elevador en sí funciona como un espacio liminal, un área de transición que sirve como "zona segura" para los jugadores. Es el lugar donde la comunidad socializa, se tiran bolas de nieve, se lanzan pasteles y, lo más importante, se observa la interacción de los personajes.
+
+--- Page 2 ---
+La Mecánica de Supervivencia y Colección
+A lo largo de los pisos, los jugadores deben sobrevivir a diferentes amenazas para ganar monedas y "Tickets". Las monedas se usan en el piso de la tienda (Shop Floor) para comprar objetos interactivos temporales (linternas, paraguas, comida), mientras que los tickets permiten comprar accesorios permanentes, mascotas o alterar la música del elevador.
+El entorno está diseñado para desorientar. Los pisos pueden variar desde un apacible supermercado o una pista de baile, hasta laberintos oscuros habitados por entidades hostiles, o la oficina de un psiquiatra. Esta desconexión espacial refuerza la idea de que el elevador viaja a través de dimensiones o sueños, más que por un edificio físico.
+3. Personajes Principales y sus Dinámicas (El Corazón del Lore)
+Lo que eleva a Regretevator por encima de otros juegos de su género es su extenso elenco de personajes. Cada NPC que entra al ascensor tiene su propia personalidad, animaciones y líneas de diálogo que cambian dependiendo de qué otros personajes estén presentes.
+
+--- Page 3 ---
+Poob y Pest: La Luz y la Sombra
+Poob: Es quizás la cara más reconocible del juego. Lleva un gorro de fiesta, habla con un tono optimista y siempre busca celebrar. Poob es la encarnación de la ingenuidad y la alegría, aunque su constante necesidad de atención puede resultar molesta para otros personajes.
+Pest: En contraste directo, Pest es un escarabajo humanoide estoico, cleptómano y antisocial originario de la zona de "The Backrooms" o laberintos similares. Pest suele robarle monedas a los jugadores. La dinámica entre Poob y Pest es de las más queridas por la comunidad: Poob intenta constantemente ser amigo de Pest, mientras que Pest lo rechaza, aunque en el fondo existe una tolerancia tácita.
+
+--- Page 4 ---
+Split y Bive: La Amabilidad y la Paranoia
+Split: Una figura amarilla, alta, amigable y que trabaja en el supermercado del juego. Está literalmente partida por la mitad (de ahí su nombre, Split) pero se mantiene unida por la física de los videojuegos. Es extremadamente dulce y siempre busca el bienestar de los demás.
+Bive: Una entidad cubierta completamente de pelo oscuro, que sufre de paranoia extrema y teorías de conspiración. Bive está convencida de que todos los persiguen o de que el mundo es una farsa. Split es el único personaje que actúa como un ancla emocional para Bive, cuidando de ella. Ambas comparten un vínculo romántico/platónico fuertemente respaldado por los desarrolladores.
+
+--- Page 5 ---
+Gnarpy: El Alienígena y la Controversia
+Gnarpy: Es un alienígena verde con apariencia felina que utiliza pronombres neutros (xe/xem). Gnarpy es arrogante, militarista y considera a los humanos y otros seres como especies inferiores. El lore de Gnarpy revela que pertenece a una especie extraterrestre avanzada que experimenta con otras razas.
+El Rediseño (Contexto de Desarrollo): Gnarpy sufrió un rediseño radical en 2024. Originalmente, el personaje fue creado por un colaborador externo. Tras surgir serias controversias y acusaciones reales de mala conducta contra ese colaborador, The Axolotl Sun eliminó todo rastro del diseño original y reintrodujo a Gnarpy con un aspecto completamente nuevo, demostrando la postura de tolerancia cero del equipo de desarrollo ante comportamientos inapropiados en su comunidad.
+
+--- Page 6 ---
+Pilby y Spud!: La Tragedia Oculta
+Pilby: Un personaje que parece ser una oruga o bicho melancólico, siempre llorando y pidiendo disculpas por existir. El lore sugiere un pasado de abandono o de intenso aislamiento. Los jugadores a menudo intentan abrazar a Pilby en el juego para animarlo.
+Spud!: Un personaje que habita en un campamento de verano y parece estar profundamente traumatizado. Le faltan los brazos y tiene un parche en el ojo. La historia sugiere que Spud! fue atacado salvajemente por un oso en el campamento, aunque teorías más oscuras del lore conectan las mutilaciones de Spud! con experimentos realizados por la especie de Gnarpy.
+
+--- Page 7 ---
+Otros Pasajeros Notables
+Infected: Un skater que ha sido víctima de una "infección de sonrisas" (un tropo clásico de internet), pero a diferencia del tropo de terror habitual, él mantiene una actitud relajada y amigable ("chill"), aceptando su destino.
+Wallter y Mark: Wallter es un ser gris que ama el cemento y la construcción industrial. Mark es su contraparte, que ama la madera. Sus interacciones son debates constantes sobre cuál material de construcción es superior, una rivalidad cómica y absurda.
+Prototype y Scag: Un robot (Prototype) que lucha con la comprensión de sus propias emociones y sintiencia, acompañado a menudo por una entidad ruidosa y caótica llamada Scag.
+Dr. Retro: Un gato psiquiatra/médico colorido con estética de los años 90 que parece saber más sobre la naturaleza surrealista del universo de lo que aparenta.
+4. La Trama Principal: Folly y el Entramado del Terror
+A medida que el juego evolucionó, The Axolotl Sun comenzó a introducir una narrativa más serializada, alejándose de la simple aleatoriedad. Aquí es donde entra Folly.
+¿Quién es Folly?
+Folly es una entidad cósmica, oscura y malévola que actúa como el principal antagonista en el lore de Regretevator. Representa las pesadillas, el trauma y la alteración de la realidad. A diferencia de los otros NPCs que simplemente existen en sus pisos, Folly tiene el poder de manipular el tejido mismo del juego.
+
+--- Page 8 ---
+La Influencia de Folly
+Durante ciertos eventos de actualización, Folly comenzó a infiltrarse en el elevador. Su presencia se caracteriza por estática en la pantalla, colores distorsionados, música tétrica y diálogos ominosos. Folly parece disfrutar torturando psicológicamente a los personajes, alimentándose de sus miedos (por ejemplo, explotando la paranoia de Bive o el trauma de Pilby).
+El lore insinúa que el elevador funciona como una especie de contención o purgatorio, y entidades como Folly buscan romper esas barreras. Folly no es solo un monstruo; es una representación de los pensamientos intrusivos y el "arrepentimiento" (Regret) que da nombre al juego. La llegada de Folly unió a la comunidad de jugadores para resolver acertijos estilo ARG (Juego de Realidad Alternativa) dentro del juego, descubriendo mensajes ocultos y códigos morse para entender el origen de esta entidad.
+5. El Desarrollo y el Impacto en la Comunidad
+La historia de Regretevator no está completa sin mencionar a su comunidad. Lanzado silenciosamente, el juego ganó tracción masiva en plataformas como TikTok y YouTube debido a su humor absurdo y su "lore oculto".
+Estética Musical y Visual: La banda sonora del juego es fundamental. Creada por varios artistas de la comunidad, combina música chiptune, melodías de caja de música melancólicas, y breakcore frenético. Visualmente, el uso deliberado de texturas de baja resolución y modelos nostálgicos evoca un sentimiento de "liminalidad" que atrae profundamente a la Generación Z y Alpha.
+Actualizaciones Constantes: The Axolotl Sun mantiene el juego vivo añadiendo pisos y diálogos nuevos cada pocas semanas. Esto significa que las relaciones entre los personajes están en constante evolución. Si dos personajes se pelean en una actualización, pueden reconciliarse en la siguiente, lo que hace que el mundo se sienta dinámico.
+Inclusividad y Representación: El juego es muy celebrado por su representación orgánica de neurodivergencias, diversas identidades de género y sexualidades a través de sus personajes, creando un espacio donde muchos jugadores jóvenes se sienten identificados y seguros.
+6. Conclusión
+Regretevator es mucho más que un juego de ascensor en Roblox. Es una clase magistral de narrativa fragmentada. Al no forzar una historia lineal sobre el jugador, sino permitirle observar conversaciones y explorar escenarios surrealistas, crea un misterio que invita a la investigación profunda.
+Des
+... [truncated 434 chars] ...
+--- GEMINI RESPONSE: single-chunk model=gemini-2.5-flash len=8953 parsedQuestions=10 ---
+Parse: parsed OK
+{
+  "cqifVersion": "2.0",
+  "quiz": {
+    "title": "Quiz de Regretevator",
+    "language": "es",
+    "difficulty": "hard",
+    "pedagogicalGoal": "review",
+    "topicFocus": "Para niños de primaria"
+  },
+  "questions": [
+    {
+      "externalId": "q-1",
+      "text": "¿Cuál es el significado del nombre 'Regretevator' y cómo se relaciona con la temática del juego?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Significa 'Elevador Rápido' y se relaciona con la velocidad de los viajes."
+        },
+        {
+          "key": "b",
+          "text": "Es una combinación de 'Arrepentimiento' y 'Ascensor', sugiriendo historias tristes o melancólicas de los personajes."
+        },
+        {
+          "key": "c",
+          "text": "Significa 'Elevador de Regreso' y se refiere a que siempre vuelves al inicio."
+        },
+        {
+          "key": "d",
+          "text": "Es un nombre inventado sin un significado especial."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-2",
+      "text": "Describe la función del elevador en Regretevator y su relación con el concepto de 'espacio liminal'.",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Es solo un medio de transporte para ir de un piso a otro sin más propósito."
+        },
+        {
+          "key": "b",
+          "text": "Es un espacio liminal, una zona segura de transición donde los jugadores socializan y observan a los personajes."
+        },
+        {
+          "key": "c",
+          "text": "Es el lugar donde se resuelven todos los acertijos del juego."
+        },
+        {
+          "key": "d",
+          "text": "Su función principal es llevar a los jugadores a luchar contra monstruos."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-3",
+      "text": "¿Cómo se diferencian las mecánicas de supervivencia y recolección en Regretevator, y qué propósito cumplen las monedas y los tickets?",
+      "type": "multiple_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Las monedas se usan para comprar objetos temporales como linternas o comida."
+        },
+        {
+          "key": "b",
+          "text": "Los tickets sirven para comprar accesorios permanentes, mascotas o cambiar la música del elevador."
+        },
+        {
+          "key": "c",
+          "text": "La supervivencia implica evitar amenazas para ganar monedas y tickets."
+        },
+        {
+          "key": "d",
+          "text": "Las monedas y los tickets se usan indistintamente para cualquier compra."
+        }
+      ],
+      "correctAnswerKeys": [
+        "a",
+        "b",
+        "c"
+      ]
+    },
+    {
+      "externalId": "q-4",
+      "text": "Compara y contrasta las personalidades y dinámicas de Poob y Pest.",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Poob es optimista y alegre, mientras que Pest es estoico y antisocial; Poob busca amistad y Pest lo rechaza, pero se toleran."
+        },
+        {
+          "key": "b",
+          "text": "Ambos son optimistas y siempre buscan celebrar juntos."
+        },
+        {
+          "key": "c",
+          "text": "Poob es antisocial y Pest es alegre, y son grandes amigos."
+        },
+        {
+          "key": "d",
+          "text": "Poob y Pest son enemigos que siempre están peleando sin ninguna tolerancia."
+        }
+      ],
+      "correctAnswerKeys": [
+        "a"
+      ]
+    },
+    {
+      "externalId": "q-5",
+      "text": "Explica la relación entre Split y Bive, y cómo Split actúa como un ancla emocional para Bive.",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Split es el único que cuida de Bive, quien sufre de paranoia, actuando como su ancla emocional en un vínculo romántico/platónico."
+        },
+        {
+          "key": "b",
+          "text": "Split y Bive son rivales que siempre discuten sobre quién es más amable."
+        },
+        {
+          "key": "c",
+          "text": "Bive es el ancla emocional de Split, ayudándola a superar su timidez."
+        },
+        {
+          "key": "d",
+          "text": "Son solo compañeros de viaje sin una conexión especial."
+        }
+      ],
+      "correctAnswerKeys": [
+        "a"
+      ]
+    },
+    {
+      "externalId": "q-6",
+      "text": "¿Cuál es la controversia que rodea al personaje Gnarpy y cómo afectó su diseño y lore en el juego?",
+      "type": "multiple_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Gnarpy fue rediseñado debido a controversias y acusaciones de mala conducta contra su creador original."
+        },
+        {
+          "key": "b",
+          "text": "El equipo de desarrollo eliminó el diseño original y reintrodujo a Gnarpy con un aspecto nuevo."
+        },
+        {
+          "key": "c",
+          "text": "La controversia no afectó el diseño de Gnarpy, solo su personalidad."
+        },
+        {
+          "key": "d",
+          "text": "Gnarpy fue rediseñado porque a los jugadores no les gustaba su color verde."
+        }
+      ],
+      "correctAnswerKeys": [
+        "a",
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-7",
+      "text": "Detalla el lore y las posibles tragedias ocultas detrás de los personajes Pilby y Spud!.",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Pilby sufre de abandono o aislamiento, y Spud! fue atacado por un oso o fue víctima de experimentos de la especie de Gnarpy."
+        },
+        {
+          "key": "b",
+          "text": "Pilby y Spud! son personajes muy alegres sin ninguna historia triste."
+        },
+        {
+          "key": "c",
+          "text": "Pilby es un héroe valiente y Spud! es un explorador espacial."
+        },
+        {
+          "key": "d",
+          "text": "Ambos personajes están felices en un campamento de verano sin problemas."
+        }
+      ],
+      "correctAnswerKeys": [
+        "a"
+      ]
+    },
+    {
+      "externalId": "q-8",
+      "text": "Identifica al antagonista principal de Regretevator y describe sus métodos de manipulación y su conexión con el 'arrepentimiento'.",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Folly es el antagonista principal, manipula con estática y música tétrica, tortura psicológicamente a los personajes y representa el 'arrepentimiento'."
+        },
+        {
+          "key": "b",
+          "text": "El antagonista es un oso que atacó a Spud!, y no tiene conexión con el arrepentimiento."
+        },
+        {
+          "key": "c",
+          "text": "El antagonista es Pest, quien roba monedas a los jugadores."
+        },
+        {
+          "key": "d",
+          "text": "No hay un antagonista principal en el juego, solo eventos aleatorios."
+        }
+      ],
+      "correctAnswerKeys": [
+        "a"
+      ]
+    },
+    {
+      "externalId": "q-9",
+      "text": "¿Cómo influye Folly en la narrativa del juego y qué tipo de eventos o fenómenos se asocian con su presencia?",
+      "type": "multiple_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Folly se infiltra en el elevador, causando estática, colores distorsionados y música tétrica."
+        },
+        {
+          "key": "b",
+          "text": "Folly tortura psicológicamente a los personajes, alimentándose de sus miedos."
+        },
+        {
+          "key": "c",
+          "text": "La presencia de Folly hace que los jugadores resuelvan acertijos ARG y descubran mensajes ocultos."
+        },
+        {
+          "key": "d",
+          "text": "Folly solo aparece en los pisos de la tienda para vender objetos especiales."
+        }
+      ],
+      "correctAnswerKeys": [
+        "a",
+        "b",
+        "c"
+      ]
+    },
+    {
+      "externalId": "q-10",
+      "text": "Analiza el impacto de la comunidad, la estética visual/musical y las actualizaciones constantes en la longevidad y el éxito de Regretevator.",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "La comunidad, la estética visual/musical única y las actualizaciones constantes con nuevos pisos y diálogos contribuyen a su longevidad y éxito."
+        },
+        {
+          "key": "b",
+          "text": "El juego es exitoso solo por su jugabilidad simple y sin historia."
+        },
+        {
+          "key": "c",
+          "text": "La falta de actualizaciones y una comunidad pequeña han limitado su éxito."
+        },
+        {
+          "key": "d",
+          "text": "Su éxito se debe únicamente a la popularidad de los juegos de elevador en Roblox."
+        }
+      ],
+      "correctAnswerKeys": [
+        "a"
+      ]
+    }
+  ]
+}
+[single-chunk-parsed] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":10,"types":{"single_choice":7,"multiple_choice":3},"sampleTexts":["\u00BFCu\u00E1l es el significado del nombre \u0027Regretevator\u0027 y c\u00F3mo se relaciona con la tem","Describe la funci\u00F3n del elevador en Regretevator y su relaci\u00F3n con el concepto d","\u00BFC\u00F3mo se diferencian las mec\u00E1nicas de supervivencia y recolecci\u00F3n en Regretevato"]}
+[single-chunk-merged] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":10,"types":{"single_choice":7,"multiple_choice":3},"sampleTexts":["\u00BFCu\u00E1l es el significado del nombre \u0027Regretevator\u0027 y c\u00F3mo se relaciona con la tem","Describe la funci\u00F3n del elevador en Regretevator y su relaci\u00F3n con el concepto d","\u00BFC\u00F3mo se diferencian las mec\u00E1nicas de supervivencia y recolecci\u00F3n en Regretevato"]}
+[post-gemini] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":10,"types":{"single_choice":7,"multiple_choice":3},"sampleTexts":["\u00BFCu\u00E1l es el significado del nombre \u0027Regretevator\u0027 y c\u00F3mo se relaciona con la tem","Describe la funci\u00F3n del elevador en Regretevator y su relaci\u00F3n con el concepto d","\u00BFC\u00F3mo se diferencian las mec\u00E1nicas de supervivencia y recolecci\u00F3n en Regretevato"]}
+[sanitize] Question type filter applied | {"before":10,"after":10,"allowedTypes":["single_choice","multiple_choice"],"typesBefore":{"single_choice":7,"multiple_choice":3},"typesAfter":{"single_choice":7,"multiple_choice":3}}
+[quiz.created] New quiz for AI import | {"targetQuizId":"0f233b31-cccb-4fd0-9a4d-5be92646f99f"}
+[import.populate] Import batch snapshot | {"totalRows":10,"validRows":10,"errorRows":0,"batchStatus":"ready_for_review","rows":[{"Row":1,"Status":"valid","ErrorCode":null,"message":null},{"Row":2,"Status":"valid","ErrorCode":null,"message":null},{"Row":3,"Status":"valid","ErrorCode":null,"message":null},{"Row":4,"Status":"valid","ErrorCode":null,"message":null},{"Row":5,"Status":"valid","ErrorCode":null,"message":null},{"Row":6,"Status":"valid","ErrorCode":null,"message":null},{"Row":7,"Status":"valid","ErrorCode":null,"message":null},{"Row":8,"Status":"valid","ErrorCode":null,"message":null},{"Row":9,"Status":"valid","ErrorCode":null,"message":null},{"Row":10,"Status":"valid","ErrorCode":null,"message":null}]}
+[import.batch] Import batch created from CQIF | {"ImportId":"40dadc61-e00d-491a-9e5c-9e7e7e25633e","Status":"ready_for_review","TotalQuestionsDetected":10,"ValidQuestions":10,"QuestionsWithErrors":0,"QuestionsWithWarnings":0}
+=== AI generation trace ended ===

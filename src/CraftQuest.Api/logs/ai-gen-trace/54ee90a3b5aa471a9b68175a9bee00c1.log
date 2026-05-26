@@ -1,0 +1,295 @@
+﻿=== AI generation trace started ===
+Utc: 2026-05-22T18:29:49.6004191Z
+Log file: C:\Users\cperaza_ga\Proyectos\CraftQuest\src\CraftQuest.Api\logs/ai-gen-trace\54ee90a3b5aa471a9b68175a9bee00c1.log
+[job.input] Generation parameters | {"StudyMaterialId":"8561df79-a1b9-4d47-be32-9f055dbf8fdd","QuestionCount":8,"Language":"es","Difficulty":"mixed","AllowedQuestionTypes":["single_choice","multiple_choice","true_false"],"PageFrom":1,"PageTo":22,"TopicFocus":"Mundiales de f\u00FAtbol","Preset":null,"sourceChars":8539}
+[provider.start] GenerateAsync | {"sourceChars":8539,"chunkCount":1,"requestedQuestions":8,"allowedTypes":["single_choice","multiple_choice","true_false"],"pages":"1-22","language":"es"}
+--- PROMPT: outline (len=9102) ---
+You are a curriculum planner for CraftQuest. Output JSON only (no markdown).
+Return shape (example): { "items": [ { "index": 1, "topic": "...", "suggestedType": "single_choice", "chunkIndex": 1 } ] }
+Rules:
+- Exactly 8 items in "items".
+- chunkIndex must be between 1 and 1 (match --- Page N --- sections when present).
+- suggestedType must be one of: single_choice, multiple_choice, true_false.
+- Topics must be distinct and cover the material evenly.
+- Language for topic text: "es".
+- Difficulty target: mixed.
+- Pedagogical goal: assessment.
+
+SOURCE EXCERPT:
+Focus topic: Mundiales de fútbol
+
+--- Page 1 ---
+HISTORIA DE LOS MUNDIALES DE FÚTBOL
+
+--- Page 2 ---
+Crónica del torneo más prestigioso del deporte rey (1930 - Presente)
+1. Los Orígenes y la Era Fundacional (1930 - 1938)
+La Copa Mundial de la FIFA nació de la visión de un grupo de dirigentes del fútbol internacional, liderados por el francés Jules Rimet, entonces presidente de la FIFA. Antes de la creación de este torneo, la máxima competición futbolística a nivel de selecciones se disputaba en los Juegos Olímpicos, pero las restricciones de amateurismo limitaban la participación de los mejores jugadores del mundo.
+
+--- Page 3 ---
+Uruguay 1930: El Primer Rugido
+En 1928, la FIFA decidió organizar su propio torneo continental. Uruguay fue elegido como la sede en conmemoración del centenario de su independencia y por sus logros olímpicos (medallas de oro en 1924 y 1928). La primera edición se celebró en 1930 con apenas 13 equipos participantes, debido a las dificultades y costes que suponía el viaje transatlántico para las selecciones europeas. El país anfitrión se coronó como el primer campeón mundial tras vencer a Argentina 4-2 en una mítica final en el Estadio Centenario de Montevideo.
+
+--- Page 4 ---
+Italia 1934 y Francia 1938: La Expansión Europea y la Sombra de la Guerra
+La segunda edición se trasladó a Europa. Italia 1934 introdujo por primera vez una fase de clasificación previa y estuvo fuertemente marcada por el uso político del evento por parte del régimen de Benito Mussolini. La selección italiana se consagró campeona. Cuatro años más tarde, en Francia 1938, Italia revalidó su título, convirtiéndose en el primer bicampeón de la historia. Poco después, el estallido de la Segunda Guerra Mundial obligó a suspender los torneos previstos para 1942 y 1946, paralizando el fútbol mundial por más de una década.
+* Dato curioso: Durante la Segunda Guerra Mundial, el vicepresidente italiano de la FIFA, Ottorino Barassi, escondió el trofeo original (la Copa Jules Rimet) en una caja de zapatos debajo de su cama para evitar que las tropas de ocupación se apoderaran de él.
+2. La Posguerra y la Época de Oro (1950 - 1970)
+El regreso de la Copa del Mundo en 1950 marcó el inicio de una de las épocas más románticas e impactantes del fútbol, caracterizada por sorpresas históricas y la consagración de leyendas eternas.
+
+--- Page 5 ---
+Brasil 1950: El Maracanazo
+El torneo regresó en Sudamérica. Brasil construyó el estadio más grande del mundo, el Maracaná, con la certeza de que ganarían su primera copa. Sin embargo, en el partido decisivo, Uruguay firmó la mayor sorpresa de la historia del fútbol al derrotar a los locales por 2-1 ante casi 200,000 espectadores, un hito imborrable conocido mundialmente como "El Maracanazo".
+
+--- Page 6 ---
+Suiza 1954 y Suecia 1958: El "Milagro de Berna" y el Nacimiento del Rey
+En 1954, la poderosa Hungría de Ferenc Puskás, invicta durante años, cayó de forma inesperada ante Alemania Occidental en la final (3-2), evento recordado como el "Milagro de Berna". Cuatro años más tarde, en Suecia 1958, el mundo atestiguó la aparición de un joven de 17 años llamado Edson Arantes do Nascimento, "Pelé", quien guio a Brasil a su primer título mundial y revolucionó el juego para siempre.
+
+--- Page 7 ---
+Chile 1962, Inglaterra 1966 y México 1970
+Brasil defendió con éxito su corona en Chile 1962 a pesar de la pronta lesión de Pelé. En 1966, Inglaterra alzó su único trofeo mundial en su propio suelo en una final polémica contra Alemania Occidental. La era dorada culminó de manera espectacular en México 1970, el primer mundial transmitido a color. Allí, el Brasil de 1970 (considerado por muchos el mejor equipo de todos los tiempos) se coronó tricampeón, permitiendo al país quedarse con la Copa Jules Rimet de forma definitiva.
+3. Modernización y Fútbol Total (1974 - 1994)
+A partir de la década de 1970, el torneo experimentó una profunda modernización comercial, televisiva y táctica. Se introdujo un nuevo trofeo: la Copa Mundial de la FIFA actual.
+
+--- Page 8 ---
+Alemania 1974 y Argentina 1978: La Naranja Mecánica y la Pasión Sudamericana
+En 1974, la selección de los Países Bajos asombró al planeta con su "Fútbol Total", liderado por Johan Cruyff. Pese a su genialidad, cayeron en la final ante la anfitriona Alemania Occidental. En 1978, Argentina aprovechó su localía para conseguir su primera estrella mundial en un torneo de gran intensidad, venciendo a los neerlandeses en la prórroga.
+
+--- Page 9 ---
+España 1982 y México 1986: La Magia y "La Mano de Dios"
+España 1982 expandió el número de participantes a 24 equipos y vio coronarse a Italia. Cuatro años después, México se convirtió en el primer país en albergar dos mundiales tras la renuncia de Colombia. La edición de 1986 perteneció por completo a Diego Armando Maradona, quien firmó una de las actuaciones individuales más memorables de la historia, incluyendo los dos famosos goles contra Inglaterra ("La Mano de Dios" y el "Gol del Siglo"), antes de llevar a Argentina a su segundo título.
+
+--- Page 10 ---
+Italia 1990 y Estados Unidos 1994: Táctica y Globalización
+Italia 1990 se caracterizó por un juego marcadamente defensivo que terminó con la victoria de Alemania. En 1994, el torneo se trasladó a Estados Unidos con el objetivo de conquistar nuevos mercados comerciales. El campeonato se definió por primera vez en tandas de penaltis, donde Brasil se impuso a Italia tras el famoso fallo de Roberto Baggio.
+4. La Era Global y los Nuevos Campeones (1998 - 2022)
+El cambio de siglo trajo la expansión definitiva del torneo a 32 selecciones, diversificando las sedes geográficas e incorporando nuevas potencias futbolísticas al cuadro de honor.
+
+--- Page 11 ---
+Francia 1998 y Corea-Japón 2002: Nuevas Fronteras
+En 1998, Francia organizó y ganó su primer mundial de la mano de Zinedine Zidane. El año 2002 marcó un hito histórico al celebrarse el primer mundial en suelo asiático y coorganizado por dos naciones (Corea del Sur y Japón). En este certamen, el Brasil de Ronaldo Nazário alcanzó el "Pentacampeonato", un récord que se mantiene vigente.
+
+--- Page 12 ---
+El Dominio Europeo (2006 - 2018)
+Durante las siguientes cuatro ediciones, las selecciones del viejo continente dominaron el palmarés de manera ininterrumpida:
+- Alemania 2006: Italia consiguió su cuarto título mundial en una final recordada por la expulsión de Zidane tras el cabezazo a Materazzi.
+- Sudáfrica 2010: El primer mundial en el continente africano coronó a España gracias a su célebre estilo del "Tiki-Taka" y el gol agónico de Andrés Iniesta en la prórroga.
+- Brasil 2014: Alemania humilló a la selección anfitriona con un histórico 7-1 en semifinales y luego derrotó a la Argentina de Lionel Messi en la final.
+- Rusia 2018: Una joven y potente selección francesa demostró su superioridad física y técnica para alcanzar su segunda estrella global.
+
+--- Page 13 ---
+Catar 2022: La Cúspide del Fútbol Moderno
+Celebrado de manera inédita a finales de año debido al clima del Golfo Pérsico, Catar 2022 ofreció una de las finales más épicas de todos los tiempos. Argentina y Francia empataron 3-3 tras la prórroga, con una exhibición monumental de Lionel Messi y Kylian Mbappé. Finalmente, la albiceleste se impuso en los penaltis, coronando la carrera de Messi y sumando su tercera estrella mundial.
+5. Tabla Histórica de Campeones Mundiales
+
+--- Page 14 ---
+Selección       Títulos     Años de los Campeonatos
+------------------------------------------------------------------
+
+--- Page 15 ---
+Brasil            5         1958, 1962, 1970, 1994, 2002
+
+--- Page 16 ---
+Alemania          4         1954, 1974, 1990, 2014
+
+--- Page 17 ---
+Italia            4         1934, 1938, 1982, 2006
+
+--- Page 18 ---
+Argentina         3         1978, 1986, 2022
+
+--- Page 19 ---
+Francia           2         1998, 2018
+
+--- Page 20 ---
+Uruguay           2         1930, 1950
+
+--- Page 21 ---
+Inglaterra        1         1966
+
+--- Page 22 ---
+España            1         2010
+6. Hacia el Futuro: El Mundial Expandido (2026 y más allá)
+El torneo continúa evolucionando para adaptarse a los nuevos tiempos globales. La edición de 2026 marca el inicio de una era expansiva con un formato sin precedentes: será coorganizada por tres países (Estados Unidos, México y Canadá) y contará por primera vez con 48 selecciones nacionales. Esto incrementará la cantidad de partidos de 64 a 104, permitiendo que un mayor número de culturas y aficiones formen parte de la mayor fiesta del deporte unificado del planeta.
+--- GEMINI RESPONSE: outline model=gemini-2.5-flash-lite len=1540 parsedQuestions=8 ---
+Parse: outline parsed
+{
+  "items": [
+    {
+      "index": 1,
+      "topic": "¿Quién fue el presidente de la FIFA que impulsó la creación de la Copa Mundial?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 2,
+      "topic": "¿Por qué Uruguay fue elegido como sede del primer Mundial en 1930?",
+      "suggestedType": "multiple_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 3,
+      "topic": "Verdadero o Falso: Italia fue el primer país en ganar dos Copas Mundiales consecutivas.",
+      "suggestedType": "true_false",
+      "chunkIndex": 1
+    },
+    {
+      "index": 4,
+      "topic": "¿Qué evento histórico provocó la suspensión de los Mundiales de 1942 y 1946?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 5,
+      "topic": "¿Cuál fue la mayor sorpresa de la historia del fútbol según el texto, ocurrida en Brasil 1950?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 6,
+      "topic": "¿Qué joven promesa debutó en Suecia 1958, guiando a Brasil a su primer título?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 7,
+      "topic": "¿Qué selección introdujo el concepto de 'Fútbol Total' en el Mundial de 1974?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 8,
+      "topic": "¿Qué país se convirtió en el primer anfitrión de dos Copas Mundiales?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    }
+  ]
+}
+[outline.ok] Outline plan ready | {"itemCount":8}
+[chunk.single] Single-chunk generation | {"questionCount":8,"chunkIndex":1,"chunkTotal":1}
+--- PROMPT: single-chunk (len=10411) ---
+You are CraftQuest quiz generator. Output valid CQIF JSON 2.0 only (no markdown).
+Root object MUST include: cqifVersion, quiz, questions (array).
+cqifVersion must be "2.0".
+Generate exactly 8 questions in language "es".
+QUESTION PLAN (follow this order and focus; one question per line):
+- Q1: ¿Quién fue el presidente de la FIFA que impulsó la creación de la Copa Mundial? (prefer type: single_choice)
+- Q2: ¿Por qué Uruguay fue elegido como sede del primer Mundial en 1930? (prefer type: multiple_choice)
+- Q3: Verdadero o Falso: Italia fue el primer país en ganar dos Copas Mundiales consecutivas. (prefer type: true_false)
+- Q4: ¿Qué evento histórico provocó la suspensión de los Mundiales de 1942 y 1946? (prefer type: single_choice)
+- Q5: ¿Cuál fue la mayor sorpresa de la historia del fútbol según el texto, ocurrida en Brasil 1950? (prefer type: single_choice)
+- Q6: ¿Qué joven promesa debutó en Suecia 1958, guiando a Brasil a su primer título? (prefer type: single_choice)
+- Q7: ¿Qué selección introdujo el concepto de 'Fútbol Total' en el Mundial de 1974? (prefer type: single_choice)
+- Q8: ¿Qué país se convirtió en el primer anfitrión de dos Copas Mundiales? (prefer type: single_choice)
+Language for question text: "es".
+Difficulty mode: mixed.
+Pedagogical goal: assessment.
+Allowed question types ONLY: single_choice, multiple_choice, true_false.
+NEVER use image_choice or image_based_question.
+Do not reference images, diagrams, or figures not described in text.
+Topic focus: Mundiales de fútbol.
+Use ONLY facts explicitly present in SOURCE. Do not invent.
+Each question needs: text, type, answerOptions (min 2) with unique key fields,
+correctAnswerKeys as JSON array referencing those keys (never a single string).
+For true_false use keys "true" and "false".
+Assign unique externalId per question (e.g. "q-1", "q-2").
+Omit justifications.
+
+SOURCE:
+Focus topic: Mundiales de fútbol
+
+--- Page 1 ---
+HISTORIA DE LOS MUNDIALES DE FÚTBOL
+
+--- Page 2 ---
+Crónica del torneo más prestigioso del deporte rey (1930 - Presente)
+1. Los Orígenes y la Era Fundacional (1930 - 1938)
+La Copa Mundial de la FIFA nació de la visión de un grupo de dirigentes del fútbol internacional, liderados por el francés Jules Rimet, entonces presidente de la FIFA. Antes de la creación de este torneo, la máxima competición futbolística a nivel de selecciones se disputaba en los Juegos Olímpicos, pero las restricciones de amateurismo limitaban la participación de los mejores jugadores del mundo.
+
+--- Page 3 ---
+Uruguay 1930: El Primer Rugido
+En 1928, la FIFA decidió organizar su propio torneo continental. Uruguay fue elegido como la sede en conmemoración del centenario de su independencia y por sus logros olímpicos (medallas de oro en 1924 y 1928). La primera edición se celebró en 1930 con apenas 13 equipos participantes, debido a las dificultades y costes que suponía el viaje transatlántico para las selecciones europeas. El país anfitrión se coronó como el primer campeón mundial tras vencer a Argentina 4-2 en una mítica final en el Estadio Centenario de Montevideo.
+
+--- Page 4 ---
+Italia 1934 y Francia 1938: La Expansión Europea y la Sombra de la Guerra
+La segunda edición se trasladó a Europa. Italia 1934 introdujo por primera vez una fase de clasificación previa y estuvo fuertemente marcada por el uso político del evento por parte del régimen de Benito Mussolini. La selección italiana se consagró campeona. Cuatro años más tarde, en Francia 1938, Italia revalidó su título, convirtiéndose en el primer bicampeón de la historia. Poco después, el estallido de la Segunda Guerra Mundial obligó a suspender los torneos previstos para 1942 y 1946, paralizando el fútbol mundial por más de una década.
+* Dato curioso: Durante la Segunda Guerra Mundial, el vicepresidente italiano de la FIFA, Ottorino Barassi, escondió el trofeo original (la Copa Jules Rimet) en una caja de zapatos debajo de su cama para evitar que las tropas de ocupación se apoderaran de él.
+2. La Posguerra y la Época de Oro (1950 - 1970)
+El regreso de la Copa del Mundo en 1950 marcó el inicio de una de las épocas más románticas e impactantes del fútbol, caracterizada por sorpresas históricas y la consagración de leyendas eternas.
+
+--- Page 5 ---
+Brasil 1950: El Maracanazo
+El torneo regresó en Sudamérica. Brasil construyó el estadio más grande del mundo, el Maracaná, con la certeza de que ganarían su primera copa. Sin embargo, en el partido decisivo, Uruguay firmó la mayor sorpresa de la historia del fútbol al derrotar a los locales por 2-1 ante casi 200,000 espectadores, un hito imborrable conocido mundialmente como "El Maracanazo".
+
+--- Page 6 ---
+Suiza 1954 y Suecia 1958: El "Milagro de Berna" y el Nacimiento del Rey
+En 1954, la poderosa Hungría de Ferenc Puskás, invicta durante años, cayó de forma inesperada ante Alemania Occidental en la final (3-2), evento recordado como el "Milagro de Berna". Cuatro años más tarde, en Suecia 1958, el mundo atestiguó la aparición de un joven de 17 años llamado Edson Arantes do Nascimento, "Pelé", quien guio a Brasil a su primer título mundial y revolucionó el juego para siempre.
+
+--- Page 7 ---
+Chile 1962, Inglaterra 1966 y México 1970
+Brasil defendió con éxito su corona en Chile 1962 a pesar de la pronta lesión de Pelé. En 1966, Inglaterra alzó su único trofeo mundial en su propio suelo en una final polémica contra Alemania Occidental. La era dorada culminó de manera espectacular en México 1970, el primer mundial transmitido a color. Allí, el Brasil de 1970 (considerado por muchos el mejor equipo de todos los tiempos) se coronó tricampeón, permitiendo al país quedarse con la Copa Jules Rimet de forma definitiva.
+3. Modernización y Fútbol Total (1974 - 1994)
+A partir de la década de 1970, el torneo experimentó una profunda modernización comercial, televisiva y táctica. Se introdujo un nuevo trofeo: la Copa Mundial de la FIFA actual.
+
+--- Page 8 ---
+Alemania 1974 y Argentina 1978: La Naranja Mecánica y la Pasión Sudamericana
+En 1974, la selección de los Países Bajos asombró al planeta con su "Fútbol Total", liderado por Johan Cruyff. Pese a su genialidad, cayeron en la final ante la anfitriona Alemania Occidental. En 1978, Argentina aprovechó su localía para conseguir su primera estrella mundial en un torneo de gran intensidad, venciendo a los neerlandeses en la prórroga.
+
+--- Page 9 ---
+España 1982 y México 1986: La Magia y "La Mano de Dios"
+España 1982 expandió el número de participantes a 24 equipos y vio coronarse a Italia. Cuatro años después, México se convirtió en el primer país en albergar dos mundiales tras la renuncia de Colombia. La edición de 1986 perteneció por completo a Diego Armando Maradona, quien firmó una de las actuaciones individuales más memorables de la historia, incluyendo los dos famosos goles contra Inglaterra ("La Mano de Dios" y el "Gol del Siglo"), antes de llevar a Argentina a su segundo título.
+
+--- Page 10 ---
+Italia 1990 y Estados Unidos 1994: Táctica y Globalización
+Italia 1990 se caracterizó por un juego marcadamente defensivo que terminó con la victoria de Alemania. En 1994, el torneo se trasladó a Estados Unidos con el objetivo de conquistar nuevos mercados comerciales. El campeonato se definió por primera vez en tandas de penaltis, donde Brasil se impuso a Italia tras el famoso fallo de Roberto Baggio.
+4. La Era Global y los Nuevos Campeones (1998 - 2022)
+El cambio de siglo trajo la expansión definitiva del torneo a 32 selecciones, diversificando las sedes geográficas e incorporando nuevas potencias futbolísticas al cuadro de honor.
+
+--- Page 11 ---
+Francia 1998 y Corea-Japón 2002: Nuevas Fronteras
+En 1998, Francia organizó y ganó su primer mundial de la mano de Zinedine Zidane. El año 2002 marcó un hito histórico al celebrarse el primer mundial en suelo asiático y coorganizado por dos naciones (Corea del Sur y Japón). En este certamen, el Brasil de Ronaldo Nazário alcanzó el "Pentacampeonato", un récord que se mantiene vigente.
+
+--- Page 12 ---
+El Dominio Europeo (2006 - 2018)
+Durante las siguientes cuatro ediciones, las selecciones del viejo continente dominaron el palmarés de manera ininterrumpida:
+- Alemania 2006: Italia consiguió su cuarto título mundial en una final recordada por la expulsión de Zidane tras el cabezazo a Materazzi.
+- Sudáfrica 2010: El primer mundial en el continente africano coronó a España gracias a su célebre estilo del "Tiki-Taka" y el gol agónico de Andrés Iniesta en la prórroga.
+- Brasil 2014: Alemania humilló a la selección anfitriona con un histórico 7-1 en semifinales y luego derrotó a la Argentina de Lionel Messi en la final.
+- Rusia 2018: Una joven y potente selección francesa demostró su superioridad física y técnica para alcanzar su segunda estrella global.
+
+--- Page 13 ---
+Catar 2022: La Cúspide del Fútbol Moderno
+Celebrado de manera inédita a finales de año debido al clima del Golfo Pérsico, Catar 2022 ofreció una de las finales más épicas de todos los tiempos. Argentina y Francia empataron 3-3 tras la prórroga, con una exhibición monumental de Lionel Messi y Kylian Mbappé. Finalmente, la albiceleste se impuso en los penaltis, coronando la carrera de Messi y sumando su tercera estrella mundial.
+5. Tabla Histórica de Campeones Mundiales
+
+--- Page 14 ---
+Selección       Títulos     Años de los Campeonatos
+------------------------------------------------------------------
+
+--- Page 15 ---
+Brasil            5         1958, 1962, 1970, 1994, 2002
+
+--- Page 16 ---
+Alemania          4         1954, 1974, 1990, 2014
+
+--- Page 17 ---
+Italia            4         1934, 1938, 1982, 2006
+
+--- Page 18 ---
+Argentina         3         1978, 1986, 2022
+
+--- Page 19 ---
+Francia           2         1998, 2018
+
+--- Page 20 ---
+Uruguay           2         1930, 1950
+
+--- Page 21 ---
+Inglaterra        1         1966
+
+--- Page 22 ---
+España            1         2010
+6. Hacia el Futuro: El Mundial Expandido (2026 y más allá)
+El torneo continúa evolucionando para adaptarse a los nuevos tiempos globales. La edición de 2026 marca el inicio de una era expansiva con un formato sin precedentes: será coorganizada por tres países (Estados Unidos, México y Canadá) y contará por primera vez con 48 selecciones nacionales. Esto incrementará la cantidad de partidos de 64 a 104, permitiendo que un mayor número de culturas y aficiones formen parte de la mayor fiesta del deporte unificado del planeta.
+[job.failed] Generation timeout | {"timeoutMinutes":15}
+=== AI generation trace ended ===

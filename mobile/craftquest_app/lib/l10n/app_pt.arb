@@ -1,0 +1,1261 @@
+{
+  "@@locale": "pt",
+  "appTitle": "CraftQuest",
+  "homeWelcome": "Bem-vindo ao CraftQuest",
+  "homeWelcomeUser": "Ola, {name}",
+  "@homeWelcomeUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "homeRoleLabel": "Papel: {role}",
+  "@homeRoleLabel": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "roleUnknown": "sem papel",
+  "roleTeacherLabel": "Professor",
+  "roleStudentLabel": "Estudante",
+  "roleInstitutionAdminLabel": "Admin instituição",
+  "roleContentAdminLabel": "Admin conteúdo",
+  "roleSuperAdminLabel": "Superadmin",
+  "apiStatusLabel": "Status da API",
+  "apiStatusLoading": "Conectando...",
+  "apiStatusError": "Nao foi possivel conectar a API",
+  "retry": "Tentar novamente",
+  "noInternetBannerTitle": "Sem conexao com a internet",
+  "noInternetBannerMessage": "Voce pode continuar navegando, mas os dados so atualizam quando a rede voltar.",
+  "noInternetSnackBarMessage": "Sem conexao. Verifique a internet e tente novamente.",
+  "genericRequestErrorMessage": "Nao foi possivel concluir a solicitacao. Tente novamente em instantes.",
+  "errorHttpMethodNotAllowed": "O servidor nao permite esta operacao. Reinicie a API e tente novamente.",
+  "errorQuestionLimitReached": "Voce atingiu o limite de {max} perguntas por questionario no plano {plan}.",
+  "@errorQuestionLimitReached": {
+    "placeholders": {
+      "max": { "type": "int" },
+      "plan": { "type": "String" }
+    }
+  },
+  "errorQuizLimitReached": "Voce atingiu o limite de {max} questionarios no plano {plan}.",
+  "@errorQuizLimitReached": {
+    "placeholders": {
+      "max": { "type": "int" },
+      "plan": { "type": "String" }
+    }
+  },
+  "billingPlanFreeName": "Gratuito",
+  "billingPlanProName": "Pro",
+  "billingPlanPremiumName": "Premium",
+  "billingPlanTeacherName": "Professor",
+  "loginTitle": "Entrar",
+  "loginSubtitle": "Acesse gratuitamente sua conta CraftQuest — entre ou cadastre-se em segundos",
+  "loginAction": "Entrar",
+  "loginRememberCredentials": "Lembrar e-mail e senha",
+  "registerTitle": "Criar conta",
+  "registerAction": "Registrar",
+  "goToRegister": "Nao tem conta? Registre-se",
+  "emailLabel": "E-mail",
+  "passwordLabel": "Senha",
+  "displayNameLabel": "Nome de exibicao",
+  "fieldRequired": "Este campo e obrigatorio",
+  "passwordMinLength": "Minimo de 8 caracteres",
+  "logoutAction": "Sair",
+  "navHomeLabel": "Inicio",
+  "navProfileLabel": "Perfil",
+  "profileTitle": "Perfil",
+  "selectAvatarTitle": "Seu avatar",
+  "profileChangeAvatarAction": "Alterar avatar",
+  "profileEditNameAction": "Editar nome",
+  "profileNameUpdatedMessage": "Nome atualizado",
+  "profileNameInvalidMessage": "Digite um nome entre 1 e 160 caracteres.",
+  "profileSaveAction": "Salvar",
+  "profileAvatarPickerHint": "Toque um ícone para atualizar seu perfil",
+  "avatarUpdatedMessage": "Avatar atualizado",
+  "languageSectionTitle": "Idioma",
+  "languageEnglish": "Ingles",
+  "languageSpanish": "Espanhol",
+  "languagePortuguese": "Portugues",
+  "languageUpdatedMessage": "Idioma atualizado",
+  "securitySectionTitle": "Seguranca",
+  "changePasswordTitle": "Alterar senha",
+  "changePasswordAction": "Salvar senha",
+  "currentPasswordLabel": "Senha atual",
+  "newPasswordLabel": "Nova senha",
+  "confirmPasswordLabel": "Confirmar senha",
+  "passwordsDoNotMatch": "As senhas nao coincidem",
+  "passwordChangedMessage": "Senha atualizada",
+  "myQuizzesAction": "Meus questionarios",
+  "quizzesTitle": "Questionarios",
+  "quizzesEmpty": "Voce ainda nao tem questionarios",
+  "quizzesLoadError": "Nao foi possivel carregar os questionarios",
+  "createQuizAction": "Criar questionario",
+  "createQuizTitle": "Novo questionario",
+  "createQuizNextStepTitle": "Adicione perguntas ao seu quiz",
+  "createQuizNextStepSubtitle": "Comece criando uma pergunta, importe de um arquivo ou gere com IA.",
+  "createQuizAddQuestionsManually": "Criar perguntas manualmente",
+  "createQuizImportQuestions": "Importar perguntas",
+  "createQuizSkipQuestionsSetup": "Fazer depois",
+  "quizTitleLabel": "Titulo",
+  "quizTitleTapToEdit": "Toque no titulo para editar",
+  "quizDescriptionLabel": "Descricao (opcional)",
+  "quizListSubtitle": "{status} · {count} perguntas",
+  "@quizListSubtitle": {
+    "placeholders": {
+      "status": { "type": "String" },
+      "count": { "type": "int" }
+    }
+  },
+  "quizStatusDraft": "Rascunho",
+  "quizStatusPublished": "Publicado",
+  "quizDetailTitle": "Detalhe do questionario",
+  "quizDetailImportAiDraftAction": "Importar perguntas geradas por IA",
+  "quizDetailImportAiDraftBanner": "{count, plural, =1{1 pergunta gerada por IA pronta para importar} other{{count} perguntas geradas por IA prontas para importar}}",
+  "@quizDetailImportAiDraftBanner": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "quizListPendingAiDraft": "Rascunho de IA pronto para importar",
+  "addQuestionAction": "Adicionar pergunta",
+  "viewQuizQuestionsAction": "Ver perguntas",
+  "publishQuizAction": "Publicar",
+  "quizPublishedMessage": "Questionario publicado",
+  "deleteQuizAction": "Excluir questionario",
+  "deleteQuizConfirmTitle": "Excluir questionario?",
+  "deleteQuizConfirmMessage": "\"{title}\" e todas as perguntas serao removidos. Esta acao nao pode ser desfeita.",
+  "@deleteQuizConfirmMessage": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "quizDeletedMessage": "Questionario excluido",
+  "questionsEmpty": "Sem perguntas ainda",
+  "quizDetailQuestionsSection": "Perguntas do questionario",
+  "quizQuestionsCount": "{count} perguntas",
+  "@quizQuestionsCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "quizDetailOptionCount": "{count} opcoes",
+  "@quizDetailOptionCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "quizDetailCorrectKeys": "Resposta correta: {keys}",
+  "@quizDetailCorrectKeys": {
+    "placeholders": { "keys": { "type": "String" } }
+  },
+  "quizDetailCorrectKeysPlural": "Respostas corretas: {keys}",
+  "@quizDetailCorrectKeysPlural": {
+    "placeholders": { "keys": { "type": "String" } }
+  },
+  "questionTypeLabelSingleChoice": "Escolha unica",
+  "questionTypeLabelMultipleChoice": "Multipla escolha",
+  "questionTypeLabelTrueFalse": "Verdadeiro / Falso",
+  "questionTypeLabelImageChoice": "Opcoes com imagem",
+  "questionTypeLabelImageBased": "Baseada em imagem",
+  "questionListIndexLabel": "P{index}",
+  "@questionListIndexLabel": {
+    "placeholders": { "index": { "type": "int" } }
+  },
+  "editQuestionAction": "Editar",
+  "deleteQuestionAction": "Excluir",
+  "editQuestionTitle": "Editar pergunta",
+  "deleteQuestionConfirmTitle": "Excluir pergunta?",
+  "deleteQuestionConfirmMessage": "A pergunta sera removida do questionario. Esta acao nao pode ser desfeita.",
+  "questionDeletedMessage": "Pergunta excluida",
+  "questionSavedMessage": "Pergunta salva",
+  "addQuestionTitle": "Nova pergunta",
+  "questionTypeLabel": "Tipo de pergunta",
+  "questionTextLabel": "Enunciado",
+  "questionPointsLabel": "Pontos",
+  "questionPointsHint": "Pontuacao ao acertar (somente esta pergunta)",
+  "questionPointsValue": "{points} pts",
+  "@questionPointsValue": {
+    "placeholders": { "points": { "type": "String" } }
+  },
+  "questionInvalidPoints": "Os pontos devem ser maiores que 0",
+  "answerOptionLabel": "Opcao {key}",
+  "@answerOptionLabel": {
+    "placeholders": { "key": { "type": "String" } }
+  },
+  "correctAnswerKeyLabel": "Resposta correta (key)",
+  "saveQuestionAction": "Salvar pergunta",
+  "trueLabel": "Verdadeiro",
+  "falseLabel": "Falso",
+  "minTwoOptions": "Informe pelo menos duas opcoes",
+  "questionImageLabel": "Imagem do enunciado",
+  "correctAnswersLabel": "Respostas corretas",
+  "selectCorrectAnswersHint": "Selecione uma ou mais opcoes corretas",
+  "imageChoiceHint": "Anexe uma imagem em pelo menos uma opcao de resposta",
+  "imageBasedQuestionHint": "Envie a imagem ou diagrama desta pergunta",
+  "requireQuestionImage": "Perguntas baseadas em imagem exigem uma imagem",
+  "requireOptionImage": "Adicione pelo menos uma imagem nas opcoes",
+  "selectAtLeastOneCorrect": "Marque pelo menos uma resposta correta",
+  "correctIdsLabel": "{count} resposta(s) correta(s) por ID",
+  "@correctIdsLabel": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "practiceOptionsTitle": "Parametros de pratica",
+  "practiceRandomizeQuestionsLabel": "Ordem aleatoria das perguntas",
+  "practiceRandomizeQuestionsHint": "As perguntas aparecem em ordem diferente a cada pratica",
+  "practiceShowTimerLabel": "Mostrar tempo decorrido",
+  "practiceShowTimerHint": "Exibe um relogio enquanto voce responde o questionario",
+  "practiceElapsedLabel": "Tempo: {elapsed}",
+  "@practiceElapsedLabel": {
+    "placeholders": { "elapsed": { "type": "String" } }
+  },
+  "practiceDurationLabel": "Tempo gasto",
+  "practiceQuizAction": "Praticar",
+  "practiceSessionTitle": "Sessao de pratica",
+  "practiceProgressLabel": "{answered} de {total} respondidas",
+  "@practiceProgressLabel": {
+    "placeholders": {
+      "answered": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "practiceProgressCompletedLabel": "{done} de {total} concluidas",
+  "@practiceProgressCompletedLabel": {
+    "placeholders": {
+      "done": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "practiceNavigateQuestionsLabel": "Perguntas",
+  "practiceOpenQuestionMapAction": "Mapa",
+  "practiceMapTitle": "Mapa de perguntas",
+  "practiceMapFilterAll": "Todas",
+  "practiceMapFilterPending": "Pendentes",
+  "practiceMapFilterCompleted": "Feitas",
+  "practiceMapEmptyFilter": "Nenhuma pergunta com este filtro",
+  "practiceNavLegendAnswered": "Respondida",
+  "practiceNavLegendPending": "Pendente",
+  "practiceNavLegendCurrent": "Atual",
+  "practiceQuestionNavTooltip": "Pergunta {number}",
+  "@practiceQuestionNavTooltip": {
+    "placeholders": { "number": { "type": "int" } }
+  },
+  "practicePreviousQuestionAction": "Anterior",
+  "practiceQuestionAnsweredLabel": "Ja respondida",
+  "practiceUpdateAnswerAction": "Atualizar resposta",
+  "practiceAnswerEditHint": "Voce pode alterar sua resposta e tocar em Atualizar resposta",
+  "practiceSavingAnswerHint": "Salvando sua resposta…",
+  "practiceQuestionCounter": "Pergunta {current} de {total}",
+  "@practiceQuestionCounter": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "practiceSelectAnswer": "Selecione pelo menos uma resposta",
+  "practiceSubmitAnswerAction": "Confirmar resposta",
+  "practiceNextQuestionAction": "Proxima pergunta",
+  "practiceFinishAction": "Finalizar pratica",
+  "practiceResumeTitle": "Pratica em andamento",
+  "practiceResumeMessage": "Voce tem uma pratica salva com {answered} de {total} perguntas respondidas. O que deseja fazer?",
+  "@practiceResumeMessage": {
+    "placeholders": {
+      "answered": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "practiceContinueAction": "Continuar",
+  "practiceStartNewAction": "Comecar de novo",
+  "practiceSaveAndExitAction": "Salvar e sair",
+  "practiceInProgressChip": "Pratica em andamento",
+  "practiceInProgressSubtitle": "{answered}/{total} respondidas",
+  "@practiceInProgressSubtitle": {
+    "placeholders": {
+      "answered": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "practiceFinishEarlyAction": "Finalizar agora",
+  "practiceNoQuestions": "Este questionario nao tem perguntas",
+  "practiceResultTitle": "Resultado",
+  "practicePercentageLabel": "{percentage}%",
+  "@practicePercentageLabel": {
+    "placeholders": { "percentage": { "type": "double" } }
+  },
+  "practiceScoreLabel": "Pontuacao: {obtained} / {possible}",
+  "@practiceScoreLabel": {
+    "placeholders": {
+      "obtained": { "type": "double" },
+      "possible": { "type": "double" }
+    }
+  },
+  "practiceCorrectLabel": "Corretas: {count}",
+  "@practiceCorrectLabel": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "practiceIncorrectLabel": "Incorretas: {count}",
+  "@practiceIncorrectLabel": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "practiceViewResultsAction": "Ver resultados",
+  "practiceReviewHiddenByAssignment": "Seu professor configurou esta tarefa para não mostrar as respostas corretas. Você só pode ver sua pontuação geral.",
+  "practiceReviewHiddenUntilDue": "As respostas corretas estarão disponíveis após a data limite ({date}). Por enquanto você só pode ver sua pontuação geral.",
+  "@practiceReviewHiddenUntilDue": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "practiceReviewHiddenUntilDueNoDate": "As respostas corretas estarão disponíveis após a data limite. Por enquanto você só pode ver sua pontuação geral.",
+  "practiceReviewHiddenTeacherOnly": "Somente seu professor pode ver as respostas corretas. Você pode consultar sua pontuação geral.",
+  "practiceBackHomeAction": "Voltar ao inicio",
+  "importQuestionsAction": "Importar perguntas",
+  "importQuestionsTitle": "Importar perguntas",
+  "importExcelAction": "Importar do Excel",
+  "excelImportTitle": "Importar Excel",
+  "excelImportSubtitle": "Envie um arquivo .xlsx com suas perguntas. Voce revisara uma previa antes de confirmar.",
+  "excelImportColumnsHint": "Colunas: Pergunta, Tipo (inclui image_choice e image_based_question sem arquivos de imagem), Opcao A–E, Resposta correta (ex.: B ou A|C), Pontos e Secao (opcionais). Imagens depois no app.",
+  "excelImportDownloadTemplate": "Baixar modelo Excel",
+  "excelImportTemplateReady": "Modelo pronto para salvar ou compartilhar",
+  "excelImportTemplateFailed": "Nao foi possivel baixar o modelo",
+  "excelImportDropHint": "Arraste seu arquivo .xlsx aqui",
+  "excelImportDropSubhint": "Ou escolha um arquivo no dispositivo",
+  "excelImportPickFile": "Escolher arquivo",
+  "excelImportUploadAction": "Enviar e revisar",
+  "excelImportOnlyXlsx": "Apenas arquivos .xlsx sao aceitos",
+  "excelImportFileTooLarge": "O arquivo excede o limite de 5 MB",
+  "excelImportReadFailed": "Nao foi possivel ler o arquivo selecionado",
+  "excelImportSelectFileFirst": "Selecione um arquivo Excel primeiro",
+  "excelImportColumnsTitle": "Formato das colunas",
+  "excelImportTemplateSection": "Passo 1 · Modelo",
+  "excelImportUploadSection": "Passo 2 · Seu arquivo",
+  "excelImportFileReady": "Arquivo pronto para importar",
+  "excelImportChangeFile": "Trocar arquivo",
+  "importImageMediaPending": "As imagens nao sao importadas do arquivo. Voce pode adiciona-las depois no app ao editar a pergunta.",
+  "importImagePendingBadge": "Imagem pendente no app",
+  "importFormatLabel": "Formato",
+  "importFormatJson": "CQIF JSON",
+  "importFormatTxt": "TXT CraftQuest",
+  "importContentLabel": "Conteudo",
+  "importContentHint": "Cole aqui o JSON CQIF v2 ou o TXT CraftQuest",
+  "importContentRequired": "Cole o conteudo para importar",
+  "importProcessAction": "Processar importacao",
+  "importNoValidQuestions": "Nao ha perguntas validas para importar",
+  "importPreviewTitle": "Pre-visualizacao",
+  "importSummaryLabel": "{valid} validas de {total} ({errors} com erro)",
+  "@importSummaryLabel": {
+    "placeholders": {
+      "valid": { "type": "int" },
+      "total": { "type": "int" },
+      "errors": { "type": "int" }
+    }
+  },
+  "importErrorLine": "Linha {row}: {message}",
+  "@importErrorLine": {
+    "placeholders": {
+      "row": { "type": "int" },
+      "message": { "type": "String" }
+    }
+  },
+  "importQuestionTypeLabel": "Tipo: {type}",
+  "@importQuestionTypeLabel": {
+    "placeholders": { "type": { "type": "String" } }
+  },
+  "importAnswerLine": "{key}: {text}{correct}",
+  "@importAnswerLine": {
+    "placeholders": {
+      "key": { "type": "String" },
+      "text": { "type": "String" },
+      "correct": { "type": "String" }
+    }
+  },
+  "importConfirmAction": "Confirmar e importar",
+  "importConfirmSuccess": "{count} perguntas importadas",
+  "@importConfirmSuccess": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "importPlanLimitPreviewNotice": "O plano {plan} permite ate {max} perguntas por questionario ({current} ja neste questionario). Apenas {importable} de {total} do arquivo serao importadas.",
+  "@importPlanLimitPreviewNotice": {
+    "placeholders": {
+      "plan": { "type": "String" },
+      "max": { "type": "int" },
+      "current": { "type": "int" },
+      "importable": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "importConfirmDisabledQuizFull": "Nao e possivel importar mais: este questionario ja tem {current} e o limite do plano e {max} por questionario.",
+  "@importConfirmDisabledQuizFull": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
+  "importPlanLimitConfirmNotice": "{imported} perguntas importadas. No plano {plan} o limite e {max} por questionario; {skipped} perguntas do arquivo nao foram adicionadas.",
+  "@importPlanLimitConfirmNotice": {
+    "placeholders": {
+      "imported": { "type": "int" },
+      "plan": { "type": "String" },
+      "max": { "type": "int" },
+      "skipped": { "type": "int" }
+    }
+  },
+  "teacherAttemptsAction": "Ver tentativas",
+  "teacherAttemptsTitle": "Tentativas de pratica",
+  "teacherAttemptsEmpty": "Ainda nao ha tentativas finalizadas",
+  "teacherAttemptsFilterLabel": "Estudante",
+  "teacherAttemptsFilterAll": "Todos os estudantes",
+  "teacherAttemptsFilterEmpty": "Nao ha tentativas para este estudante",
+  "teacherAttemptsStudentsSummary": "{students} estudantes · {attempts} tentativas",
+  "@teacherAttemptsStudentsSummary": {
+    "placeholders": {
+      "students": { "type": "int" },
+      "attempts": { "type": "int" }
+    }
+  },
+  "teacherAttemptsAttemptCountOne": "1 tentativa",
+  "teacherAttemptsAttemptCountMany": "{count} tentativas",
+  "@teacherAttemptsAttemptCountMany": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "teacherAttemptRowTitle": "{date}",
+  "@teacherAttemptRowTitle": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "teacherAttemptTitle": "{name} · {date}",
+  "@teacherAttemptTitle": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "date": { "type": "String" }
+    }
+  },
+  "teacherAttemptSubtitle": "{obtained}/{possible} ({percent}%) · {status}",
+  "@teacherAttemptSubtitle": {
+    "placeholders": {
+      "obtained": { "type": "double" },
+      "possible": { "type": "double" },
+      "percent": { "type": "String" },
+      "status": { "type": "String" }
+    }
+  },
+  "teacherAttemptSubtitleWithDuration": "{stats} · {duration}",
+  "@teacherAttemptSubtitleWithDuration": {
+    "placeholders": {
+      "stats": { "type": "String" },
+      "duration": { "type": "String" }
+    }
+  },
+  "teacherReviewTitle": "Revisao da tentativa",
+  "teacherReviewStudentLabel": "Estudante: {name}",
+  "@teacherReviewStudentLabel": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "teacherReviewScoreLabel": "Pontuacao: {obtained} / {possible}",
+  "@teacherReviewScoreLabel": {
+    "placeholders": {
+      "obtained": { "type": "double" },
+      "possible": { "type": "double" }
+    }
+  },
+  "teacherReviewQuestionLabel": "{order}. {text}",
+  "@teacherReviewQuestionLabel": {
+    "placeholders": {
+      "order": { "type": "int" },
+      "text": { "type": "String" }
+    }
+  },
+  "teacherReviewAnswerStatus": "{status} · {awarded}/{possible} pts",
+  "@teacherReviewAnswerStatus": {
+    "placeholders": {
+      "status": { "type": "String" },
+      "awarded": { "type": "double" },
+      "possible": { "type": "double" }
+    }
+  },
+  "billingPlanLabel": "Plano: {plan}",
+  "@billingPlanLabel": {
+    "placeholders": { "plan": { "type": "String" } }
+  },
+  "billingPlanChipLabel": "Plano",
+  "billingUsageLabel": "Questionarios: {quizzes}/{maxQuizzes}",
+  "@billingUsageLabel": {
+    "placeholders": {
+      "quizzes": { "type": "int" },
+      "maxQuizzes": { "type": "String" }
+    }
+  },
+  "billingQuizzesUnlimited": "Questionarios: Ilimitados",
+  "billingCreditsLabel": "Creditos IA deste mes: {credits}",
+  "@billingCreditsLabel": {
+    "placeholders": { "credits": { "type": "int" } }
+  },
+  "redeemCodeAction": "Resgatar codigo",
+  "redeemCodeTitle": "Resgatar codigo de acesso",
+  "redeemCodeSubtitle": "Digite o codigo compartilhado pelo professor ou colega",
+  "redeemCodeLabel": "Codigo",
+  "redeemCodeRequired": "Digite um codigo",
+  "redeemCodeSuccess": "Acesso concedido a \"{title}\"",
+  "@redeemCodeSuccess": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "redeemCodeAlreadyInShared": "Voce ja tem \"{title}\" em Compartilhados.",
+  "@redeemCodeAlreadyInShared": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "accessibleQuizzesAction": "Questionarios compartilhados",
+  "accessibleQuizzesTitle": "Questionarios compartilhados",
+  "accessibleQuizzesEmpty": "Nenhum questionario compartilhado. Resgate um codigo.",
+  "accessibleQuizzesSharedBy": "Compartilhado por {name}",
+  "@accessibleQuizzesSharedBy": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "accessibleQuizzesGroupCount": "{count, plural, =1{1 questionario} other{{count} questionarios}}",
+  "@accessibleQuizzesGroupCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "accessibleQuizzesRemoveAction": "Remover de compartilhados",
+  "accessibleQuizzesRemoveConfirmTitle": "Remover de compartilhados?",
+  "accessibleQuizzesRemoveConfirmMessage": "\"{title}\" sera removido da sua lista. O questionario nao e excluido; voce pode resgata-lo novamente com o codigo, se precisar.",
+  "@accessibleQuizzesRemoveConfirmMessage": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "accessibleQuizzesRemovedMessage": "Questionario removido dos compartilhados",
+  "accessibleQuizzesSlotBanner": "Questionarios compartilhados: {current}/{max}",
+  "@accessibleQuizzesSlotBanner": {
+    "placeholders": { "current": { "type": "int" }, "max": { "type": "int" } }
+  },
+  "accessibleQuizzesSlotFull": "Cupo do plano Free completo. Remova um para resgatar outro codigo.",
+  "errorSharedQuizSlotLimit": "Seu plano Free permite {max} questionarios compartilhados. Remova um em Compartilhados para resgatar outro.",
+  "@errorSharedQuizSlotLimit": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "errorCannotRedeemOwnQuiz": "Voce nao pode resgatar o codigo de um questionario que voce criou. Abra-o em Meus questionarios.",
+  "shareCodeViewAction": "Ver codigo",
+  "shareCodeExistingHint": "Este e o codigo permanente deste questionario.",
+  "myQuizAnalyticsAction": "Minha analitica",
+  "myQuizAnalyticsTitle": "Minha analitica de pratica",
+  "myPracticeAttemptsAction": "Minhas tentativas",
+  "myPracticeAttemptsTitle": "Minhas tentativas de pratica",
+  "myPracticeAttemptsEmpty": "Voce ainda nao concluiu nenhuma tentativa neste questionario.",
+  "myPracticeReviewTitle": "Revisao da minha tentativa",
+  "myQuizAnalyticsAttemptsLabel": "{count} tentativas concluidas",
+  "@myQuizAnalyticsAttemptsLabel": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "myQuizAnalyticsAverageLabel": "Media: {percentage}%",
+  "@myQuizAnalyticsAverageLabel": {
+    "placeholders": { "percentage": { "type": "double" } }
+  },
+  "myQuizAnalyticsBestLabel": "Melhor: {percentage}%",
+  "@myQuizAnalyticsBestLabel": {
+    "placeholders": { "percentage": { "type": "double" } }
+  },
+  "createShareCodeAction": "Gerar codigo",
+  "shareCodeTitle": "Codigo de acesso",
+  "shareCodeCreateTitle": "Compartilhar questionario",
+  "shareCodeCreateTeacherSubtitle": "Escolha se qualquer pessoa pode praticar ou apenas sua turma.",
+  "shareCodeCreateStudentSubtitle": "Sera gerado um codigo para muitas pessoas praticarem (sem ver tentativas de outros).",
+  "shareCodeAudienceAnyone": "Qualquer pessoa",
+  "shareCodeAudienceAnyoneHint": "Com ou sem conta. Mesmo codigo para todos.",
+  "shareCodeAudienceGroup": "Apenas minha turma",
+  "shareCodeAudienceGroupHint": "Apenas alunos da turma escolhida (conta obrigatoria).",
+  "shareCodeSelectClassLabel": "Turma",
+  "shareCodeClassOption": "{name} ({count} alunos)",
+  "@shareCodeClassOption": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "count": { "type": "int" }
+    }
+  },
+  "shareCodeNoClasses": "Voce ainda nao tem turmas. Crie uma turma para compartir apenas com seu grupo.",
+  "shareCodeGroupRequired": "Selecione uma turma para compartilhar com o grupo.",
+  "shareCodeResultOpenHint": "Valido para muitas pessoas. Tambem funciona em Praticar com codigo sem conta.",
+  "shareCodeResultGroupHint": "Apenas membros da turma selecionada, com conta.",
+  "shareCodeCopyAction": "Copiar",
+  "shareCodeCopied": "Codigo copiado",
+  "shareCodeCloseAction": "Fechar",
+  "quizInviteTitle": "Convidar pessoas",
+  "quizInviteSubtitle": "A pessoa precisa ter conta no CraftQuest. O questionario aparece em Compartilhados (sem codigo).",
+  "quizInviteEmailsLabel": "E-mails",
+  "quizInviteEmailsHint": "um@email.com, outro@email.com",
+  "quizInviteAction": "Convidar",
+  "quizInviteEmailsRequired": "Digite pelo menos um e-mail valido.",
+  "quizInviteSuccessCount": "{count, plural, =1{1 pessoa convidada} other{{count} pessoas convidadas}}",
+  "@quizInviteSuccessCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "quizInviteOutcomeInvited": "{name}: convidado/a",
+  "@quizInviteOutcomeInvited": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "quizInviteOutcomeAlreadyHadAccess": "{name}: ja tinha acesso",
+  "@quizInviteOutcomeAlreadyHadAccess": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "quizInviteOutcomeNotFound": "{email}: nenhuma conta com este e-mail",
+  "@quizInviteOutcomeNotFound": {
+    "placeholders": { "email": { "type": "String" } }
+  },
+  "quizInviteOutcomeInvalidEmail": "{email}: e-mail invalido",
+  "@quizInviteOutcomeInvalidEmail": {
+    "placeholders": { "email": { "type": "String" } }
+  },
+  "quizInviteOutcomeSlotLimit": "{name}: sem vaga no plano Free",
+  "@quizInviteOutcomeSlotLimit": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "quizInviteOutcomeSelf": "Voce nao pode convidar a si mesmo/a",
+  "errorDirectInviteNotAllowed": "Convites diretos exigem plano Pro ou Professor.",
+  "errorActivePracticeSession": "Voce tem uma pratica em andamento. Continue ou comece de novo.",
+  "aiNormalizeAction": "Normalizar com IA",
+  "aiImproveImportAction": "Melhorar com IA",
+  "aiNormalizeSuccess": "Normalizacao IA concluida",
+  "quizAnalyticsAction": "Analitica",
+  "quizAnalyticsTitle": "Analitica do questionario",
+  "quizAnalyticsSessionsLabel": "Tentativas finalizadas: {count}",
+  "@quizAnalyticsSessionsLabel": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "quizAnalyticsQuestionStats": "{attempts} tentativas · {correct} corretas · {incorrect} incorretas",
+  "@quizAnalyticsQuestionStats": {
+    "placeholders": {
+      "attempts": { "type": "int" },
+      "correct": { "type": "int" },
+      "incorrect": { "type": "int" }
+    }
+  },
+  "quizAnalyticsOptionLabel": "{key}: {text} — {count} ({rate}%){correct}",
+  "@quizAnalyticsOptionLabel": {
+    "placeholders": {
+      "key": { "type": "String" },
+      "text": { "type": "String" },
+      "count": { "type": "int" },
+      "rate": { "type": "double" },
+      "correct": { "type": "String" }
+    }
+  },
+  "attachImageAction": "Anexar imagem",
+  "removeImageAction": "Remover imagem",
+  "viewFullImageAction": "Ver imagem completa",
+  "closeAction": "Fechar",
+  "imageLoadError": "Nao foi possivel carregar a imagem",
+  "upgradePlanAction": "Melhorar plano",
+  "upgradePlanTitle": "Melhorar plano",
+  "upgradePlanSubtitle": "Compare os planos e escolha o que mais combina com voce.",
+  "upgradePlanAlreadyHighest": "Voce ja tem o plano mais alto disponivel. Nao ha mais upgrades por agora.",
+  "upgradeProHighlightQuizzes": "Questionarios ilimitados (seu plano atual: max. 5)",
+  "upgradeProHighlightQuestions": "Sem limite de perguntas por questionario (seu plano atual: 65)",
+  "upgradeProHighlightAiCredits": "150 creditos IA por mes (seu plano atual: 20)",
+  "upgradeProHighlightShared": "Compartilhados ilimitados ao resgatar ou convidar",
+  "upgradeProHighlightDirectInvite": "Convide pessoas especificas por e-mail",
+  "upgradeTeacherHighlightIncludesPro": "Tudo do plano Pro",
+  "upgradeTeacherHighlightAiCredits": "360 creditos IA por mes para mais geracoes",
+  "upgradeTeacherHighlightClasses": "Turmas e grupos de estudantes",
+  "upgradeTeacherHighlightAssignments": "Tarefas com prazos, tentativas e revisao",
+  "upgradeTeacherHighlightGroupShare": "Compartilhe codigos so com sua turma",
+  "upgradeTeacherHighlightTracking": "Acompanhe tentativas e resultados por aluno",
+  "buyWithStoreAction": "Comprar na loja",
+  "buyWithPayPalAction": "Pagar com PayPal",
+  "paypalWebHint": "Na web, PayPal e o metodo de pagamento recomendado.",
+  "paypalAwaitingCapture": "Conclua o pagamento no PayPal e confirme a captura.",
+  "upgradeSuccess": "Plano ativado: {plan}",
+  "@upgradeSuccess": {
+    "placeholders": { "plan": { "type": "String" } }
+  },
+  "storeProductNotConfigured": "Produto da loja nao configurado",
+  "storeProductNotFound": "Produto nao encontrado: {id}",
+  "@storeProductNotFound": {
+    "placeholders": { "id": { "type": "String" } }
+  },
+  "purchaseFailed": "A compra nao foi concluida",
+  "purchaseVerificationFailed": "Não foi possível verificar sua compra. Tente novamente em instantes.",
+  "contactSales": "Contactar vendas",
+  "aiGenerationHubTitle": "Gerar com IA",
+  "aiGenerationHubSubtitle": "Envie PDF ou Word com texto selecionavel e obtenha um questionario revisavel em minutos.",
+  "aiGenerationHubAction": "Criar a partir de material",
+  "aiGenerationLibraryTitle": "Biblioteca de materiais",
+  "aiGenerationLibraryRetentionHint": "Os materiais sao removidos automaticamente ao fim de {days} dias. Pode apaga-los antes com o icone do caixote do lixo.",
+  "@aiGenerationLibraryRetentionHint": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "aiGenerationLibraryExpiresOn": "Eliminacao automatica: {date}",
+  "@aiGenerationLibraryExpiresOn": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "aiGenerationLibraryMaterialCount": "{count, plural, =1{1 material} other{{count} materiais}}",
+  "@aiGenerationLibraryMaterialCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "aiGenerationLibraryStatusReady": "Pronto",
+  "aiGenerationLibraryStatusProcessing": "A processar",
+  "aiGenerationLibraryStatusFailed": "Erro",
+  "aiGenerationLibraryStatusPending": "Pendente",
+  "aiGenerationLibraryUploaded": "Enviado em {date}",
+  "@aiGenerationLibraryUploaded": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "aiGenerationLibraryExpiresInDays": "Elimina-se em {days} dias",
+  "@aiGenerationLibraryExpiresInDays": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "aiGenerationLibraryNeedsReview": "Rever texto",
+  "aiGenerationLibraryEmpty": "Ainda nao tem materiais guardados.",
+  "aiGenerationLibraryEmptySubtitle": "Os PDF e Word que enviar para gerar com IA aparecerao aqui.",
+  "aiGenerationLibraryAction": "Ver biblioteca",
+  "deleteStudyMaterialConfirmTitle": "Eliminar material",
+  "deleteStudyMaterialConfirmMessage": "Sera eliminado \"{title}\" e o texto extraido. O questionario gerado sera mantido. Esta acao nao pode ser anulada.",
+  "@deleteStudyMaterialConfirmMessage": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "deleteStudyMaterialAction": "Eliminar",
+  "studyMaterialDeletedMessage": "Material eliminado",
+  "aiGenerationUploadTitle": "Enviar material",
+  "aiGenerationUploadSubtitle": "Envie um PDF ou Word com texto copiavel. Revisara o alcance de paginas antes de gerar o questionario.",
+  "aiGenerationUploadHeroDrop": "Arraste o seu PDF ou Word aqui",
+  "aiGenerationUploadHeroPick": "ou escolha um ficheiro no seu dispositivo",
+  "aiGenerationUploadFormatGuideTitle": "Dicas e limites de formato",
+  "aiGenerationUploadHint": "PDF ou DOCX com texto selecionavel, nao digitalizados (max. 25 MB)",
+  "aiGenerationUploadLimitsHint": "Ate {maxPagesPerFile} paginas por ficheiro · ate {maxPagesPerGeneration} paginas por geracao",
+  "@aiGenerationUploadLimitsHint": {
+    "placeholders": {
+      "maxPagesPerFile": { "type": "int" },
+      "maxPagesPerGeneration": { "type": "int" }
+    }
+  },
+  "aiGenerationUploadLimitsSteps": "Se o documento for maior, divida-o em varios ficheiros (cada um com {maxPagesPerFile} paginas ou menos) ou exporte apenas o capitulo necessario. Depois pode gerar questionarios em blocos de ate {maxPagesPerGeneration} paginas.",
+  "@aiGenerationUploadLimitsSteps": {
+    "placeholders": {
+      "maxPagesPerFile": { "type": "int" },
+      "maxPagesPerGeneration": { "type": "int" }
+    }
+  },
+  "errorMaterialPageLimitGuidance": "O que pode fazer: divida o PDF ou Word em partes de {maxPagesPerFile} paginas ou menos (por capitulos ou blocos) e envie-as separadamente. Em cada material, gere o questionario escolhendo ate {maxPagesPerGeneration} paginas de cada vez.",
+  "@errorMaterialPageLimitGuidance": {
+    "placeholders": {
+      "maxPagesPerFile": { "type": "int" },
+      "maxPagesPerGeneration": { "type": "int" }
+    }
+  },
+  "aiGenerationUploadAnotherFileAction": "Enviar outro ficheiro",
+  "aiGenerationDropHint": "Tambem pode arrastar ficheiros aqui",
+  "aiGenerationUploadAction": "Enviar e analisar",
+  "aiGenerationUploadFileReady": "Ficheiro pronto para enviar",
+  "aiGenerationUploadChangeFile": "Alterar ficheiro",
+  "aiGenerationUploadRemoveFile": "Remover",
+  "aiGenerationProcessing": "A analisar documento…",
+  "aiGenerationNeedsOcr": "Pouco texto detetado. Use PDF ou Word com texto selecionavel, ou revise e cole o conteudo.",
+  "aiGenerationReviewTextTitle": "Rever texto",
+  "aiGenerationReviewTextHint": "O documento tem pouco texto extraivel. Corrija o detetado ou cole conteudo com texto selecionavel.",
+  "aiGenerationReviewTextSave": "Guardar e continuar",
+  "aiGenerationReviewTextAction": "Rever texto",
+  "aiGenerationOutlineTitle": "Alcance do material",
+  "aiGenerationPageRange": "Paginas {from}–{to}",
+  "@aiGenerationPageRange": {
+    "placeholders": { "from": { "type": "int" }, "to": { "type": "int" } }
+  },
+  "aiGenerationPageRangeOfTotal": "Paginas {from}–{to} de {total}",
+  "@aiGenerationPageRangeOfTotal": {
+    "placeholders": {
+      "from": { "type": "int" },
+      "to": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "aiGenerationPageRangeHelp": "Escolha quais paginas do documento serao usadas para gerar o questionario. Arraste cada extremo do controle para limitar o trecho.",
+  "aiGenerationPageRangeSelectedCount": "{count, plural, =1{1 pagina neste trecho} other{{count} paginas neste trecho}}",
+  "@aiGenerationPageRangeSelectedCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "aiGenerationPageRangeOverLimit": "Maximo de {max} paginas por geracao. Reduza o trecho selecionado.",
+  "@aiGenerationPageRangeOverLimit": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "aiGenerationWordsInScopePurpose": "A IA gerara perguntas a partir de aproximadamente {words} palavras nesse trecho.",
+  "@aiGenerationWordsInScopePurpose": {
+    "placeholders": { "words": { "type": "int" } }
+  },
+  "aiGenerationTopicHint": "Foco opcional (tema ou seccao)",
+  "aiGenerationWordsInScope": "{words} palavras no alcance",
+  "@aiGenerationWordsInScope": {
+    "placeholders": { "words": { "type": "int" } }
+  },
+  "aiGenerationParamsTitle": "Parametros de geracao",
+  "aiGenerationMaterialLanguageNotice": "As perguntas serao geradas em {language} conforme o idioma do material.",
+  "@aiGenerationMaterialLanguageNotice": {
+    "placeholders": { "language": { "type": "String" } }
+  },
+  "aiGenerationPresetQuick": "Revisao rapida",
+  "aiGenerationPresetStandard": "Exame padrao",
+  "aiGenerationPresetDeep": "Pratica profunda",
+  "aiGenerationQuestionCount": "Numero de perguntas",
+  "aiGenerationQuestionCountOfMax": "{count} de {max}",
+  "@aiGenerationQuestionCountOfMax": {
+    "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
+  },
+  "aiGenerationQuestionTypes": "Tipos de pergunta",
+  "aiGenerationTypeSingleChoice": "Escolha unica",
+  "aiGenerationTypeMultipleChoice": "Escolha multipla",
+  "aiGenerationTypeTrueFalse": "Verdadeiro / falso",
+  "aiGenerationDifficulty": "Dificuldade",
+  "aiGenerationDifficultyEasy": "Facil",
+  "aiGenerationDifficultyMedium": "Media",
+  "aiGenerationDifficultyHard": "Dificil",
+  "aiGenerationDifficultyMixed": "Mista",
+  "aiGenerationCreditsCost": "Consumira {credits} creditos IA ({available} disponiveis)",
+  "@aiGenerationCreditsCost": {
+    "placeholders": {
+      "credits": { "type": "int" },
+      "available": { "type": "int" }
+    }
+  },
+  "aiGenerationStartAction": "Gerar questionario",
+  "aiGenerationProgressTitle": "A gerar questionario",
+  "aiGenerationProgressSubtitle": "A IA esta a criar perguntas a partir do seu material…",
+  "aiGenerationProgressDeferredRetry": "O servico de IA esta sobrecarregado. Tentaremos novamente em breve.",
+  "aiGenerationProgressDeferredRetryMinutes": "Nova tentativa automatica em cerca de {minutes} min. Pode manter esta tela aberta.",
+  "@aiGenerationProgressDeferredRetryMinutes": {
+    "placeholders": { "minutes": { "type": "int" } }
+  },
+  "aiGenerationProgressAutoRetry": "Tentativa automatica {attempt} em andamento…",
+  "@aiGenerationProgressAutoRetry": {
+    "placeholders": { "attempt": { "type": "int" } }
+  },
+  "aiGenerationCreditsNotConsumed": "Nenhum credito de IA foi descontado.",
+  "aiGenerationRetryAction": "Tentar gerar novamente",
+  "aiGenerationProgressTakingLong": "Ainda em processamento (pode demorar varios minutos). Se a API foi reiniciada, tente gerar novamente.",
+  "aiGenerationProgressStuck": "A geracao parece bloqueada no servidor.",
+  "aiGenerationProgressStuckDetail": "Este trabalho esta em processamento ha demasiado tempo. Volte atras e gere novamente; os creditos nao foram consumidos se nao terminou.",
+  "aiGenerationStuckGoBackAction": "Voltar e tentar de novo",
+  "errorSessionExpired": "A sua sessao expirou. Inicie sessao novamente e tente outra vez.",
+  "aiGenerationFailed": "Nao foi possivel gerar o questionario",
+  "errorGenerationJobNotRetryable": "Este trabalho de geracao nao pode ser repetido agora.",
+  "errorGuestNotAllowed": "Este codigo requer uma conta registrada. Crie uma conta gratuita para continuar.",
+  "errorGroupAccessDenied": "Este codigo e apenas para membros da turma \"{className}\".",
+  "@errorGroupAccessDenied": {
+    "placeholders": { "className": { "type": "String" } }
+  },
+  "errorGroupAccessDeniedGeneric": "Este codigo e apenas para membros da turma do professor.",
+  "errorAiGenerationInvalidOutput": "A IA devolveu um formato invalido. Toque em Tentar gerar novamente; nenhum credito foi descontado.",
+  "aiGenerationFromQuizAction": "Gerar com IA a partir de material",
+  "importAiGeneratedBadge": "Gerada por IA",
+  "errorAiCreditsInsufficient": "Creditos IA insuficientes para esta geracao.",
+  "errorMaterialNeedsOcr": "Pouco texto extraivel. Use PDF ou Word com texto selecionavel, ou revise e cole o conteudo.",
+  "errorMaterialNotSelectableText": "Este ficheiro parece digitalizado ou sem texto selecionavel.",
+  "errorMaterialNotSelectableTextGuidance": "Recomendacoes:\n• Abra o ficheiro e confirme que pode selecionar e copiar paragrafos (nao apenas ampliar).\n• Se for digitalizado: no Word, Ficheiro → Abrir o PDF e deixe reconhecer o texto; reveja e guarde como DOCX.\n• Alternativa: OCR externo (Adobe, Google Drive), cole o texto no Word e envie como DOCX.\n• Exporte a partir do Word ou Google Docs; evite PDFs feitos so com fotos ou «imprimir para imagem».\n• Volte a enviar DOCX ou PDF exportado do Word com texto selecionavel.",
+  "errorMaterialNeedsOcrGuidance": "Recomendacoes:\n• Use PDF ou DOCX em que possa selecionar e copiar texto.\n• Se a origem for digitalizada, converta para Word com texto (passos de OCR acima) e envie DOCX.\n• Tambem pode colar o conteudo no Word, guardar como DOCX e enviar esse ficheiro.",
+  "errorMaterialTooLargeGuidance": "Recomendacoes:\n• O limite e 25 MB por ficheiro.\n• Comprima imagens no Word ou exporte apenas o capitulo necessario.\n• Divida o documento em ficheiros mais pequenos se ainda for demasiado grande.",
+  "aiGenerationUploadRecommendationsTitle": "Recomendacoes",
+  "aiGenerationUploadSelectableTextHint": "O PDF ou Word deve permitir selecionar e copiar texto. Documentos digitalizados nao sao suportados.",
+  "errorMaterialTooLarge": "O ficheiro excede o tamanho maximo permitido.",
+  "errorMaterialPageLimitExceeded": "O documento excede o maximo de {maxPages} paginas por ficheiro.",
+  "@errorMaterialPageLimitExceeded": {
+    "placeholders": { "maxPages": { "type": "int" } }
+  },
+  "errorGenerationPageRangeExceeded": "So pode gerar a partir de no maximo {maxPages} paginas de cada vez.",
+  "@errorGenerationPageRangeExceeded": {
+    "placeholders": { "maxPages": { "type": "int" } }
+  },
+  "errorGenerationScopeEmpty": "Sem texto no intervalo de paginas selecionado.",
+  "errorGenerationAlreadyInProgress": "Ja existe uma geracao em curso para este material.",
+  "errorAiNotConfigured": "A geracao com IA nao esta configurada no servidor.",
+  "errorAiGeminiQuotaExhausted": "Os creditos do Gemini esgotaram. Adicione saldo no Google AI Studio (ai.google.dev) e tente novamente.",
+  "errorAiGeminiModelUnavailable": "O modelo Gemini configurado nao esta mais disponivel. Defina Ai:GeminiModel como gemini-2.5-flash e reinicie a API.",
+  "errorAiGeminiOverloaded": "O Gemini esta com alta demanda no momento. Aguarde alguns minutos e tente gerar novamente.",
+  "aiActivityTitle": "Atividade IA",
+  "aiActivityAction": "Atividade IA",
+  "aiActivityEmpty": "Sem geracoes recentes. Ao gerar um questionario, os trabalhos aparecem aqui mesmo que feche a app.",
+  "aiActivityStatusDraftReady": "Rascunho pronto",
+  "aiActivityStatusFailed": "Erro",
+  "aiActivityStatusCompleted": "Concluida",
+  "aiActivityReviewDraft": "Toque para rever e importar o rascunho",
+  "aiActivityViewProgress": "Toque para ver o progresso",
+  "aiActivityTapForDetails": "Toque para ver detalhes",
+  "aiActivityUnknownMaterial": "Material",
+  "aiActivityPagesRange": "Paginas {from}–{to}",
+  "@aiActivityPagesRange": {
+    "placeholders": {
+      "from": { "type": "int" },
+      "to": { "type": "int" }
+    }
+  },
+  "aiLibraryStatusDraftReady": "Rascunho pronto",
+  "aiGenerationBackgroundSnack": "Geracao em segundo plano. Pode sair; retome em Atividade IA ou na biblioteca.",
+  "aiGenerationResumedSnack": "Ja havia uma geracao em curso para este material. A mostrar o progresso.",
+  "aiGenerationProgressPercent": "{percent}% concluido",
+  "@aiGenerationProgressPercent": {
+    "placeholders": { "percent": { "type": "int" } }
+  },
+  "aiJobStageQueued": "Em fila",
+  "aiJobStagePreparing": "A preparar material",
+  "aiJobStageOutlining": "A planear temas",
+  "aiJobStageGenerating": "A gerar perguntas",
+  "aiJobStageMerging": "A combinar resultados",
+  "aiJobStageValidating": "A validar perguntas",
+  "aiJobStageImporting": "A preparar rascunho",
+  "aiJobStageCompleted": "Concluida",
+  "aiJobStageFailed": "Erro",
+  "aiActivityClearHistoryAction": "Limpar historico",
+  "aiActivityClearHistoryTitle": "Limpar historico?",
+  "aiActivityClearHistoryMessage": "Serao removidas geracoes concluidas e erros antigos. Mantem-se as em curso e os rascunhos por rever.",
+  "aiActivityClearHistoryDone": "Foram removidas {count} entradas do historico.",
+  "@aiActivityClearHistoryDone": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "aiActivityClearHistoryNothing": "Nao havia entradas para limpar.",
+
+  "cancel": "Cancelar",
+  "practiceStatusInProgress": "Em andamento",
+
+  "guestCodeTitle": "Praticar com codigo",
+  "guestCodeSubtitle": "Insira o codigo compartilhado pelo seu professor para praticar sem criar conta.",
+  "guestCodeAction": "Comecar",
+  "guestCodeLabel": "Codigo",
+  "guestCodeRequired": "Insira um codigo",
+  "guestCodePasteTooltip": "Colar",
+  "guestEphemeralNotice": "Esta e uma sessao temporaria. Tudo sera apagado ao sair.",
+  "guestPracticeWithCodeAction": "Praticar com codigo",
+  "guestShellFreeBadge": "Gratis",
+  "guestShellHeroHint": "Pratique agora. Registre-se gratis para salvar o progresso e desbloquear mais.",
+  "guestShellSessionBadge": "Sem conta",
+  "guestPracticeOptions": "Opcoes de pratica",
+  "guestStartPracticeAction": "Praticar",
+  "guestAttemptsTitle": "Nesta visita",
+  "guestAttemptsEmpty": "Voce ainda nao praticou nesta visita. Comece agora!",
+  "guestLeaveAction": "Sair",
+  "guestLeaveConfirmTitle": "Sair desta visita?",
+  "guestLeaveConfirmMessage": "Todas as tentativas desta visita serao apagadas. Esta acao nao pode ser desfeita.",
+  "guestRegisterAction": "Criar conta gratuita",
+  "guestTryAgainAction": "Tentar novamente",
+  "guestResultStatCorrect": "Corretas",
+  "guestResultStatIncorrect": "Incorretas",
+  "guestViewResultsAction": "Ver resultados",
+  "guestTimerRegisteredOnlyHint": "Apenas para usuarios registrados. Criar conta e gratis.",
+  "guestRegisterCtaTitle": "Quer salvar seus resultados?",
+  "guestRegisterBenefit1": "Historico permanente de todas as suas tentativas",
+  "guestRegisterBenefit2": "Crie seus proprios questionarios com IA",
+  "guestRegisterBenefit3": "Plano Free: 5 questionarios e 20 creditos de IA, gratis",
+  "guestExitPracticeTitle": "Sair da pratica?",
+  "guestExitPracticeMessage": "Seu progresso foi salvo e voce pode retomar quando voltar.",
+  "guestExitPracticeConfirm": "Sair",
+
+  "teacherTabLabel": "Professor",
+  "teacherDashboardTitle": "Painel",
+  "teacherDashboardTotalStudents": "Alunos",
+  "teacherDashboardActiveClasses": "Turmas",
+  "teacherDashboardPublishedQuizzes": "Quizzes",
+  "teacherDashboardSessionsThisWeek": "Esta semana",
+  "teacherDashboardActivityFeedTitle": "Atividade recente",
+  "teacherDashboardInsightsTitle": "Insights",
+  "teacherDashboardEmptyFeed": "Sem atividade ainda. Compartilhe um quiz com seus alunos!",
+  "teacherDashboardEmptyInsights": "Sem insights ainda. Volte quando seus alunos começarem a praticar.",
+  "teacherDashboardInventoryStudents": "Alunos",
+  "teacherDashboardInventoryClasses": "Turmas",
+  "teacherDashboardInventoryQuizzes": "Quizzes",
+  "teacherDashboardUrgentTitle": "Requer atenção",
+  "teacherDashboardUrgentEmpty": "Nenhuma tarefa urgente no momento.",
+  "teacherDashboardUrgentDueLabel": "Vence {date}",
+  "@teacherDashboardUrgentDueLabel": { "placeholders": { "date": { "type": "String" } } },
+  "teacherDashboardUrgentPendingLabel": "{pending} de {total} sem entregar",
+  "@teacherDashboardUrgentPendingLabel": { "placeholders": { "pending": { "type": "int" }, "total": { "type": "int" } } },
+  "teacherDashboardActiveStudentsWeek": "Alunos ativos esta semana: {count}",
+  "@teacherDashboardActiveStudentsWeek": { "placeholders": { "count": { "type": "int" } } },
+  "teacherInsightHighError": "Uma pergunta tem {errorRate}% de erros: {questionText}",
+  "@teacherInsightHighError": { "placeholders": { "errorRate": { "type": "String" }, "questionText": { "type": "String" } } },
+  "teacherInsightMostActive": "{sessionCount} práticas esta semana ({studentCount} alunos) · {quizTitle}",
+  "@teacherInsightMostActive": { "placeholders": { "sessionCount": { "type": "int" }, "studentCount": { "type": "int" }, "quizTitle": { "type": "String" } } },
+  "teacherAssignmentAnalyticsTitle": "Análise da tarefa",
+  "teacherAssignmentAnalyticsAction": "Ver análise",
+  "teacherAssignmentAnalyticsRosterTitle": "Alunos",
+  "teacherAssignmentAnalyticsHardQuestionsTitle": "Perguntas difíceis",
+  "teacherAssignmentAnalyticsDistributionTitle": "Distribuição de notas",
+  "teacherAssignmentAnalyticsNoAttempt": "Sem tentativa",
+  "teacherAssignmentAnalyticsCompletionLabel": "Entregaram {completed} de {total}",
+  "@teacherAssignmentAnalyticsCompletionLabel": { "placeholders": { "completed": { "type": "int" }, "total": { "type": "int" } } },
+  "teacherAssignmentAnalyticsBestLabel": "Melhor: {score}%",
+  "@teacherAssignmentAnalyticsBestLabel": { "placeholders": { "score": { "type": "String" } } },
+  "teacherAssignmentAnalyticsLastLabel": "Último: {score}%",
+  "@teacherAssignmentAnalyticsLastLabel": { "placeholders": { "score": { "type": "String" } } },
+  "teacherAssignmentAnalyticsErrorRateLabel": "{rate}% erro · {attempts} tentativas",
+  "@teacherAssignmentAnalyticsErrorRateLabel": { "placeholders": { "rate": { "type": "String" }, "attempts": { "type": "int" } } },
+  "teacherClassAnalyticsActiveStudentsLabel": "Alunos com prática",
+  "teacherClassAnalyticsAverageLabel": "Média",
+  "teacherClassAnalyticsAssignmentsTitle": "Tarefas",
+  "studentAssignmentProgressTitle": "Meu progresso",
+  "studentAssignmentProgressAction": "Meu progresso",
+  "studentAssignmentProgressMyStats": "Meus resultados",
+  "studentAssignmentProgressEvolutionTitle": "Minha evolução",
+  "studentAssignmentProgressHardQuestionsTitle": "Perguntas para revisar",
+  "studentAssignmentProgressTrendUp": "Você melhorou {points} pts desde a primeira tentativa",
+  "@studentAssignmentProgressTrendUp": { "placeholders": { "points": { "type": "String" } } },
+  "studentAssignmentProgressAttemptLabel": "Tentativa {number}: {percent}%",
+  "@studentAssignmentProgressAttemptLabel": { "placeholders": { "number": { "type": "int" }, "percent": { "type": "String" } } },
+  "practiceResultRepracticeTitle": "Perguntas para revisar",
+  "practiceResultTrendUp": "+{points} pts vs tentativa anterior",
+  "@practiceResultTrendUp": { "placeholders": { "points": { "type": "String" } } },
+  "practiceResultTrendDown": "{points} pts vs tentativa anterior",
+  "@practiceResultTrendDown": { "placeholders": { "points": { "type": "String" } } },
+  "practiceResultReviewQuestionAction": "Ver na revisão",
+  "analyticsPersonalOnlyLabel": "Somente suas tentativas",
+  "analyticsOnlyDifficultFilter": "Só difíceis",
+  "analyticsPersonalAccuracyLabel": "{percent}% de acerto nas suas tentativas",
+  "@analyticsPersonalAccuracyLabel": { "placeholders": { "percent": { "type": "String" } } },
+  "scoreDistributionRange": "{min}–{max}%",
+  "@scoreDistributionRange": { "placeholders": { "min": { "type": "int" }, "max": { "type": "int" } } },
+
+  "teacherClassesTitle": "Minhas turmas",
+  "teacherClassesEmpty": "Você ainda não criou nenhuma turma.",
+  "teacherClassCreateTitle": "Nova turma",
+  "teacherClassNameLabel": "Nome da turma",
+  "teacherClassNameHint": "Ex. Álgebra II — Período 3",
+  "teacherClassDescriptionLabel": "Descrição (opcional)",
+  "teacherClassDescriptionHint": "Breve descrição desta turma",
+  "teacherClassSaveAction": "Salvar",
+  "teacherClassCreateAction": "Criar turma",
+  "teacherClassArchiveAction": "Arquivar turma",
+  "teacherClassArchiveConfirmTitle": "Arquivar turma?",
+  "teacherClassArchiveConfirmMessage": "Os alunos não verão mais as tarefas desta turma.",
+  "teacherClassArchiveConfirmAction": "Arquivar",
+  "teacherClassMembersTab": "Membros",
+  "teacherClassAssignmentsTab": "Tarefas",
+  "teacherClassAnalyticsTab": "Análises",
+  "teacherClassActiveMembersLabel": "membros ativos",
+  "teacherClassPendingMembersLabel": "aguardando aprovação",
+  "teacherClassAddMemberTitle": "Adicionar aluno",
+  "teacherClassAddMemberEmailLabel": "E-mail do aluno",
+  "teacherClassAddMemberEmailHint": "aluno@email.com",
+  "teacherClassAddMemberAction": "Adicionar",
+  "teacherClassInvalidEmailError": "Digite um endereço de e-mail válido.",
+  "teacherClassMemberNotFoundError": "Nenhum aluno registrado foi encontrado com esse e-mail.",
+  "teacherClassMemberAlreadyExistsError": "Esse aluno já pertence a esta turma.",
+  "teacherClassRemoveMemberAction": "Remover",
+  "teacherClassRemoveMemberConfirmTitle": "Remover aluno?",
+  "teacherClassRemoveMemberConfirmMessage": "Este aluno perderá acesso a todas as tarefas desta turma.",
+  "teacherClassApproveAction": "Aprovar",
+  "teacherClassMembersEmpty": "Nenhum aluno nesta turma ainda.",
+  "teacherClassPendingApprovalsTitle": "Aguardando aprovação",
+
+  "teacherAssignmentCreateTitle": "Nova tarefa",
+  "teacherAssignmentTitleLabel": "Título",
+  "teacherAssignmentTitleHint": "Ex. Capítulo 5 — Quiz de prática",
+  "teacherAssignmentInstructionsLabel": "Instruções (opcional)",
+  "teacherAssignmentQuizLabel": "Selecionar quiz",
+  "teacherAssignmentStartsAtLabel": "Abre em",
+  "teacherAssignmentDueAtLabel": "Data limite",
+  "teacherAssignmentMaxAttemptsLabel": "Tentativas máximas",
+  "teacherAssignmentMaxAttemptsHint": "Deixe em branco para ilimitadas",
+  "teacherAssignmentShowAnswersLabel": "Mostrar respostas corretas",
+  "teacherAssignmentShowAnswersNever": "Nunca",
+  "teacherAssignmentShowAnswersAfterAttempt": "Após cada tentativa",
+  "teacherAssignmentShowAnswersAfterDue": "Após a data limite",
+  "teacherAssignmentShowAnswersTeacherOnly": "Somente o professor",
+  "teacherAssignmentCreateAction": "Criar tarefa",
+  "teacherAssignmentEditTitle": "Editar tarefa",
+  "teacherAssignmentEditAction": "Editar",
+  "teacherAssignmentSaveAction": "Salvar alterações",
+  "teacherAssignmentTitleRequired": "O título é obrigatório",
+  "teacherAssignmentQuizSelectHint": "Selecionar quiz",
+  "teacherAssignmentQuizRequiredError": "Selecione um quiz",
+  "teacherAssignmentQuizLockedHint": "O quiz não pode ser alterado após a tarefa ser criada.",
+  "teacherAssignmentMaxAttemptsInvalidError": "Digite um número válido de tentativas",
+  "teacherAssignmentNotEditableError": "Somente tarefas ativas podem ser editadas.",
+  "teacherAssignmentMaxAttemptsBelowExistingError": "O máximo de tentativas não pode ser menor que as tentativas já usadas pelos alunos.",
+  "teacherAssignmentInvalidDateRangeError": "O prazo não pode ser anterior à data de abertura.",
+  "teacherAssignmentCloseAction": "Fechar tarefa",
+  "teacherAssignmentArchiveAction": "Arquivar",
+  "teacherAssignmentCloseConfirmTitle": "Fechar tarefa?",
+  "teacherAssignmentCloseConfirmMessage": "Os alunos não poderão enviar novas tentativas.",
+  "teacherAssignmentCompletionTitle": "Conclusão",
+  "teacherAssignmentAttemptsTitle": "Tentativas",
+  "teacherAssignmentCompletedLabel": "concluíram",
+  "teacherAssignmentPendingLabel": "não enviado",
+  "teacherAssignmentBestScoreLabel": "Melhor",
+  "teacherAssignmentAttemptsLabel": "tentativas",
+  "teacherAssignmentDueLabel": "Encerra",
+  "teacherAssignmentNoDueDate": "Sem data limite",
+  "teacherAssignmentEmpty": "Sem tarefas ainda.",
+  "teacherAssignmentFormSubtitle": "Configure datas, tentativas e quando as respostas são reveladas.",
+  "teacherAssignmentSectionDetails": "Detalhes",
+  "teacherAssignmentSectionQuiz": "Questionário",
+  "teacherAssignmentSectionSchedule": "Calendário",
+  "teacherAssignmentSectionRules": "Regras",
+  "teacherAssignmentCreateQuizCtaSubtitle": "Crie aqui e selecione na hora",
+  "teacherAssignmentSelectQuizAction": "Escolher dos meus quizzes",
+  "teacherAssignmentChangeQuizAction": "Alterar",
+  "teacherAssignmentQuizDraftWarning": "Este quiz está em rascunho. Publique-o para que os alunos vejam a tarefa.",
+  "teacherAssignmentNoQuizzesHint": "Você ainda não tem quizzes. Crie um para continuar.",
+  "teacherAssignmentPickDatePlaceholder": "Não definido",
+  "teacherAssignmentDraftContinued": "Continue configurando sua tarefa. O novo quiz já está selecionado.",
+
+  "teacherAnalyticsAvgScoreLabel": "Média de pontos",
+  "teacherAnalyticsTotalSessionsLabel": "Sessões totais",
+  "teacherAnalyticsCompletionRateLabel": "Conclusão",
+
+  "teacherUpgradeHeroTitle": "Transforme seus quizzes em sala de aula",
+  "teacherUpgradeHeroSubtitle": "Tudo o que você precisa para ensinar, atribuir e acompanhar — em um só lugar.",
+  "teacherUpgradePriceLabel": "/ mês",
+  "teacherUpgradePopularBadge": "O mais escolhido por educadores",
+  "teacherUpgradePillar1Title": "Turmas organizadas",
+  "teacherUpgradePillar1Body": "Crie grupos, convide alunos por e-mail e gerencie o acesso.",
+  "teacherUpgradePillar2Title": "Tarefas inteligentes",
+  "teacherUpgradePillar2Body": "Defina prazos, limite tentativas e controle quando as respostas são reveladas.",
+  "teacherUpgradePillar3Title": "Activity Pulse",
+  "teacherUpgradePillar3Body": "Feed ao vivo de atividade dos alunos, insights automáticos e análises por turma.",
+  "teacherUpgradeCta": "Torne-se Professor",
+  "teacherUpgradeCancelHint": "Cancele quando quiser · Acesso imediato após o pagamento",
+  "teacherUpgradeSeeAllPlans": "Ver todos os planos",
+  "teacherUpgradeAlreadyActive": "Você já tem um plano Professor ativo.",
+  "teacherUpgradeCancelTitle": "Cancelar assinatura?",
+  "teacherUpgradeCancelMessage": "Você perderá o acesso ao módulo Professor e suas turmas serão arquivadas. Você pode se reinscrever a qualquer momento.",
+  "teacherUpgradeCancelConfirm": "Cancelar plano",
+  "teacherUpgradeCancelSuccess": "Assinatura cancelada. Até logo!",
+  "teacherUpgradeExpiryWarning": "Seu plano Professor vence em menos de 7 dias. Renove para manter o acesso.",
+
+  "homeTeacherBannerTitle": "Você é professor?",
+  "homeTeacherBannerBody": "Turmas, tarefas e análises em tempo real.",
+  "homeTeacherBannerAction": "Ver plano Professor",
+  "homeTeacherBannerDismissTooltip": "Não mostrar novamente",
+
+  "studentAssignmentsTitle": "Minhas atribuições",
+  "studentAssignmentsAction": "Atribuições da turma",
+  "studentAssignmentsEmpty": "Você ainda não tem atribuições dos seus professores.",
+  "studentAssignmentStartAction": "Começar",
+  "studentAssignmentClosedLabel": "Encerrada",
+  "studentAssignmentUnavailableLabel": "Indisponível",
+  "studentAssignmentNotYetOpenLabel": "Em breve",
+  "studentAssignmentNotYetOpenError": "Esta atribuição ainda não está disponível. Verifique a data de abertura.",
+  "studentAssignmentPastDueLabel": "Prazo encerrado",
+  "studentAssignmentMaxAttemptsLabel": "Sem tentativas",
+  "studentAssignmentAvailableNowLabel": "Disponível agora",
+  "studentAssignmentAttemptsSummary": "{used} de {max} tentativas",
+  "@studentAssignmentAttemptsSummary": {
+    "placeholders": {
+      "used": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
+  "studentAssignmentMyAttemptsAction": "Minhas tentativas",
+  "studentAssignmentMyAttemptsTitle": "Minhas tentativas",
+  "studentAssignmentMyAttemptsEmpty": "Você ainda não completou nenhuma tentativa nesta tarefa.",
+  "studentAssignmentAttemptScoreOnlyHint": "Somente pontuação — as respostas corretas não estão disponíveis conforme a configuração do professor.",
+  "studentAssignmentAttemptsHeaderSummary": "{count, plural, =1{1 tentativa registrada} other{{count} tentativas registradas}}",
+  "@studentAssignmentAttemptsHeaderSummary": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "studentAssignmentAttemptBestScore": "Melhor resultado: {percent}%",
+  "@studentAssignmentAttemptBestScore": {
+    "placeholders": {
+      "percent": { "type": "String" }
+    }
+  },
+  "studentAssignmentAttemptStatusFinished": "Concluída",
+  "studentAssignmentAttemptScoreOnlyBadge": "Somente pontuação",
+  "studentAssignmentAttemptReviewAvailable": "Ver respostas",
+  "studentAssignmentAttemptMeta": "{score} · {duration} · {status}",
+  "@studentAssignmentAttemptMeta": {
+    "placeholders": {
+      "score": { "type": "String" },
+      "duration": { "type": "String" },
+      "status": { "type": "String" }
+    }
+  },
+  "studentAssignmentsFilterAll": "Todas",
+  "studentAssignmentsFilterPending": "Pendentes",
+  "studentAssignmentsSearchHint": "Buscar tarefa ou turma",
+  "studentAssignmentsSummaryTodoOnly": "{count, plural, =1{1 pendente} other{{count} pendentes}}",
+  "@studentAssignmentsSummaryTodoOnly": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "studentAssignmentsSummaryDueTodayOnly": "{count, plural, =1{1 vence hoje} other{{count} vencem hoje}}",
+  "@studentAssignmentsSummaryDueTodayOnly": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "studentAssignmentsSummaryCombined": "{todo} · {dueToday}",
+  "@studentAssignmentsSummaryCombined": {
+    "placeholders": {
+      "todo": { "type": "String" },
+      "dueToday": { "type": "String" }
+    }
+  },
+  "studentAssignmentsSummaryAllDone": "Você não tem tarefas pendentes no momento.",
+  "studentAssignmentsClassGroupSubtitle": "{teacher} · {count, plural, =1{1 tarefa} other{{count} tarefas}}",
+  "@studentAssignmentsClassGroupSubtitle": {
+    "placeholders": {
+      "teacher": { "type": "String" },
+      "count": { "type": "int" }
+    }
+  },
+  "studentAssignmentsEmptyFiltered": "Nenhuma tarefa corresponde a este filtro.",
+  "studentAssignmentRowSubtitleDue": "Vence {date}{attemptsSuffix}",
+  "@studentAssignmentRowSubtitleDue": {
+    "placeholders": {
+      "date": { "type": "String" },
+      "attemptsSuffix": { "type": "String" }
+    }
+  },
+  "studentAssignmentRowSubtitleDueToday": "Vence hoje{attemptsSuffix}",
+  "@studentAssignmentRowSubtitleDueToday": {
+    "placeholders": {
+      "attemptsSuffix": { "type": "String" }
+    }
+  },
+  "studentAssignmentRowSubtitleAvailable": "Disponível{attemptsSuffix}",
+  "@studentAssignmentRowSubtitleAvailable": {
+    "placeholders": {
+      "attemptsSuffix": { "type": "String" }
+    }
+  },
+  "studentAssignmentRowSubtitleNoDue": "Sem data limite{attemptsSuffix}",
+  "@studentAssignmentRowSubtitleNoDue": {
+    "placeholders": {
+      "attemptsSuffix": { "type": "String" }
+    }
+  },
+  "studentAssignmentRowSubtitleNotYetOpen": "Abre {date}",
+  "@studentAssignmentRowSubtitleNotYetOpen": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "studentAssignmentRowSubtitleStatus": "{status}{attemptsSuffix}",
+  "@studentAssignmentRowSubtitleStatus": {
+    "placeholders": {
+      "status": { "type": "String" },
+      "attemptsSuffix": { "type": "String" }
+    }
+  },
+  "studentAssignmentAttemptsSuffix": " · {summary}",
+  "@studentAssignmentAttemptsSuffix": {
+    "placeholders": {
+      "summary": { "type": "String" }
+    }
+  },
+  "studentAssignmentStatusBadgeAvailable": "Disponível",
+  "studentAssignmentDetailTitle": "Detalhes da tarefa",
+
+  "profileTeacherPlanSectionTitle": "Plano Professor",
+  "profileTeacherPlanManageTitle": "Gerenciar plano Professor",
+  "profileTeacherPlanActiveSubtitle": "Plano ativo · toque para gerenciar",
+  "profileTeacherPlanInactiveSubtitle": "Turmas, tarefas e análises · Assinatura mensal",
+
+  "teacherUpgradeKeepPlan": "Não, manter",
+
+  "teacherOnboardingWelcomeTitle": "Bem-vindo, Professor!",
+  "teacherOnboardingStepProgress": "Passo {current} de {total}",
+  "@teacherOnboardingStepProgress": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "teacherOnboardingStep1Title": "Crie sua primeira turma",
+  "teacherOnboardingStep1Body": "As turmas permitem organizar alunos e atribuir quizzes com acompanhamento personalizado.",
+  "teacherOnboardingClassNameLabel": "Nome da turma",
+  "teacherOnboardingClassNameHint": "Ex. Matemática — Grupo A",
+  "teacherOnboardingCreateClassAction": "Criar turma e continuar",
+  "teacherOnboardingStep2Title": "Convide seu primeiro aluno",
+  "teacherOnboardingStep2Body": "Digite o e-mail de um aluno registrado para adicioná-lo à turma. Você também pode fazer isso depois.",
+  "teacherOnboardingStudentEmailLabel": "E-mail do aluno",
+  "teacherOnboardingStudentEmailHint": "aluno@email.com",
+  "teacherOnboardingInviteAction": "Convidar e continuar",
+  "teacherOnboardingSkipAction": "Pular por agora",
+  "teacherOnboardingStep3Title": "Tudo pronto!",
+  "teacherOnboardingStep3Body": "Sua sala de aula está configurada. Agora você pode criar tarefas, acompanhar o progresso dos alunos e analisar resultados no Activity Pulse.",
+  "teacherOnboardingGoToDashboardAction": "Ir ao Painel do Professor"
+}

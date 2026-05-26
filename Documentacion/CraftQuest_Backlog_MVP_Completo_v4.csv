@@ -1,0 +1,29 @@
+Epic,RequirementId,Title,Description,Priority,MVP
+Usuarios,RF-USR-001,Autenticacion multimetodo,"Email/password, Google y Apple con perfiles en core.Users.",Alta,Si
+Usuarios,RF-USR-002,Roles y permisos,"Student, Teacher, InstitutionAdmin, ContentAdmin, SuperAdmin.",Alta,Si
+Billing,RF-BIL-001,Planes y entitlements,"Free, Pro, Teacher, Institucional con reglas server-side.",Alta,Si
+Billing,RF-BIL-002,Ledger de creditos IA,"Registrar grants, consumos, compras y ajustes.",Alta,Si
+Quiz,RF-QUIZ-001,Gestion de cuestionarios,"Crear, editar, publicar, archivar y eliminar logicamente.",Alta,Si
+Quiz,RF-QTYPE-001,Tipos de pregunta,"single_choice, multiple_choice, true_false, image_choice, image_based_question.",Alta,Si
+Respuestas,RF-ANS-001,AnswerOptionId estable,Cada respuesta posible tiene ID real generado por backend.,Critica,Si
+Respuestas,RF-ANS-002,Correctas por relacion,QuestionCorrectAnswerOptions define correctas por AnswerOptionId.,Critica,Si
+Aleatorizacion,RF-RND-001,Aleatorizar respuestas,El backend aleatoriza respuestas por intento segun RandomizeAnswerOptions.,Critica,Si
+Aleatorizacion,RF-RND-002,Etiquetas visuales temporales,"A/B/C/D son DisplayLabel, no respuesta real.",Critica,Si
+Aleatorizacion,RF-RND-003,Snapshot de respuestas,"Guardar DisplayOrder, DisplayLabel, AnswerOptionId, texto, imagen, WasSelected, IsCorrectSnapshot.",Critica,Si
+Practica,RF-PRAC-001,Iniciar sesion,Crear PracticeSession y snapshots al comenzar.,Alta,Si
+Practica,RF-PRAC-002,Responder por IDs,Flutter envia selectedAnswerOptionIds; API rechaza letras como respuesta final.,Critica,Si
+Practica,RF-PRAC-003,Correccion por conjuntos,Seleccion unica/multiple se corrige comparando IDs.,Critica,Si
+Teacher,RF-TCH-001,Revision de intentos,Profesor ve intentos dentro de clases/asignaciones autorizadas.,Alta,Si
+Teacher,RF-TCH-002,Orden original del estudiante,Profesor ve respuestas en el orden exacto mostrado al estudiante.,Critica,Si
+Importacion,RF-IMP-001,Importacion multi-formato,"Excel, TXT, CSV, JSON y ZIP con imagenes.",Alta,Si
+CQIF,RF-CQIF-001,CQIF v2 canonico,Todo input externo se normaliza a CQIF v2.,Critica,Si
+CQIF,RF-CQIF-002,correctAnswerKeys,La importacion usa answerOptions.key y correctAnswerKeys; no letras visuales.,Critica,Si
+IA,RF-AI-001,Generacion desde material,"Crear preguntas desde PDF, Word, TXT e imagenes.",Alta,Si
+IA,RF-AI-002,Normalizacion con IA,Transformar bancos desordenados a CQIF v2.,Alta,Si
+Justificaciones,RF-JUS-001,Justificaciones y fuentes,"Texto, visibilidad, estado de revision, fuentes y aprobacion.",Alta,Si
+Sharing,RF-SHR-001,Codigos flexibles,Un solo uso y codigos de clase con cupos.,Alta,Si
+Analytics,RF-ANA-001,Analitica por distractor,"Medir seleccion por AnswerOptionId, pregunta, clase y quiz.",Media,Si
+Auditoria,RF-AUD-001,AuditEvents,"Auditar cambios de correctas, importaciones, IA, pagos y revision docente.",Alta,Si
+Testing,TST-RND-001,Prueba de aleatorizacion,Misma pregunta muestra distinto orden en intentos distintos.,Critica,Si
+Testing,TST-RND-002,Prueba de correccion por ID,La misma respuesta correcta se califica bien aunque cambie DisplayLabel.,Critica,Si
+Testing,TST-TCH-001,Prueba revision docente,Teacher ve orden y seleccion historica exacta.,Critica,Si

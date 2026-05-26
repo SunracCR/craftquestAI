@@ -1,0 +1,89 @@
+import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/theme/app_spacing.dart';
+import 'package:craftquest_app/core/widgets/app_bottom_bar.dart';
+import 'package:craftquest_app/core/widgets/app_brand_header.dart';
+import 'package:craftquest_app/core/widgets/app_buttons.dart';
+import 'package:craftquest_app/core/widgets/app_snackbar.dart';
+import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
+import 'package:craftquest_app/features/sharing/data/sharing_repository.dart';
+import 'package:craftquest_app/l10n/app_localizations.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+
+class RedeemCodePage extends StatefulWidget {
+  const RedeemCodePage({super.key});
+
+  @override
+  State<RedeemCodePage> createState() => _RedeemCodePageState();
+}
+
+class _RedeemCodePageState extends State<RedeemCodePage> {
+  final _repository = getIt<SharingRepository>();
+  final _codeController = TextEditingController();
+  bool _loading = false;
+
+  @override
+  void dispose() {
+    _codeController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _redeem() async {
+    final l10n = AppLocalizations.of(context)!;
+    final code = _codeController.text.trim();
+    if (code.isEmpty) {
+      context.showErrorSnackBar(l10n.redeemCodeRequired);
+      return;
+    }
+
+    setState(() => _loading = true);
+    try {
+      final result = await _repository.redeemCode(code);
+      if (!mounted) return;
+      if (result.alreadyInSharedList) {
+        context.showInfoSnackBar(l10n.redeemCodeAlreadyInShared(result.quizTitle));
+      } else {
+        context.showSuccessSnackBar(l10n.redeemCodeSuccess(result.quizTitle));
+      }
+      Navigator.of(context).pop(true);
+    } on DioException catch (e) {
+      if (!mounted) return;
+      context.showDioErrorSnackBar(e);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return EdgeAwareScaffold(
+      appBar: craftQuestAppBar(title: l10n.redeemCodeTitle),
+      bottomBar: AppBottomActionBar(
+        children: [
+          AppGradientPrimaryButton(
+            label: l10n.redeemCodeAction,
+            isLoading: _loading,
+            onPressed: _redeem,
+          ),
+        ],
+      ),
+      body: ListView(
+        padding: AppSpacing.pageVertical,
+        children: [
+          AppBrandHeader(
+            title: l10n.redeemCodeTitle,
+            subtitle: l10n.redeemCodeSubtitle,
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          TextField(
+            controller: _codeController,
+            textCapitalization: TextCapitalization.characters,
+            decoration: InputDecoration(labelText: l10n.redeemCodeLabel),
+          ),
+        ],
+      ),
+    );
+  }
+}

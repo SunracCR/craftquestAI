@@ -1,0 +1,1503 @@
+﻿=== AI generation trace started ===
+Utc: 2026-05-22T20:10:16.0685886Z
+Log file: C:\Users\cperaza_ga\Proyectos\CraftQuest\src\CraftQuest.Api\logs/ai-gen-trace\7066fc7fca36474c895096684362085c.log
+[job.input] Generation parameters | {"StudyMaterialId":"38ade0ca-3555-421d-8503-6206ff07a33a","QuestionCount":40,"Language":"es","Difficulty":"mixed","AllowedQuestionTypes":["single_choice","multiple_choice","true_false"],"PageFrom":31,"PageTo":60,"TopicFocus":null,"Preset":null,"sourceChars":77335}
+[provider.start] GenerateAsync | {"sourceChars":77335,"chunkCount":3,"requestedQuestions":40,"allowedTypes":["single_choice","multiple_choice","true_false"],"pages":"31-60","language":"es"}
+--- PROMPT: outline (len=10618) ---
+You are a curriculum planner for CraftQuest. Output JSON only (no markdown).
+Return shape (example): { "items": [ { "index": 1, "topic": "...", "suggestedType": "single_choice", "chunkIndex": 1 } ] }
+Rules:
+- Exactly 40 items in "items".
+- chunkIndex must be between 1 and 3 (match --- Page N --- sections when present).
+- suggestedType must be one of: single_choice, multiple_choice, true_false.
+- Topics must be distinct and cover the material evenly.
+- Language for topic text: "es".
+- Difficulty target: mixed.
+- Pedagogical goal: assessment.
+
+SOURCE EXCERPT:
+--- Page 31 ---
+8 1 Introduction object-orientation improve reuse? Are inspections cost-effective? Should we have inspection meetings or is it sufﬁcient to hand-in the remarks to a moderator? This type of questions can be investigated in order to improve our understanding of software engineering. Improved understanding is the basis for changing and improvingthewaywework,henceempiricalstudiesingeneralandexperimentation in particular are important. The introduction to the area is based on the introduction of a process for experimentation. The basic steps in the process can be used for other types of empiricalstudiestoo.Thefocusis,however,onprovidingguidelinesandsupportfor performing experiments in software engineering. Furthermore, it should be noted that ‘true’ experiments, i.e. experiments with full randomization, are difﬁcult to performin softwareengineering.Softwareengineeringexperimentsareoftenquasi- experiments,i.e.experimentinwhichit,forexample,hasnotbeenpossibletoassign participants in the experiments to groups by random [37]. Quasi-experiments are important,and they can providevaluableresults.Theprocesspresentedin this book is aimed at both ‘true’ experimentsand quasi-experiments.The latter is particularly supported by a thorough discussion of threats to experiments. Thus, the intention of this book is to providean introductionto empirical studies and experimentation, in order to highlight the opportunities and beneﬁts of doing experimentsintheﬁeldofsoftwareengineering.Theempiricalresearchmethodcan, and should be used more in software engineering.The arguments against empirical studies in software engineering are refuted by Tichy et al. [169]. Hopefully, this practical guide to experimentation in software engineering facilitates the use of empirical studies and experimentation both within software engineering research and practice. 1.3 Exercises 1.1. Why can experimentsbe viewed as prototypingfor process changes? 1.2. How can experiments be used in improvementactivities? 1.3. Why are empirical studies importantin software engineering? 1.4. When is the empirical research method best suited in software engineering in comparison with the scientiﬁc, engineering and analytic methods respectively? 1.5. Which three strategies are empirical methods divided into?
+
+--- Page 32 ---
+Chapter 2 Empirical Strategies There are two types of research paradigms that have different approaches to empirical studies. Exploratory research is concerned with studying objects in their natural setting and letting the ﬁndings emerge from the observations. This implies that a ﬂexible research design [1] is needed to adapt to changes in the observed phenomenon.Flexible design research is also referred to as qualitative research, as it primarily is informed by qualitative data. Inductive research attempts to interpret aphenomenonbasedonexplanationsthatpeoplebringforward.Itisconcernedwith discoveringcausesnoticedbythesubjectsinthestudy,andunderstandingtheirview oftheproblemathand.Thesubjectistheperson,whichistakingpartinanempirical study in order to evaluate an object. Explanatory research is mainly concerned with quantifying a relationship or to compare two or more groups with the aim to identify a cause-effect relationship. The research is often conducted through setting up controlled experiment. This type of study is a ﬁxed design [1] study, implying that factors are ﬁxed before the study is launched.Fixed design research is also referred to as quantitativeresearch, as it primarily is informed by quantitative data. Quantitative investigations are appropriate when testing the effect of some manipulation or activity. An advantage is that quantitativedata promotescomparisonsand statistical analyses.It is possible for qualitative and quantitative research to investigate the same topics but each of them will address a different type of question. For example, a quantitative investigation could be launched to investigate how much a new inspection method decreases the number of faults found in test. To answer questions about the sources of variations between different inspection groups, a qualitative investigation could be launched. As mentionedearlier,ﬁxed design strategies,such as controlledexperiments,are appropriate when testing the effects of a treatment while a ﬂexible design study of beliefs, understandings, and multiple perspectives are appropriate to ﬁnd out why the results from a quantitative investigation are as they are. The two approaches should be regarded as complementaryrather than competitive. C. Wohlin et al., Experimentation in Software Engineering, DOI 10.1007/978-3-642-29044-2 2, © Springer-Verlag Berlin Heidelberg 2012 9
+
+--- Page 33 ---
+10 2 Empirical Strategies The objectives of this chapter are: (1) to introduce empirical research strategies, (2) to highlight some important aspects in relation to the empirical strategies, and (3) to illustrate how the strategies can be used in the context of technology transfer a
+
+[... middle of source omitted for outline ...]
+
+e sure that conﬁdentiality proceduresapply,independently of facts revealed (crime exempted [159]), • Sponsors, include clear statements on rights for independent publications of the anonymizedresults in the informed consent form for companies, and in research project contracts, • Researchers,considerhavingpeerstoperformstatisticalanalysesonanonymized data (both subjects and scales) independentlyfrom the experimenters,especially when the treatment is designed by the experimenters themselves. This also reduces the threat of experimenterexpectancies. These actions reduce the risk of being stuck in ethical dilemmas, and increases the validity of all empirical studies. Inducement. In recruiting subjects for an experiment, there must be inducements to motivate their participation. The experience and knowledge gained by applying
+
+--- Page 59 ---
+36 2 Empirical Strategies a new method may be inducement enough. In order to treat all participants fair, all subjects should be given the opportunity to learn about all treatments, even if the experimentaldesign does not require it. Some monetary inducement may also be involved, for example, in the form of cash payment, participation in a lottery, or, for professional subjects, their ordinary salary. Independently of form, the inducement must be balanced to ensure that the consent to participate really is voluntary, and not forced by too large economic or other inducements. Feedback. To maintain long term relationships and trust with the subjects of a study,feedbackof resultsandanalysisareimportant.Subjectsmustnotagreeonthe analysis, but should be giventhe opportunityto get informationabout the study and its results. If feasible, from a conﬁdentiality point of view, data from individual’s performancemay be reported back together with the overall analysis. Conclusion on ethics. Singer and Vinson ask in their early work for a code of ethics for empirical software engineering[159]. Still, 10 years later, the community has not yet developed one; the closest is Vinson and Singer’s guidelines [174], which are summarized above. Research funding agencies start to require general codes of ethics be applied, which may not ﬁt the purpose. Concrete and tailored ethical guidelines for empirical software engineering research would beneﬁt both the subjects, which they aim to protect, and the development of the research ﬁeld as such. 2.12 Exercises 2.1. What is the differencebetween qualitative and quantitative research? 2.2. What is a survey? Give examples of different types of surveys in software engineering. 2.3. Which role plays replications and systematic literature reviews in building empirical knowledge? 2.4. How can theExperienceFactorybe combinedwith the Goal/Question/Metrics method and empirical studies on a technology transfer context? 2.5. Which are the key ethical principles to observethen conducting experiments?
+
+--- Page 60 ---
+Chapter 3 Measurement Software measurement is crucial to enable control of projects, products and processes, or as stated by DeMarco: “You cannot control what you cannot mea- sure” [41]. Moreover,measurementis a central part in empirical studies. Empirical studiesare used to investigatetheeffectsof some inputto the objectunderstudy.To control the study and to see the effects, we must be able to both measure the inputs in order to describe what causes the effect on the output,and to measure the output. Without measurements, it is not possible to have the desired control and therefore an empirical study cannot be conducted. Measurement and measure are deﬁned as [56]: “Measurement is the process by which numbers or symbols are assigned to attributes of entities in the real world in such a way as to describe them according to clearly deﬁned rules.” A measure is the number or symbol assigned to an entity by this relationship to characterize an attribute. Instead of making judgement directly on the real entity, we study the measures and make the judgement on them. The word metric or metrics is also often used in software engineering. Two different meanings can be identiﬁed. First of all, softwaremetrics is used as a term for denotingthe ﬁeld of measurementin software engineering.The book by Fenton and Pﬂeeger [56] is an example of this. Secondly, the word metric is used to denote an entity which is measured, for example, lines of code (LOC) is a product metric. More precisely, it is a measure of the size of the program.Software measurement is also further discussed by Shepperd [150]. In this chapter, basic measurementtheory is presented. Section 3.1 describes the basic concept of measurement theory, and the different scale types of measures. Examples of measures in software engineering and the relation to the statistical analysis are presented in Sect.3.2, while practical aspects of measurements are discussed in Sect.3.3. C. Wohlin et al., Experimentation in Software Engineering, DOI 10.1007/978-3-642-29044-2 3, © Springer-Verlag Berlin Heidelberg 2012 37
+--- GEMINI RESPONSE: outline model=gemini-2.5-flash-lite len=8525 parsedQuestions=40 ---
+Parse: outline parsed
+{
+  "items": [
+    {
+      "index": 1,
+      "topic": "Explica por qué los experimentos pueden considerarse prototipos para cambios en procesos.",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 2,
+      "topic": "¿De qué manera se pueden utilizar los experimentos en actividades de mejora?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 3,
+      "topic": "¿Por qué son importantes los estudios empíricos en la ingeniería de software?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 4,
+      "topic": "¿Cuándo es el método de investigación empírica más adecuado en ingeniería de software en comparación con los métodos científico, de ingeniería y analítico, respectivamente?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 5,
+      "topic": "¿En cuántas estrategias se dividen los métodos empíricos?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 6,
+      "topic": "¿Cuál es la diferencia principal entre investigación exploratoria y explicativa?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 7,
+      "topic": "La investigación exploratoria se enfoca en estudiar objetos en su entorno natural y permitir que los hallazgos emerjan de las observaciones. ¿Verdadero o Falso?",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 8,
+      "topic": "La investigación explicativa se enfoca principalmente en cuantificar una relación o comparar dos o más grupos para identificar una relación causa-efecto. ¿Verdadero o Falso?",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 9,
+      "topic": "¿Qué tipo de diseño de investigación se necesita para la investigación exploratoria?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 10,
+      "topic": "¿Qué tipo de diseño de investigación se utiliza comúnmente en la investigación explicativa?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 11,
+      "topic": "La investigación cualitativa se basa principalmente en datos cualitativos. ¿Verdadero o Falso?",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 12,
+      "topic": "La investigación cuantitativa es apropiada para probar el efecto de alguna manipulación o actividad. ¿Verdadero o Falso?",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 13,
+      "topic": "¿Qué tipo de investigación se enfoca en descubrir causas notadas por los sujetos en el estudio y comprender su punto de vista?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 14,
+      "topic": "¿Qué tipo de investigación se enfoca en cuantificar una relación o comparar grupos?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 15,
+      "topic": "¿Cuál es una ventaja de los datos cuantitativos en la investigación?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 16,
+      "topic": "La investigación cualitativa y cuantitativa pueden investigar los mismos temas, pero abordan diferentes tipos de preguntas. ¿Verdadero o Falso?",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 17,
+      "topic": "¿Qué se considera apropiado para probar los efectos de un tratamiento en investigación?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 18,
+      "topic": "¿Qué tipo de estudio es apropiado para descubrir por qué los resultados de una investigación cuantitativa son como son?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 19,
+      "topic": "Los enfoques de investigación cualitativa y cuantitativa deben considerarse competitivos en lugar de complementarios. ¿Verdadero o Falso?",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 20,
+      "topic": "¿Cuáles son los objetivos principales del capítulo sobre estrategias empíricas?",
+      "suggestedType": "multiple_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 21,
+      "topic": "¿Qué se debe asegurar con respecto a los procedimientos de confidencialidad en la investigación empírica?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 3
+    },
+    {
+      "index": 22,
+      "topic": "¿Qué deben incluir las declaraciones claras para los patrocinadores en el formulario de consentimiento informado para empresas?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 3
+    },
+    {
+      "index": 23,
+      "topic": "¿Qué deben considerar los investigadores al realizar análisis estadísticos de datos anonimizados?",
+      "suggestedType": "multiple_choice",
+      "chunkIndex": 3
+    },
+    {
+      "index": 24,
+      "topic": "¿Qué acción reduce la amenaza de las expectativas del experimentador?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 3
+    },
+    {
+      "index": 25,
+      "topic": "¿Qué se debe proporcionar a los participantes para motivar su participación en un experimento?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 3
+    },
+    {
+      "index": 26,
+      "topic": "La experiencia y el conocimiento adquirido al aplicar un nuevo método pueden ser suficientes como incentivo. ¿Verdadero o Falso?",
+      "suggestedType": "true_false",
+      "chunkIndex": 3
+    },
+    {
+      "index": 27,
+      "topic": "¿Qué se debe dar a todos los sujetos para tratarlos de manera justa, independientemente del diseño experimental?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 3
+    },
+    {
+      "index": 28,
+      "topic": "¿Qué formas puede tomar un incentivo monetario?",
+      "suggestedType": "multiple_choice",
+      "chunkIndex": 3
+    },
+    {
+      "index": 29,
+      "topic": "¿Qué debe equilibrarse en cuanto a los incentivos para asegurar que el consentimiento sea voluntario?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 3
+    },
+    {
+      "index": 30,
+      "topic": "¿Por qué es importante la retroalimentación de resultados y análisis para mantener relaciones a largo plazo con los sujetos de un estudio?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 3
+    },
+    {
+      "index": 31,
+      "topic": "¿Los sujetos deben estar de acuerdo con el análisis de los resultados del estudio? ¿Verdadero o Falso?",
+      "suggestedType": "true_false",
+      "chunkIndex": 3
+    },
+    {
+      "index": 32,
+      "topic": "¿Qué se puede informar de vuelta a los sujetos, si es factible desde el punto de vista de la confidencialidad?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 3
+    },
+    {
+      "index": 33,
+      "topic": "¿Qué se solicitó en trabajos tempranos sobre un código de ética para la ingeniería de software empírica?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 3
+    },
+    {
+      "index": 34,
+      "topic": "¿Qué tipo de directrices éticas serían beneficiosas para los sujetos y el campo de la investigación empírica en ingeniería de software?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 3
+    },
+    {
+      "index": 35,
+      "topic": "La medición de software es crucial para permitir el control de proyectos, productos y procesos. ¿Verdadero o Falso?",
+      "suggestedType": "true_false",
+      "chunkIndex": 4
+    },
+    {
+      "index": 36,
+      "topic": "¿Por qué es la medición un componente central en los estudios empíricos?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 4
+    },
+    {
+      "index": 37,
+      "topic": "Según DeMarco, ¿qué no se puede controlar?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 4
+    },
+    {
+      "index": 38,
+      "topic": "Para controlar un estudio empírico y ver sus efectos, ¿qué se debe poder medir?",
+      "suggestedType": "multiple_choice",
+      "chunkIndex": 4
+    },
+    {
+      "index": 39,
+      "topic": "Define 'medición' según la fuente proporcionada.",
+      "suggestedType": "single_choice",
+      "chunkIndex": 4
+    },
+    {
+      "index": 40,
+      "topic": "¿Qué término se usa a menudo en ingeniería de software además de 'medida'?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 4
+    }
+  ]
+}
+[outline.ok] Outline plan ready | {"itemCount":40}
+[chunks.parallel] Starting parallel chunk generation | {"chunks":3,"questionsPerChunk":[13,13,14],"outlineItems":40}
+--- PROMPT: chunk-1 (len=28294) ---
+You are CraftQuest quiz generator. Output valid CQIF JSON 2.0 only (no markdown).
+Root object MUST include: cqifVersion, quiz, questions (array).
+cqifVersion must be "2.0".
+This is SOURCE chunk 1 of 3.
+Generate exactly 13 questions using ONLY facts from this chunk.
+Do not duplicate questions that would belong to other parts of the material.
+QUESTION PLAN (follow this order and focus; one question per line):
+- Q1: Explica por qué los experimentos pueden considerarse prototipos para cambios en procesos. (prefer type: single_choice)
+- Q2: ¿De qué manera se pueden utilizar los experimentos en actividades de mejora? (prefer type: single_choice)
+- Q3: ¿Por qué son importantes los estudios empíricos en la ingeniería de software? (prefer type: single_choice)
+- Q4: ¿Cuándo es el método de investigación empírica más adecuado en ingeniería de software en comparación con los métodos científico, de ingeniería y analítico, respectivamente? (prefer type: single_choice)
+- Q5: ¿En cuántas estrategias se dividen los métodos empíricos? (prefer type: single_choice)
+Language for question text: "es".
+Difficulty mode: mixed.
+Pedagogical goal: assessment.
+Allowed question types ONLY: single_choice, multiple_choice, true_false.
+NEVER use image_choice or image_based_question.
+Do not reference images, diagrams, or figures not described in text.
+Topic focus: cover this source section evenly.
+Use ONLY facts explicitly present in SOURCE. Do not invent.
+Each question needs: text, type, answerOptions (min 2) with unique key fields,
+correctAnswerKeys as JSON array referencing those keys (never a single string).
+For true_false use keys "true" and "false".
+Assign unique externalId per question (e.g. "q-1", "q-2").
+Omit justifications.
+
+SOURCE:
+--- Page 31 ---
+8 1 Introduction object-orientation improve reuse? Are inspections cost-effective? Should we have inspection meetings or is it sufﬁcient to hand-in the remarks to a moderator? This type of questions can be investigated in order to improve our understanding of software engineering. Improved understanding is the basis for changing and improvingthewaywework,henceempiricalstudiesingeneralandexperimentation in particular are important. The introduction to the area is based on the introduction of a process for experimentation. The basic steps in the process can be used for other types of empiricalstudiestoo.Thefocusis,however,onprovidingguidelinesandsupportfor performing experiments in software engineering. Furthermore, it should be noted that ‘true’ experiments, i.e. experiments with full randomization, are difﬁcult to performin softwareengineering.Softwareengineeringexperimentsareoftenquasi- experiments,i.e.experimentinwhichit,forexample,hasnotbeenpossibletoassign participants in the experiments to groups by random [37]. Quasi-experiments are important,and they can providevaluableresults.Theprocesspresentedin this book is aimed at both ‘true’ experimentsand quasi-experiments.The latter is particularly supported by a thorough discussion of threats to experiments. Thus, the intention of this book is to providean introductionto empirical studies and experimentation, in order to highlight the opportunities and beneﬁts of doing experimentsintheﬁeldofsoftwareengineering.Theempiricalresearchmethodcan, and should be used more in software engineering.The arguments against empirical studies in software engineering are refuted by Tichy et al. [169]. Hopefully, this practical guide to experimentation in software engineering facilitates the use of empirical studies and experimentation both within software engineering research and practice. 1.3 Exercises 1.1. Why can experimentsbe viewed as prototypingfor process changes? 1.2. How can experiments be used in improvementactivities? 1.3. Why are empirical studies importantin software engineering? 1.4. When is the empirical research method best suited in software engineering in comparison with the scientiﬁc, engineering and analytic methods respectively? 1.5. Which three strategies are empirical methods divided into?
+
+--- Page 32 ---
+Chapter 2 Empirical Strategies There are two types of research paradigms that have different approaches to empirical studies. Exploratory research is concerned with studying objects in their natural setting and letting the ﬁndings emerge from the observations. This implies that a ﬂexible research design [1] is needed to adapt to changes in the observed phenomenon.Flexible design research is also referred to as qualitative research, as it primarily is informed by qualitative data. Inductive research attempts to interpret aphenomenonbasedonexplanationsthatpeoplebringforward.Itisconcernedwith discoveringcausesnoticedbythesubjectsinthestudy,andunderstandingtheirview oftheproblemathand.Thesubjectistheperson,whichistakingpartinanempirical study in order to evaluate an object. Explanatory research is mainly concerned with quantifying a relationship or to compare two or more groups with the aim to identify a cause-effect relationship. The research is often conducted through setting up controlled experiment. This type of study is a ﬁxed design [1] study, implying that factors are ﬁxed before the study is launched.Fixed design research is also referred to as quantitativeresearch, as it primarily is informed by quantitative data. Quantitative investigations are appropriate when testing the effect of some manipulation or activity. An advantage is that quantitativedata promotescomparisonsand statistical analyses.It is possible for qualitative and quantitative research to investigate the same topics but each of them will address a different type of question. For example, a quantitative investigation could be launched to investigate how much a new inspection method decreases the number of faults found in test. To answer questions about the sources of variations between different inspection groups, a qualitative investigation could be launched. As mentionedearlier,ﬁxed design strategies,such as controlledexperiments,are appropriate when testing the effects of a treatment while a ﬂexible design study of beliefs, understandings, and multiple perspectives are appropriate to ﬁnd out why the results from a quantitative investigation are as they are. The two approaches should be regarded as complementaryrather than competitive. C. Wohlin et al., Experimentation in Software Engineering, DOI 10.1007/978-3-642-29044-2 2, © Springer-Verlag Berlin Heidelberg 2012 9
+
+--- Page 33 ---
+10 2 Empirical Strategies The objectives of this chapter are: (1) to introduce empirical research strategies, (2) to highlight some important aspects in relation to the empirical strategies, and (3) to illustrate how the strategies can be used in the context of technology transfer and improvement. To fulﬁl the ﬁrst objective, an overview of empirical strategies is provided, see Sect.2.1, and then surveys, case studies and experiments are discussed in some more detail. The different empirical strategies are presented brieﬂy in Sects.2.2–2.4, and a comparison of them is provided in Sect.2.5. The secondobjectiveis addressedbyaddressingreplicationsof experimentsin Sect.2.6, theories in relation to empirical studies are brieﬂy discussed in Sect.2.7, and aggregation of empirical studies are elaborated in Sect.2.8. Finally, the use of the research strategies within a technology transfer process and as being part of an improvementprogram is discussed in Sect.2.9. 2.1 Overview of Empirical Strategies Depending on the purpose of the evaluation, whether it is techniques, methods or tools,anddependingontheconditionsfortheempiricalinvestigation,therearethree major different types of investigations (strategies) that may be carried out, survey, case study and experiment [144]. Deﬁnition 2.1. A survey is a system for collecting information from or about peopleto describe,compareorexplaintheirknowledge,attitudesandbehavior[58]. A survey is often an investigation performed in retrospect, when, for example, a toolor technique,hasbeenin usefora while[133].Theprimarymeansofgathering qualitative or quantitative data are interviews or questionnaires. These are done through taking a sample which is representative from the population to be studied. The results from the survey are then analyzed to derive descriptive and explanatory conclusions.Theyarethengeneralizedtothepopulationfromwhichthesamplewas taken. Surveys are discussed further by Fink [58] and Robson [144]. Deﬁnition 2.2. Case study in software engineering is: an empirical enquiry that drawsonmultiplesourcesofevidencetoinvestigateoneinstance(orasmallnumber of instances) of a contemporary software engineering phenomenon within its real- lifecontext,especiallywhentheboundarybetweenphenomenonandcontextcannot be clearly speciﬁed [146]. Case studies are used to research projects, activities or assignments. Data is collected for a speciﬁc purpose throughout the study. Based on the data collection, statistical analyses can be carried out. The case study is normally aimed at tracking a speciﬁc attribute or establishing relationships between different attributes. The level of control is lower in a case study than in an experiment. A case study is an observational study while the experiment is a controlled study [181]. A case study may, for example, be aimed at building a model to predict the number of faults in testing [2]. Multivariate statistical analysis is often applied in this type of
+
+--- Page 34 ---
+2.1 Overview of Empirical Strategies 11 studies. The analysis methods include linear regression and principal component analysis [118]. Case study research is further discussed in general by, for example, Robson [144], Stake [165], and Yin [180],and speciﬁcally for software engineering by Pﬂeeger [133], Kitchenham et al. [97], Verner et al. [173], Runeson and H¨ost [145], and Runeson et al. [146]. For the empirical investigation strategy in main focus of this book, experiment, we deﬁne: Deﬁnition 2.3. Experiment (or controlled experiment) in software engineering is an empirical enquiry that manipulates one factor or variable of the studied setting. Based in randomization,different treatments are applied to or by differentsubjects, while keeping other variables constant, and measuring the effects on outcome variables. In human-oriented experiments, humans apply different treatments to objects,whileintechnology-orientedexperiments,differenttechnicaltreatmentsare applied to different objects. Experimentsaremostlydonein a laboratoryenvironment,whichprovidesahigh level of control. When experimenting, subjects are assigned to different treatments at random. The objective is to manipulate one or more variables and control all othervariablesatﬁxedlevels.Theeffectofthemanipulationismeasured,andbased on this a statistical analysis can be performed. In cases where it is impossible to randomly assign treatments to subjects, we may use quasi-experiments. Deﬁnition 2.4. Quasi-experiment is an empirical enquiry similar to an experi- ment, where the assignment of treatments to subjects cannot be based on random- ization, but emergesfrom the characteristics of the subjects or objects themselves. In experimental studies, methods for statistical inference are applied with the purpose of showing with statistical signiﬁcance that one method is better than the other [125,144,157]. The statistical methods are further discussed in Chap.10. Surveys are very common within social sciences where, for example, attitudes are polled to determine how a population will vote in the next election. A survey provides no control of the execution or the measurement, though it is possible to compare it with similar ones, but it is not possible to manipulate variables as in the other investigation methods [6]. Case study research is a technique where key factors that may have any effect on the outcome are identiﬁed and then the activity is documented [165,180]. Case study research is an observational method, i.e. it is done by observation of an on-
+... [truncated 16294 chars] ...
+--- PROMPT: chunk-2 (len=28866) ---
+You are CraftQuest quiz generator. Output valid CQIF JSON 2.0 only (no markdown).
+Root object MUST include: cqifVersion, quiz, questions (array).
+cqifVersion must be "2.0".
+This is SOURCE chunk 2 of 3.
+Generate exactly 13 questions using ONLY facts from this chunk.
+Do not duplicate questions that would belong to other parts of the material.
+QUESTION PLAN (follow this order and focus; one question per line):
+- Q6: ¿Cuál es la diferencia principal entre investigación exploratoria y explicativa? (prefer type: single_choice)
+- Q7: La investigación exploratoria se enfoca en estudiar objetos en su entorno natural y permitir que los hallazgos emerjan de las observaciones. ¿Verdadero o Falso? (prefer type: true_false)
+- Q8: La investigación explicativa se enfoca principalmente en cuantificar una relación o comparar dos o más grupos para identificar una relación causa-efecto. ¿Verdadero o Falso? (prefer type: true_false)
+- Q9: ¿Qué tipo de diseño de investigación se necesita para la investigación exploratoria? (prefer type: single_choice)
+- Q10: ¿Qué tipo de diseño de investigación se utiliza comúnmente en la investigación explicativa? (prefer type: single_choice)
+- Q11: La investigación cualitativa se basa principalmente en datos cualitativos. ¿Verdadero o Falso? (prefer type: true_false)
+- Q12: La investigación cuantitativa es apropiada para probar el efecto de alguna manipulación o actividad. ¿Verdadero o Falso? (prefer type: true_false)
+- Q13: ¿Qué tipo de investigación se enfoca en descubrir causas notadas por los sujetos en el estudio y comprender su punto de vista? (prefer type: single_choice)
+- Q14: ¿Qué tipo de investigación se enfoca en cuantificar una relación o comparar grupos? (prefer type: single_choice)
+- Q15: ¿Cuál es una ventaja de los datos cuantitativos en la investigación? (prefer type: single_choice)
+- Q16: La investigación cualitativa y cuantitativa pueden investigar los mismos temas, pero abordan diferentes tipos de preguntas. ¿Verdadero o Falso? (prefer type: true_false)
+- Q17: ¿Qué se considera apropiado para probar los efectos de un tratamiento en investigación? (prefer type: single_choice)
+- Q18: ¿Qué tipo de estudio es apropiado para descubrir por qué los resultados de una investigación cuantitativa son como son? (prefer type: single_choice)
+- Q19: Los enfoques de investigación cualitativa y cuantitativa deben considerarse competitivos en lugar de complementarios. ¿Verdadero o Falso? (prefer type: true_false)
+- Q20: ¿Cuáles son los objetivos principales del capítulo sobre estrategias empíricas? (prefer type: multiple_choice)
+Language for question text: "es".
+Difficulty mode: mixed.
+Pedagogical goal: assessment.
+Allowed question types ONLY: single_choice, multiple_choice, true_false.
+NEVER use image_choice or image_based_question.
+Do not reference images, diagrams, or figures not described in text.
+Topic focus: cover this source section evenly.
+Use ONLY facts explicitly present in SOURCE. Do not invent.
+Each question needs: text, type, answerOptions (min 2) with unique key fields,
+correctAnswerKeys as JSON array referencing those keys (never a single string).
+For true_false use keys "true" and "false".
+Assign unique externalId per question (e.g. "q-1", "q-2").
+Omit justifications.
+
+SOURCE:
+--- Page 41 ---
+18 2 Empirical Strategies 2.4.2 Experiment Process Carrying out an experiment involves several differentsteps. The different steps are: 1. Scoping 2. Planning 3. Operation 4. Analysis and interpretation 5. Presentation and package Theexperimentprocessispresentedin Chap.6,andthedifferentstepsarediscussed in more detail in Chaps.7–11. 2.5 Empirical Strategies Comparison The prerequisites for an investigation limit the choice of research strategy. A com- parison of strategies can be based on a number of different factors. Table 2.2 is an extensionofthedifferentfactorsdiscussedbyPﬂeeger[133].Thefactorsarefurther described below. Execution control describes how much control the researcher has over the study. For example, in a case study, data is collected during the execution of a project. If management decides to stop the studied project due to, for example, economical reasons, the researcher cannot continue carrying out the case study. The opposite is the experimentwhere the researcher is in control of the execution. Measurementcontrolisthedegreetowhichtheresearchercandecideuponwhich measures to be collected, and to include or exclude during execution of the study. Anexampleishowtocollectdataaboutrequirementvolatility.Duringtheexecution of a survey we cannot include this kind of measures, but in a case study or in an experiment it is possible to include them. In a survey, we can only collect data regardingpeople’s opinion about requirementvolatility. Closely related, to the factors above, is the investigation cost. Depending on which strategy is chosen, the cost differs. This is related to, for example, the size of the investigation and the need for resources. The strategy with the lowest cost is the survey, since it does not require a large amount of resources. The difference between case studies and experiments is that if we choose to investigate a project in a case study, the outcome from the project is some form of product that may be retailed, i.e. it is an on-line investigation. In an off-line experiment the outcome is some form of experience or knowledge which is not directly proﬁtable in the same way as a product. Another important aspect to consider is the possibility to replicate the in- vestigation. The purpose of a replication is to show that the result from the original experiment is valid for a larger population. A replication becomes a ‘true’ replication if it is possible to replicate both the design and the results. It is not
+
+--- Page 42 ---
+2.6 Replications 19 Table 2.2 Research strategy factors Factor Survey Case study Experiment Execution control No No Yes Measurement control No Yes Yes Investigation cost Low Medium High Ease of replication High Low High uncommon that the objective is to perform a replication, but the results, to some extent, turn out differently than the results of the original study. Anotheraspectrelatedtoreplication,inthesensethatitisconcernedwithstudies over time, is longitudinalstudies [141]. The main differencebetween a longitudinal study and a replication is that a longitudinal study is primarily conducted with the same subjects and a replication is mostly a study conducted with new subjects. In other words, replication means several studies and a longitudinal study is a single study. The longitudinal study is conducted over a period of time, for example, a survey can be done at several occasions, experiments can be repeated and the case studymayalsobelongitudinalifitisconductedoveraperiodoftime.Alongitudinal study is normally conducted to understand, describe or evaluate something that changes over time [144]. The choice of empirical strategy depends on the prerequisites for the investiga- tion, the purpose of it, available resources and how we would like to analyze the collected data. Easterbrook et al. [50] provide more advice on selection of research strategies. Further, the borderline between different types of study is not always clear cut. For example,a comparativecase study may also be referred to as a quasi- experiment in an industrial context, and a post-hoc observational study of software engineering course outcomes, may also be referred to as a student experiment. 2.6 Replications The replication of an experiment involves repeating the investigation under similar conditions, while for example, varying the subject population. This helps ﬁnding out how much conﬁdence it is possible to place in the results of the experiment. If the assumption of randomization is correct, i.e. the subjects are representative of a larger population, replications within this population show the same results as the previous performed experiment. If we do not get the same results, we have been unable to capture all aspects in the experiment design that affect the result. Even if it is possible to measure a certain variable or to replicate an experiment,it might be difﬁcult and too costly.
+
+--- Page 43 ---
+20 2 Empirical Strategies Replications may be of different types [89,155]: • Closereplicationsfollowtheoriginalproceduresascloselyaspossible.Thistype is sometimes referred to as exact replications [155]. • Differentiated replications study the same research questions, using different experimental procedures. They may also deliberately vary one or more major conditions in the experiment. Basili et al. [20], proposed a more ﬁne grained classiﬁcation: • Strict replications (synonym to close and exact) • Replications that vary variables intrinsic to the study • Replications that vary variables intrinsic to the focus of the study • Replications that vary the context variables in the environment in which the solution is evaluated • Replications that vary the manner in which the experimentis run • Replications that extend the theory In other ﬁelds of research, many different classiﬁcations schemes are used [64], and no standardized terminology exist across ﬁelds of research. Neither is the terminologyin software engineeringﬁeld established. The above presented distinc- tion between close and differentiated replications is a starting point for specifying replications in software engineering. The advantage of close replications is that the known factors are kept under control,buildingconﬁdencein the outcome.However,close replicationssometimes require the same researchers to conduct the study, as they have tacit knowledge about the experiment procedures which hardly can be documented [153,154]. On the other hand, there is a substantial risk for experimenter bias in close replication studies [95]. Further, it is questioned that any replication in software engineering may be classiﬁed as close, sinceso manyfactors may vary in the complexsetting of a software engineering experiment[89]. Differentiated replications on the other hand may be used for more exploratory studies. If the differencesin factors and settings are well documentedand analyzed, more knowledge may be gained from replicated studies. Factors to consider and report for differentiated replication studies include [89]: • Site where the experimentis conducted • Experimenters conducting the experiment • Design chosen for the experiment • Instrumentation i.e. forms and other material • Variables measured • Subjects conducting the experiment ThesefactorsarediscussedindetailChap.8.Argumentsareraisedforreplicating original hypotheses, rather than speciﬁc experimental designs [123], i.e. in favor of differentiated replications rather than close replications.
+
+--- Page 44 ---
+2.7 Theory in Software Engineering 21 2.7 Theory in Software Engineering “A theory provides explanations and understanding in terms of basic concepts and underlying mechanisms, which constitute an important counterpart to knowledge of passing trends and their manifestation” [72]. Experiments may be conducted to generate, conﬁrm and extend theories, as mentioned above. However, the use of theory is scarce in software engineering, as concluded by Hannay et al. in their systematic literature review of software engineering experiments, 1993–2002 [72]. They found40 theoriesin 23 articles, outof the 113 articles in the review.Only two of the theories were used in more than one article! Endres and Rombach [53] identiﬁes a list of 50 ﬁndings which they refer to as ‘laws’, which is a notion for a description of a repeatable phenomenon in a natural sciences context. Endres and Rombach apply this notion to software engineering. Many of the listed ‘laws’ are more general than software engineering,for example, “it takes 5,000 h to turn a novice into an expert”. In their notion, theories explain the ‘laws’, hypotheses propose a tentative explanation for why the phenomenon behaves as observed, while a conjectu
+... [truncated 16866 chars] ...
+--- PROMPT: chunk-3 (len=28938) ---
+You are CraftQuest quiz generator. Output valid CQIF JSON 2.0 only (no markdown).
+Root object MUST include: cqifVersion, quiz, questions (array).
+cqifVersion must be "2.0".
+This is SOURCE chunk 3 of 3.
+Generate exactly 14 questions using ONLY facts from this chunk.
+Do not duplicate questions that would belong to other parts of the material.
+QUESTION PLAN (follow this order and focus; one question per line):
+- Q21: ¿Qué se debe asegurar con respecto a los procedimientos de confidencialidad en la investigación empírica? (prefer type: single_choice)
+- Q22: ¿Qué deben incluir las declaraciones claras para los patrocinadores en el formulario de consentimiento informado para empresas? (prefer type: single_choice)
+- Q23: ¿Qué deben considerar los investigadores al realizar análisis estadísticos de datos anonimizados? (prefer type: multiple_choice)
+- Q24: ¿Qué acción reduce la amenaza de las expectativas del experimentador? (prefer type: single_choice)
+- Q25: ¿Qué se debe proporcionar a los participantes para motivar su participación en un experimento? (prefer type: single_choice)
+- Q26: La experiencia y el conocimiento adquirido al aplicar un nuevo método pueden ser suficientes como incentivo. ¿Verdadero o Falso? (prefer type: true_false)
+- Q27: ¿Qué se debe dar a todos los sujetos para tratarlos de manera justa, independientemente del diseño experimental? (prefer type: single_choice)
+- Q28: ¿Qué formas puede tomar un incentivo monetario? (prefer type: multiple_choice)
+- Q29: ¿Qué debe equilibrarse en cuanto a los incentivos para asegurar que el consentimiento sea voluntario? (prefer type: single_choice)
+- Q30: ¿Por qué es importante la retroalimentación de resultados y análisis para mantener relaciones a largo plazo con los sujetos de un estudio? (prefer type: single_choice)
+- Q31: ¿Los sujetos deben estar de acuerdo con el análisis de los resultados del estudio? ¿Verdadero o Falso? (prefer type: true_false)
+- Q32: ¿Qué se puede informar de vuelta a los sujetos, si es factible desde el punto de vista de la confidencialidad? (prefer type: single_choice)
+- Q33: ¿Qué se solicitó en trabajos tempranos sobre un código de ética para la ingeniería de software empírica? (prefer type: single_choice)
+- Q34: ¿Qué tipo de directrices éticas serían beneficiosas para los sujetos y el campo de la investigación empírica en ingeniería de software? (prefer type: single_choice)
+- Q35: La medición de software es crucial para permitir el control de proyectos, productos y procesos. ¿Verdadero o Falso? (prefer type: true_false)
+- Q36: ¿Por qué es la medición un componente central en los estudios empíricos? (prefer type: single_choice)
+- Q37: Según DeMarco, ¿qué no se puede controlar? (prefer type: single_choice)
+- Q38: Para controlar un estudio empírico y ver sus efectos, ¿qué se debe poder medir? (prefer type: multiple_choice)
+- Q39: Define 'medición' según la fuente proporcionada. (prefer type: single_choice)
+- Q40: ¿Qué término se usa a menudo en ingeniería de software además de 'medida'? (prefer type: single_choice)
+Language for question text: "es".
+Difficulty mode: mixed.
+Pedagogical goal: assessment.
+Allowed question types ONLY: single_choice, multiple_choice, true_false.
+NEVER use image_choice or image_based_question.
+Do not reference images, diagrams, or figures not described in text.
+Topic focus: cover this source section evenly.
+Use ONLY facts explicitly present in SOURCE. Do not invent.
+Each question needs: text, type, answerOptions (min 2) with unique key fields,
+correctAnswerKeys as JSON array referencing those keys (never a single string).
+For true_false use keys "true" and "false".
+Assign unique externalId per question (e.g. "q-1", "q-2").
+Omit justifications.
+
+SOURCE:
+--- Page 51 ---
+28 2 Empirical Strategies Experience factoryProject organization 1. Characterize 2. Set goals 3. Choose process 5. Analyze4. Execute Experience base 6. Package Project support Fig. 2.3 Experience Factory QIP focuses on a logical separation of project development (performed by the Project Organization) from the systematic learning and packaging of reusable experience (performed by the Experience Factory) [8]. The Experience Factory is thus a separate organization that supports product development by analyzing and synthesizing all kinds of experience,acting as a repository for such experience,and supplying that experienceto various projects on demand, see Fig.2.3. The Experience Factory packages experience by “building informal, formal, or schematised models and measures of various processes, products, and other forms of knowledgevia people, documents,and automated support” [16]. The goal of the Project Organization is to produce and maintain software. The project organization provides the Experience Factory with project and environment characteristics, development data, resource usage information, quality records, and process information. It also provides feedback on the actual performance of the models processed by the experiencefactory and utilized by the project. The Experience Factory processes the information received from the develop- ment organization, and returns direct feedback to each project, together with goals and models tailored from similar projects. It also provides baselines, tools, lessons learned, and data, tailored to the speciﬁc project. To be able to improve, a software developing organization needs to introduce new technology. It needs to experiment and record its experiences from develop- ment projects and eventually change the current development process. When the technology is substantially different from the current practice, the evaluation may be off-linein order to reduce risks. The change evaluation,as discussed above,may take the form of a controlled experiment (for detailed evaluation in the small) or of a case study (to study the scale effects). In both cases, the Goal/Question/Metric method,as described subsequently,providesa useful framework.
+
+--- Page 52 ---
+2.9 Empiricism in a Software Engineering Context 29 Goal Question Metric Goal Question Question Question Question Metric Metric Metric Metric Metric Conceptual level Operational level Quantitative level Fig. 2.4 GQM model hierarchical structure 2.9.4 Goal/Question/Metric Method The Goal/Question/Metric (GQM) [17,26,172] method is based upon the assump- tion that for an organizationto measure in a purposefulway it must: 1. Specify the goals for itself and its projects, 2. Trace those goals to the data that is intended to deﬁne those goals operationally, and 3. Provide a framework for interpreting the data with respect to the stated goals. TheresultoftheapplicationoftheGQMmethodisaspeciﬁcationofameasurement model targeting a particular set of issues and a set of rules for the interpretation of the measurementdata. The resulting measurement model has three levels, as illustrated by the hierar- chical structure in Fig.2.4: 1. Conceptual level (Goal). A goal is deﬁned for an object, for a variety of reasons, with respect to various modelsof quality,from variouspoints of view,relative to a particular environment. Objects of measurement are products, processes, and resources (see also Chap.3). 2. Operational level (Question). A set of questions is used to characterize the way the assessment/achievement of a speciﬁc goal is going to be performed based on some characterization model. Questions try to characterize the objects of measurement (product, process and resource) with respect to a selected quality aspect and to determineits quality from the selected viewpoint. 3. Quantitative level (Metric). A set of data is associated with every question in order to answer it in a quantitative way (either objectively or subjectively). The process of setting goals is critical to the successful application of the GQM method. Goals are formulated based on (1) policies and strategies of the organization, (2) descriptions of processes and products, and (3) organization models. When goals have been formulated, questions are developed based on these goals. Once the questions have been developed, we proceed to associating the questions with appropriatemetrics.
+
+--- Page 53 ---
+30 2 Empirical Strategies Practical guidelines of how to use GQM for measurement-based process im- provement are given by Briand et al. [26], and van Solingen and Berghout [172]. In Chap.3, general aspects of measurement are further described. 2.10 Empirically-Based Technology Transfer Empiricalstudieshavea valuestand-alone,buttheycan also bepartof aknowledge exchange and improvement endeavor jointly between academia and industry, for example in technology transfer as also discussed above. Software engineering is an applied research area, and hence to perform research on industrially relevant problems is expected. It is in many cases insufﬁcient to just do academic research on, for example, requirements engineering or software testing with the motivation that these areas are challenging in industry. Software engineering is preferably conducted jointly by academia and industry to enable transfer of knowledge in both directionsand at the end transfer of new methods,technologiesand tools from academia to industry. Joint research provides an excellent opportunity to improve industrial software development based on concrete evidence, and hence being a good exampleof evidence-based software engineering[48,100]. Based on a long-term collaborativeventure,a model for technologytransfer was documented and presented by Gorschek et al. [66]. The seven steps in the model are summarized below to illustrate how differentempirical studies and in particular experimentscanbeusedinempiricallydrivenimprovement.Themodelisillustrated in Fig.2.5. The model is closely related to the discussion about software process improvement in Sect.2.9. The main focus of the model is on the usage of different empirical methods to create a solution to a real industrial problem and bring it to industrial application. Identiﬁcation of industrial problem/issue. The ﬁrst step is to identify actual in- dustrial challengesin a speciﬁc industrial context,which implies that the researcher is present at the industrial partner(s). The identiﬁcation of challenges may be done using, for example, a survey or interviews, which are brieﬂy presented in Sect.2.2. The objective is to capture the challenges and in particular issues that are suitable for research. Any challenge identiﬁed must be possible to formulate as a research problem to avoid that the researcher ends up in the role of a consultant addressing short-term problems. A major beneﬁt with doing this step thoroughly is that it creates an opportunity to build a joint trust and ensures that the industrial partner(s) and its employees get used to have researchers present in their environment. At this stage, commitment from both management and other practitioners involved in the joint effort is crucial to ensure future success according to Wohlin et al. [179].
+
+--- Page 54 ---
+2.10 Empirically-Based Technology Transfer 31 Problem formulation Problem/ issue Industry Academia Study state of the art Candidate solution Static validation Validation in academia Dynamic validationRelease solution Fig. 2.5 Technology transfer model (Adapted from the description by Gorschek et al. [66]) Problem formulation. Based on the challenge(s) identiﬁed, the challenge should be formulated as a research problem and research questions should be speciﬁed. If several different challenges are identiﬁed there is a need to prioritize which to address. Furthermore, a main contact person for the chosen challenge should be identiﬁed.Thepersonshouldpreferablynotonlybeappointed;itshouldbeaperson who would like to be the driver within the company and act as a champion for the research collaboration.This includes helping to get in contact with the right people in the company, and to help ensuring that the researchers get access to systems, documentationand data when needed. As a
+... [truncated 16938 chars] ...
+--- GEMINI RESPONSE: chunk-1 model=gemini-2.5-flash-lite len=8722 parsedQuestions=13 ---
+Parse: parsed OK
+{
+  "cqifVersion": "2.0",
+  "quiz": {
+    "title": "CraftQuest Quiz",
+    "description": "Quiz on Software Engineering Empirical Strategies"
+  },
+  "questions": [
+    {
+      "externalId": "q-1",
+      "text": "Explica por qué los experimentos pueden considerarse prototipos para cambios en procesos.",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Porque permiten probar nuevas ideas en un entorno controlado antes de implementarlas a gran escala."
+        },
+        {
+          "key": "b",
+          "text": "Porque son la única forma de recopilar datos cuantitativos."
+        },
+        {
+          "key": "c",
+          "text": "Porque siempre resultan en cambios positivos en los procesos."
+        },
+        {
+          "key": "d",
+          "text": "Porque son más rápidos que los estudios de caso."
+        }
+      ],
+      "correctAnswerKeys": [
+        "a"
+      ]
+    },
+    {
+      "externalId": "q-2",
+      "text": "¿De qué manera se pueden utilizar los experimentos en actividades de mejora?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Para investigar y mejorar la comprensión de la ingeniería de software."
+        },
+        {
+          "key": "b",
+          "text": "Para reemplazar completamente los métodos analíticos."
+        },
+        {
+          "key": "c",
+          "text": "Para documentar proyectos existentes sin realizar cambios."
+        },
+        {
+          "key": "d",
+          "text": "Para obtener opiniones de los desarrolladores sobre herramientas."
+        }
+      ],
+      "correctAnswerKeys": [
+        "a"
+      ]
+    },
+    {
+      "externalId": "q-3",
+      "text": "¿Por qué son importantes los estudios empíricos en la ingeniería de software?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Son la base para cambiar y mejorar la forma en que trabajamos."
+        },
+        {
+          "key": "b",
+          "text": "Permiten evitar por completo la necesidad de realizar análisis científicos."
+        },
+        {
+          "key": "c",
+          "text": "Son útiles solo en la investigación académica, no en la práctica."
+        },
+        {
+          "key": "d",
+          "text": "Aseguran que todos los experimentos sean 'verdaderos' experimentos."
+        }
+      ],
+      "correctAnswerKeys": [
+        "a"
+      ]
+    },
+    {
+      "externalId": "q-4",
+      "text": "¿Cuándo es el método de investigación empírica más adecuado en ingeniería de software en comparación con los métodos científico, de ingeniería y analítico, respectivamente?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "El texto no especifica cuándo el método empírico es más adecuado que los métodos científico, de ingeniería y analítico de forma comparativa."
+        },
+        {
+          "key": "b",
+          "text": "El método empírico es siempre superior a los métodos científico, de ingeniería y analítico."
+        },
+        {
+          "key": "c",
+          "text": "El método empírico se utiliza cuando los otros métodos no son aplicables."
+        },
+        {
+          "key": "d",
+          "text": "El método empírico es una subdivisión del método científico."
+        }
+      ],
+      "correctAnswerKeys": [
+        "a"
+      ]
+    },
+    {
+      "externalId": "q-5",
+      "text": "¿En cuántas estrategias principales se dividen los métodos empíricos según el propósito de la evaluación y las condiciones de la investigación?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Tres"
+        },
+        {
+          "key": "b",
+          "text": "Dos"
+        },
+        {
+          "key": "c",
+          "text": "Cuatro"
+        },
+        {
+          "key": "d",
+          "text": "Cinco"
+        }
+      ],
+      "correctAnswerKeys": [
+        "a"
+      ]
+    },
+    {
+      "externalId": "q-6",
+      "text": "Los 'verdaderos' experimentos, con aleatorización completa, son fáciles de realizar en ingeniería de software.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "false"
+      ]
+    },
+    {
+      "externalId": "q-7",
+      "text": "¿Qué tipo de experimentos son comunes en ingeniería de software cuando no es posible asignar participantes a grupos de forma aleatoria?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Cuasi-experimentos"
+        },
+        {
+          "key": "b",
+          "text": "Experimentos verdaderos"
+        },
+        {
+          "key": "c",
+          "text": "Estudios de caso"
+        },
+        {
+          "key": "d",
+          "text": "Encuestas"
+        }
+      ],
+      "correctAnswerKeys": [
+        "a"
+      ]
+    },
+    {
+      "externalId": "q-8",
+      "text": "¿Cuál es el objetivo principal de la investigación exploratoria en estudios empíricos?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Estudiar objetos en su entorno natural y dejar que los hallazgos emerjan de las observaciones."
+        },
+        {
+          "key": "b",
+          "text": "Cuantificar una relación o comparar dos o más grupos para identificar una relación causa-efecto."
+        },
+        {
+          "key": "c",
+          "text": "Interpretar un fenómeno basándose en explicaciones que las personas aportan."
+        },
+        {
+          "key": "d",
+          "text": "Probar teorías existentes."
+        }
+      ],
+      "correctAnswerKeys": [
+        "a"
+      ]
+    },
+    {
+      "externalId": "q-9",
+      "text": "La investigación explicativa se enfoca principalmente en cuantificar relaciones y comparar grupos para identificar relaciones causa-efecto.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-10",
+      "text": "¿Qué tipo de investigación se caracteriza por un diseño flexible que se adapta a los cambios en el fenómeno observado?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Investigación exploratoria (o investigación de diseño flexible)"
+        },
+        {
+          "key": "b",
+          "text": "Investigación explicativa (o investigación de diseño fijo)"
+        },
+        {
+          "key": "c",
+          "text": "Investigación inductiva"
+        },
+        {
+          "key": "d",
+          "text": "Investigación cuantitativa"
+        }
+      ],
+      "correctAnswerKeys": [
+        "a"
+      ]
+    },
+    {
+      "externalId": "q-11",
+      "text": "La investigación cuantitativa, a diferencia de la cualitativa, es apropiada para probar el efecto de alguna manipulación o actividad.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-12",
+      "text": "¿Cuál es una ventaja de los datos cuantitativos en las investigaciones?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Promueven comparaciones y análisis estadísticos."
+        },
+        {
+          "key": "b",
+          "text": "Son más fáciles de recopilar que los datos cualitativos."
+        },
+        {
+          "key": "c",
+          "text": "Permiten una comprensión más profunda de las creencias y perspectivas de los sujetos."
+        },
+        {
+          "key": "d",
+          "text": "Son el único tipo de datos que se pueden usar en estudios exploratorios."
+        }
+      ],
+      "correctAnswerKeys": [
+        "a"
+      ]
+    },
+    {
+      "externalId": "q-13",
+      "text": "Los enfoques de investigación cualitativa y cuantitativa son mutuamente excluyentes y no pueden investigar los mismos temas.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "false"
+      ]
+    }
+  ]
+}
+[chunk-1-parsed] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":13,"types":{"single_choice":9,"true_false":4},"sampleTexts":["Explica por qu\u00E9 los experimentos pueden considerarse prototipos para cambios en ","\u00BFDe qu\u00E9 manera se pueden utilizar los experimentos en actividades de mejora?","\u00BFPor qu\u00E9 son importantes los estudios emp\u00EDricos en la ingenier\u00EDa de software?"]}
+--- GEMINI RESPONSE: chunk-3 model=gemini-2.5-flash-lite len=13985 parsedQuestions=20 ---
+Parse: parsed OK
+{
+  "cqifVersion": "2.0",
+  "quiz": {
+    "title": "Ethics and Measurement in Empirical Software Engineering",
+    "description": "Quiz covering ethical considerations and measurement principles in empirical software engineering.",
+    "language": "es",
+    "difficulty": "mixed",
+    "pedagogicalGoal": "assessment"
+  },
+  "questions": [
+    {
+      "externalId": "q-21",
+      "text": "¿Qué se debe asegurar con respecto a los procedimientos de confidencialidad en la investigación empírica?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Que los datos sean accesibles para todos los investigadores."
+        },
+        {
+          "key": "b",
+          "text": "Que la información compartida por los investigadores permanezca confidencial."
+        },
+        {
+          "key": "c",
+          "text": "Que los resultados se publiquen inmediatamente sin importar la confidencialidad."
+        },
+        {
+          "key": "d",
+          "text": "Que la identidad de los sujetos sea siempre revelada."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-22",
+      "text": "¿Qué deben incluir las declaraciones claras para los patrocinadores en el formulario de consentimiento informado para empresas?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Solo los objetivos del estudio."
+        },
+        {
+          "key": "b",
+          "text": "Declaraciones claras sobre los derechos para la publicación independiente de resultados anonimizados."
+        },
+        {
+          "key": "c",
+          "text": "Información detallada sobre los riesgos individuales de cada sujeto."
+        },
+        {
+          "key": "d",
+          "text": "Una lista completa de todos los participantes."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-23",
+      "text": "¿Qué deben considerar los investigadores al realizar análisis estadísticos de datos anonimizados?",
+      "type": "multiple_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "El riesgo de que la información pueda ser rastreada a individuos, incluso si está anonimizada."
+        },
+        {
+          "key": "b",
+          "text": "La necesidad de revelar la identidad de los sujetos para validar los resultados."
+        },
+        {
+          "key": "c",
+          "text": "La posibilidad de que la información del contexto del estudio entre en conflicto con el anonimato."
+        },
+        {
+          "key": "d",
+          "text": "Que el análisis estadístico no requiere consideración ética."
+        }
+      ],
+      "correctAnswerKeys": [
+        "a",
+        "c"
+      ]
+    },
+    {
+      "externalId": "q-24",
+      "text": "¿Qué acción reduce la amenaza de las expectativas del experimentador?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Revelar la hipótesis del estudio a los participantes."
+        },
+        {
+          "key": "b",
+          "text": "Que los compañeros realicen análisis estadísticos de datos anonimizados de forma independiente."
+        },
+        {
+          "key": "c",
+          "text": "Aumentar el tamaño de la muestra."
+        },
+        {
+          "key": "d",
+          "text": "No informar a los sujetos sobre los objetivos del estudio."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-25",
+      "text": "¿Qué se debe proporcionar a los participantes para motivar su participación en un experimento?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Una lista de todos los riesgos potenciales."
+        },
+        {
+          "key": "b",
+          "text": "Inducimientos para motivar su participación."
+        },
+        {
+          "key": "c",
+          "text": "La obligación de completar el estudio."
+        },
+        {
+          "key": "d",
+          "text": "Información sobre los resultados finales del estudio antes de comenzar."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-26",
+      "text": "La experiencia y el conocimiento adquirido al aplicar un nuevo método pueden ser suficientes como incentivo. ¿Verdadero o Falso?",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-27",
+      "text": "¿Qué se debe dar a todos los sujetos para tratarlos de manera justa, independientemente del diseño experimental?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "La oportunidad de aprender sobre todos los tratamientos."
+        },
+        {
+          "key": "b",
+          "text": "Un resumen de los resultados antes de comenzar."
+        },
+        {
+          "key": "c",
+          "text": "Una compensación monetaria igual para todos."
+        },
+        {
+          "key": "d",
+          "text": "La garantía de que no habrá riesgos."
+        }
+      ],
+      "correctAnswerKeys": [
+        "a"
+      ]
+    },
+    {
+      "externalId": "q-28",
+      "text": "¿Qué formas puede tomar un incentivo monetario?",
+      "type": "multiple_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Pago en efectivo."
+        },
+        {
+          "key": "b",
+          "text": "Participación en una lotería."
+        },
+        {
+          "key": "c",
+          "text": "Salario ordinario para sujetos profesionales."
+        },
+        {
+          "key": "d",
+          "text": "Regalos de empresa."
+        }
+      ],
+      "correctAnswerKeys": [
+        "a",
+        "b",
+        "c"
+      ]
+    },
+    {
+      "externalId": "q-29",
+      "text": "¿Qué debe equilibrarse en cuanto a los incentivos para asegurar que el consentimiento sea voluntario?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Los riesgos y beneficios del estudio."
+        },
+        {
+          "key": "b",
+          "text": "El tiempo requerido y la compensación monetaria."
+        },
+        {
+          "key": "c",
+          "text": "Los incentivos económicos o de otro tipo."
+        },
+        {
+          "key": "d",
+          "text": "La complejidad del estudio y la experiencia del participante."
+        }
+      ],
+      "correctAnswerKeys": [
+        "c"
+      ]
+    },
+    {
+      "externalId": "q-30",
+      "text": "¿Por qué es importante la retroalimentación de resultados y análisis para mantener relaciones a largo plazo con los sujetos de un estudio?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Para asegurar que los sujetos no se retiren del estudio."
+        },
+        {
+          "key": "b",
+          "text": "Para mantener relaciones a largo plazo y confianza con los sujetos."
+        },
+        {
+          "key": "c",
+          "text": "Para obtener más datos de los sujetos."
+        },
+        {
+          "key": "d",
+          "text": "Para cumplir con los requisitos legales."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-31",
+      "text": "¿Los sujetos deben estar de acuerdo con el análisis de los resultados del estudio? ¿Verdadero o Falso?",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "false"
+      ]
+    },
+    {
+      "externalId": "q-32",
+      "text": "¿Qué se puede informar de vuelta a los sujetos, si es factible desde el punto de vista de la confidencialidad?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Los datos de rendimiento individuales de cada sujeto."
+        },
+        {
+          "key": "b",
+          "text": "La conclusión general del estudio."
+        },
+        {
+          "key": "c",
+          "text": "Los datos de rendimiento individuales junto con el análisis general."
+        },
+        {
+          "key": "d",
+          "text": "Los nombres de los otros participantes."
+        }
+      ],
+      "correctAnswerKeys": [
+        "c"
+      ]
+    },
+    {
+      "externalId": "q-33",
+      "text": "¿Qué se solicitó en trabajos tempranos sobre un código de ética para la ingeniería de software empírica?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Un código de ética para la ingeniería de software empírica."
+        },
+        {
+          "key": "b",
+          "text": "Directrices para la publicación de resultados."
+        },
+        {
+          "key": "c",
+          "text": "Un sistema de revisión por pares."
+        },
+        {
+          "key": "d",
+          "text": "Un estándar para la recopilación de datos."
+        }
+      ],
+      "correctAnswerKeys": [
+        "a"
+      ]
+    },
+    {
+      "externalId": "q-34",
+      "text": "¿Qué tipo de directrices éticas serían beneficiosas para los sujetos y el campo de la investigación empírica en ingeniería de software?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Directrices generales de ética de investigación."
+        },
+        {
+          "key": "b",
+          "text": "Directrices concretas y adaptadas para la investigación empírica en ingeniería de software."
+        },
+        {
+          "key": "c",
+          "text": "Directrices enfocadas únicamente en la publicación de resultados."
+        },
+        {
+          "key": "d",
+          "text": "Directrices que prioricen los intereses de los patrocinadores."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-35",
+      "text": "La medición de software es crucial para permitir el control de proyectos, productos y procesos. ¿Verdadero o Falso?",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-36",
+      "text": "¿Por qué es la medición un componente central en los estudios empíricos?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Para aumentar la complejidad de los estudios."
+        },
+        {
+          "key": "b",
+          "text": "Para permitir el control del estudio y observar sus efectos."
+        },
+        {
+          "key": "c",
+          "text": "Para hacer que los resultados sean más difíciles de interpretar."
+        },
+        {
+          "key": "d",
+          "text": "Para evitar la necesidad de hipótesis."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-37",
+      "text": "Según DeMarco, ¿qué no se puede controlar?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Los resultados de un estudio empírico."
+        },
+        {
+          "key": "b",
+          "text": "Lo que no se puede medir."
+        },
+        {
+          "key": "c",
+          "text": "El proceso de desarrollo de software."
+        },
+        {
+          "key": "d",
+          "text": "La calidad del producto de software."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "exte
+... [truncated 1985 chars] ...
+[chunk-3-parsed] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":20,"types":{"single_choice":14,"multiple_choice":3,"true_false":3},"sampleTexts":["\u00BFQu\u00E9 se debe asegurar con respecto a los procedimientos de confidencialidad en l","\u00BFQu\u00E9 deben incluir las declaraciones claras para los patrocinadores en el formul","\u00BFQu\u00E9 deben considerar los investigadores al realizar an\u00E1lisis estad\u00EDsticos de da"]}
+--- GEMINI RESPONSE: chunk-2 model=gemini-2.5-flash len=8196 parsedQuestions=13 ---
+Parse: parsed OK
+{
+  "cqifVersion": "2.0",
+  "quiz": {
+    "title": "Estrategias Empíricas en Ingeniería de Software",
+    "description": "Preguntas sobre estrategias empíricas, replicaciones y teoría en ingeniería de software, basadas en el chunk 2 de 3.",
+    "language": "es",
+    "difficulty": "mixed",
+    "pedagogicalGoal": "assessment"
+  },
+  "questions": [
+    {
+      "externalId": "q-6",
+      "text": "¿Cuál es la diferencia principal entre investigación exploratoria y explicativa, según el texto?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "La exploratoria busca variar condiciones para ganar conocimiento, mientras que la explicativa busca entender el 'porqué' de los fenómenos."
+        },
+        {
+          "key": "b",
+          "text": "La exploratoria se enfoca en cuantificar relaciones, la explicativa en describir características."
+        },
+        {
+          "key": "c",
+          "text": "La exploratoria es de bajo costo y riesgo, la explicativa es de alto costo y riesgo."
+        },
+        {
+          "key": "d",
+          "text": "La exploratoria se realiza en laboratorio, la explicativa en entornos reales."
+        }
+      ],
+      "correctAnswerKeys": [
+        "a"
+      ]
+    },
+    {
+      "externalId": "q-7",
+      "text": "La investigación exploratoria se enfoca en estudiar objetos en su entorno natural y permitir que los hallazgos emerjan de las observaciones. ¿Verdadero o Falso?",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "false"
+      ]
+    },
+    {
+      "externalId": "q-8",
+      "text": "La investigación explicativa se enfoca principalmente en cuantificar una relación o comparar dos o más grupos para identificar una relación causa-efecto. ¿Verdadero o Falso?",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-9",
+      "text": "¿Qué tipo de diseño de investigación se menciona como apropiado para estudios exploratorios?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Replicaciones estrictas"
+        },
+        {
+          "key": "b",
+          "text": "Replicaciones diferenciadas"
+        },
+        {
+          "key": "c",
+          "text": "Estudios de caso"
+        },
+        {
+          "key": "d",
+          "text": "Encuestas"
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-10",
+      "text": "¿Qué tipo de diseño de investigación se utiliza comúnmente en la investigación explicativa para generar, confirmar y extender teorías?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Encuestas"
+        },
+        {
+          "key": "b",
+          "text": "Estudios de caso"
+        },
+        {
+          "key": "c",
+          "text": "Experimentos"
+        },
+        {
+          "key": "d",
+          "text": "Estudios de mapeo"
+        }
+      ],
+      "correctAnswerKeys": [
+        "c"
+      ]
+    },
+    {
+      "externalId": "q-11",
+      "text": "La investigación cualitativa se basa principalmente en datos cualitativos. ¿Verdadero o Falso?",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-12",
+      "text": "La investigación cuantitativa es apropiada para probar el efecto de alguna manipulación o actividad. ¿Verdadero o Falso?",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-13",
+      "text": "¿Qué tipo de investigación se enfoca en descubrir causas notadas por los sujetos en el estudio y comprender su punto de vista, a menudo con características cualitativas?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Investigación cualitativa"
+        },
+        {
+          "key": "b",
+          "text": "Investigación cuantitativa"
+        },
+        {
+          "key": "c",
+          "text": "Experimentos"
+        },
+        {
+          "key": "d",
+          "text": "Encuestas"
+        }
+      ],
+      "correctAnswerKeys": [
+        "a"
+      ]
+    },
+    {
+      "externalId": "q-14",
+      "text": "¿Qué tipo de investigación se enfoca en cuantificar una relación o comparar grupos para obtener resultados objetivos y estadísticamente significativos?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Investigación cualitativa"
+        },
+        {
+          "key": "b",
+          "text": "Investigación cuantitativa"
+        },
+        {
+          "key": "c",
+          "text": "Estudios de caso"
+        },
+        {
+          "key": "d",
+          "text": "Estudios de mapeo"
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-15",
+      "text": "¿Cuál es una ventaja clave de los estudios empíricos cuantitativos en la investigación de ingeniería de software?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Permiten comprender el punto de vista de los sujetos en profundidad."
+        },
+        {
+          "key": "b",
+          "text": "Proporcionan resultados objetivos y estadísticamente significativos."
+        },
+        {
+          "key": "c",
+          "text": "Son inherentemente de bajo costo y requieren pocos recursos."
+        },
+        {
+          "key": "d",
+          "text": "Se adaptan mejor a estudios exploratorios sin hipótesis previas."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-16",
+      "text": "La investigación cualitativa y cuantitativa pueden investigar los mismos temas, pero abordan diferentes tipos de preguntas. ¿Verdadero o Falso?",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-17",
+      "text": "¿Qué tipo de estrategia empírica se considera apropiada para probar los efectos de un tratamiento o cambio en un entorno de laboratorio controlado?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Encuestas"
+        },
+        {
+          "key": "b",
+          "text": "Estudios de caso"
+        },
+        {
+          "key": "c",
+          "text": "Experimentos"
+        },
+        {
+          "key": "d",
+          "text": "Estudios de mapeo"
+        }
+      ],
+      "correctAnswerKeys": [
+        "c"
+      ]
+    },
+    {
+      "externalId": "q-18",
+      "text": "¿Qué tipo de estudio es apropiado para descubrir por qué los resultados de una investigación cuantitativa son como son, proporcionando una comprensión más profunda en un contexto real?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Encuesta"
+        },
+        {
+          "key": "b",
+          "text": "Estudio de caso"
+        },
+        {
+          "key": "c",
+          "text": "Experimento"
+        },
+        {
+          "key": "d",
+          "text": "Meta-análisis"
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    }
+  ]
+}
+[chunk-2-parsed] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":13,"types":{"single_choice":8,"true_false":5},"sampleTexts":["\u00BFCu\u00E1l es la diferencia principal entre investigaci\u00F3n exploratoria y explicativa,","La investigaci\u00F3n exploratoria se enfoca en estudiar objetos en su entorno natura","La investigaci\u00F3n explicativa se enfoca principalmente en cuantificar una relaci\u00F3"]}
+[merge.final] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":40,"types":{"single_choice":27,"true_false":11,"multiple_choice":2},"sampleTexts":["Explica por qu\u00E9 los experimentos pueden considerarse prototipos para cambios en ","\u00BFDe qu\u00E9 manera se pueden utilizar los experimentos en actividades de mejora?","\u00BFPor qu\u00E9 son importantes los estudios emp\u00EDricos en la ingenier\u00EDa de software?"]}
+[post-gemini] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":40,"types":{"single_choice":27,"true_false":11,"multiple_choice":2},"sampleTexts":["Explica por qu\u00E9 los experimentos pueden considerarse prototipos para cambios en ","\u00BFDe qu\u00E9 manera se pueden utilizar los experimentos en actividades de mejora?","\u00BFPor qu\u00E9 son importantes los estudios emp\u00EDricos en la ingenier\u00EDa de software?"]}
+[sanitize] Question type filter applied | {"before":40,"after":40,"allowedTypes":["single_choice","multiple_choice","true_false"],"typesBefore":{"single_choice":27,"true_false":11,"multiple_choice":2},"typesAfter":{"single_choice":27,"true_false":11,"multiple_choice":2}}
+[import.populate] Import batch snapshot | {"totalRows":40,"validRows":40,"errorRows":0,"batchStatus":"ready_for_review","rows":[{"Row":1,"Status":"valid","ErrorCode":null,"message":null},{"Row":2,"Status":"valid","ErrorCode":null,"message":null},{"Row":3,"Status":"valid","ErrorCode":null,"message":null},{"Row":4,"Status":"valid","ErrorCode":null,"message":null},{"Row":5,"Status":"valid","ErrorCode":null,"message":null},{"Row":6,"Status":"valid","ErrorCode":null,"message":null},{"Row":7,"Status":"valid","ErrorCode":null,"message":null},{"Row":8,"Status":"valid","ErrorCode":null,"message":null},{"Row":9,"Status":"valid","ErrorCode":null,"message":null},{"Row":10,"Status":"valid","ErrorCode":null,"message":null}]}
+[import.batch] Import batch created from CQIF | {"ImportId":"c23f6b94-2566-489a-ba13-95a476545b47","Status":"ready_for_review","TotalQuestionsDetected":40,"ValidQuestions":40,"QuestionsWithErrors":0,"QuestionsWithWarnings":0}
+=== AI generation trace ended ===

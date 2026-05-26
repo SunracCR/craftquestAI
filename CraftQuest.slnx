@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/CraftQuest.Api/CraftQuest.Api.csproj" />
+    <Project Path="src/CraftQuest.Application/CraftQuest.Application.csproj" />
+    <Project Path="src/CraftQuest.Domain/CraftQuest.Domain.csproj" />
+    <Project Path="src/CraftQuest.Infrastructure/CraftQuest.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/CraftQuest.IntegrationTests/CraftQuest.IntegrationTests.csproj" />
+    <Project Path="tests/CraftQuest.UnitTests/CraftQuest.UnitTests.csproj" />
+  </Folder>
+</Solution>

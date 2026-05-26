@@ -1,0 +1,952 @@
+openapi: 3.0.3
+info:
+  title: CraftQuest API
+  version: "4.0.0"
+  description: >
+    API MVP completo v4. Las respuestas se identifican por AnswerOptionId.
+    A/B/C/D son etiquetas visuales generadas por intento y guardadas como snapshot.
+servers:
+  - url: https://api.craftquestai.com/api
+    description: Producción
+  - url: https://localhost:7080/api
+    description: Desarrollo local
+security:
+  - bearerAuth: []
+tags:
+  - name: QuestionTypes
+  - name: Quizzes
+  - name: Imports
+  - name: StudyMaterials
+  - name: AI
+  - name: Practice
+  - name: Teacher
+  - name: Sharing
+  - name: Billing
+paths:
+  /question-types:
+    get:
+      tags: [QuestionTypes]
+      summary: Lista tipos de pregunta soportados
+      responses:
+        "200":
+          description: Tipos de pregunta
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/QuestionTypeDto"
+
+  /quizzes:
+    post:
+      tags: [Quizzes]
+      summary: Crear cuestionario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateQuizRequest"
+      responses:
+        "201":
+          description: Cuestionario creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizDto"
+
+  /quizzes/{quizId}/questions:
+    post:
+      tags: [Quizzes]
+      summary: Crear pregunta con respuestas por key e IDs generados por backend
+      description: >
+        El cliente envia answerOptions con clientKey y correctAnswerKeys.
+        El backend crea AnswerOptionId reales y define las correctas en QuestionCorrectAnswerOptions.
+      parameters:
+        - $ref: "#/components/parameters/QuizId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateQuestionRequest"
+      responses:
+        "201":
+          description: Pregunta creada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionDto"
+
+  /quizzes/{quizId}/question-imports/process:
+    post:
+      tags: [Imports]
+      summary: Procesar formato externo a CQIF v2
+      description: >
+        Recibe Excel, TXT, CSV, JSON, ZIP o rawText. No crea preguntas definitivas.
+        Devuelve importId para preview, normalizacion con IA y confirmacion.
+      parameters:
+        - $ref: "#/components/parameters/QuizId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProcessImportRequest"
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                sourceType:
+                  type: string
+                  enum: [xlsx, txt, csv, json, zip]
+                useAiNormalization:
+                  type: boolean
+      responses:
+        "202":
+          description: Importacion procesada o en proceso
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionImportStatusDto"
+
+  /question-imports/{importId}/preview:
+    get:
+      tags: [Imports]
+      summary: Vista previa de importacion
+      parameters:
+        - $ref: "#/components/parameters/ImportId"
+      responses:
+        "200":
+          description: Preview con preguntas, respuestas por key y errores
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionImportPreviewDto"
+
+  /question-imports/{importId}/ai-normalize:
+    post:
+      tags: [AI, Imports]
+      summary: Normalizar con IA hacia CQIF v2
+      parameters:
+        - $ref: "#/components/parameters/ImportId"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiNormalizeImportRequest"
+      responses:
+        "202":
+          description: Job de IA creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiJobDto"
+
+  /question-imports/{importId}/confirm:
+    post:
+      tags: [Imports]
+      summary: Confirmar importacion y crear preguntas definitivas
+      description: >
+        Crea Questions, QuestionAnswerOptions y QuestionCorrectAnswerOptions.
+        Las correctas se resuelven usando correctAnswerKeys de CQIF v2.
+      parameters:
+        - $ref: "#/components/parameters/ImportId"
+      responses:
+        "200":
+          description: Importacion confirmada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionImportConfirmResultDto"
+
+  /study-materials:
+    get:
+      tags: [StudyMaterials]
+      summary: Listar materiales del usuario
+      parameters:
+        - name: skip
+          in: query
+          schema: { type: integer, default: 0 }
+        - name: take
+          in: query
+          schema: { type: integer, default: 20 }
+      responses:
+        "200":
+          description: Lista de materiales
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StudyMaterialSummaryDto"
+    post:
+      tags: [StudyMaterials]
+      summary: Subir PDF o DOCX
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file: { type: string, format: binary }
+                title: { type: string }
+      responses:
+        "202":
+          description: Material aceptado para procesamiento
+
+  /study-materials/images:
+    post:
+      tags: [StudyMaterials]
+      summary: Subir fotos de apuntes (multi-imagen)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items: { type: string, format: binary }
+                title: { type: string }
+      responses:
+        "202":
+          description: Material imagen aceptado
+
+  /study-materials/{studyMaterialId}:
+    get:
+      tags: [StudyMaterials]
+      summary: Detalle del material (paginas, secciones, estado)
+      parameters:
+        - $ref: "#/components/parameters/StudyMaterialId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudyMaterialDetailDto"
+
+  /study-materials/{studyMaterialId}/extracted-text:
+    patch:
+      tags: [StudyMaterials]
+      summary: Guardar texto revisado manualmente
+      parameters:
+        - $ref: "#/components/parameters/StudyMaterialId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStudyMaterialExtractedTextRequest"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudyMaterialDetailDto"
+
+  /study-materials/{studyMaterialId}/run-ocr:
+    post:
+      tags: [StudyMaterials]
+      summary: Ejecutar OCR con Gemini sobre imagenes
+      parameters:
+        - $ref: "#/components/parameters/StudyMaterialId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudyMaterialDetailDto"
+
+  /study-materials/{studyMaterialId}/selection:
+    patch:
+      tags: [StudyMaterials]
+      summary: Actualizar rango de paginas y tema
+      parameters:
+        - $ref: "#/components/parameters/StudyMaterialId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStudyMaterialSelectionRequest"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudyMaterialDetailDto"
+
+  /study-materials/{studyMaterialId}/generate/estimate:
+    post:
+      tags: [StudyMaterials]
+      summary: Estimar creditos y preguntas importables
+      parameters:
+        - $ref: "#/components/parameters/StudyMaterialId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuizGenerationParameters"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizGenerationEstimateDto"
+
+  /study-materials/{studyMaterialId}/generate:
+    post:
+      tags: [StudyMaterials]
+      summary: Iniciar generacion de cuestionario con IA
+      parameters:
+        - $ref: "#/components/parameters/StudyMaterialId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuizGenerationParameters"
+      responses:
+        "202":
+          description: Job de generacion creado
+
+  /ai/question-format/normalize:
+    post:
+      tags: [AI]
+      summary: Normalizar texto libre a CQIF v2
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiNormalizeRawTextRequest"
+      responses:
+        "200":
+          description: Documento CQIF v2 sugerido
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CqifDocument"
+
+  /practice-sessions:
+    post:
+      tags: [Practice]
+      summary: Iniciar sesion de practica
+      description: >
+        El backend materializa snapshots y aleatoriza respuestas. La respuesta no incluye isCorrect.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StartPracticeSessionRequest"
+      responses:
+        "201":
+          description: Sesion iniciada con preguntas y respuestas aleatorizadas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PracticeSessionDto"
+
+  /practice-sessions/{sessionId}/questions/{practiceQuestionSnapshotId}/answer:
+    post:
+      tags: [Practice]
+      summary: Responder pregunta usando AnswerOptionId
+      description: >
+        El cliente debe enviar selectedAnswerOptionIds. No se aceptan letras visuales como A/B/C/D.
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+        - $ref: "#/components/parameters/PracticeQuestionSnapshotId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitAnswerRequest"
+      responses:
+        "200":
+          description: Respuesta registrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmitAnswerResultDto"
+
+  /practice-sessions/{sessionId}/finish:
+    post:
+      tags: [Practice]
+      summary: Finalizar sesion de practica
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Resultado final
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PracticeSessionResultDto"
+
+  /teacher/classes/{classId}/assignments/{assignmentId}/attempts:
+    get:
+      tags: [Teacher]
+      summary: Intentos de estudiantes por asignacion
+      parameters:
+        - $ref: "#/components/parameters/ClassId"
+        - $ref: "#/components/parameters/AssignmentId"
+      responses:
+        "200":
+          description: Lista de intentos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TeacherAttemptSummaryDto"
+
+  /teacher/practice-sessions/{sessionId}:
+    get:
+      tags: [Teacher]
+      summary: Revision docente completa del intento
+      description: >
+        Devuelve el mismo orden de respuestas visto por el estudiante, incluyendo DisplayLabel,
+        AnswerOptionId, WasSelected e IsCorrectSnapshot.
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Detalle de intento
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeacherPracticeReviewDto"
+
+  /sharing/share-codes/redeem:
+    post:
+      tags: [Sharing]
+      summary: Canjear codigo de acceso
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code:
+                  type: string
+      responses:
+        "200":
+          description: Codigo canjeado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RedeemShareCodeResultDto"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    QuizId:
+      name: quizId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    ImportId:
+      name: importId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    SessionId:
+      name: sessionId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    PracticeQuestionSnapshotId:
+      name: practiceQuestionSnapshotId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    ClassId:
+      name: classId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    AssignmentId:
+      name: assignmentId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    StudyMaterialId:
+      name: studyMaterialId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+
+  schemas:
+    StudyMaterialSummaryDto:
+      type: object
+      properties:
+        studyMaterialId: { type: string, format: uuid }
+        title: { type: string }
+        fileType: { type: string }
+        processingStatus: { type: string }
+        needsOcr: { type: boolean }
+        pageCount: { type: integer, nullable: true }
+        wordCount: { type: integer, nullable: true }
+        createdAt: { type: string, format: date-time }
+
+    StudyMaterialDetailDto:
+      type: object
+      properties:
+        studyMaterialId: { type: string, format: uuid }
+        title: { type: string }
+        fileType: { type: string }
+        processingStatus: { type: string }
+        needsOcr: { type: boolean }
+        requiresTextReview: { type: boolean }
+        editedExtractedText: { type: string, nullable: true }
+        pageCount: { type: integer, nullable: true }
+        wordCount: { type: integer, nullable: true }
+        estimatedMaxQuestions: { type: integer }
+        pages:
+          type: array
+          items:
+            $ref: "#/components/schemas/StudyMaterialPageDto"
+        sections:
+          type: array
+          items:
+            $ref: "#/components/schemas/StudyMaterialSectionDto"
+
+    StudyMaterialPageDto:
+      type: object
+      properties:
+        pageNumber: { type: integer }
+        previewText: { type: string, nullable: true }
+        wordCount: { type: integer }
+        extractionQuality: { type: string }
+
+    StudyMaterialSectionDto:
+      type: object
+      properties:
+        title: { type: string }
+        pageFrom: { type: integer }
+        pageTo: { type: integer }
+
+    UpdateStudyMaterialExtractedTextRequest:
+      type: object
+      required: [extractedText]
+      properties:
+        extractedText: { type: string }
+
+    UpdateStudyMaterialSelectionRequest:
+      type: object
+      properties:
+        pageFrom: { type: integer }
+        pageTo: { type: integer }
+        topic: { type: string, nullable: true }
+
+    QuizGenerationParameters:
+      type: object
+      properties:
+        targetQuizId: { type: string, format: uuid, nullable: true }
+        questionCount: { type: integer }
+        language: { type: string }
+        difficulty: { type: string }
+        allowedQuestionTypes:
+          type: array
+          items: { type: string }
+        topicFocus: { type: string, nullable: true }
+        pageFrom: { type: integer }
+        pageTo: { type: integer }
+
+    QuizGenerationEstimateDto:
+      type: object
+      properties:
+        creditsRequired: { type: integer }
+        aiCreditsAvailable: { type: integer }
+        estimatedImportableQuestions: { type: integer }
+        wordsInScope: { type: integer }
+
+    QuestionTypeDto:
+      type: object
+      properties:
+        code: { type: string }
+        name: { type: string }
+        supportsMultipleCorrectAnswers: { type: boolean }
+        supportsImages: { type: boolean }
+        requiresOptions: { type: boolean }
+
+    CreateQuizRequest:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string, maxLength: 220 }
+        description: { type: string }
+        visibility:
+          type: string
+          enum: [private, shared_by_code, class_only, public, curated]
+        randomizeQuestions: { type: boolean }
+        defaultRandomizeAnswerOptions: { type: boolean }
+
+    QuizDto:
+      type: object
+      properties:
+        quizId: { type: string, format: uuid }
+        title: { type: string }
+        publicationStatus: { type: string }
+
+    CreateQuestionRequest:
+      type: object
+      required: [questionType, text, answerOptions, correctAnswerKeys]
+      properties:
+        questionType:
+          type: string
+          enum: [single_choice, multiple_choice, true_false, image_choice, image_based_question]
+        sectionId:
+          type: string
+          format: uuid
+          nullable: true
+        text:
+          type: string
+        points:
+          type: number
+          format: double
+          default: 1
+        randomizeAnswerOptions:
+          type: boolean
+          default: true
+        scoringPolicy:
+          type: string
+          enum: [strict, partial_future]
+          default: strict
+        answerOptions:
+          type: array
+          minItems: 2
+          items:
+            $ref: "#/components/schemas/CreateAnswerOptionRequest"
+        correctAnswerKeys:
+          type: array
+          minItems: 1
+          items:
+            type: string
+        justification:
+          $ref: "#/components/schemas/QuestionJustificationInput"
+
+    CreateAnswerOptionRequest:
+      type: object
+      required: [clientKey]
+      properties:
+        clientKey:
+          type: string
+          description: Key estable en la solicitud/importacion; se convierte a StableKey.
+        text:
+          type: string
+          nullable: true
+        mediaAssetId:
+          type: string
+          format: uuid
+          nullable: true
+        defaultSortOrder:
+          type: integer
+
+    QuestionDto:
+      type: object
+      properties:
+        questionId: { type: string, format: uuid }
+        questionType: { type: string }
+        text: { type: string }
+        randomizeAnswerOptions: { type: boolean }
+        answerOptions:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnswerOptionDto"
+        correctAnswerOptionIds:
+          type: array
+          items: { type: string, format: uuid }
+
+    AnswerOptionDto:
+      type: object
+      properties:
+        answerOptionId: { type: string, format: uuid }
+        stableKey: { type: string }
+        text: { type: string }
+        mediaAssetId: { type: string, format: uuid, nullable: true }
+
+    QuestionJustificationInput:
+      type: object
+      properties:
+        text: { type: string }
+        sourceUrl: { type: string }
+        visibility:
+          type: string
+          enum: [never, after_answer, after_quiz, teacher_only]
+
+    ProcessImportRequest:
+      type: object
+      required: [sourceType]
+      properties:
+        sourceType:
+          type: string
+          enum: [xlsx, txt, csv, json, zip, raw_text]
+        rawText:
+          type: string
+        useAiNormalization:
+          type: boolean
+        language:
+          type: string
+          default: es
+
+    QuestionImportStatusDto:
+      type: object
+      properties:
+        importId: { type: string, format: uuid }
+        status: { type: string }
+        totalQuestionsDetected: { type: integer }
+        validQuestions: { type: integer }
+        questionsWithWarnings: { type: integer }
+        questionsWithErrors: { type: integer }
+
+    QuestionImportPreviewDto:
+      type: object
+      properties:
+        importId: { type: string, format: uuid }
+        status: { type: string }
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/CqifQuestion"
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/ImportErrorDto"
+
+    ImportErrorDto:
+      type: object
+      properties:
+        rowNumber: { type: integer }
+        fieldName: { type: string }
+        errorCode: { type: string }
+        message: { type: string }
+        severity:
+          type: string
+          enum: [info, warning, error]
+
+    AiNormalizeImportRequest:
+      type: object
+      properties:
+        generateMissingJustifications: { type: boolean, default: false }
+        validateSemantics: { type: boolean, default: true }
+        useGrounding: { type: boolean, default: false }
+
+    AiNormalizeRawTextRequest:
+      type: object
+      required: [rawText]
+      properties:
+        rawText: { type: string }
+        targetFormat:
+          type: string
+          default: CQIF_V2
+        language:
+          type: string
+          default: es
+        defaultQuestionType:
+          type: string
+          default: single_choice
+
+    AiJobDto:
+      type: object
+      properties:
+        aiJobId: { type: string, format: uuid }
+        status: { type: string }
+        jobType: { type: string }
+
+    CqifDocument:
+      type: object
+      required: [cqifVersion, quiz, questions]
+      properties:
+        cqifVersion:
+          type: string
+          example: "2.0"
+        quiz:
+          type: object
+          properties:
+            title: { type: string }
+            description: { type: string }
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/CqifQuestion"
+
+    CqifQuestion:
+      type: object
+      required: [type, text, answerOptions, correctAnswerKeys]
+      properties:
+        type:
+          type: string
+          enum: [single_choice, multiple_choice, true_false, image_choice, image_based_question]
+        section: { type: string }
+        text: { type: string }
+        points: { type: number }
+        randomizeAnswerOptions: { type: boolean }
+        answerOptions:
+          type: array
+          items:
+            $ref: "#/components/schemas/CqifAnswerOption"
+        correctAnswerKeys:
+          type: array
+          items: { type: string }
+        justification: { type: string }
+
+    CqifAnswerOption:
+      type: object
+      required: [key]
+      properties:
+        key: { type: string }
+        text: { type: string }
+        mediaFileName: { type: string }
+
+    QuestionImportConfirmResultDto:
+      type: object
+      properties:
+        importId: { type: string, format: uuid }
+        createdQuestions: { type: integer }
+        skippedQuestions: { type: integer }
+        createdQuestionIds:
+          type: array
+          items: { type: string, format: uuid }
+
+    StartPracticeSessionRequest:
+      type: object
+      required: [quizId]
+      properties:
+        quizId: { type: string, format: uuid }
+        classId: { type: string, format: uuid, nullable: true }
+        assignmentId: { type: string, format: uuid, nullable: true }
+        mode:
+          type: string
+          enum: [practice, exam, teacher_assignment]
+          default: practice
+
+    PracticeSessionDto:
+      type: object
+      properties:
+        practiceSessionId: { type: string, format: uuid }
+        quizId: { type: string, format: uuid }
+        status: { type: string }
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/PracticeQuestionDto"
+
+    PracticeQuestionDto:
+      type: object
+      properties:
+        practiceQuestionSnapshotId: { type: string, format: uuid }
+        questionId: { type: string, format: uuid }
+        displayOrder: { type: integer }
+        questionText: { type: string }
+        questionType: { type: string }
+        answers:
+          type: array
+          items:
+            $ref: "#/components/schemas/PracticeAnswerOptionDto"
+
+    PracticeAnswerOptionDto:
+      type: object
+      properties:
+        answerOptionId: { type: string, format: uuid }
+        displayOrder: { type: integer }
+        displayLabel: { type: string, example: A }
+        text: { type: string }
+        mediaAssetId: { type: string, format: uuid, nullable: true }
+
+    SubmitAnswerRequest:
+      type: object
+      required: [selectedAnswerOptionIds]
+      properties:
+        selectedAnswerOptionIds:
+          type: array
+          items: { type: string, format: uuid }
+          description: IDs reales de respuestas seleccionadas. No enviar A/B/C/D.
+
+    SubmitAnswerResultDto:
+      type: object
+      properties:
+        practiceQuestionSnapshotId: { type: string, format: uuid }
+        accepted: { type: boolean }
+        answerStatus: { type: string }
+
+    PracticeSessionResultDto:
+      type: object
+      properties:
+        practiceSessionId: { type: string, format: uuid }
+        scoreObtained: { type: number }
+        scorePossible: { type: number }
+        percentage: { type: number }
+        correctAnswers: { type: integer }
+        incorrectAnswers: { type: integer }
+        omittedAnswers: { type: integer }
+
+    TeacherAttemptSummaryDto:
+      type: object
+      properties:
+        practiceSessionId: { type: string, format: uuid }
+        studentUserId: { type: string, format: uuid }
+        studentDisplayName: { type: string }
+        scoreObtained: { type: number }
+        scorePossible: { type: number }
+        status: { type: string }
+        finishedAt: { type: string, format: date-time }
+
+    TeacherPracticeReviewDto:
+      type: object
+      properties:
+        practiceSessionId: { type: string, format: uuid }
+        student:
+          type: object
+          properties:
+            userId: { type: string, format: uuid }
+            displayName: { type: string }
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/TeacherPracticeQuestionReviewDto"
+
+    TeacherPracticeQuestionReviewDto:
+      type: object
+      properties:
+        practiceQuestionSnapshotId: { type: string, format: uuid }
+        questionId: { type: string, format: uuid }
+        questionText: { type: string }
+        isCorrect: { type: boolean }
+        pointsAwarded: { type: number }
+        answersAsDisplayedToStudent:
+          type: array
+          items:
+            $ref: "#/components/schemas/TeacherAnswerOptionReviewDto"
+
+    TeacherAnswerOptionReviewDto:
+      type: object
+      properties:
+        answerOptionId: { type: string, format: uuid }
+        stableKey: { type: string }
+        displayOrder: { type: integer }
+        displayLabel: { type: string }
+        text: { type: string }
+        wasSelected: { type: boolean }
+        isCorrect: { type: boolean }
+
+    RedeemShareCodeResultDto:
+      type: object
+      properties:
+        quizId: { type: string, format: uuid }
+        classId: { type: string, format: uuid, nullable: true }
+        assignmentId: { type: string, format: uuid, nullable: true }

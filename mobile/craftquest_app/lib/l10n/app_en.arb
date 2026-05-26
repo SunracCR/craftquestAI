@@ -1,0 +1,1262 @@
+{
+  "@@locale": "en",
+  "appTitle": "CraftQuest",
+  "homeWelcome": "Welcome to CraftQuest",
+  "homeWelcomeUser": "Hello, {name}",
+  "@homeWelcomeUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "homeRoleLabel": "Role: {role}",
+  "@homeRoleLabel": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "roleUnknown": "no role",
+  "roleTeacherLabel": "Teacher",
+  "roleStudentLabel": "Student",
+  "roleInstitutionAdminLabel": "Institution admin",
+  "roleContentAdminLabel": "Content admin",
+  "roleSuperAdminLabel": "Super admin",
+  "apiStatusLabel": "API status",
+  "apiStatusLoading": "Connecting...",
+  "apiStatusError": "Could not connect to the API",
+  "retry": "Retry",
+  "noInternetBannerTitle": "No internet connection",
+  "noInternetBannerMessage": "You can keep browsing, but data will not update until you are back online.",
+  "noInternetSnackBarMessage": "You are offline. Check your connection and try again.",
+  "genericRequestErrorMessage": "The request could not be completed. Please try again shortly.",
+  "errorHttpMethodNotAllowed": "The server does not support this operation. Restart the API and try again.",
+  "errorQuestionLimitReached": "You reached the limit of {max} questions per quiz on your {plan} plan.",
+  "@errorQuestionLimitReached": {
+    "placeholders": {
+      "max": { "type": "int" },
+      "plan": { "type": "String" }
+    }
+  },
+  "errorQuizLimitReached": "You reached the limit of {max} quizzes on your {plan} plan.",
+  "@errorQuizLimitReached": {
+    "placeholders": {
+      "max": { "type": "int" },
+      "plan": { "type": "String" }
+    }
+  },
+  "billingPlanFreeName": "Free",
+  "billingPlanProName": "Pro",
+  "billingPlanPremiumName": "Premium",
+  "billingPlanTeacherName": "Teacher",
+  "loginTitle": "Sign in",
+  "loginSubtitle": "Access your CraftQuest account for free — sign in or create one in seconds",
+  "loginAction": "Sign in",
+  "loginRememberCredentials": "Remember email and password",
+  "registerTitle": "Create account",
+  "registerAction": "Sign up",
+  "goToRegister": "Don't have an account? Sign up",
+  "emailLabel": "Email",
+  "passwordLabel": "Password",
+  "displayNameLabel": "Display name",
+  "fieldRequired": "This field is required",
+  "passwordMinLength": "Minimum 8 characters",
+  "logoutAction": "Sign out",
+  "navHomeLabel": "Home",
+  "navProfileLabel": "Profile",
+  "profileTitle": "Profile",
+  "selectAvatarTitle": "Your avatar",
+  "profileChangeAvatarAction": "Change avatar",
+  "profileEditNameAction": "Edit name",
+  "profileNameUpdatedMessage": "Name updated",
+  "profileNameInvalidMessage": "Enter a name between 1 and 160 characters.",
+  "profileSaveAction": "Save",
+  "profileAvatarPickerHint": "Tap an icon to update your profile",
+  "avatarUpdatedMessage": "Avatar updated",
+  "languageSectionTitle": "Language",
+  "languageEnglish": "English",
+  "languageSpanish": "Spanish",
+  "languagePortuguese": "Portuguese",
+  "languageUpdatedMessage": "Language updated",
+  "securitySectionTitle": "Security",
+  "changePasswordTitle": "Change password",
+  "changePasswordAction": "Save password",
+  "currentPasswordLabel": "Current password",
+  "newPasswordLabel": "New password",
+  "confirmPasswordLabel": "Confirm password",
+  "passwordsDoNotMatch": "Passwords do not match",
+  "passwordChangedMessage": "Password updated",
+  "myQuizzesAction": "My quizzes",
+  "quizzesTitle": "Quizzes",
+  "quizzesEmpty": "You have no quizzes yet",
+  "quizzesLoadError": "Could not load quizzes",
+  "createQuizAction": "Create quiz",
+  "createQuizTitle": "New quiz",
+  "createQuizNextStepTitle": "Add questions to your quiz",
+  "createQuizNextStepSubtitle": "Start by creating a question, importing from a file, or generating with AI.",
+  "createQuizAddQuestionsManually": "Create questions manually",
+  "createQuizImportQuestions": "Import questions",
+  "createQuizSkipQuestionsSetup": "Do it later",
+  "quizTitleLabel": "Title",
+  "quizTitleTapToEdit": "Tap the title to edit",
+  "quizDescriptionLabel": "Description (optional)",
+  "quizListSubtitle": "{status} · {count} questions",
+  "@quizListSubtitle": {
+    "placeholders": {
+      "status": { "type": "String" },
+      "count": { "type": "int" }
+    }
+  },
+  "quizStatusDraft": "Draft",
+  "quizStatusPublished": "Published",
+  "quizDetailTitle": "Quiz detail",
+  "quizDetailImportAiDraftAction": "Import AI-generated questions",
+  "quizDetailImportAiDraftBanner": "{count, plural, =1{1 AI-generated question ready to import} other{{count} AI-generated questions ready to import}}",
+  "@quizDetailImportAiDraftBanner": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "quizListPendingAiDraft": "AI draft ready to import",
+  "addQuestionAction": "Add question",
+  "viewQuizQuestionsAction": "View questions",
+  "publishQuizAction": "Publish",
+  "quizPublishedMessage": "Quiz published",
+  "deleteQuizAction": "Delete quiz",
+  "deleteQuizConfirmTitle": "Delete quiz?",
+  "deleteQuizConfirmMessage": "\"{title}\" and all its questions will be removed. This action cannot be undone.",
+  "@deleteQuizConfirmMessage": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "quizDeletedMessage": "Quiz deleted",
+  "questionsEmpty": "No questions yet",
+  "quizDetailQuestionsSection": "Quiz questions",
+  "quizQuestionsCount": "{count} questions",
+  "@quizQuestionsCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "quizDetailOptionCount": "{count} options",
+  "@quizDetailOptionCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "quizDetailCorrectKeys": "Correct answer: {keys}",
+  "@quizDetailCorrectKeys": {
+    "placeholders": { "keys": { "type": "String" } }
+  },
+  "quizDetailCorrectKeysPlural": "Correct answers: {keys}",
+  "@quizDetailCorrectKeysPlural": {
+    "placeholders": { "keys": { "type": "String" } }
+  },
+  "questionTypeLabelSingleChoice": "Single choice",
+  "questionTypeLabelMultipleChoice": "Multiple choice",
+  "questionTypeLabelTrueFalse": "True / False",
+  "questionTypeLabelImageChoice": "Image options",
+  "questionTypeLabelImageBased": "Image-based",
+  "questionListIndexLabel": "Q{index}",
+  "@questionListIndexLabel": {
+    "placeholders": { "index": { "type": "int" } }
+  },
+  "editQuestionAction": "Edit",
+  "deleteQuestionAction": "Delete",
+  "editQuestionTitle": "Edit question",
+  "deleteQuestionConfirmTitle": "Delete question?",
+  "deleteQuestionConfirmMessage": "This question will be removed from the quiz. This action cannot be undone.",
+  "questionDeletedMessage": "Question deleted",
+  "questionSavedMessage": "Question saved",
+  "addQuestionTitle": "New question",
+  "questionTypeLabel": "Question type",
+  "questionTextLabel": "Question text",
+  "questionPointsLabel": "Points",
+  "questionPointsHint": "Score when answered correctly (this question only)",
+  "questionPointsValue": "{points} pts",
+  "@questionPointsValue": {
+    "placeholders": { "points": { "type": "String" } }
+  },
+  "questionInvalidPoints": "Points must be greater than 0",
+  "answerOptionLabel": "Option {key}",
+  "@answerOptionLabel": {
+    "placeholders": { "key": { "type": "String" } }
+  },
+  "correctAnswerKeyLabel": "Correct answer (key)",
+  "saveQuestionAction": "Save question",
+  "trueLabel": "True",
+  "falseLabel": "False",
+  "minTwoOptions": "Enter at least two options",
+  "questionImageLabel": "Question image",
+  "correctAnswersLabel": "Correct answers",
+  "selectCorrectAnswersHint": "Select one or more correct options",
+  "imageChoiceHint": "Attach an image to at least one answer option",
+  "imageBasedQuestionHint": "Upload the image or diagram for this question",
+  "requireQuestionImage": "Image-based questions require an image",
+  "requireOptionImage": "Add at least one image to the answer options",
+  "selectAtLeastOneCorrect": "Mark at least one correct answer",
+  "correctIdsLabel": "{count} correct answer(s) by ID",
+  "@correctIdsLabel": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "practiceOptionsTitle": "Practice settings",
+  "practiceRandomizeQuestionsLabel": "Shuffle question order",
+  "practiceRandomizeQuestionsHint": "Questions appear in a random order each time you practice",
+  "practiceShowTimerLabel": "Show elapsed time",
+  "practiceShowTimerHint": "Displays a running clock while you answer the quiz",
+  "practiceElapsedLabel": "Time: {elapsed}",
+  "@practiceElapsedLabel": {
+    "placeholders": { "elapsed": { "type": "String" } }
+  },
+  "practiceDurationLabel": "Time spent",
+  "practiceQuizAction": "Practice",
+  "practiceSessionTitle": "Practice session",
+  "practiceProgressLabel": "{answered} of {total} answered",
+  "@practiceProgressLabel": {
+    "placeholders": {
+      "answered": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "practiceProgressCompletedLabel": "{done} of {total} completed",
+  "@practiceProgressCompletedLabel": {
+    "placeholders": {
+      "done": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "practiceNavigateQuestionsLabel": "Questions",
+  "practiceOpenQuestionMapAction": "Map",
+  "practiceMapTitle": "Question map",
+  "practiceMapFilterAll": "All",
+  "practiceMapFilterPending": "Pending",
+  "practiceMapFilterCompleted": "Done",
+  "practiceMapEmptyFilter": "No questions match this filter",
+  "practiceNavLegendAnswered": "Answered",
+  "practiceNavLegendPending": "Pending",
+  "practiceNavLegendCurrent": "Current",
+  "practiceQuestionNavTooltip": "Question {number}",
+  "@practiceQuestionNavTooltip": {
+    "placeholders": { "number": { "type": "int" } }
+  },
+  "practicePreviousQuestionAction": "Previous",
+  "practiceQuestionAnsweredLabel": "Already answered",
+  "practiceUpdateAnswerAction": "Update answer",
+  "practiceAnswerEditHint": "You can change your answer and tap Update answer",
+  "practiceSavingAnswerHint": "Saving your answer…",
+  "practiceQuestionCounter": "Question {current} of {total}",
+  "@practiceQuestionCounter": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "practiceSelectAnswer": "Select at least one answer",
+  "practiceSubmitAnswerAction": "Submit answer",
+  "practiceNextQuestionAction": "Next question",
+  "practiceFinishAction": "Finish practice",
+  "practiceResumeTitle": "Practice in progress",
+  "practiceResumeMessage": "You have a saved practice with {answered} of {total} questions answered. What would you like to do?",
+  "@practiceResumeMessage": {
+    "placeholders": {
+      "answered": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "practiceContinueAction": "Continue",
+  "practiceStartNewAction": "Start over",
+  "practiceSaveAndExitAction": "Save and exit",
+  "practiceInProgressChip": "Practice in progress",
+  "practiceInProgressSubtitle": "{answered}/{total} answered",
+  "@practiceInProgressSubtitle": {
+    "placeholders": {
+      "answered": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "practiceFinishEarlyAction": "Finish now",
+  "practiceNoQuestions": "This quiz has no questions",
+  "practiceResultTitle": "Results",
+  "practicePercentageLabel": "{percentage}%",
+  "@practicePercentageLabel": {
+    "placeholders": { "percentage": { "type": "double" } }
+  },
+  "practiceScoreLabel": "Score: {obtained} / {possible}",
+  "@practiceScoreLabel": {
+    "placeholders": {
+      "obtained": { "type": "double" },
+      "possible": { "type": "double" }
+    }
+  },
+  "practiceCorrectLabel": "Correct: {count}",
+  "@practiceCorrectLabel": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "practiceIncorrectLabel": "Incorrect: {count}",
+  "@practiceIncorrectLabel": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "practiceViewResultsAction": "View results",
+  "practiceReviewHiddenByAssignment": "Your teacher configured this assignment to hide correct answers. You can only see your overall score.",
+  "practiceReviewHiddenUntilDue": "Correct answers will be available after the due date ({date}). For now you can only see your overall score.",
+  "@practiceReviewHiddenUntilDue": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "practiceReviewHiddenUntilDueNoDate": "Correct answers will be available after the due date. For now you can only see your overall score.",
+  "practiceReviewHiddenTeacherOnly": "Only your teacher can see the correct answers. You can check your overall score.",
+  "practiceBackHomeAction": "Back to home",
+  "importQuestionsAction": "Import questions",
+  "importQuestionsTitle": "Import questions",
+  "importExcelAction": "Import from Excel",
+  "excelImportTitle": "Excel import",
+  "excelImportSubtitle": "Upload a .xlsx file with your questions. You will review a preview before confirming.",
+  "excelImportColumnsHint": "Columns: Question, Type (includes image_choice and image_based_question without image files), Option A–E, Correct answer (e.g. B or A|C), Points and Section (optional). Add images later in the app.",
+  "excelImportDownloadTemplate": "Download Excel template",
+  "excelImportTemplateReady": "Template ready to save or share",
+  "excelImportTemplateFailed": "Could not download the template",
+  "excelImportDropHint": "Drag your .xlsx file here",
+  "excelImportDropSubhint": "Or choose a file from your device",
+  "excelImportPickFile": "Choose file",
+  "excelImportUploadAction": "Upload and review",
+  "excelImportOnlyXlsx": "Only .xlsx files are supported",
+  "excelImportFileTooLarge": "File exceeds the 5 MB limit",
+  "excelImportReadFailed": "Could not read the selected file",
+  "excelImportSelectFileFirst": "Select an Excel file first",
+  "excelImportColumnsTitle": "Column format",
+  "excelImportTemplateSection": "Step 1 · Template",
+  "excelImportUploadSection": "Step 2 · Your file",
+  "excelImportFileReady": "File ready to import",
+  "excelImportChangeFile": "Change file",
+  "importImageMediaPending": "Images are not imported from the file. You can add them later in the app when editing the question.",
+  "importImagePendingBadge": "Image pending in app",
+  "importFormatLabel": "Format",
+  "importFormatJson": "CQIF JSON",
+  "importFormatTxt": "CraftQuest TXT",
+  "importContentLabel": "Content",
+  "importContentHint": "Paste CQIF v2 JSON or CraftQuest TXT here",
+  "importContentRequired": "Paste content to import",
+  "importProcessAction": "Process import",
+  "importNoValidQuestions": "No valid questions to import",
+  "importPreviewTitle": "Preview",
+  "importSummaryLabel": "{valid} valid of {total} ({errors} with errors)",
+  "@importSummaryLabel": {
+    "placeholders": {
+      "valid": { "type": "int" },
+      "total": { "type": "int" },
+      "errors": { "type": "int" }
+    }
+  },
+  "importErrorLine": "Row {row}: {message}",
+  "@importErrorLine": {
+    "placeholders": {
+      "row": { "type": "int" },
+      "message": { "type": "String" }
+    }
+  },
+  "importQuestionTypeLabel": "Type: {type}",
+  "@importQuestionTypeLabel": {
+    "placeholders": { "type": { "type": "String" } }
+  },
+  "importAnswerLine": "{key}: {text}{correct}",
+  "@importAnswerLine": {
+    "placeholders": {
+      "key": { "type": "String" },
+      "text": { "type": "String" },
+      "correct": { "type": "String" }
+    }
+  },
+  "importConfirmAction": "Confirm and import",
+  "importConfirmSuccess": "{count} questions imported",
+  "@importConfirmSuccess": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "importPlanLimitPreviewNotice": "Your {plan} plan allows up to {max} questions per quiz ({current} already in this quiz). Only {importable} of {total} from the file will be imported.",
+  "@importPlanLimitPreviewNotice": {
+    "placeholders": {
+      "plan": { "type": "String" },
+      "max": { "type": "int" },
+      "current": { "type": "int" },
+      "importable": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "importConfirmDisabledQuizFull": "You cannot import more questions: this quiz already has {current} and your plan allows up to {max} per quiz.",
+  "@importConfirmDisabledQuizFull": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
+  "importPlanLimitConfirmNotice": "{imported} questions were imported. On the {plan} plan the limit is {max} per quiz; {skipped} questions from the file were not added.",
+  "@importPlanLimitConfirmNotice": {
+    "placeholders": {
+      "imported": { "type": "int" },
+      "plan": { "type": "String" },
+      "max": { "type": "int" },
+      "skipped": { "type": "int" }
+    }
+  },
+  "teacherAttemptsAction": "View attempts",
+  "teacherAttemptsTitle": "Practice attempts",
+  "teacherAttemptsEmpty": "No finished attempts yet",
+  "teacherAttemptsFilterLabel": "Student",
+  "teacherAttemptsFilterAll": "All students",
+  "teacherAttemptsFilterEmpty": "No attempts for this student",
+  "teacherAttemptsStudentsSummary": "{students} students · {attempts} attempts",
+  "@teacherAttemptsStudentsSummary": {
+    "placeholders": {
+      "students": { "type": "int" },
+      "attempts": { "type": "int" }
+    }
+  },
+  "teacherAttemptsAttemptCountOne": "1 attempt",
+  "teacherAttemptsAttemptCountMany": "{count} attempts",
+  "@teacherAttemptsAttemptCountMany": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "teacherAttemptRowTitle": "{date}",
+  "@teacherAttemptRowTitle": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "teacherAttemptTitle": "{name} · {date}",
+  "@teacherAttemptTitle": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "date": { "type": "String" }
+    }
+  },
+  "teacherAttemptSubtitle": "{obtained}/{possible} ({percent}%) · {status}",
+  "@teacherAttemptSubtitle": {
+    "placeholders": {
+      "obtained": { "type": "double" },
+      "possible": { "type": "double" },
+      "percent": { "type": "String" },
+      "status": { "type": "String" }
+    }
+  },
+  "teacherAttemptSubtitleWithDuration": "{stats} · {duration}",
+  "@teacherAttemptSubtitleWithDuration": {
+    "placeholders": {
+      "stats": { "type": "String" },
+      "duration": { "type": "String" }
+    }
+  },
+  "teacherReviewTitle": "Attempt review",
+  "teacherReviewStudentLabel": "Student: {name}",
+  "@teacherReviewStudentLabel": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "teacherReviewScoreLabel": "Score: {obtained} / {possible}",
+  "@teacherReviewScoreLabel": {
+    "placeholders": {
+      "obtained": { "type": "double" },
+      "possible": { "type": "double" }
+    }
+  },
+  "teacherReviewQuestionLabel": "{order}. {text}",
+  "@teacherReviewQuestionLabel": {
+    "placeholders": {
+      "order": { "type": "int" },
+      "text": { "type": "String" }
+    }
+  },
+  "teacherReviewAnswerStatus": "{status} · {awarded}/{possible} pts",
+  "@teacherReviewAnswerStatus": {
+    "placeholders": {
+      "status": { "type": "String" },
+      "awarded": { "type": "double" },
+      "possible": { "type": "double" }
+    }
+  },
+  "billingPlanLabel": "Plan: {plan}",
+  "@billingPlanLabel": {
+    "placeholders": { "plan": { "type": "String" } }
+  },
+  "billingPlanChipLabel": "Plan",
+  "billingUsageLabel": "Quizzes: {quizzes}/{maxQuizzes}",
+  "@billingUsageLabel": {
+    "placeholders": {
+      "quizzes": { "type": "int" },
+      "maxQuizzes": { "type": "String" }
+    }
+  },
+  "billingQuizzesUnlimited": "Quizzes: Unlimited",
+  "billingCreditsLabel": "AI credits this month: {credits}",
+  "@billingCreditsLabel": {
+    "placeholders": { "credits": { "type": "int" } }
+  },
+  "redeemCodeAction": "Redeem code",
+  "redeemCodeTitle": "Redeem access code",
+  "redeemCodeSubtitle": "Enter the code shared by your teacher or classmate",
+  "redeemCodeLabel": "Code",
+  "redeemCodeRequired": "Enter a code",
+  "redeemCodeSuccess": "Access granted to \"{title}\"",
+  "@redeemCodeSuccess": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "redeemCodeAlreadyInShared": "You already have \"{title}\" in Shared quizzes.",
+  "@redeemCodeAlreadyInShared": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "accessibleQuizzesAction": "Shared quizzes",
+  "accessibleQuizzesTitle": "Shared quizzes",
+  "accessibleQuizzesEmpty": "No shared quizzes yet. Redeem a code.",
+  "accessibleQuizzesSharedBy": "Shared by {name}",
+  "@accessibleQuizzesSharedBy": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "accessibleQuizzesGroupCount": "{count, plural, =1{1 quiz} other{{count} quizzes}}",
+  "@accessibleQuizzesGroupCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "accessibleQuizzesRemoveAction": "Remove from shared",
+  "accessibleQuizzesRemoveConfirmTitle": "Remove from shared?",
+  "accessibleQuizzesRemoveConfirmMessage": "\"{title}\" will be removed from your list. The quiz is not deleted; you can redeem it again with the code if needed.",
+  "@accessibleQuizzesRemoveConfirmMessage": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "accessibleQuizzesRemovedMessage": "Quiz removed from shared list",
+  "accessibleQuizzesSlotBanner": "Shared quizzes: {current}/{max}",
+  "@accessibleQuizzesSlotBanner": {
+    "placeholders": { "current": { "type": "int" }, "max": { "type": "int" } }
+  },
+  "accessibleQuizzesSlotFull": "Free plan slot full. Remove one to redeem another code.",
+  "errorSharedQuizSlotLimit": "Your Free plan allows {max} shared quizzes. Remove one from Shared quizzes to redeem another.",
+  "@errorSharedQuizSlotLimit": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "errorCannotRedeemOwnQuiz": "You cannot redeem a code for a quiz you created. Open it from My quizzes.",
+  "shareCodeViewAction": "View code",
+  "shareCodeExistingHint": "This is the permanent code for this quiz.",
+  "myQuizAnalyticsAction": "My analytics",
+  "myQuizAnalyticsTitle": "My practice analytics",
+  "myPracticeAttemptsAction": "My attempts",
+  "myPracticeAttemptsTitle": "My practice attempts",
+  "myPracticeAttemptsEmpty": "You have not completed any attempts on this quiz yet.",
+  "myPracticeReviewTitle": "My attempt review",
+  "myQuizAnalyticsAttemptsLabel": "{count} completed attempts",
+  "@myQuizAnalyticsAttemptsLabel": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "myQuizAnalyticsAverageLabel": "Average: {percentage}%",
+  "@myQuizAnalyticsAverageLabel": {
+    "placeholders": { "percentage": { "type": "double" } }
+  },
+  "myQuizAnalyticsBestLabel": "Best: {percentage}%",
+  "@myQuizAnalyticsBestLabel": {
+    "placeholders": { "percentage": { "type": "double" } }
+  },
+  "createShareCodeAction": "Generate code",
+  "shareCodeTitle": "Access code",
+  "shareCodeCreateTitle": "Share quiz",
+  "shareCodeCreateTeacherSubtitle": "Choose whether anyone can practice or only your class.",
+  "shareCodeCreateStudentSubtitle": "A multi-use code will be created so many people can practice (without seeing others' attempts).",
+  "shareCodeAudienceAnyone": "Anyone",
+  "shareCodeAudienceAnyoneHint": "With or without an account. Same code for everyone.",
+  "shareCodeAudienceGroup": "My class only",
+  "shareCodeAudienceGroupHint": "Only students in the class you select (account required).",
+  "shareCodeSelectClassLabel": "Class",
+  "shareCodeClassOption": "{name} ({count} students)",
+  "@shareCodeClassOption": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "count": { "type": "int" }
+    }
+  },
+  "shareCodeNoClasses": "You have no classes yet. Create a class to share with your group only.",
+  "shareCodeGroupRequired": "Select a class to share with your group.",
+  "shareCodeResultOpenHint": "Valid for many people. Also works in Practice with code without an account.",
+  "shareCodeResultGroupHint": "Class members only, with an account.",
+  "shareCodeCopyAction": "Copy",
+  "shareCodeCopied": "Code copied",
+  "shareCodeCloseAction": "Close",
+  "quizInviteTitle": "Invite people",
+  "quizInviteSubtitle": "They must have a CraftQuest account. The quiz appears in Shared quizzes (no code needed).",
+  "quizInviteEmailsLabel": "Emails",
+  "quizInviteEmailsHint": "one@email.com, another@email.com",
+  "quizInviteAction": "Invite",
+  "quizInviteEmailsRequired": "Enter at least one valid email.",
+  "quizInviteSuccessCount": "{count, plural, =1{1 person invited} other{{count} people invited}}",
+  "@quizInviteSuccessCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "quizInviteOutcomeInvited": "{name}: invited",
+  "@quizInviteOutcomeInvited": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "quizInviteOutcomeAlreadyHadAccess": "{name}: already had access",
+  "@quizInviteOutcomeAlreadyHadAccess": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "quizInviteOutcomeNotFound": "{email}: no account with this email",
+  "@quizInviteOutcomeNotFound": {
+    "placeholders": { "email": { "type": "String" } }
+  },
+  "quizInviteOutcomeInvalidEmail": "{email}: invalid email",
+  "@quizInviteOutcomeInvalidEmail": {
+    "placeholders": { "email": { "type": "String" } }
+  },
+  "quizInviteOutcomeSlotLimit": "{name}: Free plan shared slot limit",
+  "@quizInviteOutcomeSlotLimit": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "quizInviteOutcomeSelf": "You cannot invite yourself",
+  "errorDirectInviteNotAllowed": "Direct invitations require a Pro or Teacher plan.",
+  "errorActivePracticeSession": "You have a practice in progress. Continue or start over.",
+  "aiNormalizeAction": "Normalize with AI",
+  "aiImproveImportAction": "Improve with AI",
+  "aiNormalizeSuccess": "AI normalization completed",
+  "quizAnalyticsAction": "Analytics",
+  "quizAnalyticsTitle": "Quiz analytics",
+  "quizAnalyticsSessionsLabel": "Finished attempts: {count}",
+  "@quizAnalyticsSessionsLabel": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "quizAnalyticsQuestionStats": "{attempts} attempts · {correct} correct · {incorrect} incorrect",
+  "@quizAnalyticsQuestionStats": {
+    "placeholders": {
+      "attempts": { "type": "int" },
+      "correct": { "type": "int" },
+      "incorrect": { "type": "int" }
+    }
+  },
+  "quizAnalyticsOptionLabel": "{key}: {text} — {count} ({rate}%){correct}",
+  "@quizAnalyticsOptionLabel": {
+    "placeholders": {
+      "key": { "type": "String" },
+      "text": { "type": "String" },
+      "count": { "type": "int" },
+      "rate": { "type": "double" },
+      "correct": { "type": "String" }
+    }
+  },
+  "attachImageAction": "Attach image",
+  "removeImageAction": "Remove image",
+  "viewFullImageAction": "View full image",
+  "closeAction": "Close",
+  "imageLoadError": "Could not load image",
+  "upgradePlanAction": "Upgrade plan",
+  "upgradePlanTitle": "Upgrade plan",
+  "upgradePlanSubtitle": "Compare plans and pick the one that fits you best.",
+  "upgradePlanAlreadyHighest": "You already have the highest available plan. No further upgrades right now.",
+  "upgradeProHighlightQuizzes": "Unlimited quizzes (your current plan: max. 5)",
+  "upgradeProHighlightQuestions": "No question limit per quiz (your current plan: 65)",
+  "upgradeProHighlightAiCredits": "150 AI credits per month (your current plan: 20)",
+  "upgradeProHighlightShared": "Unlimited shared quizzes when redeeming or inviting",
+  "upgradeProHighlightDirectInvite": "Invite specific people by email",
+  "upgradeTeacherHighlightIncludesPro": "Everything in Pro",
+  "upgradeTeacherHighlightAiCredits": "360 AI credits per month for more generations",
+  "upgradeTeacherHighlightClasses": "Classes and student groups",
+  "upgradeTeacherHighlightAssignments": "Assignments with due dates, attempts, and review",
+  "upgradeTeacherHighlightGroupShare": "Share codes for your class only",
+  "upgradeTeacherHighlightTracking": "Track attempts and results per student",
+  "buyWithStoreAction": "Buy in store",
+  "buyWithPayPalAction": "Pay with PayPal",
+  "paypalWebHint": "On the web, PayPal is the recommended payment method.",
+  "paypalAwaitingCapture": "Complete payment in PayPal, then capture the order.",
+  "upgradeSuccess": "Plan activated: {plan}",
+  "@upgradeSuccess": {
+    "placeholders": { "plan": { "type": "String" } }
+  },
+  "storeProductNotConfigured": "Store product is not configured",
+  "storeProductNotFound": "Product not found: {id}",
+  "@storeProductNotFound": {
+    "placeholders": { "id": { "type": "String" } }
+  },
+  "purchaseFailed": "Purchase was not completed",
+  "purchaseVerificationFailed": "We couldn't verify your purchase. Please try again in a moment.",
+  "purchaseVerificationFailed": "We couldn't verify your purchase. Please try again in a moment.",
+  "contactSales": "Contact sales",
+  "aiGenerationHubTitle": "Generate with AI",
+  "aiGenerationHubSubtitle": "Upload PDF or Word with selectable text and get a reviewable quiz in minutes.",
+  "aiGenerationHubAction": "Create from material",
+  "aiGenerationLibraryTitle": "Materials library",
+  "aiGenerationLibraryRetentionHint": "Materials are removed automatically after {days} days. You can delete them sooner using the trash icon.",
+  "@aiGenerationLibraryRetentionHint": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "aiGenerationLibraryExpiresOn": "Auto-delete: {date}",
+  "@aiGenerationLibraryExpiresOn": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "aiGenerationLibraryMaterialCount": "{count, plural, =1{1 material} other{{count} materials}}",
+  "@aiGenerationLibraryMaterialCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "aiGenerationLibraryStatusReady": "Ready",
+  "aiGenerationLibraryStatusProcessing": "Processing",
+  "aiGenerationLibraryStatusFailed": "Failed",
+  "aiGenerationLibraryStatusPending": "Pending",
+  "aiGenerationLibraryUploaded": "Uploaded {date}",
+  "@aiGenerationLibraryUploaded": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "aiGenerationLibraryExpiresInDays": "Auto-deletes in {days} days",
+  "@aiGenerationLibraryExpiresInDays": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "aiGenerationLibraryNeedsReview": "Review text",
+  "aiGenerationLibraryEmpty": "You have no saved materials yet.",
+  "aiGenerationLibraryEmptySubtitle": "PDF and Word files you upload for AI generation will appear here.",
+  "aiGenerationLibraryAction": "View library",
+  "deleteStudyMaterialConfirmTitle": "Delete material",
+  "deleteStudyMaterialConfirmMessage": "\"{title}\" and its extracted text will be deleted. The generated quiz will be kept. This cannot be undone.",
+  "@deleteStudyMaterialConfirmMessage": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "deleteStudyMaterialAction": "Delete",
+  "studyMaterialDeletedMessage": "Material deleted",
+  "aiGenerationUploadTitle": "Upload material",
+  "aiGenerationUploadSubtitle": "Upload a PDF or Word file with copyable text. You will choose the page scope before generating the quiz.",
+  "aiGenerationUploadHeroDrop": "Drag your PDF or Word file here",
+  "aiGenerationUploadHeroPick": "or choose a file from your device",
+  "aiGenerationUploadFormatGuideTitle": "Format tips and limits",
+  "aiGenerationUploadHint": "PDF or DOCX with selectable text, not scanned images (max 25 MB)",
+  "aiGenerationUploadLimitsHint": "Up to {maxPagesPerFile} pages per file · up to {maxPagesPerGeneration} pages per generation",
+  "@aiGenerationUploadLimitsHint": {
+    "placeholders": {
+      "maxPagesPerFile": { "type": "int" },
+      "maxPagesPerGeneration": { "type": "int" }
+    }
+  },
+  "aiGenerationUploadLimitsSteps": "If your document is longer, split it into several files (each with {maxPagesPerFile} pages or fewer) or export only the chapter you need. You can then generate quizzes in chunks of up to {maxPagesPerGeneration} pages.",
+  "@aiGenerationUploadLimitsSteps": {
+    "placeholders": {
+      "maxPagesPerFile": { "type": "int" },
+      "maxPagesPerGeneration": { "type": "int" }
+    }
+  },
+  "errorMaterialPageLimitGuidance": "What you can do: split the PDF or Word into parts of {maxPagesPerFile} pages or fewer (by chapter or section) and upload them separately. For each file, generate the quiz using up to {maxPagesPerGeneration} pages at a time.",
+  "@errorMaterialPageLimitGuidance": {
+    "placeholders": {
+      "maxPagesPerFile": { "type": "int" },
+      "maxPagesPerGeneration": { "type": "int" }
+    }
+  },
+  "aiGenerationUploadAnotherFileAction": "Upload another file",
+  "aiGenerationDropHint": "You can also drag files here",
+  "aiGenerationUploadAction": "Upload and analyze",
+  "aiGenerationUploadFileReady": "File ready to upload",
+  "aiGenerationUploadChangeFile": "Change file",
+  "aiGenerationUploadRemoveFile": "Remove",
+  "aiGenerationProcessing": "Analyzing document…",
+  "aiGenerationNeedsOcr": "Little text detected. Use a PDF or Word with selectable text, or review and paste the content.",
+  "aiGenerationReviewTextTitle": "Review text",
+  "aiGenerationReviewTextHint": "This document has little extractable text. Fix what was detected or paste content with selectable text.",
+  "aiGenerationReviewTextSave": "Save and continue",
+  "aiGenerationReviewTextAction": "Review text",
+  "aiGenerationOutlineTitle": "Material scope",
+  "aiGenerationPageRange": "Pages {from}–{to}",
+  "@aiGenerationPageRange": {
+    "placeholders": { "from": { "type": "int" }, "to": { "type": "int" } }
+  },
+  "aiGenerationPageRangeOfTotal": "Pages {from}–{to} of {total}",
+  "@aiGenerationPageRangeOfTotal": {
+    "placeholders": {
+      "from": { "type": "int" },
+      "to": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "aiGenerationPageRangeHelp": "Choose which pages from the document will be used to generate the quiz. Drag each end of the slider to narrow the range.",
+  "aiGenerationPageRangeSelectedCount": "{count, plural, =1{1 page in this range} other{{count} pages in this range}}",
+  "@aiGenerationPageRangeSelectedCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "aiGenerationPageRangeOverLimit": "Maximum {max} pages per generation. Narrow the selected range.",
+  "@aiGenerationPageRangeOverLimit": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "aiGenerationWordsInScopePurpose": "The AI will generate questions from approximately {words} words in that range.",
+  "@aiGenerationWordsInScopePurpose": {
+    "placeholders": { "words": { "type": "int" } }
+  },
+  "aiGenerationTopicHint": "Optional focus (topic or section)",
+  "aiGenerationWordsInScope": "{words} words in scope",
+  "@aiGenerationWordsInScope": {
+    "placeholders": { "words": { "type": "int" } }
+  },
+  "aiGenerationParamsTitle": "Generation settings",
+  "aiGenerationMaterialLanguageNotice": "Questions will be generated in {language} based on the material's language.",
+  "@aiGenerationMaterialLanguageNotice": {
+    "placeholders": { "language": { "type": "String" } }
+  },
+  "aiGenerationPresetQuick": "Quick review",
+  "aiGenerationPresetStandard": "Standard exam",
+  "aiGenerationPresetDeep": "Deep practice",
+  "aiGenerationQuestionCount": "Number of questions",
+  "aiGenerationQuestionCountOfMax": "{count} of {max}",
+  "@aiGenerationQuestionCountOfMax": {
+    "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
+  },
+  "aiGenerationQuestionTypes": "Question types",
+  "aiGenerationTypeSingleChoice": "Single choice",
+  "aiGenerationTypeMultipleChoice": "Multiple choice",
+  "aiGenerationTypeTrueFalse": "True / false",
+  "aiGenerationDifficulty": "Difficulty",
+  "aiGenerationDifficultyEasy": "Easy",
+  "aiGenerationDifficultyMedium": "Medium",
+  "aiGenerationDifficultyHard": "Hard",
+  "aiGenerationDifficultyMixed": "Mixed",
+  "aiGenerationCreditsCost": "Uses {credits} AI credits ({available} available)",
+  "@aiGenerationCreditsCost": {
+    "placeholders": {
+      "credits": { "type": "int" },
+      "available": { "type": "int" }
+    }
+  },
+  "aiGenerationStartAction": "Generate quiz",
+  "aiGenerationProgressTitle": "Generating quiz",
+  "aiGenerationProgressSubtitle": "AI is building questions from your material…",
+  "aiGenerationProgressDeferredRetry": "The AI service is busy. We will retry automatically shortly.",
+  "aiGenerationProgressDeferredRetryMinutes": "Automatic retry in about {minutes} min. You can keep this screen open.",
+  "@aiGenerationProgressDeferredRetryMinutes": {
+    "placeholders": { "minutes": { "type": "int" } }
+  },
+  "aiGenerationProgressAutoRetry": "Automatic retry {attempt} in progress…",
+  "@aiGenerationProgressAutoRetry": {
+    "placeholders": { "attempt": { "type": "int" } }
+  },
+  "aiGenerationCreditsNotConsumed": "No AI credits were deducted.",
+  "aiGenerationRetryAction": "Retry generation",
+  "aiGenerationProgressTakingLong": "Still running (this can take several minutes). If the API was restarted, retry generation.",
+  "aiGenerationProgressStuck": "Generation appears stuck on the server.",
+  "aiGenerationProgressStuckDetail": "This job has been processing too long without finishing. Go back and start again; credits were not consumed if it did not complete.",
+  "aiGenerationStuckGoBackAction": "Go back and try again",
+  "errorSessionExpired": "Your session has expired. Sign in again and try once more.",
+  "aiGenerationFailed": "Could not generate the quiz",
+  "errorGenerationJobNotRetryable": "This generation job cannot be retried right now.",
+  "errorGuestNotAllowed": "This code requires a registered account. Create a free account to continue.",
+  "errorGroupAccessDenied": "This code is only for members of the class \"{className}\".",
+  "@errorGroupAccessDenied": {
+    "placeholders": { "className": { "type": "String" } }
+  },
+  "errorGroupAccessDeniedGeneric": "This code is only for members of the teacher's class.",
+  "errorAiGenerationInvalidOutput": "The AI returned an invalid quiz format. Tap Retry generation; no credits were deducted.",
+  "aiGenerationFromQuizAction": "Generate with AI from material",
+  "importAiGeneratedBadge": "AI generated",
+  "errorAiCreditsInsufficient": "Not enough AI credits for this generation.",
+  "errorMaterialNeedsOcr": "Not enough extractable text. Use PDF or Word with selectable text, or review and paste the content.",
+  "errorMaterialNotSelectableText": "This file looks scanned or has no selectable text.",
+  "errorMaterialNotSelectableTextGuidance": "Recommendations:\n• Open the file and check you can select and copy paragraphs (not just zoom).\n• If it is a scan: in Word, File → Open the PDF and let it recognize text; review and save as DOCX.\n• Alternative: external OCR (Adobe, Google Drive), paste text into Word, upload as DOCX.\n• Export from Word or Google Docs; avoid PDFs made only from photos or print-to-image.\n• Upload DOCX or a PDF exported from Word with selectable text.",
+  "errorMaterialNeedsOcrGuidance": "Recommendations:\n• Use a PDF or DOCX where you can select and copy text.\n• If the source is scanned, convert it to Word with text (see OCR steps above) and upload DOCX.\n• You can also paste content into Word, save as DOCX, and upload that file.",
+  "errorMaterialTooLargeGuidance": "Recommendations:\n• The limit is 25 MB per file.\n• Compress embedded images in Word or export only the chapter you need.\n• Split the document into smaller files if it is still too large.",
+  "aiGenerationUploadRecommendationsTitle": "Recommendations",
+  "aiGenerationUploadSelectableTextHint": "The PDF or Word must allow selecting and copying text. Scanned documents are not supported.",
+  "errorMaterialTooLarge": "File exceeds the maximum allowed upload size.",
+  "errorMaterialPageLimitExceeded": "The document exceeds the maximum of {maxPages} pages per file.",
+  "@errorMaterialPageLimitExceeded": {
+    "placeholders": { "maxPages": { "type": "int" } }
+  },
+  "errorGenerationPageRangeExceeded": "You can only generate from up to {maxPages} pages at a time.",
+  "@errorGenerationPageRangeExceeded": {
+    "placeholders": { "maxPages": { "type": "int" } }
+  },
+  "errorGenerationScopeEmpty": "No text in the selected page range.",
+  "errorGenerationAlreadyInProgress": "A generation is already in progress for this material.",
+  "errorAiNotConfigured": "AI generation is not configured on the server.",
+  "errorAiGeminiQuotaExhausted": "Gemini credits are exhausted. Add billing credits in Google AI Studio (ai.google.dev) and try again.",
+  "errorAiGeminiModelUnavailable": "The configured Gemini model is no longer available. Set Ai:GeminiModel to gemini-2.5-flash and restart the API.",
+  "errorAiGeminiOverloaded": "Gemini is under heavy load right now. Wait a few minutes and try generating again.",
+  "aiActivityTitle": "AI activity",
+  "aiActivityAction": "AI activity",
+  "aiActivityEmpty": "No recent generations. When you generate a quiz, jobs appear here even if you close the app.",
+  "aiActivityStatusDraftReady": "Draft ready",
+  "aiActivityStatusFailed": "Failed",
+  "aiActivityStatusCompleted": "Completed",
+  "aiActivityReviewDraft": "Tap to review and import the draft",
+  "aiActivityViewProgress": "Tap to view progress",
+  "aiActivityTapForDetails": "Tap for details",
+  "aiActivityUnknownMaterial": "Material",
+  "aiActivityPagesRange": "Pages {from}–{to}",
+  "@aiActivityPagesRange": {
+    "placeholders": {
+      "from": { "type": "int" },
+      "to": { "type": "int" }
+    }
+  },
+  "aiLibraryStatusDraftReady": "Draft ready",
+  "aiGenerationBackgroundSnack": "Generation runs in the background. You can leave; resume it in AI activity or the library.",
+  "aiGenerationResumedSnack": "A generation was already in progress for this material. Showing its progress.",
+  "aiGenerationProgressPercent": "{percent}% complete",
+  "@aiGenerationProgressPercent": {
+    "placeholders": { "percent": { "type": "int" } }
+  },
+  "aiJobStageQueued": "Queued",
+  "aiJobStagePreparing": "Preparing material",
+  "aiJobStageOutlining": "Planning topics",
+  "aiJobStageGenerating": "Generating questions",
+  "aiJobStageMerging": "Merging results",
+  "aiJobStageValidating": "Validating questions",
+  "aiJobStageImporting": "Preparing draft",
+  "aiJobStageCompleted": "Completed",
+  "aiJobStageFailed": "Failed",
+  "aiActivityClearHistoryAction": "Clear history",
+  "aiActivityClearHistoryTitle": "Clear history?",
+  "aiActivityClearHistoryMessage": "Completed runs and old failures will be removed. Jobs in progress and drafts waiting for review are kept.",
+  "aiActivityClearHistoryDone": "Removed {count} items from history.",
+  "@aiActivityClearHistoryDone": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "aiActivityClearHistoryNothing": "There was nothing to clear.",
+
+  "cancel": "Cancel",
+  "practiceStatusInProgress": "In progress",
+
+  "guestCodeTitle": "Practice with code",
+  "guestCodeSubtitle": "Enter the code shared by your teacher to practice without creating an account.",
+  "guestCodeAction": "Start",
+  "guestCodeLabel": "Code",
+  "guestCodeRequired": "Enter a code",
+  "guestCodePasteTooltip": "Paste",
+  "guestEphemeralNotice": "This is a temporary session. Everything is deleted when you leave.",
+  "guestPracticeWithCodeAction": "Practice with code",
+  "guestShellFreeBadge": "Free",
+  "guestShellHeroHint": "Practice now. Sign up free to save progress and unlock more.",
+  "guestShellSessionBadge": "No account",
+  "guestPracticeOptions": "Practice options",
+  "guestStartPracticeAction": "Practice",
+  "guestAttemptsTitle": "This visit",
+  "guestAttemptsEmpty": "You haven't practiced yet in this visit. Start now!",
+  "guestLeaveAction": "Leave",
+  "guestLeaveConfirmTitle": "Leave this visit?",
+  "guestLeaveConfirmMessage": "All attempts from this visit will be deleted. This cannot be undone.",
+  "guestRegisterAction": "Create free account",
+  "guestTryAgainAction": "Try again",
+  "guestResultStatCorrect": "Correct",
+  "guestResultStatIncorrect": "Wrong",
+  "guestViewResultsAction": "View results",
+  "guestTimerRegisteredOnlyHint": "Registered users only. Creating an account is free.",
+  "guestRegisterCtaTitle": "Want to save your results?",
+  "guestRegisterBenefit1": "Permanent history of all your attempts",
+  "guestRegisterBenefit2": "Create your own quizzes with AI",
+  "guestRegisterBenefit3": "Free plan: 5 quizzes and 20 AI credits, no cost",
+  "guestExitPracticeTitle": "Exit practice?",
+  "guestExitPracticeMessage": "Your progress is saved and you can resume it when you come back.",
+  "guestExitPracticeConfirm": "Exit",
+
+  "teacherTabLabel": "Teacher",
+  "teacherDashboardTitle": "Dashboard",
+  "teacherDashboardTotalStudents": "Students",
+  "teacherDashboardActiveClasses": "Classes",
+  "teacherDashboardPublishedQuizzes": "Quizzes",
+  "teacherDashboardSessionsThisWeek": "This week",
+  "teacherDashboardActivityFeedTitle": "Recent Activity",
+  "teacherDashboardInsightsTitle": "Insights",
+  "teacherDashboardEmptyFeed": "No activity yet. Share a quiz with your students!",
+  "teacherDashboardEmptyInsights": "No insights yet. Come back when your students start practicing.",
+  "teacherDashboardInventoryStudents": "Students",
+  "teacherDashboardInventoryClasses": "Classes",
+  "teacherDashboardInventoryQuizzes": "Quizzes",
+  "teacherDashboardUrgentTitle": "Needs attention",
+  "teacherDashboardUrgentEmpty": "No urgent tasks right now.",
+  "teacherDashboardUrgentDueLabel": "Due {date}",
+  "@teacherDashboardUrgentDueLabel": { "placeholders": { "date": { "type": "String" } } },
+  "teacherDashboardUrgentPendingLabel": "{pending} of {total} not submitted",
+  "@teacherDashboardUrgentPendingLabel": { "placeholders": { "pending": { "type": "int" }, "total": { "type": "int" } } },
+  "teacherDashboardActiveStudentsWeek": "Active students this week: {count}",
+  "@teacherDashboardActiveStudentsWeek": { "placeholders": { "count": { "type": "int" } } },
+  "teacherInsightHighError": "A question has {errorRate}% errors: {questionText}",
+  "@teacherInsightHighError": { "placeholders": { "errorRate": { "type": "String" }, "questionText": { "type": "String" } } },
+  "teacherInsightMostActive": "{sessionCount} practices this week ({studentCount} students) · {quizTitle}",
+  "@teacherInsightMostActive": { "placeholders": { "sessionCount": { "type": "int" }, "studentCount": { "type": "int" }, "quizTitle": { "type": "String" } } },
+  "teacherAssignmentAnalyticsTitle": "Assignment analytics",
+  "teacherAssignmentAnalyticsAction": "View analytics",
+  "teacherAssignmentAnalyticsRosterTitle": "Students",
+  "teacherAssignmentAnalyticsHardQuestionsTitle": "Hard questions",
+  "teacherAssignmentAnalyticsDistributionTitle": "Score distribution",
+  "teacherAssignmentAnalyticsNoAttempt": "No attempt",
+  "teacherAssignmentAnalyticsCompletionLabel": "Submitted {completed} of {total}",
+  "@teacherAssignmentAnalyticsCompletionLabel": { "placeholders": { "completed": { "type": "int" }, "total": { "type": "int" } } },
+  "teacherAssignmentAnalyticsBestLabel": "Best: {score}%",
+  "@teacherAssignmentAnalyticsBestLabel": { "placeholders": { "score": { "type": "String" } } },
+  "teacherAssignmentAnalyticsLastLabel": "Last: {score}%",
+  "@teacherAssignmentAnalyticsLastLabel": { "placeholders": { "score": { "type": "String" } } },
+  "teacherAssignmentAnalyticsErrorRateLabel": "{rate}% error · {attempts} attempts",
+  "@teacherAssignmentAnalyticsErrorRateLabel": { "placeholders": { "rate": { "type": "String" }, "attempts": { "type": "int" } } },
+  "teacherClassAnalyticsActiveStudentsLabel": "Students who practiced",
+  "teacherClassAnalyticsAverageLabel": "Average",
+  "teacherClassAnalyticsAssignmentsTitle": "Assignments",
+  "studentAssignmentProgressTitle": "My progress",
+  "studentAssignmentProgressAction": "My progress",
+  "studentAssignmentProgressMyStats": "My results",
+  "studentAssignmentProgressEvolutionTitle": "My progress over time",
+  "studentAssignmentProgressHardQuestionsTitle": "Questions to review",
+  "studentAssignmentProgressTrendUp": "You improved {points} pts since your first attempt",
+  "@studentAssignmentProgressTrendUp": { "placeholders": { "points": { "type": "String" } } },
+  "studentAssignmentProgressAttemptLabel": "Attempt {number}: {percent}%",
+  "@studentAssignmentProgressAttemptLabel": { "placeholders": { "number": { "type": "int" }, "percent": { "type": "String" } } },
+  "practiceResultRepracticeTitle": "Questions to review",
+  "practiceResultTrendUp": "+{points} pts vs previous attempt",
+  "@practiceResultTrendUp": { "placeholders": { "points": { "type": "String" } } },
+  "practiceResultTrendDown": "{points} pts vs previous attempt",
+  "@practiceResultTrendDown": { "placeholders": { "points": { "type": "String" } } },
+  "practiceResultReviewQuestionAction": "View in review",
+  "analyticsPersonalOnlyLabel": "Your attempts only",
+  "analyticsOnlyDifficultFilter": "Difficult only",
+  "analyticsPersonalAccuracyLabel": "{percent}% correct on your attempts",
+  "@analyticsPersonalAccuracyLabel": { "placeholders": { "percent": { "type": "String" } } },
+  "scoreDistributionRange": "{min}–{max}%",
+  "@scoreDistributionRange": { "placeholders": { "min": { "type": "int" }, "max": { "type": "int" } } },
+
+  "teacherClassesTitle": "My Classes",
+  "teacherClassesEmpty": "You haven't created any class yet.",
+  "teacherClassCreateTitle": "New Class",
+  "teacherClassNameLabel": "Class name",
+  "teacherClassNameHint": "e.g. Algebra II — Period 3",
+  "teacherClassDescriptionLabel": "Description (optional)",
+  "teacherClassDescriptionHint": "Short description of this class",
+  "teacherClassSaveAction": "Save",
+  "teacherClassCreateAction": "Create class",
+  "teacherClassArchiveAction": "Archive class",
+  "teacherClassArchiveConfirmTitle": "Archive class?",
+  "teacherClassArchiveConfirmMessage": "Students will no longer be able to see assignments from this class.",
+  "teacherClassArchiveConfirmAction": "Archive",
+  "teacherClassMembersTab": "Members",
+  "teacherClassAssignmentsTab": "Assignments",
+  "teacherClassAnalyticsTab": "Analytics",
+  "teacherClassActiveMembersLabel": "active members",
+  "teacherClassPendingMembersLabel": "pending approval",
+  "teacherClassAddMemberTitle": "Add student",
+  "teacherClassAddMemberEmailLabel": "Student email",
+  "teacherClassAddMemberEmailHint": "student@email.com",
+  "teacherClassAddMemberAction": "Add",
+  "teacherClassInvalidEmailError": "Enter a valid email address.",
+  "teacherClassMemberNotFoundError": "No registered student was found with that email.",
+  "teacherClassMemberAlreadyExistsError": "That student is already in this class.",
+  "teacherClassRemoveMemberAction": "Remove",
+  "teacherClassRemoveMemberConfirmTitle": "Remove student?",
+  "teacherClassRemoveMemberConfirmMessage": "This student will lose access to all assignments in this class.",
+  "teacherClassApproveAction": "Approve",
+  "teacherClassMembersEmpty": "No students in this class yet.",
+  "teacherClassPendingApprovalsTitle": "Pending approval",
+
+  "teacherAssignmentCreateTitle": "New Assignment",
+  "teacherAssignmentTitleLabel": "Title",
+  "teacherAssignmentTitleHint": "e.g. Chapter 5 — Practice Quiz",
+  "teacherAssignmentInstructionsLabel": "Instructions (optional)",
+  "teacherAssignmentQuizLabel": "Select quiz",
+  "teacherAssignmentStartsAtLabel": "Opens on",
+  "teacherAssignmentDueAtLabel": "Due date",
+  "teacherAssignmentMaxAttemptsLabel": "Max attempts",
+  "teacherAssignmentMaxAttemptsHint": "Leave blank for unlimited",
+  "teacherAssignmentShowAnswersLabel": "Show correct answers",
+  "teacherAssignmentShowAnswersNever": "Never",
+  "teacherAssignmentShowAnswersAfterAttempt": "After each attempt",
+  "teacherAssignmentShowAnswersAfterDue": "After due date",
+  "teacherAssignmentShowAnswersTeacherOnly": "Teacher only",
+  "teacherAssignmentCreateAction": "Create assignment",
+  "teacherAssignmentEditTitle": "Edit assignment",
+  "teacherAssignmentEditAction": "Edit",
+  "teacherAssignmentSaveAction": "Save changes",
+  "teacherAssignmentTitleRequired": "Title is required",
+  "teacherAssignmentQuizSelectHint": "Select quiz",
+  "teacherAssignmentQuizRequiredError": "Select a quiz",
+  "teacherAssignmentQuizLockedHint": "The quiz cannot be changed after the assignment is created.",
+  "teacherAssignmentMaxAttemptsInvalidError": "Enter a valid number of attempts",
+  "teacherAssignmentNotEditableError": "Only active assignments can be edited.",
+  "teacherAssignmentMaxAttemptsBelowExistingError": "Max attempts cannot be lower than attempts students have already used.",
+  "teacherAssignmentInvalidDateRangeError": "Due date cannot be before the start date.",
+  "teacherAssignmentCloseAction": "Close assignment",
+  "teacherAssignmentArchiveAction": "Archive",
+  "teacherAssignmentCloseConfirmTitle": "Close assignment?",
+  "teacherAssignmentCloseConfirmMessage": "Students will no longer be able to submit new attempts.",
+  "teacherAssignmentCompletionTitle": "Completion",
+  "teacherAssignmentAttemptsTitle": "Attempts",
+  "teacherAssignmentCompletedLabel": "completed",
+  "teacherAssignmentPendingLabel": "not submitted",
+  "teacherAssignmentBestScoreLabel": "Best",
+  "teacherAssignmentAttemptsLabel": "attempts",
+  "teacherAssignmentDueLabel": "Due",
+  "teacherAssignmentNoDueDate": "No due date",
+  "teacherAssignmentEmpty": "No assignments yet.",
+  "teacherAssignmentFormSubtitle": "Set dates, attempts, and when answers are revealed.",
+  "teacherAssignmentSectionDetails": "Details",
+  "teacherAssignmentSectionQuiz": "Quiz",
+  "teacherAssignmentSectionSchedule": "Schedule",
+  "teacherAssignmentSectionRules": "Rules",
+  "teacherAssignmentCreateQuizCtaSubtitle": "Create it here and select it instantly",
+  "teacherAssignmentSelectQuizAction": "Choose from my quizzes",
+  "teacherAssignmentChangeQuizAction": "Change",
+  "teacherAssignmentQuizDraftWarning": "This quiz is a draft. Publish it so students can see the assignment.",
+  "teacherAssignmentNoQuizzesHint": "You don't have any quizzes yet. Create one to continue.",
+  "teacherAssignmentPickDatePlaceholder": "Not set",
+  "teacherAssignmentDraftContinued": "Continue setting up your assignment. The new quiz is already selected.",
+
+  "teacherAnalyticsAvgScoreLabel": "Avg. score",
+  "teacherAnalyticsTotalSessionsLabel": "Total sessions",
+  "teacherAnalyticsCompletionRateLabel": "Completion",
+
+  "teacherUpgradeHeroTitle": "Turn your quizzes into a classroom",
+  "teacherUpgradeHeroSubtitle": "Everything you need to teach, assign, and track — all in one place.",
+  "teacherUpgradePriceLabel": "/ month",
+  "teacherUpgradePopularBadge": "Most popular for educators",
+  "teacherUpgradePillar1Title": "Organized classes",
+  "teacherUpgradePillar1Body": "Create groups, invite students by email and manage who has access.",
+  "teacherUpgradePillar2Title": "Smart assignments",
+  "teacherUpgradePillar2Body": "Set deadlines, limit attempts and control when answers are revealed.",
+  "teacherUpgradePillar3Title": "Activity Pulse",
+  "teacherUpgradePillar3Body": "Live feed of student activity, auto-insights and per-class analytics.",
+  "teacherUpgradeCta": "Become a Teacher",
+  "teacherUpgradeCancelHint": "Cancel anytime · Instant access after payment",
+  "teacherUpgradeSeeAllPlans": "See all plans",
+  "teacherUpgradeAlreadyActive": "You already have an active Teacher plan.",
+  "teacherUpgradeCancelTitle": "Cancel subscription?",
+  "teacherUpgradeCancelMessage": "You will lose access to the Teacher module and all your classes will be archived. You can resubscribe at any time.",
+  "teacherUpgradeCancelConfirm": "Cancel plan",
+  "teacherUpgradeCancelSuccess": "Subscription cancelled. See you soon!",
+  "teacherUpgradeExpiryWarning": "Your Teacher plan expires in less than 7 days. Renew to keep access.",
+
+  "homeTeacherBannerTitle": "Are you a teacher?",
+  "homeTeacherBannerBody": "Classes, assignments and real-time analytics.",
+  "homeTeacherBannerAction": "View Teacher plan",
+  "homeTeacherBannerDismissTooltip": "Don't show again",
+
+  "studentAssignmentsTitle": "My assignments",
+  "studentAssignmentsAction": "Class assignments",
+  "studentAssignmentsEmpty": "You don't have any assignments from your teachers yet.",
+  "studentAssignmentStartAction": "Start",
+  "studentAssignmentClosedLabel": "Closed",
+  "studentAssignmentUnavailableLabel": "Unavailable",
+  "studentAssignmentNotYetOpenLabel": "Coming soon",
+  "studentAssignmentNotYetOpenError": "This assignment is not available yet. Check the opening date.",
+  "studentAssignmentPastDueLabel": "Past due",
+  "studentAssignmentMaxAttemptsLabel": "No attempts left",
+  "studentAssignmentAvailableNowLabel": "Available now",
+  "studentAssignmentAttemptsSummary": "{used} of {max} attempts",
+  "@studentAssignmentAttemptsSummary": {
+    "placeholders": {
+      "used": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
+  "studentAssignmentMyAttemptsAction": "My attempts",
+  "studentAssignmentMyAttemptsTitle": "My attempts",
+  "studentAssignmentMyAttemptsEmpty": "You have not completed any attempts for this assignment yet.",
+  "studentAssignmentAttemptScoreOnlyHint": "Score only — correct answers are not available per your teacher's settings.",
+  "studentAssignmentAttemptsHeaderSummary": "{count, plural, =1{1 attempt recorded} other{{count} attempts recorded}}",
+  "@studentAssignmentAttemptsHeaderSummary": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "studentAssignmentAttemptBestScore": "Best score: {percent}%",
+  "@studentAssignmentAttemptBestScore": {
+    "placeholders": {
+      "percent": { "type": "String" }
+    }
+  },
+  "studentAssignmentAttemptStatusFinished": "Completed",
+  "studentAssignmentAttemptScoreOnlyBadge": "Score only",
+  "studentAssignmentAttemptReviewAvailable": "View answers",
+  "studentAssignmentAttemptMeta": "{score} · {duration} · {status}",
+  "@studentAssignmentAttemptMeta": {
+    "placeholders": {
+      "score": { "type": "String" },
+      "duration": { "type": "String" },
+      "status": { "type": "String" }
+    }
+  },
+  "studentAssignmentsFilterAll": "All",
+  "studentAssignmentsFilterPending": "Pending",
+  "studentAssignmentsSearchHint": "Search assignment or class",
+  "studentAssignmentsSummaryTodoOnly": "{count, plural, =1{1 to do} other{{count} to do}}",
+  "@studentAssignmentsSummaryTodoOnly": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "studentAssignmentsSummaryDueTodayOnly": "{count, plural, =1{1 due today} other{{count} due today}}",
+  "@studentAssignmentsSummaryDueTodayOnly": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "studentAssignmentsSummaryCombined": "{todo} · {dueToday}",
+  "@studentAssignmentsSummaryCombined": {
+    "placeholders": {
+      "todo": { "type": "String" },
+      "dueToday": { "type": "String" }
+    }
+  },
+  "studentAssignmentsSummaryAllDone": "You have no pending assignments right now.",
+  "studentAssignmentsClassGroupSubtitle": "{teacher} · {count, plural, =1{1 assignment} other{{count} assignments}}",
+  "@studentAssignmentsClassGroupSubtitle": {
+    "placeholders": {
+      "teacher": { "type": "String" },
+      "count": { "type": "int" }
+    }
+  },
+  "studentAssignmentsEmptyFiltered": "No assignments match this filter.",
+  "studentAssignmentRowSubtitleDue": "Due {date}{attemptsSuffix}",
+  "@studentAssignmentRowSubtitleDue": {
+    "placeholders": {
+      "date": { "type": "String" },
+      "attemptsSuffix": { "type": "String" }
+    }
+  },
+  "studentAssignmentRowSubtitleDueToday": "Due today{attemptsSuffix}",
+  "@studentAssignmentRowSubtitleDueToday": {
+    "placeholders": {
+      "attemptsSuffix": { "type": "String" }
+    }
+  },
+  "studentAssignmentRowSubtitleAvailable": "Available{attemptsSuffix}",
+  "@studentAssignmentRowSubtitleAvailable": {
+    "placeholders": {
+      "attemptsSuffix": { "type": "String" }
+    }
+  },
+  "studentAssignmentRowSubtitleNoDue": "No due date{attemptsSuffix}",
+  "@studentAssignmentRowSubtitleNoDue": {
+    "placeholders": {
+      "attemptsSuffix": { "type": "String" }
+    }
+  },
+  "studentAssignmentRowSubtitleNotYetOpen": "Opens {date}",
+  "@studentAssignmentRowSubtitleNotYetOpen": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "studentAssignmentRowSubtitleStatus": "{status}{attemptsSuffix}",
+  "@studentAssignmentRowSubtitleStatus": {
+    "placeholders": {
+      "status": { "type": "String" },
+      "attemptsSuffix": { "type": "String" }
+    }
+  },
+  "studentAssignmentAttemptsSuffix": " · {summary}",
+  "@studentAssignmentAttemptsSuffix": {
+    "placeholders": {
+      "summary": { "type": "String" }
+    }
+  },
+  "studentAssignmentStatusBadgeAvailable": "Available",
+  "studentAssignmentDetailTitle": "Assignment details",
+
+  "profileTeacherPlanSectionTitle": "Teacher plan",
+  "profileTeacherPlanManageTitle": "Manage Teacher plan",
+  "profileTeacherPlanActiveSubtitle": "Active plan · tap to manage",
+  "profileTeacherPlanInactiveSubtitle": "Classes, assignments and analytics · Monthly subscription",
+
+  "teacherUpgradeKeepPlan": "No, keep it",
+
+  "teacherOnboardingWelcomeTitle": "Welcome, Teacher!",
+  "teacherOnboardingStepProgress": "Step {current} of {total}",
+  "@teacherOnboardingStepProgress": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "teacherOnboardingStep1Title": "Create your first class",
+  "teacherOnboardingStep1Body": "Classes let you organize students and assign quizzes with personalized tracking.",
+  "teacherOnboardingClassNameLabel": "Class name",
+  "teacherOnboardingClassNameHint": "e.g. Mathematics — Group A",
+  "teacherOnboardingCreateClassAction": "Create class and continue",
+  "teacherOnboardingStep2Title": "Invite your first student",
+  "teacherOnboardingStep2Body": "Enter a registered student's email to add them to your class. You can also do this later.",
+  "teacherOnboardingStudentEmailLabel": "Student email",
+  "teacherOnboardingStudentEmailHint": "student@email.com",
+  "teacherOnboardingInviteAction": "Invite and continue",
+  "teacherOnboardingSkipAction": "Skip for now",
+  "teacherOnboardingStep3Title": "All set!",
+  "teacherOnboardingStep3Body": "Your classroom is ready. You can now create assignments, track student progress, and analyze results in Activity Pulse.",
+  "teacherOnboardingGoToDashboardAction": "Go to Teacher Dashboard"
+}

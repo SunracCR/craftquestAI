@@ -1,0 +1,53 @@
+# CraftQuest TXT Import Format v4
+# Regla: la respuesta correcta se define por keys, no por A/B/C/D.
+# Las letras visuales se asignan despues por la Web API cuando inicia el intento.
+
+[QUIZ]
+title=Practica de supuestos y razonamiento
+description=Ejemplo de importacion TXT con respuestas por ID estable
+default_points=1
+default_randomize_answers=true
+
+[QUESTION]
+external_id=Q-SUP-001
+type=single_choice
+section=Razonamiento
+points=1
+difficulty=medium
+randomize_answers=true
+text=Analice los siguientes tres supuestos y seleccione la alternativa correcta.
+answer[ONLY_1]=Solo Supuesto 1 correcto
+answer[ONE_TWO]=Supuesto 1 y 2 correctos
+answer[ALL]=Todos los supuestos son correctos
+answer[NONE]=Ningun Supuesto es correcto
+correct=ALL
+justification=Los tres supuestos cumplen la condicion indicada; por eso la alternativa correcta es "Todos los supuestos son correctos".
+explanation_visibility=after_quiz
+
+[QUESTION]
+external_id=Q-MULTI-001
+type=multiple_choice
+section=Informatica
+points=2
+difficulty=easy
+randomize_answers=true
+text=Cuales de las siguientes son bases de datos relacionales?
+answer[SQL_SERVER]=SQL Server
+answer[MYSQL]=MySQL
+answer[MONGODB]=MongoDB
+answer[POSTGRES]=PostgreSQL
+correct=SQL_SERVER|MYSQL|POSTGRES
+justification=SQL Server, MySQL y PostgreSQL son bases de datos relacionales. MongoDB es documental.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=Q-TF-001
+type=true_false
+section=Bases de datos
+points=1
+randomize_answers=false
+text=Azure SQL Database es un servicio administrado de base de datos relacional.
+answer[TRUE]=Verdadero
+answer[FALSE]=Falso
+correct=TRUE
+justification=Azure SQL Database es un servicio administrado basado en el motor de SQL Server.

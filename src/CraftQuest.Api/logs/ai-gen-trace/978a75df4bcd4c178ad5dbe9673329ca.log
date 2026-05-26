@@ -1,0 +1,480 @@
+﻿=== AI generation trace started ===
+Utc: 2026-05-25T00:24:43.2268681Z
+Log file: C:\Users\cperaza_ga\Proyectos\CraftQuest\src\CraftQuest.Api\logs/ai-gen-trace\978a75df4bcd4c178ad5dbe9673329ca.log
+[job.input] Generation parameters | {"StudyMaterialId":"53f7bc14-463c-4753-82c6-0645187d2dae","QuestionCount":11,"Language":"en","Difficulty":"mixed","AllowedQuestionTypes":["single_choice","true_false","multiple_choice"],"PageFrom":96,"PageTo":100,"TopicFocus":null,"Preset":null,"sourceChars":11367}
+[provider.start] GenerateAsync | {"sourceChars":11367,"chunkCount":1,"requestedQuestions":11,"allowedTypes":["single_choice","true_false","multiple_choice"],"pages":"96-100","language":"en"}
+--- PROMPT: outline (len=10618) ---
+You are a curriculum planner for CraftQuest. Output JSON only (no markdown).
+Return shape (example): { "items": [ { "index": 1, "topic": "...", "suggestedType": "single_choice", "chunkIndex": 1 } ] }
+Rules:
+- Exactly 11 items in "items".
+- chunkIndex must be between 1 and 1 (match --- Page N --- sections when present).
+- suggestedType must be one of: single_choice, true_false, multiple_choice.
+- Topics must be distinct and cover the material evenly.
+- Language for topic text: "en".
+- Difficulty target: mixed.
+- Pedagogical goal: assessment.
+
+SOURCE EXCERPT:
+--- Page 96 ---
+74 6 Experiment Process Cause construct Effect construct OutputTreatment Theory Observation Independent variable Dependent variable Experiment operation Experiment objective cause-effect construct treatment-outcome construct Fig. 6.1 Experiment principles (Adapted from Trochim [171]) uncommon that some factor is overlooked before the experiment, and the oversight prevents us from doing the planned analysis and hence we are unable to draw valid conclusions. The objective, of having a process, is to provide support in setting up and conducting an experiment. The activities in an experiment are brieﬂy outlined in this chapterand treated in moredetail in the followingchapters,see Chaps.7–11. 6.1 Variables, Treatments, Objects and Subjects Before discussing the experiment process, it is necessary to introduce a few deﬁnitions in order to have a vocabulary for experimentation. When conducting a formal experiment, we want to study the outcome when we vary some of the input variables to a process. There are two kinds of variables in an experiment, independentand dependentvariables, see Fig.6.2. Those variables that we want to study to see the effect of the changes in the independentvariables are called dependent variables (or response variables). Often thereisonlyonedependentvariablein anexperiment.All variablesin aprocessthat are manipulated and controlled are called independentvariables. Example. We want to study the effect of a new development method on the productivity of the personnel. We may have chosen to introduce an object-oriented design method instead of a function-oriented approach. The dependent variable in
+
+--- Page 97 ---
+6.1 Variables, Treatments, Objects and Subjects 75 ProcessIndependent variables Dependent variable Fig. 6.2 Illustration of independent and dependent variables Process Independent variables Dependent variable Experiment design Experiment Treatment Independent variables with fixed levels Fig. 6.3 Illustration of an experiment the experiment is the productivity. Independent variables may be the development method,the experienceof the personnel,tool support, and the environment. An experimentstudies the effectof changingoneor moreindependentvariables. Thosevariablesare calledfactors. Theother independentvariablesare controlledat a ﬁxed level during the experiment, or else we cannot say if the factor or another variable causes the effect. A treatment is one particular value of a factor. Example. The factor for theexampleexperimentabove,is the developmentmethod since we want to study the effect of changingthe method.We use two treatmentsof the factor: the old and the new developmentmethod. The choice of treatment,and at which levels the other independentvariable shall have, is part of the experiment design, see Fig.6.3. Experiment design is described in more detail in Chap.8. The treatments are being applied to the combination of objects and subjects. An object can, for example, be a document that shall be reviewed with different inspection techniques.The peoplethat apply the treatment are called subjects.1 The characteristics of both the objects and the subjects can be independent variables in the experiment. 1Sometimes the term participant is used instead of the term subject. The term subject is mainly used when people are considered with respect to different treatments and with respect to the analysis and the term participant mainly when it deals with how to engage and motivate people in a study.
+
+--- Page 98 ---
+76 6 Experiment Process Example. The objects in the example experiment are the programsto be developed and the subjects are the personnel. An experiment consists of a set of tests (sometimes called trials) where each test is a combination of treatment, subject and object. It should be observed that this type of test should not be confused with the use of statistical tests, which is further discussed in Chap.10. The number of tests affects the experimental error, and provides an opportunity to estimate the mean effect of any experimental factor. The experimental error helps us to know how much conﬁdence we can place in the results of the experiment. Example. A test can be that person N (subject) uses the new development method (treatment) for developingprogram A (object). In human-oriented experiments, humans are the subjects, applying different treatments to objects. This implies several limitations to the control of the exper- iment. Firstly, humans have different skills and abilities, which in itself may be an independent variable. Secondly, humans learn over time, which means that if one subject applies two methods, the order of application of the methods may matter, andalsothesameobjectcannotbeusedforbothoccasions.Thirdly,human-oriented experiments are impacted by all sorts of inﬂuences and threats, due to the subject’s ability to guess what the experimenter expects, their motivation for doing the tasks etc. Hence it is critical for the outcome of the expe
+
+[... middle of source omitted for outline ...]
+
+s 77 Experiment process Experiment scoping Experiment report Experiment idea Experiment planning Experiment operation Analysis & interpretation Presentation & package Fig. 6.4 Overview of the experiment process other types of studies than experiments, but it has to be tailored to the speciﬁc type of study being conducted, for example, a survey using e-mail or a case study of a large software project. The process is as it is presented, however, suited for both randomized experiments and quasi-experiments. The latter are often used in software engineering when random samples of, for example, subjects (participants) are infeasible. The starting point for an experiment is insight, and the idea that an experiment would be a possible way of evaluating whatever we are interested in. In other words, we have to realize that an experiment is appropriate for the question we are going to investigate. This is by no means always obvious, in particular since empirical studies are not frequently used within computer science and software engineering [170, 181]. Some argumentation regarding why computer scientist should experiment more is provided by Tichy [169]. If we assume that we have realized,thatanexperimentisappropriatethenitisimportanttoplantheexperiment carefully to avoid unnecessary mistakes, see Sect.2.9. The experiment process can be divided into the following main activities. Scop- ing is the ﬁrst step, where we scope the experiment in terms of problem, objective and goals. Planning comes next, where the design of the experiment is determined, the instrumentation is considered and the threats to the experiment are evaluated. Operation of the experiment follows from the design. In the operational activity, measurements are collected which then are analyzed and evaluated in analysis and interpretation. Finally, the results are presented and packaged in presentation and package. The activities are illustrated in Fig.6.4 and further elaborated below,
+
+--- Page 100 ---
+78 6 Experiment Process and then each of the activities is treated in-depth in Chaps.7–11. An overview of the experimentprocess including the activities, is presented in Fig.6.5. The process is not supposed to be a ‘true’ waterfall model; it is not assumed that an activity is necessarily ﬁnished prior to that the next activity is started. The order of activities in the process primarily indicates the starting order of the activities. In other words, the process is partly iterative and it may be necessary to go back and reﬁneapreviousactivitybeforecontinuingwiththeexperiment.Themainexception iswhentheoperationoftheexperimenthasstarted,thenit isnotpossibleto goback to thescopingand planningofthe experiment.Thisis notpossiblesincestarting the operation means that the subjects are inﬂuenced by the experiment, and if we go back thereis risk that it is impossibleto use the same subjects when returningto the operation phase of the experimentprocess. Scoping. The ﬁrst activity is scoping. The hypothesis has to be stated clearly. It does not have to be stated formally at this stage, but it has to be clear. Furthermore, the objective and goals of the experiment must be deﬁned. The goal is formulated from the problem to be solved. In order to capture the scope, a framework has been suggested [13]. The framework consists of the following constituents: • Object of study (what is studied?), • Purpose (what is the intention?), • Quality focus (which effect is studied?), • Perspective (whose view?), and • Context (where is the study conducted?). These are further discussed in Chap.7. Planning. The planningactivity is where the foundationfor the experimentis laid. The context of the experiment is determined in detail. This includes personnel and the environment, for example, whether the experiment is run in a university environment with students or in an industrial setting. Moreover, the hypothesis of the experiment is stated formally, including a null hypothesis and an alternative hypothesis. The next step in the planning activity is to determine variables (both indepen- dent variables (inputs) and the dependent variables (outputs). An important issue regarding the variables is to determine the values the variables actually can take. This also includes determining the measurement scale, which puts constraints on the method that we later can apply for statistical analysis. The subjects of the study are identiﬁed. Furthermore, the experiment is designed, which includes choosing a suitable experiment design including, for example, randomization of subjects. An issue closely related to the design is to preparefor the instrumentation of the experiment. We must identify and prepare suitable objects, develop guidelines if necessary and deﬁne measurement procedures.These issues are further discussed in Chap.8. As a part of the planning, it is important to consider the question of validity of the results we can expect. Validity can be divided into four major classes: internal,
+--- GEMINI RESPONSE: outline model=gemini-2.5-flash-lite len=2035 parsedQuestions=11 ---
+Parse: outline parsed
+{
+  "items": [
+    {
+      "index": 1,
+      "topic": "What are the two main types of variables in an experiment?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 2,
+      "topic": "In an experiment, which variables are manipulated and controlled?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 3,
+      "topic": "Which variables are observed to see the effect of changes in other variables?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 4,
+      "topic": "What is a 'treatment' in the context of an experiment?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 5,
+      "topic": "What are 'objects' in an experiment?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 6,
+      "topic": "What are 'subjects' in an experiment?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 7,
+      "topic": "What does a 'test' or 'trial' in an experiment consist of?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 3
+    },
+    {
+      "index": 8,
+      "topic": "True or False: The experiment process is a strict waterfall model where each step must be completed before the next begins.",
+      "suggestedType": "true_false",
+      "chunkIndex": 4
+    },
+    {
+      "index": 9,
+      "topic": "Which activity in the experiment process involves defining the problem, objective, and goals?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 4
+    },
+    {
+      "index": 10,
+      "topic": "What is determined during the 'planning' activity of the experiment process?",
+      "suggestedType": "multiple_choice",
+      "chunkIndex": 5
+    },
+    {
+      "index": 11,
+      "topic": "Why is it not possible to go back to scoping and planning once the operation of an experiment has started?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 4
+    }
+  ]
+}
+[outline.ok] Outline plan ready | {"itemCount":11}
+[chunk.single] Single-chunk generation | {"questionCount":11,"chunkIndex":1,"chunkTotal":1}
+--- PROMPT: single-chunk (len=13523) ---
+You are CraftQuest quiz generator. Output valid CQIF JSON 2.0 only (no markdown).
+Root object MUST include: cqifVersion, quiz, questions (array).
+cqifVersion must be "2.0".
+Generate exactly 11 questions in language "en".
+QUESTION PLAN (follow this order and focus; one question per line):
+- Q1: What are the two main types of variables in an experiment? (prefer type: single_choice)
+- Q2: In an experiment, which variables are manipulated and controlled? (prefer type: single_choice)
+- Q3: Which variables are observed to see the effect of changes in other variables? (prefer type: single_choice)
+- Q4: What is a 'treatment' in the context of an experiment? (prefer type: single_choice)
+- Q5: What are 'objects' in an experiment? (prefer type: single_choice)
+- Q6: What are 'subjects' in an experiment? (prefer type: single_choice)
+- Q7: What does a 'test' or 'trial' in an experiment consist of? (prefer type: single_choice)
+- Q8: True or False: The experiment process is a strict waterfall model where each step must be completed before the next begins. (prefer type: true_false)
+- Q9: Which activity in the experiment process involves defining the problem, objective, and goals? (prefer type: single_choice)
+- Q10: What is determined during the 'planning' activity of the experiment process? (prefer type: multiple_choice)
+- Q11: Why is it not possible to go back to scoping and planning once the operation of an experiment has started? (prefer type: single_choice)
+Language for question text: "en".
+Difficulty mode: mixed.
+Pedagogical goal: assessment.
+Allowed question types ONLY: single_choice, true_false, multiple_choice.
+NEVER use image_choice or image_based_question.
+Do not reference images, diagrams, or figures not described in text.
+Topic focus: cover this source section evenly.
+Use ONLY facts explicitly present in SOURCE. Do not invent.
+Each question needs: text, type, answerOptions (min 2) with unique key fields,
+correctAnswerKeys as JSON array referencing those keys (never a single string).
+For true_false use keys "true" and "false".
+Assign unique externalId per question (e.g. "q-1", "q-2").
+Omit justifications.
+
+SOURCE:
+--- Page 96 ---
+74 6 Experiment Process Cause construct Effect construct OutputTreatment Theory Observation Independent variable Dependent variable Experiment operation Experiment objective cause-effect construct treatment-outcome construct Fig. 6.1 Experiment principles (Adapted from Trochim [171]) uncommon that some factor is overlooked before the experiment, and the oversight prevents us from doing the planned analysis and hence we are unable to draw valid conclusions. The objective, of having a process, is to provide support in setting up and conducting an experiment. The activities in an experiment are brieﬂy outlined in this chapterand treated in moredetail in the followingchapters,see Chaps.7–11. 6.1 Variables, Treatments, Objects and Subjects Before discussing the experiment process, it is necessary to introduce a few deﬁnitions in order to have a vocabulary for experimentation. When conducting a formal experiment, we want to study the outcome when we vary some of the input variables to a process. There are two kinds of variables in an experiment, independentand dependentvariables, see Fig.6.2. Those variables that we want to study to see the effect of the changes in the independentvariables are called dependent variables (or response variables). Often thereisonlyonedependentvariablein anexperiment.All variablesin aprocessthat are manipulated and controlled are called independentvariables. Example. We want to study the effect of a new development method on the productivity of the personnel. We may have chosen to introduce an object-oriented design method instead of a function-oriented approach. The dependent variable in
+
+--- Page 97 ---
+6.1 Variables, Treatments, Objects and Subjects 75 ProcessIndependent variables Dependent variable Fig. 6.2 Illustration of independent and dependent variables Process Independent variables Dependent variable Experiment design Experiment Treatment Independent variables with fixed levels Fig. 6.3 Illustration of an experiment the experiment is the productivity. Independent variables may be the development method,the experienceof the personnel,tool support, and the environment. An experimentstudies the effectof changingoneor moreindependentvariables. Thosevariablesare calledfactors. Theother independentvariablesare controlledat a ﬁxed level during the experiment, or else we cannot say if the factor or another variable causes the effect. A treatment is one particular value of a factor. Example. The factor for theexampleexperimentabove,is the developmentmethod since we want to study the effect of changingthe method.We use two treatmentsof the factor: the old and the new developmentmethod. The choice of treatment,and at which levels the other independentvariable shall have, is part of the experiment design, see Fig.6.3. Experiment design is described in more detail in Chap.8. The treatments are being applied to the combination of objects and subjects. An object can, for example, be a document that shall be reviewed with different inspection techniques.The peoplethat apply the treatment are called subjects.1 The characteristics of both the objects and the subjects can be independent variables in the experiment. 1Sometimes the term participant is used instead of the term subject. The term subject is mainly used when people are considered with respect to different treatments and with respect to the analysis and the term participant mainly when it deals with how to engage and motivate people in a study.
+
+--- Page 98 ---
+76 6 Experiment Process Example. The objects in the example experiment are the programsto be developed and the subjects are the personnel. An experiment consists of a set of tests (sometimes called trials) where each test is a combination of treatment, subject and object. It should be observed that this type of test should not be confused with the use of statistical tests, which is further discussed in Chap.10. The number of tests affects the experimental error, and provides an opportunity to estimate the mean effect of any experimental factor. The experimental error helps us to know how much conﬁdence we can place in the results of the experiment. Example. A test can be that person N (subject) uses the new development method (treatment) for developingprogram A (object). In human-oriented experiments, humans are the subjects, applying different treatments to objects. This implies several limitations to the control of the exper- iment. Firstly, humans have different skills and abilities, which in itself may be an independent variable. Secondly, humans learn over time, which means that if one subject applies two methods, the order of application of the methods may matter, andalsothesameobjectcannotbeusedforbothoccasions.Thirdly,human-oriented experiments are impacted by all sorts of inﬂuences and threats, due to the subject’s ability to guess what the experimenter expects, their motivation for doing the tasks etc. Hence it is critical for the outcome of the experiment how subjects are selected and treated. Technology-orientedexperimentsareeasier to control,since thetechnologymay be made deterministic. The independent variable out of control in this type of experiments may instead be the objects selected for the experiment. One tool or technique may be well suited for one type of programs, and not for another. Hence it is critical for the outcome how objects are selected. 6.2 Process A process provides steps that support an activity, for example, software develop- ment. Processes are important as they can be used as checklists and guidelines of what to do and how to do it. To perform an experiment, several steps have to be taken and they have to be in a certain order. Thus, a process for how to perform experimentsis needed. The process presented is focused on experimentation, but the same basic steps must be performed in any empirical study, as illustrated for the case study process inSect.5.1.2.Themaindifferenceistheworkwithinaspeciﬁcactivity,forexample, the design of a survey, experiment and case study differ, but they all need to be designed. Further, as case studies are ﬂexible design studies, there are several iterations over the process steps, while experiments and surveys, as ﬁxed design studies, primarily execute the steps once. Thus, the basic process may be used for
+
+--- Page 99 ---
+6.2 Process 77 Experiment process Experiment scoping Experiment report Experiment idea Experiment planning Experiment operation Analysis & interpretation Presentation & package Fig. 6.4 Overview of the experiment process other types of studies than experiments, but it has to be tailored to the speciﬁc type of study being conducted, for example, a survey using e-mail or a case study of a large software project. The process is as it is presented, however, suited for both randomized experiments and quasi-experiments. The latter are often used in software engineering when random samples of, for example, subjects (participants) are infeasible. The starting point for an experiment is insight, and the idea that an experiment would be a possible way of evaluating whatever we are interested in. In other words, we have to realize that an experiment is appropriate for the question we are going to investigate. This is by no means always obvious, in particular since empirical studies are not frequently used within computer science and software engineering [170, 181]. Some argumentation regarding why computer scientist should experiment more is provided by Tichy [169]. If we assume that we have realized,thatanexperimentisappropriatethenitisimportanttoplantheexperiment carefully to avoid unnecessary mistakes, see Sect.2.9. The experiment process can be divided into the following main activities. Scop- ing is the ﬁrst step, where we scope the experiment in terms of problem, objective and goals. Planning comes next, where the design of the experiment is determined, the instrumentation is considered and the threats to the experiment are evaluated. Operation of the experiment follows from the design. In the operational activity, measurements are collected which then are analyzed and evaluated in analysis and interpretation. Finally, the results are presented and packaged in presentation and package. The activities are illustrated in Fig.6.4 and further elaborated below,
+
+--- Page 100 ---
+78 6 Experiment Process and then each of the activities is treated in-depth in Chaps.7–11. An overview of the experimentprocess including the activities, is presented in Fig.6.5. The process is not supposed to be a ‘true’ waterfall model; it is not assumed that an activity is necessarily ﬁnished prior to that the next activity is started. The order of activities in the process primarily indicates the starting order of the activities. In other words, the process is partly iterative and it may be necessary to go back and reﬁneapreviousactivitybeforecontinuingwiththeexperiment.Themainexception iswhentheoperationoftheexperimenthasstarted,thenit isnotpossibleto goback to thescopingand planningofthe experiment.Thisis notpossiblesincestarting the operation means that the subjects are inﬂuenced by the experiment, and if we go back thereis risk that it is impossibleto use the same subjects when returningto the operation phase of the experimentprocess. Scoping. The ﬁrst activity is scoping. The hypothesis has to be stated clearly. It does not have to be stated formally at this stage, but it has to be clear. Furthermore, the objective and goals of the experiment must be deﬁned. The goal is formulated from the problem to be solved. In order to capture the scope, a framework has been suggested [13]. The framework consists of the following constituents: • Object of study (what is studied?), • Purpose (what is the intention?), • Quality focus (which effect is studied?), • P
+... [truncated 1523 chars] ...
+--- GEMINI RESPONSE: single-chunk model=gemini-2.5-flash len=7589 parsedQuestions=11 ---
+Parse: parsed OK
+{
+  "cqifVersion": "2.0",
+  "quiz": {
+    "language": "en",
+    "difficulty": "mixed",
+    "pedagogicalGoal": "assessment"
+  },
+  "questions": [
+    {
+      "externalId": "q-1",
+      "text": "What are the two main types of variables in an experiment?",
+      "type": "single_choice",
+      "language": "en",
+      "difficulty": "easy",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Independent and dependent variables"
+        },
+        {
+          "key": "b",
+          "text": "Manipulated and observed variables"
+        },
+        {
+          "key": "c",
+          "text": "Input and output variables"
+        },
+        {
+          "key": "d",
+          "text": "Cause and effect variables"
+        }
+      ],
+      "correctAnswerKeys": [
+        "a"
+      ]
+    },
+    {
+      "externalId": "q-2",
+      "text": "In an experiment, which variables are manipulated and controlled?",
+      "type": "single_choice",
+      "language": "en",
+      "difficulty": "easy",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Independent variables"
+        },
+        {
+          "key": "b",
+          "text": "Dependent variables"
+        },
+        {
+          "key": "c",
+          "text": "Response variables"
+        },
+        {
+          "key": "d",
+          "text": "Outcome variables"
+        }
+      ],
+      "correctAnswerKeys": [
+        "a"
+      ]
+    },
+    {
+      "externalId": "q-3",
+      "text": "Which variables are observed to see the effect of changes in other variables?",
+      "type": "single_choice",
+      "language": "en",
+      "difficulty": "easy",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Independent variables"
+        },
+        {
+          "key": "b",
+          "text": "Dependent variables"
+        },
+        {
+          "key": "c",
+          "text": "Control variables"
+        },
+        {
+          "key": "d",
+          "text": "Confounding variables"
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-4",
+      "text": "What is a 'treatment' in the context of an experiment?",
+      "type": "single_choice",
+      "language": "en",
+      "difficulty": "easy",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "A particular value of a factor"
+        },
+        {
+          "key": "b",
+          "text": "A type of statistical analysis"
+        },
+        {
+          "key": "c",
+          "text": "A method for data collection"
+        },
+        {
+          "key": "d",
+          "text": "An experimental error"
+        }
+      ],
+      "correctAnswerKeys": [
+        "a"
+      ]
+    },
+    {
+      "externalId": "q-5",
+      "text": "What are 'objects' in an experiment?",
+      "type": "single_choice",
+      "language": "en",
+      "difficulty": "easy",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "The people that apply the treatment"
+        },
+        {
+          "key": "b",
+          "text": "The items to which treatments are applied"
+        },
+        {
+          "key": "c",
+          "text": "The variables being manipulated"
+        },
+        {
+          "key": "d",
+          "text": "The results of the experiment"
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-6",
+      "text": "What are 'subjects' in an experiment?",
+      "type": "single_choice",
+      "language": "en",
+      "difficulty": "easy",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "The variables being observed"
+        },
+        {
+          "key": "b",
+          "text": "The people who apply the treatment"
+        },
+        {
+          "key": "c",
+          "text": "The items being developed"
+        },
+        {
+          "key": "d",
+          "text": "The statistical methods used"
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-7",
+      "text": "What does a 'test' or 'trial' in an experiment consist of?",
+      "type": "single_choice",
+      "language": "en",
+      "difficulty": "easy",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "A combination of treatment, subject, and object"
+        },
+        {
+          "key": "b",
+          "text": "A statistical analysis"
+        },
+        {
+          "key": "c",
+          "text": "A hypothesis statement"
+        },
+        {
+          "key": "d",
+          "text": "A measurement procedure"
+        }
+      ],
+      "correctAnswerKeys": [
+        "a"
+      ]
+    },
+    {
+      "externalId": "q-8",
+      "text": "True or False: The experiment process is a strict waterfall model where each step must be completed before the next begins.",
+      "type": "true_false",
+      "language": "en",
+      "difficulty": "medium",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "True"
+        },
+        {
+          "key": "false",
+          "text": "False"
+        }
+      ],
+      "correctAnswerKeys": [
+        "false"
+      ]
+    },
+    {
+      "externalId": "q-9",
+      "text": "Which activity in the experiment process involves defining the problem, objective, and goals?",
+      "type": "single_choice",
+      "language": "en",
+      "difficulty": "medium",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Scoping"
+        },
+        {
+          "key": "b",
+          "text": "Planning"
+        },
+        {
+          "key": "c",
+          "text": "Operation"
+        },
+        {
+          "key": "d",
+          "text": "Analysis & Interpretation"
+        }
+      ],
+      "correctAnswerKeys": [
+        "a"
+      ]
+    },
+    {
+      "externalId": "q-10",
+      "text": "What is determined during the 'planning' activity of the experiment process?",
+      "type": "multiple_choice",
+      "language": "en",
+      "difficulty": "hard",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "The context of the experiment, including personnel and environment."
+        },
+        {
+          "key": "b",
+          "text": "The formal statement of the hypothesis, including null and alternative hypotheses."
+        },
+        {
+          "key": "c",
+          "text": "The independent and dependent variables, their values, and measurement scales."
+        },
+        {
+          "key": "d",
+          "text": "The identification of subjects and the experiment design."
+        },
+        {
+          "key": "e",
+          "text": "The collection of measurements."
+        }
+      ],
+      "correctAnswerKeys": [
+        "a",
+        "b",
+        "c",
+        "d"
+      ]
+    },
+    {
+      "externalId": "q-11",
+      "text": "Why is it not possible to go back to scoping and planning once the operation of an experiment has started?",
+      "type": "single_choice",
+      "language": "en",
+      "difficulty": "hard",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Because the data analysis would become too complex."
+        },
+        {
+          "key": "b",
+          "text": "Because subjects are influenced by the experiment, and it might be impossible to use the same subjects again."
+        },
+        {
+          "key": "c",
+          "text": "Because the experiment report would already be in progress."
+        },
+        {
+          "key": "d",
+          "text": "Because the budget for the experiment would be exhausted."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    }
+  ]
+}
+[single-chunk-parsed] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":11,"types":{"single_choice":9,"true_false":1,"multiple_choice":1},"sampleTexts":["What are the two main types of variables in an experiment?","In an experiment, which variables are manipulated and controlled?","Which variables are observed to see the effect of changes in other variables?"]}
+[single-chunk-merged] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":11,"types":{"single_choice":9,"true_false":1,"multiple_choice":1},"sampleTexts":["What are the two main types of variables in an experiment?","In an experiment, which variables are manipulated and controlled?","Which variables are observed to see the effect of changes in other variables?"]}
+[post-gemini] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":11,"types":{"single_choice":9,"true_false":1,"multiple_choice":1},"sampleTexts":["What are the two main types of variables in an experiment?","In an experiment, which variables are manipulated and controlled?","Which variables are observed to see the effect of changes in other variables?"]}
+[sanitize] Question type filter applied | {"before":11,"after":11,"allowedTypes":["single_choice","true_false","multiple_choice"],"typesBefore":{"single_choice":9,"true_false":1,"multiple_choice":1},"typesAfter":{"single_choice":9,"true_false":1,"multiple_choice":1}}
+[import.populate] Import batch snapshot | {"totalRows":11,"validRows":11,"errorRows":0,"batchStatus":"ready_for_review","rows":[{"Row":1,"Status":"valid","ErrorCode":null,"message":null},{"Row":2,"Status":"valid","ErrorCode":null,"message":null},{"Row":3,"Status":"valid","ErrorCode":null,"message":null},{"Row":4,"Status":"valid","ErrorCode":null,"message":null},{"Row":5,"Status":"valid","ErrorCode":null,"message":null},{"Row":6,"Status":"valid","ErrorCode":null,"message":null},{"Row":7,"Status":"valid","ErrorCode":null,"message":null},{"Row":8,"Status":"valid","ErrorCode":null,"message":null},{"Row":9,"Status":"valid","ErrorCode":null,"message":null},{"Row":10,"Status":"valid","ErrorCode":null,"message":null}]}
+[import.batch] Import batch created from CQIF | {"ImportId":"d70afa1b-21ad-4138-a75f-668d8516dfb1","Status":"ready_for_review","TotalQuestionsDetected":11,"ValidQuestions":11,"QuestionsWithErrors":0,"QuestionsWithWarnings":0}
+=== AI generation trace ended ===

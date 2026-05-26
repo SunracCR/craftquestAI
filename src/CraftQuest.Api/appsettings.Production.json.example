@@ -1,0 +1,21 @@
+{
+  "_comment": "Copiar a appsettings.Production.json o usar variables de entorno cuando despliegues. Hoy el proyecto corre solo en local.",
+  "AllowedHosts": "api.craftquestai.com",
+  "Cors": {
+    "AllowedOrigins": [
+      "https://craftquestai.com",
+      "https://www.craftquestai.com",
+      "https://app.craftquestai.com"
+    ]
+  },
+  "Payments": {
+    "UseMockPayments": false,
+    "PayPal": {
+      "ClientId": "",
+      "ClientSecret": "",
+      "ApiBaseUrl": "https://api-m.paypal.com",
+      "ReturnUrl": "https://app.craftquestai.com/billing/paypal/return",
+      "CancelUrl": "https://app.craftquestai.com/billing/paypal/cancel"
+    }
+  }
+}

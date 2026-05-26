@@ -1,0 +1,1666 @@
+﻿=== AI generation trace started ===
+Utc: 2026-05-25T00:02:46.7665621Z
+Log file: C:\Users\cperaza_ga\Proyectos\CraftQuest\src\CraftQuest.Api\logs/ai-gen-trace\a6f5eaa3e472454a89b0d1db10ce4624.log
+[job.input] Generation parameters | {"StudyMaterialId":"ecdd4ba8-a416-4c1f-80c9-bcc7d237fd75","QuestionCount":40,"Language":"en","Difficulty":"mixed","AllowedQuestionTypes":["single_choice","multiple_choice","true_false"],"PageFrom":31,"PageTo":60,"TopicFocus":"Prueba en Ingl\u00E9s","Preset":null,"sourceChars":77366}
+[provider.start] GenerateAsync | {"sourceChars":77366,"chunkCount":3,"requestedQuestions":40,"allowedTypes":["single_choice","multiple_choice","true_false"],"pages":"31-60","language":"en"}
+--- PROMPT: outline (len=10618) ---
+You are a curriculum planner for CraftQuest. Output JSON only (no markdown).
+Return shape (example): { "items": [ { "index": 1, "topic": "...", "suggestedType": "single_choice", "chunkIndex": 1 } ] }
+Rules:
+- Exactly 40 items in "items".
+- chunkIndex must be between 1 and 3 (match --- Page N --- sections when present).
+- suggestedType must be one of: single_choice, multiple_choice, true_false.
+- Topics must be distinct and cover the material evenly.
+- Language for topic text: "en".
+- Difficulty target: mixed.
+- Pedagogical goal: assessment.
+
+SOURCE EXCERPT:
+Focus topic: Prueba en Inglés
+
+--- Page 31 ---
+8 1 Introduction object-orientation improve reuse? Are inspections cost-effective? Should we have inspection meetings or is it sufﬁcient to hand-in the remarks to a moderator? This type of questions can be investigated in order to improve our understanding of software engineering. Improved understanding is the basis for changing and improvingthewaywework,henceempiricalstudiesingeneralandexperimentation in particular are important. The introduction to the area is based on the introduction of a process for experimentation. The basic steps in the process can be used for other types of empiricalstudiestoo.Thefocusis,however,onprovidingguidelinesandsupportfor performing experiments in software engineering. Furthermore, it should be noted that ‘true’ experiments, i.e. experiments with full randomization, are difﬁcult to performin softwareengineering.Softwareengineeringexperimentsareoftenquasi- experiments,i.e.experimentinwhichit,forexample,hasnotbeenpossibletoassign participants in the experiments to groups by random [37]. Quasi-experiments are important,and they can providevaluableresults.Theprocesspresentedin this book is aimed at both ‘true’ experimentsand quasi-experiments.The latter is particularly supported by a thorough discussion of threats to experiments. Thus, the intention of this book is to providean introductionto empirical studies and experimentation, in order to highlight the opportunities and beneﬁts of doing experimentsintheﬁeldofsoftwareengineering.Theempiricalresearchmethodcan, and should be used more in software engineering.The arguments against empirical studies in software engineering are refuted by Tichy et al. [169]. Hopefully, this practical guide to experimentation in software engineering facilitates the use of empirical studies and experimentation both within software engineering research and practice. 1.3 Exercises 1.1. Why can experimentsbe viewed as prototypingfor process changes? 1.2. How can experiments be used in improvementactivities? 1.3. Why are empirical studies importantin software engineering? 1.4. When is the empirical research method best suited in software engineering in comparison with the scientiﬁc, engineering and analytic methods respectively? 1.5. Which three strategies are empirical methods divided into?
+
+--- Page 32 ---
+Chapter 2 Empirical Strategies There are two types of research paradigms that have different approaches to empirical studies. Exploratory research is concerned with studying objects in their natural setting and letting the ﬁndings emerge from the observations. This implies that a ﬂexible research design [1] is needed to adapt to changes in the observed phenomenon.Flexible design research is also referred to as qualitative research, as it primarily is informed by qualitative data. Inductive research attempts to interpret aphenomenonbasedonexplanationsthatpeoplebringforward.Itisconcernedwith discoveringcausesnoticedbythesubjectsinthestudy,andunderstandingtheirview oftheproblemathand.Thesubjectistheperson,whichistakingpartinanempirical study in order to evaluate an object. Explanatory research is mainly concerned with quantifying a relationship or to compare two or more groups with the aim to identify a cause-effect relationship. The research is often conducted through setting up controlled experiment. This type of study is a ﬁxed design [1] study, implying that factors are ﬁxed before the study is launched.Fixed design research is also referred to as quantitativeresearch, as it primarily is informed by quantitative data. Quantitative investigations are appropriate when testing the effect of some manipulation or activity. An advantage is that quantitativedata promotescomparisonsand statistical analyses.It is possible for qualitative and quantitative research to investigate the same topics but each of them will address a different type of question. For example, a quantitative investigation could be launched to investigate how much a new inspection method decreases the number of faults found in test. To answer questions about the sources of variations between different inspection groups, a qualitative investigation could be launched. As mentionedearlier,ﬁxed design strategies,such as controlledexperiments,are appropriate when testing the effects of a treatment while a ﬂexible design study of beliefs, understandings, and multiple perspectives are appropriate to ﬁnd out why the results from a quantitative investigation are as they are. The two approaches should be regarded as complementaryrather than competitive. C. Wohlin et al., Experimentation in Software Engineering, DOI 10.1007/978-3-642-29044-2 2, © Springer-Verlag Berlin Heidelberg 2012 9
+
+--- Page 33 ---
+10 2 Empirical Strategies The objectives of this chapter are: (1) to introduce empirical research strategies, (2) to highlight some important aspects in relation to the empirical strategies, and (3) to illustrate how the strategies can be used in the c
+
+[... middle of source omitted for outline ...]
+
+e sure that conﬁdentiality proceduresapply,independently of facts revealed (crime exempted [159]), • Sponsors, include clear statements on rights for independent publications of the anonymizedresults in the informed consent form for companies, and in research project contracts, • Researchers,considerhavingpeerstoperformstatisticalanalysesonanonymized data (both subjects and scales) independentlyfrom the experimenters,especially when the treatment is designed by the experimenters themselves. This also reduces the threat of experimenterexpectancies. These actions reduce the risk of being stuck in ethical dilemmas, and increases the validity of all empirical studies. Inducement. In recruiting subjects for an experiment, there must be inducements to motivate their participation. The experience and knowledge gained by applying
+
+--- Page 59 ---
+36 2 Empirical Strategies a new method may be inducement enough. In order to treat all participants fair, all subjects should be given the opportunity to learn about all treatments, even if the experimentaldesign does not require it. Some monetary inducement may also be involved, for example, in the form of cash payment, participation in a lottery, or, for professional subjects, their ordinary salary. Independently of form, the inducement must be balanced to ensure that the consent to participate really is voluntary, and not forced by too large economic or other inducements. Feedback. To maintain long term relationships and trust with the subjects of a study,feedbackof resultsandanalysisareimportant.Subjectsmustnotagreeonthe analysis, but should be giventhe opportunityto get informationabout the study and its results. If feasible, from a conﬁdentiality point of view, data from individual’s performancemay be reported back together with the overall analysis. Conclusion on ethics. Singer and Vinson ask in their early work for a code of ethics for empirical software engineering[159]. Still, 10 years later, the community has not yet developed one; the closest is Vinson and Singer’s guidelines [174], which are summarized above. Research funding agencies start to require general codes of ethics be applied, which may not ﬁt the purpose. Concrete and tailored ethical guidelines for empirical software engineering research would beneﬁt both the subjects, which they aim to protect, and the development of the research ﬁeld as such. 2.12 Exercises 2.1. What is the differencebetween qualitative and quantitative research? 2.2. What is a survey? Give examples of different types of surveys in software engineering. 2.3. Which role plays replications and systematic literature reviews in building empirical knowledge? 2.4. How can theExperienceFactorybe combinedwith the Goal/Question/Metrics method and empirical studies on a technology transfer context? 2.5. Which are the key ethical principles to observethen conducting experiments?
+
+--- Page 60 ---
+Chapter 3 Measurement Software measurement is crucial to enable control of projects, products and processes, or as stated by DeMarco: “You cannot control what you cannot mea- sure” [41]. Moreover,measurementis a central part in empirical studies. Empirical studiesare used to investigatetheeffectsof some inputto the objectunderstudy.To control the study and to see the effects, we must be able to both measure the inputs in order to describe what causes the effect on the output,and to measure the output. Without measurements, it is not possible to have the desired control and therefore an empirical study cannot be conducted. Measurement and measure are deﬁned as [56]: “Measurement is the process by which numbers or symbols are assigned to attributes of entities in the real world in such a way as to describe them according to clearly deﬁned rules.” A measure is the number or symbol assigned to an entity by this relationship to characterize an attribute. Instead of making judgement directly on the real entity, we study the measures and make the judgement on them. The word metric or metrics is also often used in software engineering. Two different meanings can be identiﬁed. First of all, softwaremetrics is used as a term for denotingthe ﬁeld of measurementin software engineering.The book by Fenton and Pﬂeeger [56] is an example of this. Secondly, the word metric is used to denote an entity which is measured, for example, lines of code (LOC) is a product metric. More precisely, it is a measure of the size of the program.Software measurement is also further discussed by Shepperd [150]. In this chapter, basic measurementtheory is presented. Section 3.1 describes the basic concept of measurement theory, and the different scale types of measures. Examples of measures in software engineering and the relation to the statistical analysis are presented in Sect.3.2, while practical aspects of measurements are discussed in Sect.3.3. C. Wohlin et al., Experimentation in Software Engineering, DOI 10.1007/978-3-642-29044-2 3, © Springer-Verlag Berlin Heidelberg 2012 37
+--- GEMINI RESPONSE: outline model=gemini-2.5-flash-lite len=7731 parsedQuestions=40 ---
+Parse: outline parsed
+{
+  "items": [
+    {
+      "index": 1,
+      "topic": "What is the primary goal of empirical studies in software engineering?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 2,
+      "topic": "Why are experiments considered a form of prototyping for process changes?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 3,
+      "topic": "How can experiments contribute to software engineering improvement activities?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 4,
+      "topic": "What is the difference between 'true' experiments and quasi-experiments in software engineering?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 5,
+      "topic": "What is the main focus of the experimentation process described in the text?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 6,
+      "topic": "Which type of research paradigm studies objects in their natural setting with findings emerging from observations?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 7,
+      "topic": "What is another name for flexible research design, often associated with qualitative data?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 8,
+      "topic": "Which research paradigm attempts to interpret a phenomenon based on explanations provided by subjects?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 9,
+      "topic": "What is the primary aim of explanatory research?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 10,
+      "topic": "What type of research design is often associated with explanatory research and controlled experiments?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 11,
+      "topic": "What is another name for fixed design research, primarily informed by quantitative data?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 12,
+      "topic": "When are quantitative investigations most appropriate?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 13,
+      "topic": "What is a key advantage of quantitative data in research?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 14,
+      "topic": "Can qualitative and quantitative research investigate the same topics?",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 15,
+      "topic": "Which type of research is appropriate for finding out 'why' results from a quantitative investigation occurred?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 16,
+      "topic": "What are the two main objectives of Chapter 2 regarding empirical strategies?",
+      "suggestedType": "multiple_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 17,
+      "topic": "What is a crucial aspect of software measurement for project and process control?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 3
+    },
+    {
+      "index": 18,
+      "topic": "Why is measurement central to empirical studies?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 3
+    },
+    {
+      "index": 19,
+      "topic": "According to the definition provided, what is 'measurement'?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 3
+    },
+    {
+      "index": 20,
+      "topic": "What is a 'measure' according to the definition?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 3
+    },
+    {
+      "index": 21,
+      "topic": "In software engineering, what are the two identified meanings of the term 'metric'?",
+      "suggestedType": "multiple_choice",
+      "chunkIndex": 3
+    },
+    {
+      "index": 22,
+      "topic": "What is an example of a product metric mentioned in the text?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 3
+    },
+    {
+      "index": 23,
+      "topic": "What is the fundamental requirement for conducting an empirical study, as stated in the text?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 3
+    },
+    {
+      "index": 24,
+      "topic": "What is the relationship between studying measures and making judgments about real entities?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 3
+    },
+    {
+      "index": 25,
+      "topic": "What is the primary purpose of measurement in software engineering, according to DeMarco?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 3
+    },
+    {
+      "index": 26,
+      "topic": "What is the main challenge in performing 'true' experiments in software engineering?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 27,
+      "topic": "What does the text suggest is the basis for changing and improving how we work in software engineering?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 28,
+      "topic": "What is the intention of the book regarding empirical studies and experimentation in software engineering?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 29,
+      "topic": "What is the role of threats to experiments in the context of quasi-experiments?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 30,
+      "topic": "What is the relationship between flexible design research and qualitative research?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 31,
+      "topic": "What does inductive research aim to discover?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 32,
+      "topic": "What is a 'subject' in the context of an empirical study?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 33,
+      "topic": "What is the implication of a 'fixed design' in research?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 34,
+      "topic": "How should qualitative and quantitative approaches be viewed in relation to each other?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 35,
+      "topic": "What is the purpose of a systematic literature review in building empirical knowledge?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 3
+    },
+    {
+      "index": 36,
+      "topic": "What are the key ethical principles to observe when conducting experiments?",
+      "suggestedType": "multiple_choice",
+      "chunkIndex": 3
+    },
+    {
+      "index": 37,
+      "topic": "What is the role of inducements in recruiting subjects for an experiment?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 3
+    },
+    {
+      "index": 38,
+      "topic": "Why is feedback of results and analysis important for maintaining long-term relationships with study subjects?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 3
+    },
+    {
+      "index": 39,
+      "topic": "What is the status of a formal code of ethics for empirical software engineering?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 3
+    },
+    {
+      "index": 40,
+      "topic": "What benefit would concrete and tailored ethical guidelines for empirical software engineering research provide?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 3
+    }
+  ]
+}
+[outline.ok] Outline plan ready | {"itemCount":40}
+[chunks.parallel] Starting parallel chunk generation | {"chunks":3,"questionsPerChunk":[13,13,14],"outlineItems":40}
+--- PROMPT: chunk-1 (len=28755) ---
+You are CraftQuest quiz generator. Output valid CQIF JSON 2.0 only (no markdown).
+Root object MUST include: cqifVersion, quiz, questions (array).
+cqifVersion must be "2.0".
+This is SOURCE chunk 1 of 3.
+Generate exactly 13 questions using ONLY facts from this chunk.
+Do not duplicate questions that would belong to other parts of the material.
+QUESTION PLAN (follow this order and focus; one question per line):
+- Q1: What is the primary goal of empirical studies in software engineering? (prefer type: single_choice)
+- Q2: Why are experiments considered a form of prototyping for process changes? (prefer type: single_choice)
+- Q3: How can experiments contribute to software engineering improvement activities? (prefer type: single_choice)
+- Q4: What is the difference between 'true' experiments and quasi-experiments in software engineering? (prefer type: single_choice)
+- Q5: What is the main focus of the experimentation process described in the text? (prefer type: single_choice)
+- Q26: What is the main challenge in performing 'true' experiments in software engineering? (prefer type: single_choice)
+- Q27: What does the text suggest is the basis for changing and improving how we work in software engineering? (prefer type: single_choice)
+- Q28: What is the intention of the book regarding empirical studies and experimentation in software engineering? (prefer type: single_choice)
+- Q29: What is the role of threats to experiments in the context of quasi-experiments? (prefer type: single_choice)
+Language for question text: "en".
+Difficulty mode: mixed.
+Pedagogical goal: assessment.
+Allowed question types ONLY: single_choice, multiple_choice, true_false.
+NEVER use image_choice or image_based_question.
+Do not reference images, diagrams, or figures not described in text.
+Topic focus: Prueba en Inglés.
+Use ONLY facts explicitly present in SOURCE. Do not invent.
+Each question needs: text, type, answerOptions (min 2) with unique key fields,
+correctAnswerKeys as JSON array referencing those keys (never a single string).
+For true_false use keys "true" and "false".
+Assign unique externalId per question (e.g. "q-1", "q-2").
+Omit justifications.
+
+SOURCE:
+Focus topic: Prueba en Inglés
+
+--- Page 31 ---
+8 1 Introduction object-orientation improve reuse? Are inspections cost-effective? Should we have inspection meetings or is it sufﬁcient to hand-in the remarks to a moderator? This type of questions can be investigated in order to improve our understanding of software engineering. Improved understanding is the basis for changing and improvingthewaywework,henceempiricalstudiesingeneralandexperimentation in particular are important. The introduction to the area is based on the introduction of a process for experimentation. The basic steps in the process can be used for other types of empiricalstudiestoo.Thefocusis,however,onprovidingguidelinesandsupportfor performing experiments in software engineering. Furthermore, it should be noted that ‘true’ experiments, i.e. experiments with full randomization, are difﬁcult to performin softwareengineering.Softwareengineeringexperimentsareoftenquasi- experiments,i.e.experimentinwhichit,forexample,hasnotbeenpossibletoassign participants in the experiments to groups by random [37]. Quasi-experiments are important,and they can providevaluableresults.Theprocesspresentedin this book is aimed at both ‘true’ experimentsand quasi-experiments.The latter is particularly supported by a thorough discussion of threats to experiments. Thus, the intention of this book is to providean introductionto empirical studies and experimentation, in order to highlight the opportunities and beneﬁts of doing experimentsintheﬁeldofsoftwareengineering.Theempiricalresearchmethodcan, and should be used more in software engineering.The arguments against empirical studies in software engineering are refuted by Tichy et al. [169]. Hopefully, this practical guide to experimentation in software engineering facilitates the use of empirical studies and experimentation both within software engineering research and practice. 1.3 Exercises 1.1. Why can experimentsbe viewed as prototypingfor process changes? 1.2. How can experiments be used in improvementactivities? 1.3. Why are empirical studies importantin software engineering? 1.4. When is the empirical research method best suited in software engineering in comparison with the scientiﬁc, engineering and analytic methods respectively? 1.5. Which three strategies are empirical methods divided into?
+
+--- Page 32 ---
+Chapter 2 Empirical Strategies There are two types of research paradigms that have different approaches to empirical studies. Exploratory research is concerned with studying objects in their natural setting and letting the ﬁndings emerge from the observations. This implies that a ﬂexible research design [1] is needed to adapt to changes in the observed phenomenon.Flexible design research is also referred to as qualitative research, as it primarily is informed by qualitative data. Inductive research attempts to interpret aphenomenonbasedonexplanationsthatpeoplebringforward.Itisconcernedwith discoveringcausesnoticedbythesubjectsinthestudy,andunderstandingtheirview oftheproblemathand.Thesubjectistheperson,whichistakingpartinanempirical study in order to evaluate an object. Explanatory research is mainly concerned with quantifying a relationship or to compare two or more groups with the aim to identify a cause-effect relationship. The research is often conducted through setting up controlled experiment. This type of study is a ﬁxed design [1] study, implying that factors are ﬁxed before the study is launched.Fixed design research is also referred to as quantitativeresearch, as it primarily is informed by quantitative data. Quantitative investigations are appropriate when testing the effect of some manipulation or activity. An advantage is that quantitativedata promotescomparisonsand statistical analyses.It is possible for qualitative and quantitative research to investigate the same topics but each of them will address a different type of question. For example, a quantitative investigation could be launched to investigate how much a new inspection method decreases the number of faults found in test. To answer questions about the sources of variations between different inspection groups, a qualitative investigation could be launched. As mentionedearlier,ﬁxed design strategies,such as controlledexperiments,are appropriate when testing the effects of a treatment while a ﬂexible design study of beliefs, understandings, and multiple perspectives are appropriate to ﬁnd out why the results from a quantitative investigation are as they are. The two approaches should be regarded as complementaryrather than competitive. C. Wohlin et al., Experimentation in Software Engineering, DOI 10.1007/978-3-642-29044-2 2, © Springer-Verlag Berlin Heidelberg 2012 9
+
+--- Page 33 ---
+10 2 Empirical Strategies The objectives of this chapter are: (1) to introduce empirical research strategies, (2) to highlight some important aspects in relation to the empirical strategies, and (3) to illustrate how the strategies can be used in the context of technology transfer and improvement. To fulﬁl the ﬁrst objective, an overview of empirical strategies is provided, see Sect.2.1, and then surveys, case studies and experiments are discussed in some more detail. The different empirical strategies are presented brieﬂy in Sects.2.2–2.4, and a comparison of them is provided in Sect.2.5. The secondobjectiveis addressedbyaddressingreplicationsof experimentsin Sect.2.6, theories in relation to empirical studies are brieﬂy discussed in Sect.2.7, and aggregation of empirical studies are elaborated in Sect.2.8. Finally, the use of the research strategies within a technology transfer process and as being part of an improvementprogram is discussed in Sect.2.9. 2.1 Overview of Empirical Strategies Depending on the purpose of the evaluation, whether it is techniques, methods or tools,anddependingontheconditionsfortheempiricalinvestigation,therearethree major different types of investigations (strategies) that may be carried out, survey, case study and experiment [144]. Deﬁnition 2.1. A survey is a system for collecting information from or about peopleto describe,compareorexplaintheirknowledge,attitudesandbehavior[58]. A survey is often an investigation performed in retrospect, when, for example, a toolor technique,hasbeenin usefora while[133].Theprimarymeansofgathering qualitative or quantitative data are interviews or questionnaires. These are done through taking a sample which is representative from the population to be studied. The results from the survey are then analyzed to derive descriptive and explanatory conclusions.Theyarethengeneralizedtothepopulationfromwhichthesamplewas taken. Surveys are discussed further by Fink [58] and Robson [144]. Deﬁnition 2.2. Case study in software engineering is: an empirical enquiry that drawsonmultiplesourcesofevidencetoinvestigateoneinstance(orasmallnumber of instances) of a contemporary software engineering phenomenon within its real- lifecontext,especiallywhentheboundarybetweenphenomenonandcontextcannot be clearly speciﬁed [146]. Case studies are used to research projects, activities or assignments. Data is collected for a speciﬁc purpose throughout the study. Based on the data collection, statistical analyses can be carried out. The case study is normally aimed at tracking a speciﬁc attribute or establishing relationships between different attributes. The level of control is lower in a case study than in an experiment. A case study is an observational study while the experiment is a controlled study [181]. A case study may, for example, be aimed at building a model to predict the number of faults in testing [2]. Multivariate statistical analysis is often applied in this type of
+
+--- Page 34 ---
+2.1 Overview of Empirical Strategies 11 studies. The analysis methods include linear regression and principal component analysis [118]. Case study research is further discussed in general by, for example, Robson [144], Stake [165], and Yin [180],and speciﬁcally for software engineering by Pﬂeeger [133], Kitchenham et al. [97], Verner et al. [173], Runeson and H¨ost [145], and Runeson et al. [146]. For the empirical investigation strategy in main focus of this book, experiment, we deﬁne: Deﬁnition 2.3. Experiment (or controlled experiment) in software engineering is an empirical enquiry that manipulates one factor or variable of the studied setting. Based in randomization,different treatments are applied to or by differentsubjects, while keeping other variables constant, and measuring the effects on outcome variables. In human-oriented experiments, humans apply different treatments to objects,whileintechnology-orientedexperiments,differenttechnicaltreatmentsare applied to different objects. Experimentsaremostlydonein a laboratoryenvironment,whichprovidesahigh level of control. When experimenting, subjects are assigned to different treatments at random. The objective is to manipulate one or more variables and control all othervariablesatﬁxedlevels.Theeffectofthemanipulationismeasured,andbased on this a statistical analysis can be performed. In cases where it is impossible to randomly assign treatments to subjects, we may use quasi-experiments. Deﬁnition 2.4. Quasi-experiment is an empirical enquiry similar to an experi- ment, where the assignment of treatments to subjects cannot be based on random- ization, but emergesfrom the characteristics of the subjects or objects themselves. In experimental studies, methods for statistical inference are applied with the purpose of showing with statistical signiﬁcance that one method is better than the other [125,144,157]. The statistical methods are further discussed in Chap.10. Surveys are very common within social sciences where, for example, attitudes are polled to determine how a population will vote in the next el
+... [truncated 16755 chars] ...
+--- PROMPT: chunk-2 (len=28500) ---
+You are CraftQuest quiz generator. Output valid CQIF JSON 2.0 only (no markdown).
+Root object MUST include: cqifVersion, quiz, questions (array).
+cqifVersion must be "2.0".
+This is SOURCE chunk 2 of 3.
+Generate exactly 13 questions using ONLY facts from this chunk.
+Do not duplicate questions that would belong to other parts of the material.
+QUESTION PLAN (follow this order and focus; one question per line):
+- Q6: Which type of research paradigm studies objects in their natural setting with findings emerging from observations? (prefer type: single_choice)
+- Q7: What is another name for flexible research design, often associated with qualitative data? (prefer type: single_choice)
+- Q8: Which research paradigm attempts to interpret a phenomenon based on explanations provided by subjects? (prefer type: single_choice)
+- Q9: What is the primary aim of explanatory research? (prefer type: single_choice)
+- Q10: What type of research design is often associated with explanatory research and controlled experiments? (prefer type: single_choice)
+- Q11: What is another name for fixed design research, primarily informed by quantitative data? (prefer type: single_choice)
+- Q12: When are quantitative investigations most appropriate? (prefer type: single_choice)
+- Q13: What is a key advantage of quantitative data in research? (prefer type: single_choice)
+- Q14: Can qualitative and quantitative research investigate the same topics? (prefer type: true_false)
+- Q15: Which type of research is appropriate for finding out 'why' results from a quantitative investigation occurred? (prefer type: single_choice)
+- Q16: What are the two main objectives of Chapter 2 regarding empirical strategies? (prefer type: multiple_choice)
+- Q30: What is the relationship between flexible design research and qualitative research? (prefer type: single_choice)
+- Q31: What does inductive research aim to discover? (prefer type: single_choice)
+- Q32: What is a 'subject' in the context of an empirical study? (prefer type: single_choice)
+- Q33: What is the implication of a 'fixed design' in research? (prefer type: single_choice)
+- Q34: How should qualitative and quantitative approaches be viewed in relation to each other? (prefer type: single_choice)
+Language for question text: "en".
+Difficulty mode: mixed.
+Pedagogical goal: assessment.
+Allowed question types ONLY: single_choice, multiple_choice, true_false.
+NEVER use image_choice or image_based_question.
+Do not reference images, diagrams, or figures not described in text.
+Topic focus: Prueba en Inglés.
+Use ONLY facts explicitly present in SOURCE. Do not invent.
+Each question needs: text, type, answerOptions (min 2) with unique key fields,
+correctAnswerKeys as JSON array referencing those keys (never a single string).
+For true_false use keys "true" and "false".
+Assign unique externalId per question (e.g. "q-1", "q-2").
+Omit justifications.
+
+SOURCE:
+--- Page 41 ---
+18 2 Empirical Strategies 2.4.2 Experiment Process Carrying out an experiment involves several differentsteps. The different steps are: 1. Scoping 2. Planning 3. Operation 4. Analysis and interpretation 5. Presentation and package Theexperimentprocessispresentedin Chap.6,andthedifferentstepsarediscussed in more detail in Chaps.7–11. 2.5 Empirical Strategies Comparison The prerequisites for an investigation limit the choice of research strategy. A com- parison of strategies can be based on a number of different factors. Table 2.2 is an extensionofthedifferentfactorsdiscussedbyPﬂeeger[133].Thefactorsarefurther described below. Execution control describes how much control the researcher has over the study. For example, in a case study, data is collected during the execution of a project. If management decides to stop the studied project due to, for example, economical reasons, the researcher cannot continue carrying out the case study. The opposite is the experimentwhere the researcher is in control of the execution. Measurementcontrolisthedegreetowhichtheresearchercandecideuponwhich measures to be collected, and to include or exclude during execution of the study. Anexampleishowtocollectdataaboutrequirementvolatility.Duringtheexecution of a survey we cannot include this kind of measures, but in a case study or in an experiment it is possible to include them. In a survey, we can only collect data regardingpeople’s opinion about requirementvolatility. Closely related, to the factors above, is the investigation cost. Depending on which strategy is chosen, the cost differs. This is related to, for example, the size of the investigation and the need for resources. The strategy with the lowest cost is the survey, since it does not require a large amount of resources. The difference between case studies and experiments is that if we choose to investigate a project in a case study, the outcome from the project is some form of product that may be retailed, i.e. it is an on-line investigation. In an off-line experiment the outcome is some form of experience or knowledge which is not directly proﬁtable in the same way as a product. Another important aspect to consider is the possibility to replicate the in- vestigation. The purpose of a replication is to show that the result from the original experiment is valid for a larger population. A replication becomes a ‘true’ replication if it is possible to replicate both the design and the results. It is not
+
+--- Page 42 ---
+2.6 Replications 19 Table 2.2 Research strategy factors Factor Survey Case study Experiment Execution control No No Yes Measurement control No Yes Yes Investigation cost Low Medium High Ease of replication High Low High uncommon that the objective is to perform a replication, but the results, to some extent, turn out differently than the results of the original study. Anotheraspectrelatedtoreplication,inthesensethatitisconcernedwithstudies over time, is longitudinalstudies [141]. The main differencebetween a longitudinal study and a replication is that a longitudinal study is primarily conducted with the same subjects and a replication is mostly a study conducted with new subjects. In other words, replication means several studies and a longitudinal study is a single study. The longitudinal study is conducted over a period of time, for example, a survey can be done at several occasions, experiments can be repeated and the case studymayalsobelongitudinalifitisconductedoveraperiodoftime.Alongitudinal study is normally conducted to understand, describe or evaluate something that changes over time [144]. The choice of empirical strategy depends on the prerequisites for the investiga- tion, the purpose of it, available resources and how we would like to analyze the collected data. Easterbrook et al. [50] provide more advice on selection of research strategies. Further, the borderline between different types of study is not always clear cut. For example,a comparativecase study may also be referred to as a quasi- experiment in an industrial context, and a post-hoc observational study of software engineering course outcomes, may also be referred to as a student experiment. 2.6 Replications The replication of an experiment involves repeating the investigation under similar conditions, while for example, varying the subject population. This helps ﬁnding out how much conﬁdence it is possible to place in the results of the experiment. If the assumption of randomization is correct, i.e. the subjects are representative of a larger population, replications within this population show the same results as the previous performed experiment. If we do not get the same results, we have been unable to capture all aspects in the experiment design that affect the result. Even if it is possible to measure a certain variable or to replicate an experiment,it might be difﬁcult and too costly.
+
+--- Page 43 ---
+20 2 Empirical Strategies Replications may be of different types [89,155]: • Closereplicationsfollowtheoriginalproceduresascloselyaspossible.Thistype is sometimes referred to as exact replications [155]. • Differentiated replications study the same research questions, using different experimental procedures. They may also deliberately vary one or more major conditions in the experiment. Basili et al. [20], proposed a more ﬁne grained classiﬁcation: • Strict replications (synonym to close and exact) • Replications that vary variables intrinsic to the study • Replications that vary variables intrinsic to the focus of the study • Replications that vary the context variables in the environment in which the solution is evaluated • Replications that vary the manner in which the experimentis run • Replications that extend the theory In other ﬁelds of research, many different classiﬁcations schemes are used [64], and no standardized terminology exist across ﬁelds of research. Neither is the terminologyin software engineeringﬁeld established. The above presented distinc- tion between close and differentiated replications is a starting point for specifying replications in software engineering. The advantage of close replications is that the known factors are kept under control,buildingconﬁdencein the outcome.However,close replicationssometimes require the same researchers to conduct the study, as they have tacit knowledge about the experiment procedures which hardly can be documented [153,154]. On the other hand, there is a substantial risk for experimenter bias in close replication studies [95]. Further, it is questioned that any replication in software engineering may be classiﬁed as close, sinceso manyfactors may vary in the complexsetting of a software engineering experiment[89]. Differentiated replications on the other hand may be used for more exploratory studies. If the differencesin factors and settings are well documentedand analyzed, more knowledge may be gained from replicated studies. Factors to consider and report for differentiated replication studies include [89]: • Site where the experimentis conducted • Experimenters conducting the experiment • Design chosen for the experiment • Instrumentation i.e. forms and other material • Variables measured • Subjects conducting the experiment ThesefactorsarediscussedindetailChap.8.Argumentsareraisedforreplicating original hypotheses, rather than speciﬁc experimental designs [123], i.e. in favor of differentiated replications rather than close replications.
+
+--- Page 44 ---
+2.7 Theory in Software Engineering 21 2.7 Theory in Software Engineering “A theory provides explanations and understanding in terms of basic concepts and underlying mechanisms, which constitute an important counterpart to knowledge of passing trends and their manifestation” [72]. Experiments may be conducted to generate, conﬁrm and extend theories, as mentioned above. However, the use of theory is scarce in software engineering, as concluded by Hannay et al. in their systematic literature review of software engineering experiments, 1993–2002 [72]. They found40 theoriesin 23 articles, outof the 113 articles in the review.Only two of the theories were used in more than one article! Endres and Rombach [53] identiﬁes a list of 50 ﬁndings which they refer to as ‘laws’, which is a notion for a description of a repeatable phenomenon in a natural sciences context. Endres and Rombach apply this notion to software engineering. Many of the listed ‘laws’ are more general than software engineering,for example, “it takes 5,000 h to turn a novice into an expert”. In their notion, theories explain the ‘laws’, hypotheses propose a tentative explanation for why the phenomenon behaves as observed, while a conjecture is a guess about the phenomenon. Endres and Rombach list 25 hypotheses and 12 conjectures appearing in the software engineering literature. Zendler [182] takes another approach, and deﬁnes a “preliminary software engineering theory”, composed of three fundamental hypotheses, six central hy- potheses, and four elementary hypotheses. There is a hierarchical relat
+... [truncated 16500 chars] ...
+--- PROMPT: chunk-3 (len=28032) ---
+You are CraftQuest quiz generator. Output valid CQIF JSON 2.0 only (no markdown).
+Root object MUST include: cqifVersion, quiz, questions (array).
+cqifVersion must be "2.0".
+This is SOURCE chunk 3 of 3.
+Generate exactly 14 questions using ONLY facts from this chunk.
+Do not duplicate questions that would belong to other parts of the material.
+QUESTION PLAN (follow this order and focus; one question per line):
+- Q17: What is a crucial aspect of software measurement for project and process control? (prefer type: single_choice)
+- Q18: Why is measurement central to empirical studies? (prefer type: single_choice)
+- Q19: According to the definition provided, what is 'measurement'? (prefer type: single_choice)
+- Q20: What is a 'measure' according to the definition? (prefer type: single_choice)
+- Q21: In software engineering, what are the two identified meanings of the term 'metric'? (prefer type: multiple_choice)
+- Q22: What is an example of a product metric mentioned in the text? (prefer type: single_choice)
+- Q23: What is the fundamental requirement for conducting an empirical study, as stated in the text? (prefer type: single_choice)
+- Q24: What is the relationship between studying measures and making judgments about real entities? (prefer type: single_choice)
+- Q25: What is the primary purpose of measurement in software engineering, according to DeMarco? (prefer type: single_choice)
+- Q35: What is the purpose of a systematic literature review in building empirical knowledge? (prefer type: single_choice)
+- Q36: What are the key ethical principles to observe when conducting experiments? (prefer type: multiple_choice)
+- Q37: What is the role of inducements in recruiting subjects for an experiment? (prefer type: single_choice)
+- Q38: Why is feedback of results and analysis important for maintaining long-term relationships with study subjects? (prefer type: single_choice)
+- Q39: What is the status of a formal code of ethics for empirical software engineering? (prefer type: single_choice)
+- Q40: What benefit would concrete and tailored ethical guidelines for empirical software engineering research provide? (prefer type: single_choice)
+Language for question text: "en".
+Difficulty mode: mixed.
+Pedagogical goal: assessment.
+Allowed question types ONLY: single_choice, multiple_choice, true_false.
+NEVER use image_choice or image_based_question.
+Do not reference images, diagrams, or figures not described in text.
+Topic focus: Prueba en Inglés.
+Use ONLY facts explicitly present in SOURCE. Do not invent.
+Each question needs: text, type, answerOptions (min 2) with unique key fields,
+correctAnswerKeys as JSON array referencing those keys (never a single string).
+For true_false use keys "true" and "false".
+Assign unique externalId per question (e.g. "q-1", "q-2").
+Omit justifications.
+
+SOURCE:
+--- Page 51 ---
+28 2 Empirical Strategies Experience factoryProject organization 1. Characterize 2. Set goals 3. Choose process 5. Analyze4. Execute Experience base 6. Package Project support Fig. 2.3 Experience Factory QIP focuses on a logical separation of project development (performed by the Project Organization) from the systematic learning and packaging of reusable experience (performed by the Experience Factory) [8]. The Experience Factory is thus a separate organization that supports product development by analyzing and synthesizing all kinds of experience,acting as a repository for such experience,and supplying that experienceto various projects on demand, see Fig.2.3. The Experience Factory packages experience by “building informal, formal, or schematised models and measures of various processes, products, and other forms of knowledgevia people, documents,and automated support” [16]. The goal of the Project Organization is to produce and maintain software. The project organization provides the Experience Factory with project and environment characteristics, development data, resource usage information, quality records, and process information. It also provides feedback on the actual performance of the models processed by the experiencefactory and utilized by the project. The Experience Factory processes the information received from the develop- ment organization, and returns direct feedback to each project, together with goals and models tailored from similar projects. It also provides baselines, tools, lessons learned, and data, tailored to the speciﬁc project. To be able to improve, a software developing organization needs to introduce new technology. It needs to experiment and record its experiences from develop- ment projects and eventually change the current development process. When the technology is substantially different from the current practice, the evaluation may be off-linein order to reduce risks. The change evaluation,as discussed above,may take the form of a controlled experiment (for detailed evaluation in the small) or of a case study (to study the scale effects). In both cases, the Goal/Question/Metric method,as described subsequently,providesa useful framework.
+
+--- Page 52 ---
+2.9 Empiricism in a Software Engineering Context 29 Goal Question Metric Goal Question Question Question Question Metric Metric Metric Metric Metric Conceptual level Operational level Quantitative level Fig. 2.4 GQM model hierarchical structure 2.9.4 Goal/Question/Metric Method The Goal/Question/Metric (GQM) [17,26,172] method is based upon the assump- tion that for an organizationto measure in a purposefulway it must: 1. Specify the goals for itself and its projects, 2. Trace those goals to the data that is intended to deﬁne those goals operationally, and 3. Provide a framework for interpreting the data with respect to the stated goals. TheresultoftheapplicationoftheGQMmethodisaspeciﬁcationofameasurement model targeting a particular set of issues and a set of rules for the interpretation of the measurementdata. The resulting measurement model has three levels, as illustrated by the hierar- chical structure in Fig.2.4: 1. Conceptual level (Goal). A goal is deﬁned for an object, for a variety of reasons, with respect to various modelsof quality,from variouspoints of view,relative to a particular environment. Objects of measurement are products, processes, and resources (see also Chap.3). 2. Operational level (Question). A set of questions is used to characterize the way the assessment/achievement of a speciﬁc goal is going to be performed based on some characterization model. Questions try to characterize the objects of measurement (product, process and resource) with respect to a selected quality aspect and to determineits quality from the selected viewpoint. 3. Quantitative level (Metric). A set of data is associated with every question in order to answer it in a quantitative way (either objectively or subjectively). The process of setting goals is critical to the successful application of the GQM method. Goals are formulated based on (1) policies and strategies of the organization, (2) descriptions of processes and products, and (3) organization models. When goals have been formulated, questions are developed based on these goals. Once the questions have been developed, we proceed to associating the questions with appropriatemetrics.
+
+--- Page 53 ---
+30 2 Empirical Strategies Practical guidelines of how to use GQM for measurement-based process im- provement are given by Briand et al. [26], and van Solingen and Berghout [172]. In Chap.3, general aspects of measurement are further described. 2.10 Empirically-Based Technology Transfer Empiricalstudieshavea valuestand-alone,buttheycan also bepartof aknowledge exchange and improvement endeavor jointly between academia and industry, for example in technology transfer as also discussed above. Software engineering is an applied research area, and hence to perform research on industrially relevant problems is expected. It is in many cases insufﬁcient to just do academic research on, for example, requirements engineering or software testing with the motivation that these areas are challenging in industry. Software engineering is preferably conducted jointly by academia and industry to enable transfer of knowledge in both directionsand at the end transfer of new methods,technologiesand tools from academia to industry. Joint research provides an excellent opportunity to improve industrial software development based on concrete evidence, and hence being a good exampleof evidence-based software engineering[48,100]. Based on a long-term collaborativeventure,a model for technologytransfer was documented and presented by Gorschek et al. [66]. The seven steps in the model are summarized below to illustrate how differentempirical studies and in particular experimentscanbeusedinempiricallydrivenimprovement.Themodelisillustrated in Fig.2.5. The model is closely related to the discussion about software process improvement in Sect.2.9. The main focus of the model is on the usage of different empirical methods to create a solution to a real industrial problem and bring it to industrial application. Identiﬁcation of industrial problem/issue. The ﬁrst step is to identify actual in- dustrial challengesin a speciﬁc industrial context,which implies that the researcher is present at the industrial partner(s). The identiﬁcation of challenges may be done using, for example, a survey or interviews, which are brieﬂy presented in Sect.2.2. The objective is to capture the challenges and in particular issues that are suitable for research. Any challenge identiﬁed must be possible to formulate as a research problem to avoid that the researcher ends up in the role of a consultant addressing short-term problems. A major beneﬁt with doing this step thoroughly is that it creates an opportunity to build a joint trust and ensures that the industrial partner(s) and its employees get used to have researchers present in their environment. At this stage, commitment from both management and other practitioners involved in the joint effort is crucial to ensure future success according to Wohlin et al. [179].
+
+--- Page 54 ---
+2.10 Empirically-Based Technology Transfer 31 Problem formulation Problem/ issue Industry Academia Study state of the art Candidate solution Static validation Validation in academia Dynamic validationRelease solution Fig. 2.5 Technology transfer model (Adapted from the description by Gorschek et al. [66]) Problem formulation. Based on the challenge(s) identiﬁed, the challenge should be formulated as a research problem and research questions should be speciﬁed. If several different challenges are identiﬁed there is a need to prioritize which to address. Furthermore, a main contact person for the chosen challenge should be identiﬁed.Thepersonshouldpreferablynotonlybeappointed;itshouldbeaperson who would like to be the driver within the company and act as a champion for the research collaboration.This includes helping to get in contact with the right people in the company, and to help ensuring that the researchers get access to systems, documentationand data when needed. As a natural part of the formulation of the research problem, the researchers conduct a literature search. This may be done as a systematic literature review as presented in Chap.4. A literature survey is needed to know about existing ap- proaches to the identiﬁed industrial challenge. It provides a basis for understanding the relationship between approachesavailable and the actual industrial needs. Candidate solution. Based on available approaches and the actual needs, a can- didate solution is developed, which may include tailoring to the current processes, methods,technologiesand toolsused at thecompany.Thesolution is preferablyde- veloped in close collaboration with the industrial partner(s) so that the applicability can be continuously ensured. Although a speciﬁc solution for a company may be derived, the intention of the researcher is to develop a generic solution, which then is instantiated
+... [truncated 16032 chars] ...
+--- GEMINI RESPONSE: chunk-3 model=gemini-2.5-flash len=11748 parsedQuestions=15 ---
+Parse: parsed OK
+{
+  "cqifVersion": "2.0",
+  "quiz": {
+    "title": "CraftQuest Quiz - Empirical Strategies and Measurement",
+    "description": "Quiz on empirical strategies, measurement, and ethics in software engineering.",
+    "locale": "en",
+    "topicFocus": "Prueba en Inglés",
+    "pedagogicalGoal": "assessment",
+    "difficultyMode": "mixed"
+  },
+  "questions": [
+    {
+      "externalId": "q-17",
+      "type": "single_choice",
+      "text": "What is a crucial aspect of software measurement for project and process control?",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "It enables the ability to control projects, products, and processes."
+        },
+        {
+          "key": "b",
+          "text": "It helps in identifying new market trends."
+        },
+        {
+          "key": "c",
+          "text": "It primarily focuses on team motivation."
+        },
+        {
+          "key": "d",
+          "text": "It is used for marketing software products."
+        }
+      ],
+      "correctAnswerKeys": [
+        "a"
+      ]
+    },
+    {
+      "externalId": "q-18",
+      "type": "single_choice",
+      "text": "Why is measurement central to empirical studies?",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "It helps in marketing the study results to a wider audience."
+        },
+        {
+          "key": "b",
+          "text": "It is necessary to control the study and to measure both inputs and outputs to understand effects."
+        },
+        {
+          "key": "c",
+          "text": "It simplifies the process of data collection without needing specific goals."
+        },
+        {
+          "key": "d",
+          "text": "It is only required for qualitative research, not quantitative."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-19",
+      "type": "single_choice",
+      "text": "According to the definition provided, what is 'measurement'?",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "The process of assigning arbitrary values to entities."
+        },
+        {
+          "key": "b",
+          "text": "The process by which numbers or symbols are assigned to attributes of entities in the real world to describe them according to clearly defined rules."
+        },
+        {
+          "key": "c",
+          "text": "The act of observing an entity without any formal assignment."
+        },
+        {
+          "key": "d",
+          "text": "The subjective interpretation of an entity's characteristics."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-20",
+      "type": "single_choice",
+      "text": "What is a 'measure' according to the definition?",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "A qualitative description of an entity."
+        },
+        {
+          "key": "b",
+          "text": "The number or symbol assigned to an entity by a relationship to characterize an attribute."
+        },
+        {
+          "key": "c",
+          "text": "A general concept without a specific value."
+        },
+        {
+          "key": "d",
+          "text": "The act of comparing two different entities."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-21",
+      "type": "multiple_choice",
+      "text": "In software engineering, what are the two identified meanings of the term 'metric'?",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "A term for denoting the field of measurement in software engineering."
+        },
+        {
+          "key": "b",
+          "text": "A synonym for a software development methodology."
+        },
+        {
+          "key": "c",
+          "text": "An entity which is measured, such as lines of code (LOC)."
+        },
+        {
+          "key": "d",
+          "text": "A type of programming language."
+        }
+      ],
+      "correctAnswerKeys": [
+        "a",
+        "c"
+      ]
+    },
+    {
+      "externalId": "q-22",
+      "type": "single_choice",
+      "text": "What is an example of a product metric mentioned in the text?",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Team velocity"
+        },
+        {
+          "key": "b",
+          "text": "Lines of code (LOC)"
+        },
+        {
+          "key": "c",
+          "text": "Customer satisfaction score"
+        },
+        {
+          "key": "d",
+          "text": "Project budget"
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-23",
+      "type": "single_choice",
+      "text": "What is the fundamental requirement for conducting an empirical study, as stated in the text?",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "A large budget for research."
+        },
+        {
+          "key": "b",
+          "text": "A team of experienced researchers."
+        },
+        {
+          "key": "c",
+          "text": "The ability to perform measurements to achieve desired control."
+        },
+        {
+          "key": "d",
+          "text": "Access to proprietary software tools."
+        }
+      ],
+      "correctAnswerKeys": [
+        "c"
+      ]
+    },
+    {
+      "externalId": "q-24",
+      "type": "single_choice",
+      "text": "What is the relationship between studying measures and making judgments about real entities?",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Measures are irrelevant for making judgments about real entities."
+        },
+        {
+          "key": "b",
+          "text": "We make judgments directly on the real entity, not on the measures."
+        },
+        {
+          "key": "c",
+          "text": "We study the measures and make the judgment on them, instead of directly on the real entity."
+        },
+        {
+          "key": "d",
+          "text": "Studying measures only provides anecdotal evidence, not reliable judgments."
+        }
+      ],
+      "correctAnswerKeys": [
+        "c"
+      ]
+    },
+    {
+      "externalId": "q-25",
+      "type": "single_choice",
+      "text": "What is the primary purpose of measurement in software engineering, according to DeMarco?",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "To increase the aesthetic appeal of software products."
+        },
+        {
+          "key": "b",
+          "text": "To enable control of projects, products, and processes."
+        },
+        {
+          "key": "c",
+          "text": "To reduce the need for human oversight."
+        },
+        {
+          "key": "d",
+          "text": "To automate all aspects of software development."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-35",
+      "type": "single_choice",
+      "text": "What is the purpose of a systematic literature review in building empirical knowledge?",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "To replace the need for any new research."
+        },
+        {
+          "key": "b",
+          "text": "To know about existing approaches to an industrial challenge and understand their relationship with actual industrial needs."
+        },
+        {
+          "key": "c",
+          "text": "To generate new, untested hypotheses without prior knowledge."
+        },
+        {
+          "key": "d",
+          "text": "To provide a list of irrelevant publications."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-36",
+      "type": "multiple_choice",
+      "text": "What are the key ethical principles to observe when conducting experiments?",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Subjects must give informed consent to their participation."
+        },
+        {
+          "key": "b",
+          "text": "Researchers must prioritize publication interests over subject confidentiality."
+        },
+        {
+          "key": "c",
+          "text": "The study should have scientific value."
+        },
+        {
+          "key": "d",
+          "text": "The beneficence must outweigh risks and harms for subjects and organizations."
+        }
+      ],
+      "correctAnswerKeys": [
+        "a",
+        "c",
+        "d"
+      ]
+    },
+    {
+      "externalId": "q-37",
+      "type": "single_choice",
+      "text": "What is the role of inducements in recruiting subjects for an experiment?",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Inducements are strictly forbidden in all ethical research."
+        },
+        {
+          "key": "b",
+          "text": "They motivate participation but must be balanced to ensure voluntary consent, not forced participation."
+        },
+        {
+          "key": "c",
+          "text": "They are primarily used to compensate subjects for their time, regardless of the impact on voluntariness."
+        },
+        {
+          "key": "d",
+          "text": "Inducements are only for professional subjects, not students."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-38",
+      "type": "single_choice",
+      "text": "Why is feedback of results and analysis important for maintaining long-term relationships with study subjects?",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "It allows subjects to dictate the study's conclusions."
+        },
+        {
+          "key": "b",
+          "text": "It is a legal requirement in all countries for every study."
+        },
+        {
+          "key": "c",
+          "text": "It helps maintain trust and allows subjects to get information about the study and its results."
+        },
+        {
+          "key": "d",
+          "text": "It is only necessary if the study results are negative."
+        }
+      ],
+      "correctAnswerKeys": [
+        "c"
+      ]
+    },
+    {
+      "externalId": "q-39",
+      "type": "single_choice",
+      "text": "What is the status of a formal code of ethics for empirical software engineering?",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "A comprehensive formal code of ethics has been widely adopted by the community."
+        },
+        {
+          "key": "b",
+          "text": "The community has not yet developed one, with Vinson and Singer's guidelines being the closest."
+        },
+        {
+          "key": "c",
+          "text": "It is currently under development and expected to be released next year."
+        },
+        {
+          "key": "d",
+          "text": "It is deemed unnecessary due to existing general ethical guidelines."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-40",
+      "type": "single_choice",
+      "text": "What benefit would concrete and tailored ethical guidelines for empirical software engineering research provide?",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "They would primarily benefit research funding agencies by simplifying grant applications."
+        },
+        {
+          "key": "b",
+          "text": "They would benefit both the subjects (by protecting them) and the development of the research field itself."
+        },
+        {
+          "key": "c",
+          "text": "They would only benefit researchers by making their work easier."
+        },
+        {
+          "key": "d",
+          "text": "They would lead to a decrease in the number of empirical studies conducted."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    }
+  ]
+}
+[chunk-3-parsed] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":15,"types":{"single_choice":13,"multiple_choice":2},"sampleTexts":["What is a crucial aspect of software measurement for project and process control","Why is measurement central to empirical studies?","According to the definition provided, what is \u0027measurement\u0027?"]}
+--- GEMINI RESPONSE: chunk-1 model=gemini-2.5-flash len=11595 parsedQuestions=13 ---
+Parse: parsed OK
+{
+  "cqifVersion": "2.0",
+  "quiz": {
+    "title": "Software Engineering Empirical Studies and Experimentation",
+    "description": "A quiz on the introduction to empirical studies and experimentation in software engineering, based on provided source material.",
+    "language": "en",
+    "difficultyMode": "mixed",
+    "pedagogicalGoal": "assessment",
+    "topicFocus": "Prueba en Inglés"
+  },
+  "questions": [
+    {
+      "externalId": "q-1",
+      "text": "What is the primary goal of empirical studies in software engineering?",
+      "type": "single_choice",
+      "language": "en",
+      "difficulty": "easy",
+      "pedagogicalGoal": "assessment",
+      "topicFocus": "Prueba en Inglés",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "To develop new software tools."
+        },
+        {
+          "key": "b",
+          "text": "To improve understanding of software engineering."
+        },
+        {
+          "key": "c",
+          "text": "To automate software development processes."
+        },
+        {
+          "key": "d",
+          "text": "To reduce software development costs."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-2",
+      "text": "Why are experiments considered a form of prototyping for process changes?",
+      "type": "single_choice",
+      "language": "en",
+      "difficulty": "medium",
+      "pedagogicalGoal": "assessment",
+      "topicFocus": "Prueba en Inglés",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Because they are always conducted in a real-life context."
+        },
+        {
+          "key": "b",
+          "text": "Because they involve manipulating behavior directly and systematically to gain understanding for improvement."
+        },
+        {
+          "key": "c",
+          "text": "Because they are primarily used for collecting qualitative data."
+        },
+        {
+          "key": "d",
+          "text": "Because they are less costly than other empirical methods."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-3",
+      "text": "How can experiments contribute to software engineering improvement activities?",
+      "type": "single_choice",
+      "language": "en",
+      "difficulty": "easy",
+      "pedagogicalGoal": "assessment",
+      "topicFocus": "Prueba en Inglés",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "By exclusively focusing on theoretical models."
+        },
+        {
+          "key": "b",
+          "text": "By providing a basis for changing and improving the way software engineering work is done."
+        },
+        {
+          "key": "c",
+          "text": "By replacing all other forms of empirical studies."
+        },
+        {
+          "key": "d",
+          "text": "By only confirming conventional wisdom."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-4",
+      "text": "What is the difference between 'true' experiments and quasi-experiments in software engineering?",
+      "type": "single_choice",
+      "language": "en",
+      "difficulty": "easy",
+      "pedagogicalGoal": "assessment",
+      "topicFocus": "Prueba en Inglés",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "'True' experiments are always conducted in a laboratory, while quasi-experiments are always in the field."
+        },
+        {
+          "key": "b",
+          "text": "'True' experiments involve full randomization, while quasi-experiments lack random assignment of participants."
+        },
+        {
+          "key": "c",
+          "text": "'True' experiments focus on qualitative data, while quasi-experiments focus on quantitative data."
+        },
+        {
+          "key": "d",
+          "text": "'True' experiments are easier to perform than quasi-experiments in software engineering."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-5",
+      "text": "What is the main focus of the experimentation process described in the text?",
+      "type": "single_choice",
+      "language": "en",
+      "difficulty": "easy",
+      "pedagogicalGoal": "assessment",
+      "topicFocus": "Prueba en Inglés",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "To exclusively promote 'true' experiments."
+        },
+        {
+          "key": "b",
+          "text": "To provide guidelines and support for performing experiments in software engineering."
+        },
+        {
+          "key": "c",
+          "text": "To refute arguments against empirical studies."
+        },
+        {
+          "key": "d",
+          "text": "To compare different empirical research paradigms."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-6",
+      "text": "What is the main challenge in performing 'true' experiments in software engineering?",
+      "type": "single_choice",
+      "language": "en",
+      "difficulty": "easy",
+      "pedagogicalGoal": "assessment",
+      "topicFocus": "Prueba en Inglés",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "The lack of suitable software engineering tools."
+        },
+        {
+          "key": "b",
+          "text": "The difficulty in achieving full randomization."
+        },
+        {
+          "key": "c",
+          "text": "The high cost associated with data collection."
+        },
+        {
+          "key": "d",
+          "text": "The inability to measure effects on outcome variables."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-7",
+      "text": "What does the text suggest is the basis for changing and improving how we work in software engineering?",
+      "type": "single_choice",
+      "language": "en",
+      "difficulty": "easy",
+      "pedagogicalGoal": "assessment",
+      "topicFocus": "Prueba en Inglés",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Adopting new programming languages."
+        },
+        {
+          "key": "b",
+          "text": "Improved understanding of software engineering."
+        },
+        {
+          "key": "c",
+          "text": "Increasing the number of software developers."
+        },
+        {
+          "key": "d",
+          "text": "Reducing project deadlines."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-8",
+      "text": "What is the intention of the book regarding empirical studies and experimentation in software engineering?",
+      "type": "single_choice",
+      "language": "en",
+      "difficulty": "easy",
+      "pedagogicalGoal": "assessment",
+      "topicFocus": "Prueba en Inglés",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "To argue against the use of empirical studies."
+        },
+        {
+          "key": "b",
+          "text": "To provide an introduction and highlight opportunities and benefits of experiments."
+        },
+        {
+          "key": "c",
+          "text": "To focus solely on theoretical aspects of software engineering."
+        },
+        {
+          "key": "d",
+          "text": "To present only the challenges of experimentation."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-9",
+      "text": "What is the role of threats to experiments in the context of quasi-experiments?",
+      "type": "single_choice",
+      "language": "en",
+      "difficulty": "easy",
+      "pedagogicalGoal": "assessment",
+      "topicFocus": "Prueba en Inglés",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "To make quasi-experiments more difficult to perform."
+        },
+        {
+          "key": "b",
+          "text": "To provide a thorough discussion that supports quasi-experiments."
+        },
+        {
+          "key": "c",
+          "text": "To eliminate the need for randomization in 'true' experiments."
+        },
+        {
+          "key": "d",
+          "text": "To replace statistical analysis methods."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-10",
+      "text": "Which of the following are identified as major types of empirical investigation strategies?",
+      "type": "multiple_choice",
+      "language": "en",
+      "difficulty": "easy",
+      "pedagogicalGoal": "assessment",
+      "topicFocus": "Prueba en Inglés",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Survey"
+        },
+        {
+          "key": "b",
+          "text": "Simulation"
+        },
+        {
+          "key": "c",
+          "text": "Case study"
+        },
+        {
+          "key": "d",
+          "text": "Experiment"
+        },
+        {
+          "key": "e",
+          "text": "Modeling"
+        }
+      ],
+      "correctAnswerKeys": [
+        "a",
+        "c",
+        "d"
+      ]
+    },
+    {
+      "externalId": "q-11",
+      "text": "What is the primary characteristic of explanatory research as described in the text?",
+      "type": "single_choice",
+      "language": "en",
+      "difficulty": "medium",
+      "pedagogicalGoal": "assessment",
+      "topicFocus": "Prueba en Inglés",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Studying objects in their natural setting."
+        },
+        {
+          "key": "b",
+          "text": "Discovering causes noticed by subjects in the study."
+        },
+        {
+          "key": "c",
+          "text": "Quantifying a relationship or identifying a cause-effect relationship."
+        },
+        {
+          "key": "d",
+          "text": "Adapting to changes in the observed phenomenon."
+        }
+      ],
+      "correctAnswerKeys": [
+        "c"
+      ]
+    },
+    {
+      "externalId": "q-12",
+      "text": "What type of research design is typically associated with quantitative research?",
+      "type": "single_choice",
+      "language": "en",
+      "difficulty": "easy",
+      "pedagogicalGoal": "assessment",
+      "topicFocus": "Prueba en Inglés",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Flexible design."
+        },
+        {
+          "key": "b",
+          "text": "Emergent design."
+        },
+        {
+          "key": "c",
+          "text": "Adaptive design."
+        },
+        {
+          "key": "d",
+          "text": "Fixed design."
+        }
+      ],
+      "correctAnswerKeys": [
+        "d"
+      ]
+    },
+    {
+      "externalId": "q-13",
+      "text": "How does the level of control in a case study compare to that in an experiment?",
+      "type": "single_choice",
+      "language": "en",
+      "difficulty": "medium",
+      "pedagogicalGoal": "assessment",
+      "topicFocus": "Prueba en Inglés",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "The level of control is higher in a case study than in an experiment."
+        },
+        {
+          "key": "b",
+          "text": "The level of control is lower in a case study than in an experiment."
+        },
+        {
+          "key": "c",
+          "text": "The level of control is identical in both case studies and experiments."
+        },
+        {
+          "key": "d",
+          "text": "Case studies offer control over manipulation, while experiments offer control over observation."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    }
+  ]
+}
+[chunk-1-parsed] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":13,"types":{"single_choice":12,"multiple_choice":1},"sampleTexts":["What is the primary goal of empirical studies in software engineering?","Why are experiments considered a form of prototyping for process changes?","How can experiments contribute to software engineering improvement activities?"]}
+--- GEMINI RESPONSE: chunk-2 model=gemini-2.5-flash len=11130 parsedQuestions=13 ---
+Parse: parsed OK
+{
+  "cqifVersion": "2.0",
+  "quiz": {
+    "title": "Empirical Strategies and Theory in Software Engineering",
+    "language": "en",
+    "difficulty": "mixed",
+    "pedagogicalGoal": "assessment",
+    "topicFocus": "Prueba en Inglés"
+  },
+  "questions": [
+    {
+      "externalId": "q-1",
+      "text": "Which empirical strategy involves evaluating a change proposal in a real-life development situation, observed 'on-line'?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Survey"
+        },
+        {
+          "key": "b",
+          "text": "Case study"
+        },
+        {
+          "key": "c",
+          "text": "Experiment"
+        },
+        {
+          "key": "d",
+          "text": "Desktop evaluation"
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ],
+      "language": "en",
+      "difficulty": "medium",
+      "pedagogicalGoal": "assessment",
+      "topicFocus": "Prueba en Inglés"
+    },
+    {
+      "externalId": "q-2",
+      "text": "According to Gregor's types of theory, what is the primary aim of an 'Explanation' theory?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "To describe the object of study"
+        },
+        {
+          "key": "b",
+          "text": "To predict what will happen"
+        },
+        {
+          "key": "c",
+          "text": "To explain why something happens"
+        },
+        {
+          "key": "d",
+          "text": "To describe how to do things"
+        }
+      ],
+      "correctAnswerKeys": [
+        "c"
+      ],
+      "language": "en",
+      "difficulty": "easy",
+      "pedagogicalGoal": "assessment",
+      "topicFocus": "Prueba en Inglés"
+    },
+    {
+      "externalId": "q-3",
+      "text": "Which type of research design is characterized by the researcher being in control of execution and is often associated with controlled experiments?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Flexible design"
+        },
+        {
+          "key": "b",
+          "text": "Exploratory design"
+        },
+        {
+          "key": "c",
+          "text": "Fixed design"
+        },
+        {
+          "key": "d",
+          "text": "Observational design"
+        }
+      ],
+      "correctAnswerKeys": [
+        "c"
+      ],
+      "language": "en",
+      "difficulty": "medium",
+      "pedagogicalGoal": "assessment",
+      "topicFocus": "Prueba en Inglés"
+    },
+    {
+      "externalId": "q-4",
+      "text": "What is a major reason for carrying out quantitative empirical studies in software engineering?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "To gather subjective opinions"
+        },
+        {
+          "key": "b",
+          "text": "To achieve objective and statistically significant results"
+        },
+        {
+          "key": "c",
+          "text": "To explore complex social dynamics"
+        },
+        {
+          "key": "d",
+          "text": "To generate new theories without prior hypotheses"
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ],
+      "language": "en",
+      "difficulty": "easy",
+      "pedagogicalGoal": "assessment",
+      "topicFocus": "Prueba en Inglés"
+    },
+    {
+      "externalId": "q-5",
+      "text": "A key advantage of conducting quantitative empirical studies is the opportunity to obtain what kind of results?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Subjective and anecdotal"
+        },
+        {
+          "key": "b",
+          "text": "Qualitative and descriptive"
+        },
+        {
+          "key": "c",
+          "text": "Objective and statistically significant"
+        },
+        {
+          "key": "d",
+          "text": "Interpretive and contextual"
+        }
+      ],
+      "correctAnswerKeys": [
+        "c"
+      ],
+      "language": "en",
+      "difficulty": "easy",
+      "pedagogicalGoal": "assessment",
+      "topicFocus": "Prueba en Inglés"
+    },
+    {
+      "externalId": "q-6",
+      "text": "In the context of empirical studies like replications or longitudinal studies, what does the term 'subjects' primarily refer to?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "The research questions being investigated"
+        },
+        {
+          "key": "b",
+          "text": "The tools and methods used in the study"
+        },
+        {
+          "key": "c",
+          "text": "The individuals or entities participating in the study"
+        },
+        {
+          "key": "d",
+          "text": "The data collected during the experiment"
+        }
+      ],
+      "correctAnswerKeys": [
+        "c"
+      ],
+      "language": "en",
+      "difficulty": "easy",
+      "pedagogicalGoal": "assessment",
+      "topicFocus": "Prueba en Inglés"
+    },
+    {
+      "externalId": "q-7",
+      "text": "What is a key implication of a 'fixed design' in research, particularly in the context of replications?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "It allows for spontaneous changes during execution"
+        },
+        {
+          "key": "b",
+          "text": "It means the study is primarily qualitative"
+        },
+        {
+          "key": "c",
+          "text": "It ensures known factors are kept under control for confidence in outcomes"
+        },
+        {
+          "key": "d",
+          "text": "It focuses on generating new theories without prior structure"
+        }
+      ],
+      "correctAnswerKeys": [
+        "c"
+      ],
+      "language": "en",
+      "difficulty": "medium",
+      "pedagogicalGoal": "assessment",
+      "topicFocus": "Prueba en Inglés"
+    },
+    {
+      "externalId": "q-8",
+      "text": "Which of the following correctly lists the five steps involved in carrying out an experiment process?",
+      "type": "multiple_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Scoping, Planning, Operation, Analysis and interpretation, Presentation and package"
+        },
+        {
+          "key": "b",
+          "text": "Hypothesis, Data collection, Experimentation, Conclusion, Reporting"
+        },
+        {
+          "key": "c",
+          "text": "Design, Execution, Measurement, Evaluation, Dissemination"
+        },
+        {
+          "key": "d",
+          "text": "Characterize, Set goals, Choose process, Execute, Analyze"
+        }
+      ],
+      "correctAnswerKeys": [
+        "a"
+      ],
+      "language": "en",
+      "difficulty": "medium",
+      "pedagogicalGoal": "assessment",
+      "topicFocus": "Prueba en Inglés"
+    },
+    {
+      "externalId": "q-9",
+      "text": "Based on Table 2.2, which research strategy or strategies are characterized by a 'High' ease of replication?",
+      "type": "multiple_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Survey"
+        },
+        {
+          "key": "b",
+          "text": "Case study"
+        },
+        {
+          "key": "c",
+          "text": "Experiment"
+        },
+        {
+          "key": "d",
+          "text": "Both Survey and Experiment"
+        }
+      ],
+      "correctAnswerKeys": [
+        "d"
+      ],
+      "language": "en",
+      "difficulty": "easy",
+      "pedagogicalGoal": "assessment",
+      "topicFocus": "Prueba en Inglés"
+    },
+    {
+      "externalId": "q-10",
+      "text": "What is the main difference between a longitudinal study and a replication, concerning the subjects involved?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "A longitudinal study uses new subjects, while a replication uses the same subjects."
+        },
+        {
+          "key": "b",
+          "text": "A longitudinal study is a single study, while a replication involves several studies."
+        },
+        {
+          "key": "c",
+          "text": "A longitudinal study is primarily conducted with the same subjects, while a replication is mostly conducted with new subjects."
+        },
+        {
+          "key": "d",
+          "text": "A longitudinal study focuses on quantitative data, while a replication focuses on qualitative data."
+        }
+      ],
+      "correctAnswerKeys": [
+        "c"
+      ],
+      "language": "en",
+      "difficulty": "medium",
+      "pedagogicalGoal": "assessment",
+      "topicFocus": "Prueba en Inglés"
+    },
+    {
+      "externalId": "q-11",
+      "text": "What is considered a key advantage of performing close replications in research?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "They allow for deliberate variation of major conditions."
+        },
+        {
+          "key": "b",
+          "text": "They are used for more exploratory studies."
+        },
+        {
+          "key": "c",
+          "text": "They keep known factors under control, building confidence in the outcome."
+        },
+        {
+          "key": "d",
+          "text": "They require different experimental procedures."
+        }
+      ],
+      "correctAnswerKeys": [
+        "c"
+      ],
+      "language": "en",
+      "difficulty": "easy",
+      "pedagogicalGoal": "assessment",
+      "topicFocus": "Prueba en Inglés"
+    },
+    {
+      "externalId": "q-12",
+      "text": "According to Kitchenham and Charters, what is a systematic literature review?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "A primary study that generates new empirical data."
+        },
+        {
+          "key": "b",
+          "text": "A form of secondary study using a well-defined methodology to identify, analyze, and interpret available evidence related to a specific research question."
+        },
+        {
+          "key": "c",
+          "text": "A qualitative study focused on identifying research trends."
+        },
+        {
+          "key": "d",
+          "text": "A statistical method for aggregating evidence from multiple studies."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ],
+      "language": "en",
+      "difficulty": "medium",
+      "pedagogicalGoal": "assessment",
+      "topicFocus": "Prueba en Inglés"
+    },
+    {
+      "externalId": "q-13",
+      "text": "Based on the comparison of empirical strategies, which strategy typically has the lowest investigation cost?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Case study"
+        },
+        {
+          "key": "b",
+          "text": "Experiment"
+        },
+        {
+          "key": "c",
+          "text": "Survey"
+        },
+        {
+          "key": "d",
+          "text": "Longitudinal study"
+        }
+      ],
+      "correctAnswerKeys": [
+        "c"
+      ],
+      "language": "en",
+      "difficulty": "easy",
+      "pedagogicalGoal": "assessment",
+      "topicFocus": "Prueba en Inglés"
+    }
+  ]
+}
+[chunk-2-parsed] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":13,"types":{"single_choice":11,"multiple_choice":2},"sampleTexts":["Which empirical strategy involves evaluating a change proposal in a real-life de","According to Gregor\u0027s types of theory, what is the primary aim of an \u0027Explanatio","Which type of research design is characterized by the researcher being in contro"]}
+[merge.final] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":40,"types":{"single_choice":35,"multiple_choice":5},"sampleTexts":["What is the primary goal of empirical studies in software engineering?","Why are experiments considered a form of prototyping for process changes?","How can experiments contribute to software engineering improvement activities?"]}
+[post-gemini] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":40,"types":{"single_choice":35,"multiple_choice":5},"sampleTexts":["What is the primary goal of empirical studies in software engineering?","Why are experiments considered a form of prototyping for process changes?","How can experiments contribute to software engineering improvement activities?"]}
+[sanitize] Question type filter applied | {"before":40,"after":40,"allowedTypes":["single_choice","multiple_choice","true_false"],"typesBefore":{"single_choice":35,"multiple_choice":5},"typesAfter":{"single_choice":35,"multiple_choice":5}}
+[quiz.created] New quiz for AI import | {"targetQuizId":"6e6f137c-7282-4384-880a-dfd0e28e8ee4"}
+[import.populate] Import batch snapshot | {"totalRows":40,"validRows":40,"errorRows":0,"batchStatus":"ready_for_review","rows":[{"Row":1,"Status":"valid","ErrorCode":null,"message":null},{"Row":2,"Status":"valid","ErrorCode":null,"message":null},{"Row":3,"Status":"valid","ErrorCode":null,"message":null},{"Row":4,"Status":"valid","ErrorCode":null,"message":null},{"Row":5,"Status":"valid","ErrorCode":null,"message":null},{"Row":6,"Status":"valid","ErrorCode":null,"message":null},{"Row":7,"Status":"valid","ErrorCode":null,"message":null},{"Row":8,"Status":"valid","ErrorCode":null,"message":null},{"Row":9,"Status":"valid","ErrorCode":null,"message":null},{"Row":10,"Status":"valid","ErrorCode":null,"message":null}]}
+[import.batch] Import batch created from CQIF | {"ImportId":"dc78299e-0389-4989-ad90-66ebc899b9d2","Status":"ready_for_review","TotalQuestionsDetected":40,"ValidQuestions":40,"QuestionsWithErrors":0,"QuestionsWithWarnings":0}
+=== AI generation trace ended ===

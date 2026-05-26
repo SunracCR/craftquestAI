@@ -1,0 +1,808 @@
+# CraftQuest TXT Import - Multiplicacion primaria (50 preguntas)
+# Uso: en el quiz, Importar preguntas > tipo TXT > seleccionar este archivo
+
+[QUIZ]
+title=Multiplicacion primaria - 50 preguntas
+description=Tablas del 2 al 10 para practica de importacion
+default_points=1
+default_randomize_answers=true
+
+[QUESTION]
+external_id=MUL-001
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 2 x 2?
+answer[A]=3
+answer[B]=4
+answer[C]=5
+answer[D]=6
+correct=B
+justification=2 x 2 = 4.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-002
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 2 x 3?
+answer[A]=5
+answer[B]=6
+answer[C]=7
+answer[D]=8
+correct=B
+justification=2 x 3 = 6.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-003
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 2 x 4?
+answer[A]=6
+answer[B]=8
+answer[C]=9
+answer[D]=10
+correct=B
+justification=2 x 4 = 8.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-004
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 2 x 5?
+answer[A]=8
+answer[B]=10
+answer[C]=11
+answer[D]=12
+correct=B
+justification=2 x 5 = 10.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-005
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 2 x 6?
+answer[A]=10
+answer[B]=12
+answer[C]=13
+answer[D]=14
+correct=B
+justification=2 x 6 = 12.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-006
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 2 x 7?
+answer[A]=12
+answer[B]=14
+answer[C]=15
+answer[D]=16
+correct=B
+justification=2 x 7 = 14.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-007
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 2 x 8?
+answer[A]=14
+answer[B]=16
+answer[C]=17
+answer[D]=18
+correct=B
+justification=2 x 8 = 16.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-008
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 2 x 9?
+answer[A]=16
+answer[B]=18
+answer[C]=19
+answer[D]=20
+correct=B
+justification=2 x 9 = 18.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-009
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 2 x 10?
+answer[A]=18
+answer[B]=20
+answer[C]=21
+answer[D]=22
+correct=B
+justification=2 x 10 = 20.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-010
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 3 x 2?
+answer[A]=5
+answer[B]=6
+answer[C]=7
+answer[D]=9
+correct=B
+justification=3 x 2 = 6.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-011
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 3 x 3?
+answer[A]=6
+answer[B]=9
+answer[C]=10
+answer[D]=12
+correct=B
+justification=3 x 3 = 9.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-012
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 3 x 4?
+answer[A]=10
+answer[B]=12
+answer[C]=13
+answer[D]=15
+correct=B
+justification=3 x 4 = 12.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-013
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 3 x 5?
+answer[A]=12
+answer[B]=15
+answer[C]=16
+answer[D]=18
+correct=B
+justification=3 x 5 = 15.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-014
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 3 x 6?
+answer[A]=15
+answer[B]=18
+answer[C]=19
+answer[D]=21
+correct=B
+justification=3 x 6 = 18.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-015
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 3 x 7?
+answer[A]=18
+answer[B]=21
+answer[C]=22
+answer[D]=24
+correct=B
+justification=3 x 7 = 21.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-016
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 3 x 8?
+answer[A]=21
+answer[B]=24
+answer[C]=25
+answer[D]=27
+correct=B
+justification=3 x 8 = 24.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-017
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 3 x 9?
+answer[A]=24
+answer[B]=27
+answer[C]=28
+answer[D]=30
+correct=B
+justification=3 x 9 = 27.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-018
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 3 x 10?
+answer[A]=27
+answer[B]=30
+answer[C]=31
+answer[D]=33
+correct=B
+justification=3 x 10 = 30.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-019
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 4 x 2?
+answer[A]=6
+answer[B]=8
+answer[C]=9
+answer[D]=10
+correct=B
+justification=4 x 2 = 8.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-020
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 4 x 3?
+answer[A]=10
+answer[B]=12
+answer[C]=13
+answer[D]=15
+correct=B
+justification=4 x 3 = 12.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-021
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 4 x 4?
+answer[A]=12
+answer[B]=16
+answer[C]=17
+answer[D]=20
+correct=B
+justification=4 x 4 = 16.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-022
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 4 x 5?
+answer[A]=16
+answer[B]=20
+answer[C]=21
+answer[D]=24
+correct=B
+justification=4 x 5 = 20.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-023
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 4 x 6?
+answer[A]=20
+answer[B]=24
+answer[C]=25
+answer[D]=28
+correct=B
+justification=4 x 6 = 24.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-024
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 4 x 7?
+answer[A]=24
+answer[B]=28
+answer[C]=29
+answer[D]=32
+correct=B
+justification=4 x 7 = 28.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-025
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 4 x 8?
+answer[A]=28
+answer[B]=32
+answer[C]=33
+answer[D]=36
+correct=B
+justification=4 x 8 = 32.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-026
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 4 x 9?
+answer[A]=32
+answer[B]=36
+answer[C]=37
+answer[D]=40
+correct=B
+justification=4 x 9 = 36.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-027
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 4 x 10?
+answer[A]=36
+answer[B]=40
+answer[C]=41
+answer[D]=44
+correct=B
+justification=4 x 10 = 40.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-028
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 5 x 2?
+answer[A]=8
+answer[B]=10
+answer[C]=11
+answer[D]=12
+correct=B
+justification=5 x 2 = 10.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-029
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 5 x 3?
+answer[A]=12
+answer[B]=15
+answer[C]=16
+answer[D]=18
+correct=B
+justification=5 x 3 = 15.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-030
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 5 x 4?
+answer[A]=16
+answer[B]=20
+answer[C]=21
+answer[D]=24
+correct=B
+justification=5 x 4 = 20.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-031
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 5 x 5?
+answer[A]=20
+answer[B]=25
+answer[C]=26
+answer[D]=30
+correct=B
+justification=5 x 5 = 25.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-032
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 5 x 6?
+answer[A]=25
+answer[B]=30
+answer[C]=31
+answer[D]=35
+correct=B
+justification=5 x 6 = 30.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-033
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 5 x 7?
+answer[A]=30
+answer[B]=35
+answer[C]=36
+answer[D]=40
+correct=B
+justification=5 x 7 = 35.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-034
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 5 x 8?
+answer[A]=35
+answer[B]=40
+answer[C]=41
+answer[D]=45
+correct=B
+justification=5 x 8 = 40.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-035
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 5 x 9?
+answer[A]=40
+answer[B]=45
+answer[C]=46
+answer[D]=50
+correct=B
+justification=5 x 9 = 45.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-036
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 5 x 10?
+answer[A]=45
+answer[B]=50
+answer[C]=51
+answer[D]=55
+correct=B
+justification=5 x 10 = 50.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-037
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 6 x 2?
+answer[A]=10
+answer[B]=12
+answer[C]=13
+answer[D]=14
+correct=B
+justification=6 x 2 = 12.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-038
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 6 x 3?
+answer[A]=15
+answer[B]=18
+answer[C]=19
+answer[D]=21
+correct=B
+justification=6 x 3 = 18.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-039
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 6 x 4?
+answer[A]=20
+answer[B]=24
+answer[C]=25
+answer[D]=28
+correct=B
+justification=6 x 4 = 24.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-040
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 6 x 5?
+answer[A]=25
+answer[B]=30
+answer[C]=31
+answer[D]=35
+correct=B
+justification=6 x 5 = 30.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-041
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 6 x 6?
+answer[A]=30
+answer[B]=36
+answer[C]=37
+answer[D]=42
+correct=B
+justification=6 x 6 = 36.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-042
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 6 x 7?
+answer[A]=36
+answer[B]=42
+answer[C]=43
+answer[D]=48
+correct=B
+justification=6 x 7 = 42.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-043
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 6 x 8?
+answer[A]=42
+answer[B]=48
+answer[C]=49
+answer[D]=54
+correct=B
+justification=6 x 8 = 48.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-044
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 6 x 9?
+answer[A]=48
+answer[B]=54
+answer[C]=55
+answer[D]=60
+correct=B
+justification=6 x 9 = 54.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-045
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 6 x 10?
+answer[A]=54
+answer[B]=60
+answer[C]=61
+answer[D]=66
+correct=B
+justification=6 x 10 = 60.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-046
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 7 x 7?
+answer[A]=42
+answer[B]=49
+answer[C]=50
+answer[D]=56
+correct=B
+justification=7 x 7 = 49.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-047
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 7 x 8?
+answer[A]=48
+answer[B]=56
+answer[C]=57
+answer[D]=63
+correct=B
+justification=7 x 8 = 56.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-048
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 8 x 8?
+answer[A]=56
+answer[B]=64
+answer[C]=65
+answer[D]=72
+correct=B
+justification=8 x 8 = 64.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-049
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 9 x 9?
+answer[A]=72
+answer[B]=81
+answer[C]=82
+answer[D]=90
+correct=B
+justification=9 x 9 = 81.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=MUL-050
+type=single_choice
+section=Multiplicacion
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos es 10 x 10?
+answer[A]=90
+answer[B]=100
+answer[C]=101
+answer[D]=110
+correct=B
+justification=10 x 10 = 100.
+explanation_visibility=after_answer

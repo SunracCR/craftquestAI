@@ -1,0 +1,19 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+appsettings.*.local.json
+src/**/App_Data/media/
+logs/ai-gen-trace/
+
+## Flutter
+mobile/**/build/
+mobile/**/.dart_tool/
+mobile/**/.flutter-plugins-dependencies
+
+## IDE
+.idea/
+*.iml
+.cursor/

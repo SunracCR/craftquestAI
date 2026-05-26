@@ -1,0 +1,1312 @@
+﻿=== AI generation trace started ===
+Utc: 2026-05-22T20:07:00.7091114Z
+Log file: C:\Users\cperaza_ga\Proyectos\CraftQuest\src\CraftQuest.Api\logs/ai-gen-trace\2b7121a853374d77a734a611e6da8a18.log
+[job.input] Generation parameters | {"StudyMaterialId":"38ade0ca-3555-421d-8503-6206ff07a33a","QuestionCount":40,"Language":"es","Difficulty":"mixed","AllowedQuestionTypes":["single_choice","multiple_choice","true_false"],"PageFrom":1,"PageTo":30,"TopicFocus":null,"Preset":"standard_exam","sourceChars":55555}
+[provider.start] GenerateAsync | {"sourceChars":55555,"chunkCount":2,"requestedQuestions":40,"allowedTypes":["single_choice","multiple_choice","true_false"],"pages":"1-30","language":"es"}
+--- PROMPT: outline (len=10618) ---
+You are a curriculum planner for CraftQuest. Output JSON only (no markdown).
+Return shape (example): { "items": [ { "index": 1, "topic": "...", "suggestedType": "single_choice", "chunkIndex": 1 } ] }
+Rules:
+- Exactly 40 items in "items".
+- chunkIndex must be between 1 and 2 (match --- Page N --- sections when present).
+- suggestedType must be one of: single_choice, multiple_choice, true_false.
+- Topics must be distinct and cover the material evenly.
+- Language for topic text: "es".
+- Difficulty target: mixed.
+- Pedagogical goal: assessment.
+
+SOURCE EXCERPT:
+--- Page 1 ---
+
+
+--- Page 2 ---
+Experimentation in Software Engineering
+
+--- Page 3 ---
+•
+
+--- Page 4 ---
+Claes Wohlin  Per Runeson Martin H¨ost  Magnus C. Ohlsson Bj¨orn Regnell  Anders Wessl´en Experimentation in Software Engineering 123
+
+--- Page 5 ---
+Claes Wohlin School of Computing Blekinge Institute of Technology Karlskrona, Sweden Per Runeson Department of Computer Science Lund University Lund, Sweden Martin H¨ost Department of Computer Science Lund University Lund, Sweden Magnus C. Ohlsson System Veriﬁcation Sweden AB Malm¨o, Sweden Bj¨orn Regnell Department of Computer Science Lund University Lund, Sweden Anders Wessl´en ST-Ericsson AB Lund, Sweden ISBN 978-3-642-29043-5 ISBN 978-3-642-29044-2 (eBook) DOI 10.1007/978-3-642-29044-2 Springer Heidelberg New York Dordrecht London Library of Congress Control Number: 2012940660 ACM Codes: D.2 c Springer science+business media (successor in interest of Kluwer Academic Publishers, Boston) 2000, Springer-Verlag Berlin Heidelberg 2012 This work is subject to copyright. All rights are reserved by the Publisher, whether the whole or part of thematerial isconcerned, speciﬁcally therightsoftranslation, reprinting, reuseofillustrations, recitation, broadcasting, reproduction on microﬁlms or in any other physical way, and transmission or information storage and retrieval, electronic adaptation, computer software, or by similar or dissimilar methodology now known or hereafter developed. Exempted from this legal reservation are brief excerpts in connection with reviews or scholarly analysis or material supplied speciﬁcally for the purpose of being entered and executed on a computer system, for exclusive use by the purchaser of the work. Duplication of this publication or parts thereof is permitted only under the provisions of the Copyright Law of the Publisher’s location, initscurrent version,andpermissionforusemustalways beobtained fromSpringer. Permissions for use may be obtained through RightsLink at the Copyright Clearance Center. Violations are liable to prosecution under the respective Copyright Law. Theuseofgeneral descriptive names,registered names,trademarks, servicemarks,etc.inthispublication does not imply, even in the absence of a speciﬁc statement, that such names are exempt from the relevant protective laws and regulations and therefore free for general use. While the advice and information in this book are believed to be true and accurate at the date of publication, neither the authors nor the editors nor the publisher can accept any legal responsibility for any errors or omissions that may be made. The publisher makes no warranty, express or implied, with respect to the material contained herein. Printed on acid-free paper Springer is part of Springer Science+Business Media (www.springer.com)
+
+--- Page 6 ---
+Foreword Experimentationis fundamentalto any scientiﬁc and engineering endeavor. Understanding a discipline involves building models of the various elements of thediscipline,e.g.,theobjectsinthedomain,theprocessesusedtomanipulatethose objects, the relationship between the processes and the objects. Evolving domain knowledge implies the evolution of those models by testing them via experiments of various forms. Analyzing the results of the experiment involves learning, the encapsulation of knowledge and the ability to change and reﬁne our models over time. Therefore,our understandingof a discipline evolves over time. This is the paradigm that has been used in many ﬁelds, e.g., physics, medicine, manufacturing. These ﬁelds evolved as disciplines when they began applying the cycle of model building, experimenting, and learning. Each ﬁeld began with recording observations and evolved to manipulating the model variables and studying the effects of changes in those variables. The ﬁelds differ in their nature, what constitutes the basic objects of the ﬁeld, the properties of those objects, the properties of the system that contain them, the relationship of the objects to the system, and the culture of the discipline. These differences affect how the models are built and how experimentationgets done. Like other science and engineering disciplines, software engineering requires the cycle of model building, experimentation, and learning. The study of software engineeringis a laboratoryscience. The players in the discipline are the researchers and the practitioners. The researcher’s role is to understand the nature of the object (products), the processes that create and manipulate them, and the relationship between the two in the context of the system. The practitioner’s role is to build ‘improved’ systems, using the knowledge available to date. These roles are symbi- otic. The researcher needs laboratories to study the problems faced by practitioners and develop and evolve solutions based upon experimentation. The practitioner needs to understand how to build better systems and the researcher can provide models to help. Indevelopingmodelsandexperiment
+
+[... middle of source omitted for outline ...]
+
+ studies, for example, case studies or experiments. Analytical A formal theory is proposed and then compared with empirical observations. The engineering method and the empirical method can be seen as variations of the scientiﬁc method [9]. Traditionally,the analytical methodis used in the moreformalareas of electrical engineeringand computer science, e.g. electromagnetictheory and algorithms.The scientiﬁc method is used in applied areas, such as simulating a telecommunication network in order to evaluate its performance. It should, however, be noted that simulation as such is not only applied in the scientiﬁc method. Simulation may be used as a means for conducting an experiment as well. The engineering method is probably dominating in industry. The empirical studies have traditionally been used in social sciences and psychology, where we are unable to state any laws of nature, as in physics.1 In social sciences and psychology, they are concerned with human behavior. The important observation, in this context, is hence that software engineering is very much governed by human behavior through the people developing software. Thus, we cannot expect to ﬁnd any formal rules or laws in software engineering except perhaps when focusing on speciﬁc technical aspects. The focus of this book is on applying and using empirical studies in software engineering. The objective is in particular to emphasize the underlying process when performing empirical studies in general and experimentation in particular. An experiment process is presented, 1Lehman [110] referred to laws of software evolution, but this notion has not been widespread in subsequent work on theory, see further Sect.2.7.
+
+--- Page 30 ---
+1.2 Science and Software Engineering 7 whichhighlightsthebasicstepstoperformexperiments,providesguidelinesofwhat to do and exempliﬁes the steps using software engineering examples. It must be noted that it is not claimed that the analytical, scientiﬁc and engineeringmethodsareinappropriateforsoftwareengineering.Theyarenecessary for software engineering as well, for example, we may build mathematical models for software reliability growth [116]. Moreover, the research methods are not orthogonal, and hence it may, for example, be appropriate to conduct an empirical study within, for example, the engineering method. The important point is that we shouldmakebetter useof themethodsavailablewithin empiricalresearch.Theyare frequentlyusedinotherdisciplines,forexample,behavioralsciences,andthenature of software engineeringhas much in common with disciplines outside the technical parts of engineering. The very ﬁrst experiments in software engineering were conducted in the late 1960s by Grant and Sackmann [69] about on- and off-line work in testing, according to Zendler [182]. In the 1970s, a few pioneers conducted experiments on structured programming [115], ﬂowcharting [151] and software testing [126]. The need for systematic experimentation in software engineering was emphasized in the middle of the 1980s by Basili et al. [15]. Other articles stressing the need for empiricism in software engineering have since been published, see for example work by Basili, Fenton, Glass, Kitchenham, Pﬂeeger, Pickard, Potts and Tichy[9,57,62,97,140,169].Thelackofempiricalevidenceinsoftwareengineering research is stressed by Tichy et al. [170], Zelowitz and Wallace [181] and Glass et al. [63]. The latter publications indicate that the research in software engineering is still too much of advocacyresearch [140].A morescientiﬁc approachto software engineering is needed. The focus of this book is on software engineering and the application and use of empirical studies, in particular experimentation, in software engineering. The number of published experiments in software engineering has increased,and a substantialnumberof experimentshas been published,as reviewed by Sjøberg et al. [161]. Empirical strategies in software engineering include: • Setting up formal experiments, • Studying real projects in industry,i.e. performinga case study, and • Performing surveys through,for example,interviews. These strategies are described in some more detail in Chaps.2 and 5 before focusing the rest of this book on experimentation. A more general introduction to these research strategies is presented by, for example, Robson [144]. Case studies in general are elaborated by Yin [180] and case studies speciﬁcally in software en- gineeringare elaborated by Runeson et al. [146]. The research strategies are neither completelyorthogonalnor competing.They providea convenientclassiﬁcation, but some studies may be viewed as combinations of them or somewhere between two of them. Thus, there are both similarities and differences between the strategies. The main reason to use experimentation in software engineering is to en- able understanding and identiﬁcation of relationships between different factors, or variables. A number of preconceived ideas exist, but are they true? Does
+--- GEMINI RESPONSE: outline model=gemini-2.5-flash-lite len=8162 parsedQuestions=40 ---
+Parse: outline parsed
+{
+  "items": [
+    {
+      "index": 1,
+      "topic": "La experimentación es fundamental para cualquier esfuerzo científico y de ingeniería.",
+      "suggestedType": "true_false",
+      "chunkIndex": 1
+    },
+    {
+      "index": 2,
+      "topic": "¿Cuál es el propósito principal de la experimentación en la ingeniería de software según el texto?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 3,
+      "topic": "El ciclo de 'construcción de modelos, experimentación y aprendizaje' es aplicable a muchas disciplinas científicas.",
+      "suggestedType": "true_false",
+      "chunkIndex": 1
+    },
+    {
+      "index": 4,
+      "topic": "En el contexto de la ingeniería de software, ¿cuál es el rol del investigador?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 5,
+      "topic": "El rol del practicante en ingeniería de software es construir sistemas 'mejorados' utilizando el conocimiento disponible.",
+      "suggestedType": "true_false",
+      "chunkIndex": 1
+    },
+    {
+      "index": 6,
+      "topic": "¿Qué se necesita para que los investigadores estudien los problemas que enfrentan los practicantes y desarrollen soluciones?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 7,
+      "topic": "La ingeniería de software se considera una ciencia de laboratorio.",
+      "suggestedType": "true_false",
+      "chunkIndex": 1
+    },
+    {
+      "index": 8,
+      "topic": "Los roles de investigador y practicante en ingeniería de software son independientes.",
+      "suggestedType": "true_false",
+      "chunkIndex": 1
+    },
+    {
+      "index": 9,
+      "topic": "¿Qué método se utiliza tradicionalmente en áreas formales como la teoría electromagnética y los algoritmos?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 10,
+      "topic": "El método científico se utiliza en áreas aplicadas como la simulación de redes de telecomunicaciones.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 11,
+      "topic": "¿Puede la simulación ser utilizada como un medio para realizar un experimento?",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 12,
+      "topic": "El método de ingeniería es probablemente el que domina en la industria.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 13,
+      "topic": "¿En qué campos se han utilizado tradicionalmente los estudios empíricos?",
+      "suggestedType": "multiple_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 14,
+      "topic": "La ingeniería de software está muy influenciada por el comportamiento humano.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 15,
+      "topic": "No se pueden esperar reglas o leyes formales en ingeniería de software, excepto en aspectos técnicos específicos.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 16,
+      "topic": "¿Cuál es el enfoque principal del libro según el texto?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 17,
+      "topic": "Los métodos analítico, científico y de ingeniería no son apropiados para la ingeniería de software.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 18,
+      "topic": "Los métodos de investigación en ingeniería de software son completamente ortogonales.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 19,
+      "topic": "¿Por qué es importante hacer un mejor uso de los métodos de investigación empírica en ingeniería de software?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 20,
+      "topic": "La naturaleza de la ingeniería de software tiene mucho en común con disciplinas fuera de las partes técnicas de la ingeniería.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 21,
+      "topic": "¿Quiénes realizaron los primeros experimentos en ingeniería de software según el texto?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 22,
+      "topic": "Los primeros experimentos en ingeniería de software se realizaron en la década de 1990.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 23,
+      "topic": "¿Qué se enfatizó a mediados de la década de 1980 en relación con la experimentación en ingeniería de software?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 24,
+      "topic": "La falta de evidencia empírica en la investigación de ingeniería de software ha sido un tema destacado.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 25,
+      "topic": "¿Qué tipo de investigación se indica que todavía predomina en la ingeniería de software según algunas publicaciones?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 26,
+      "topic": "Se necesita un enfoque más científico para la ingeniería de software.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 27,
+      "topic": "El número de experimentos publicados en ingeniería de software ha disminuido con el tiempo.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 28,
+      "topic": "¿Cuáles son algunas de las estrategias empíricas en ingeniería de software mencionadas?",
+      "suggestedType": "multiple_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 29,
+      "topic": "Los estudios de caso en ingeniería de software son elaborados por Yin.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 30,
+      "topic": "¿Cuál es la razón principal para usar la experimentación en ingeniería de software?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 31,
+      "topic": "Las estrategias de investigación son completamente ortogonales y no se superponen.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 32,
+      "topic": "El objetivo de la experimentación en ingeniería de software es identificar relaciones entre factores o variables.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 33,
+      "topic": "La ingeniería de software se basa principalmente en leyes inmutables, similares a las de la física.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 34,
+      "topic": "¿Qué tipo de conocimiento se busca validar o refutar mediante la experimentación en ingeniería de software?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 35,
+      "topic": "Los modelos en ingeniería de software evolucionan principalmente a través de la especulación teórica.",
+      "suggestedType": "true_false",
+      "chunkIndex": 1
+    },
+    {
+      "index": 36,
+      "topic": "¿Qué implica la evolución del conocimiento en una disciplina según el texto?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 37,
+      "topic": "La experimentación permite refinar los modelos a lo largo del tiempo.",
+      "suggestedType": "true_false",
+      "chunkIndex": 1
+    },
+    {
+      "index": 38,
+      "topic": "¿Qué diferencia a las disciplinas científicas en cuanto a la experimentación?",
+      "suggestedType": "multiple_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 39,
+      "topic": "El practicante en ingeniería de software depende del investigador para obtener modelos que ayuden a construir mejores sistemas.",
+      "suggestedType": "true_false",
+      "chunkIndex": 1
+    },
+    {
+      "index": 40,
+      "topic": "¿Qué se necesita para que la ingeniería de software evolucione como disciplina?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    }
+  ]
+}
+[outline.ok] Outline plan ready | {"itemCount":40}
+[chunks.parallel] Starting parallel chunk generation | {"chunks":2,"questionsPerChunk":[20,20],"outlineItems":40}
+--- PROMPT: chunk-1 (len=28341) ---
+You are CraftQuest quiz generator. Output valid CQIF JSON 2.0 only (no markdown).
+Root object MUST include: cqifVersion, quiz, questions (array).
+cqifVersion must be "2.0".
+This is SOURCE chunk 1 of 2.
+Generate exactly 20 questions using ONLY facts from this chunk.
+Do not duplicate questions that would belong to other parts of the material.
+QUESTION PLAN (follow this order and focus; one question per line):
+- Q1: La experimentación es fundamental para cualquier esfuerzo científico y de ingeniería. (prefer type: true_false)
+- Q2: ¿Cuál es el propósito principal de la experimentación en la ingeniería de software según el texto? (prefer type: single_choice)
+- Q3: El ciclo de 'construcción de modelos, experimentación y aprendizaje' es aplicable a muchas disciplinas científicas. (prefer type: true_false)
+- Q4: En el contexto de la ingeniería de software, ¿cuál es el rol del investigador? (prefer type: single_choice)
+- Q5: El rol del practicante en ingeniería de software es construir sistemas 'mejorados' utilizando el conocimiento disponible. (prefer type: true_false)
+- Q6: ¿Qué se necesita para que los investigadores estudien los problemas que enfrentan los practicantes y desarrollen soluciones? (prefer type: single_choice)
+- Q7: La ingeniería de software se considera una ciencia de laboratorio. (prefer type: true_false)
+- Q8: Los roles de investigador y practicante en ingeniería de software son independientes. (prefer type: true_false)
+- Q35: Los modelos en ingeniería de software evolucionan principalmente a través de la especulación teórica. (prefer type: true_false)
+- Q36: ¿Qué implica la evolución del conocimiento en una disciplina según el texto? (prefer type: single_choice)
+- Q37: La experimentación permite refinar los modelos a lo largo del tiempo. (prefer type: true_false)
+- Q38: ¿Qué diferencia a las disciplinas científicas en cuanto a la experimentación? (prefer type: multiple_choice)
+- Q39: El practicante en ingeniería de software depende del investigador para obtener modelos que ayuden a construir mejores sistemas. (prefer type: true_false)
+- Q40: ¿Qué se necesita para que la ingeniería de software evolucione como disciplina? (prefer type: single_choice)
+Language for question text: "es".
+Difficulty mode: mixed.
+Pedagogical goal: assessment.
+Allowed question types ONLY: single_choice, multiple_choice, true_false.
+NEVER use image_choice or image_based_question.
+Do not reference images, diagrams, or figures not described in text.
+Topic focus: cover this source section evenly.
+Use ONLY facts explicitly present in SOURCE. Do not invent.
+Each question needs: text, type, answerOptions (min 2) with unique key fields,
+correctAnswerKeys as JSON array referencing those keys (never a single string).
+For true_false use keys "true" and "false".
+Assign unique externalId per question (e.g. "q-1", "q-2").
+Omit justifications.
+
+SOURCE:
+--- Page 1 ---
+
+--- Page 2 ---
+Experimentation in Software Engineering
+
+--- Page 3 ---
+•
+
+--- Page 4 ---
+Claes Wohlin  Per Runeson Martin H¨ost  Magnus C. Ohlsson Bj¨orn Regnell  Anders Wessl´en Experimentation in Software Engineering 123
+
+--- Page 5 ---
+Claes Wohlin School of Computing Blekinge Institute of Technology Karlskrona, Sweden Per Runeson Department of Computer Science Lund University Lund, Sweden Martin H¨ost Department of Computer Science Lund University Lund, Sweden Magnus C. Ohlsson System Veriﬁcation Sweden AB Malm¨o, Sweden Bj¨orn Regnell Department of Computer Science Lund University Lund, Sweden Anders Wessl´en ST-Ericsson AB Lund, Sweden ISBN 978-3-642-29043-5 ISBN 978-3-642-29044-2 (eBook) DOI 10.1007/978-3-642-29044-2 Springer Heidelberg New York Dordrecht London Library of Congress Control Number: 2012940660 ACM Codes: D.2 c Springer science+business media (successor in interest of Kluwer Academic Publishers, Boston) 2000, Springer-Verlag Berlin Heidelberg 2012 This work is subject to copyright. All rights are reserved by the Publisher, whether the whole or part of thematerial isconcerned, speciﬁcally therightsoftranslation, reprinting, reuseofillustrations, recitation, broadcasting, reproduction on microﬁlms or in any other physical way, and transmission or information storage and retrieval, electronic adaptation, computer software, or by similar or dissimilar methodology now known or hereafter developed. Exempted from this legal reservation are brief excerpts in connection with reviews or scholarly analysis or material supplied speciﬁcally for the purpose of being entered and executed on a computer system, for exclusive use by the purchaser of the work. Duplication of this publication or parts thereof is permitted only under the provisions of the Copyright Law of the Publisher’s location, initscurrent version,andpermissionforusemustalways beobtained fromSpringer. Permissions for use may be obtained through RightsLink at the Copyright Clearance Center. Violations are liable to prosecution under the respective Copyright Law. Theuseofgeneral descriptive names,registered names,trademarks, servicemarks,etc.inthispublication does not imply, even in the absence of a speciﬁc statement, that such names are exempt from the relevant protective laws and regulations and therefore free for general use. While the advice and information in this book are believed to be true and accurate at the date of publication, neither the authors nor the editors nor the publisher can accept any legal responsibility for any errors or omissions that may be made. The publisher makes no warranty, express or implied, with respect to the material contained herein. Printed on acid-free paper Springer is part of Springer Science+Business Media (www.springer.com)
+
+--- Page 6 ---
+Foreword Experimentationis fundamentalto any scientiﬁc and engineering endeavor. Understanding a discipline involves building models of the various elements of thediscipline,e.g.,theobjectsinthedomain,theprocessesusedtomanipulatethose objects, the relationship between the processes and the objects. Evolving domain knowledge implies the evolution of those models by testing them via experiments of various forms. Analyzing the results of the experiment involves learning, the encapsulation of knowledge and the ability to change and reﬁne our models over time. Therefore,our understandingof a discipline evolves over time. This is the paradigm that has been used in many ﬁelds, e.g., physics, medicine, manufacturing. These ﬁelds evolved as disciplines when they began applying the cycle of model building, experimenting, and learning. Each ﬁeld began with recording observations and evolved to manipulating the model variables and studying the effects of changes in those variables. The ﬁelds differ in their nature, what constitutes the basic objects of the ﬁeld, the properties of those objects, the properties of the system that contain them, the relationship of the objects to the system, and the culture of the discipline. These differences affect how the models are built and how experimentationgets done. Like other science and engineering disciplines, software engineering requires the cycle of model building, experimentation, and learning. The study of software engineeringis a laboratoryscience. The players in the discipline are the researchers and the practitioners. The researcher’s role is to understand the nature of the object (products), the processes that create and manipulate them, and the relationship between the two in the context of the system. The practitioner’s role is to build ‘improved’ systems, using the knowledge available to date. These roles are symbi- otic. The researcher needs laboratories to study the problems faced by practitioners and develop and evolve solutions based upon experimentation. The practitioner needs to understand how to build better systems and the researcher can provide models to help. Indevelopingmodelsandexperimenting,boththeresearcherandthepractitioner needtounderstandthenatureofthedisciplineofsoftwareengineering.All software isnotthesame:therearealargenumberofvariablesthatcausedifferencesandtheir v
+
+--- Page 7 ---
+vi Foreword effects need to be understood.Like medicinewhere the variation in human genetics andmedicalhistoryis oftenamajorfactor in thedevelopmentofthemodelsandthe interpretation of the experiment’s results, software engineering deals with differing contexts that affect the input and the results. In software engineering the technolo- gies are mostly human intensive rather than automated. Like manufacturing the major problem is understanding and improving the relationship between processes and the products they create. But unlike manufacturing, the process in software engineering is development not production. So we cannot collect data from exact repetitions of the same process. We have to build our models at a higher level of abstraction but still take care to identify the context variables. Currently, there is an insufﬁcient set of models that allow us to reason about the discipline, a lack of recognition of the limits of technologies for certain contexts, and insufﬁcient analysis and experimentation going on but this latter situation is improvingas evidenced by this textbook. This book is a landmark in allowing us to train both the researcher and practitioner in software engineering experimentation. It is a major contribution to the ﬁeld. The authors have accumulated an incredible collection of knowledge and packagedit in an excellentway, providinga processfor scoping,planning,running, analyzing and interpreting, and packaging experiments. They cover all necessary topics from threats to validity to statistical procedures. Itiswellwrittenandcoversawiderangeofinformationnecessaryforperforming experiments in software engineering. When I began doing experiments, I had to ﬁndvarioussourcesofinformation,almost alwaysfromotherdisciplines,and adapt them to my needs as best I could. If I had this book to help me, it would have saved me an enormous amount of time and effort and my experiments would probably have been better. Professor Victor R. Basili
+
+--- Page 8 ---
+Foreword I am honored to be asked to write a foreword for this revision of the authors’ book with the same title that was published in 2000. I have used the original edition since its publication as a teacher and a researcher. Students in my courses at Colorado State University, Washington State University, University of Denver, and Universitaet Wuerzburg have used the book over the years. Some were full- time employees at major companies working on graduate degrees in Systems Engineering, others full-time Masters and Ph.D. students. The book worked well forthem.Besides thetreatmentof experimentalsoftwareengineeringmethods,they liked its conciseness. I am delighted to see that the revised version is as compact and easy to work with as the ﬁrst. The additions and modiﬁcations in this revised version very nicely reﬂect the maturation of the ﬁeld of empirical software engineering since the book was originally published: the increased importance of replication and synthesis of experiments, and the need of academics and professionals to successfully transfer new technology based on convincing quantitative evidence. Another important improvement concerns the expanded treatment of ethical issues in software engi- neering experimentation. Especially since no formal code of ethics exists in this ﬁeld, it is vitally important that students are made aware of such issues and have access to guidelines how to deal with them. The original edition of this book emphasized experiments. In industry, however, case studies tend to be more common to evaluate technology,software engineering processes, or artifacts. Hence the addition of a chapter on case studies is much needed and welcomed. So is the chapter on systematic literature reviews. Having taught a popular quantitative software engineering course with the originaleditionfora dozenyears,this revisedversionwith its additionsand updates provid
+... [truncated 16341 chars] ...
+--- PROMPT: chunk-2 (len=34528) ---
+You are CraftQuest quiz generator. Output valid CQIF JSON 2.0 only (no markdown).
+Root object MUST include: cqifVersion, quiz, questions (array).
+cqifVersion must be "2.0".
+This is SOURCE chunk 2 of 2.
+Generate exactly 20 questions using ONLY facts from this chunk.
+Do not duplicate questions that would belong to other parts of the material.
+QUESTION PLAN (follow this order and focus; one question per line):
+- Q9: ¿Qué método se utiliza tradicionalmente en áreas formales como la teoría electromagnética y los algoritmos? (prefer type: single_choice)
+- Q10: El método científico se utiliza en áreas aplicadas como la simulación de redes de telecomunicaciones. (prefer type: true_false)
+- Q11: ¿Puede la simulación ser utilizada como un medio para realizar un experimento? (prefer type: true_false)
+- Q12: El método de ingeniería es probablemente el que domina en la industria. (prefer type: true_false)
+- Q13: ¿En qué campos se han utilizado tradicionalmente los estudios empíricos? (prefer type: multiple_choice)
+- Q14: La ingeniería de software está muy influenciada por el comportamiento humano. (prefer type: true_false)
+- Q15: No se pueden esperar reglas o leyes formales en ingeniería de software, excepto en aspectos técnicos específicos. (prefer type: true_false)
+- Q16: ¿Cuál es el enfoque principal del libro según el texto? (prefer type: single_choice)
+- Q17: Los métodos analítico, científico y de ingeniería no son apropiados para la ingeniería de software. (prefer type: true_false)
+- Q18: Los métodos de investigación en ingeniería de software son completamente ortogonales. (prefer type: true_false)
+- Q19: ¿Por qué es importante hacer un mejor uso de los métodos de investigación empírica en ingeniería de software? (prefer type: single_choice)
+- Q20: La naturaleza de la ingeniería de software tiene mucho en común con disciplinas fuera de las partes técnicas de la ingeniería. (prefer type: true_false)
+- Q21: ¿Quiénes realizaron los primeros experimentos en ingeniería de software según el texto? (prefer type: single_choice)
+- Q22: Los primeros experimentos en ingeniería de software se realizaron en la década de 1990. (prefer type: true_false)
+- Q23: ¿Qué se enfatizó a mediados de la década de 1980 en relación con la experimentación en ingeniería de software? (prefer type: single_choice)
+- Q24: La falta de evidencia empírica en la investigación de ingeniería de software ha sido un tema destacado. (prefer type: true_false)
+- Q25: ¿Qué tipo de investigación se indica que todavía predomina en la ingeniería de software según algunas publicaciones? (prefer type: single_choice)
+- Q26: Se necesita un enfoque más científico para la ingeniería de software. (prefer type: true_false)
+- Q27: El número de experimentos publicados en ingeniería de software ha disminuido con el tiempo. (prefer type: true_false)
+- Q28: ¿Cuáles son algunas de las estrategias empíricas en ingeniería de software mencionadas? (prefer type: multiple_choice)
+- Q29: Los estudios de caso en ingeniería de software son elaborados por Yin. (prefer type: true_false)
+- Q30: ¿Cuál es la razón principal para usar la experimentación en ingeniería de software? (prefer type: single_choice)
+- Q31: Las estrategias de investigación son completamente ortogonales y no se superponen. (prefer type: true_false)
+- Q32: El objetivo de la experimentación en ingeniería de software es identificar relaciones entre factores o variables. (prefer type: true_false)
+- Q33: La ingeniería de software se basa principalmente en leyes inmutables, similares a las de la física. (prefer type: true_false)
+- Q34: ¿Qué tipo de conocimiento se busca validar o refutar mediante la experimentación en ingeniería de software? (prefer type: single_choice)
+Language for question text: "es".
+Difficulty mode: mixed.
+Pedagogical goal: assessment.
+Allowed question types ONLY: single_choice, multiple_choice, true_false.
+NEVER use image_choice or image_based_question.
+Do not reference images, diagrams, or figures not described in text.
+Topic focus: cover this source section evenly.
+Use ONLY facts explicitly present in SOURCE. Do not invent.
+Each question needs: text, type, answerOptions (min 2) with unique key fields,
+correctAnswerKeys as JSON array referencing those keys (never a single string).
+For true_false use keys "true" and "false".
+Assign unique externalId per question (e.g. "q-1", "q-2").
+Omit justifications.
+
+SOURCE:
+--- Page 19 ---
+xviii Acknowledgements the manuscript very thoroughly and providing valuable comments. We would also like to acknowledgethe anonymousreviewers for their contribution to the book. For the current version of the book, we have received valuable input and improvementproposals,and hencewe wouldlike to thankthefollowingindividuals for their valuable input: Prof. Anneliese Andrews, Denver University, USA; Prof. David Budgen, Durham University, UK; Prof. Barbara Kitchenham, Keele Univer- sity, UK; Prof. Dieter Rombach and Moinul Islam, University of Kaiserslautern, Germany; Prof. J¨urgen B¨orstler, Dr. Samuel Fricker and Dr. Richard Torkar, Blekinge Institute of Technology, Sweden. Thanks also to Mr. Jesper Runeson for work on the LATEXtransformationof the book. In addition to the above individuals, we would also like to thank all members of ISERN (International Software Engineering Research Network) for interesting and enlightening discussion regarding empirical software engineering research in general. For the chapter on case studies, we are gratefulfor the feedbackto the checklists from the ISERN members and attendants of the International Advanced School of Empirical Software Engineering in September 2007. A special thank to Dr. Kim Weyns and Dr. Andreas Jedlitschka for their review of an early draft of the chapter. Numerous research projects at Lund University and Blekinge Institute of Tech- nology have over the years contributed to the book. Different grants have funded researchprojectswhereempiricalstudieshavebeenacornerstone,andhencehelped shapeour experiencethat we havetried to documentthroughthe book.This bookis to some extent a result of all these research projects. Prof. Claes Wohlin, Prof. Per Runeson, Prof. Martin H¨ost, Dr. Magnus C. Ohlsson, Prof. Bj¨orn Regnell, and Dr. Anders Wessl´en
+
+--- Page 20 ---
+Contents Part I Background 1 Introduction................................................................. 3 1.1 Software Engineering Context ..................................... 3 1.2 Science and Software Engineering................................. 5 1.3 Exercises ............................................................ 8 2 Empirical Strategies........................................................ 9 2.1 Overviewof Empirical Strategies.................................. 10 2.2 Surveys .............................................................. 12 2.2.1 Survey Characteristics ................................... 12 2.2.2 Survey Purposes ......................................... 13 2.2.3 Data Collection .......................................... 13 2.3 Case Studies......................................................... 14 2.3.1 Case Study Arrangements............................... 15 2.3.2 ConfoundingFactors and Other Aspects ............... 15 2.4 Experiments......................................................... 16 2.4.1 Characteristics ........................................... 17 2.4.2 ExperimentProcess...................................... 18 2.5 Empirical Strategies Comparison .................................. 18 2.6 Replications ......................................................... 19 2.7 Theory in Software Engineering ................................... 21 2.8 AggregatingEvidencefrom Empirical Studies.................... 22 2.9 Empiricism in a Software EngineeringContext ................... 24 2.9.1 Empirical Evaluation of Process Changes .............. 24 2.9.2 Quality ImprovementParadigm......................... 26 2.9.3 ExperienceFactory ...................................... 27 2.9.4 Goal/Question/MetricMethod .......................... 29 2.10 Empirically-Based Technology Transfer .......................... 30 2.11 Ethics in Experimentation .......................................... 33 2.12 Exercises ............................................................ 36 xix
+
+--- Page 21 ---
+xx Contents 3 Measurement................................................................ 37 3.1 Basic Concepts...................................................... 38 3.1.1 Scale Types............................................... 39 3.1.2 Objective and Subjective Measures ..................... 40 3.1.3 Direct or Indirect Measures ............................. 41 3.2 Measurements in Software Engineering ........................... 41 3.3 Measurements in Practice .......................................... 42 3.4 Exercises ............................................................ 43 4 Systematic Literature Reviews............................................ 45 4.1 Planning the Review ................................................ 45 4.2 Conducting the Review............................................. 46 4.3 Reporting the Review............................................... 51 4.4 Mapping Studies .................................................... 52 4.5 Example Reviews ................................................... 52 4.6 Exercises ............................................................ 54 5 Case Studies ................................................................. 55 5.1 Case Studies in Its Context ......................................... 56 5.1.1 Why Case Studies in Software Engineering?........... 57 5.1.2 Case Study Research Process ........................... 58 5.2 Design and Planning................................................ 58 5.2.1 Case Study Planning..................................... 58 5.2.2 Case Study Protocol ..................................... 60 5.3 Preparation and Collection of Data ................................ 61 5.3.1 Interviews ................................................ 62 5.3.2 Observations ............................................. 64 5.3.3 Archival Data ............................................ 65 5.3.4 Metrics ................................................... 65 5.4 Data Analysis ....................................................... 65 5.4.1 Quantitative Data Analysis .............................. 65 5.4.2 Qualitative Data Analysis ............................... 66 5.4.3 Validity ................................................... 68 5.5 Reporting............................................................ 69 5.5.1 Characteristics ........................................... 69 5.5.2 Structure.................................................. 71 5.6 Exercises ............................................................ 72 6 Experiment Process ........................................................ 73 6.1 Variables, Treatments, Objects and Subjects ...................... 74 6.2 Process............................................................... 76 6.3 Overview ............................................................ 81 6.4 Exercises ............................................................ 81
+
+--- Page 22 ---
+Contents xxi Part II Steps in the Experiment Process 7 Scoping....................................................................... 85 7.1 Scope Experiment................................................... 85 7.2 Example Experiment................................................ 87 7.3 Exercises ............................................................ 88 8 Planning ..................................................................... 89 8.1 Context Selection ................................................... 89 8.2 Hypothesis Formulation ............................................ 91 8.3 Variables Selection.................................................. 92 8.4 Selection of Subjects...........
+... [truncated 22528 chars] ...
+--- GEMINI RESPONSE: chunk-1 model=gemini-2.5-flash len=11858 parsedQuestions=20 ---
+Parse: parsed OK
+{
+  "cqifVersion": "2.0",
+  "quiz": {
+    "title": "Experimentación en Ingeniería de Software - Chunk 1",
+    "description": "Preguntas basadas en el primer fragmento sobre la experimentación en ingeniería de software."
+  },
+  "questions": [
+    {
+      "externalId": "q-1",
+      "text": "La experimentación es fundamental para cualquier esfuerzo científico y de ingeniería.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-2",
+      "text": "¿Cuál es el propósito principal de la experimentación en la ingeniería de software según el texto?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Construir sistemas de software sin necesidad de modelos."
+        },
+        {
+          "key": "b",
+          "text": "Validar y evolucionar los modelos de la disciplina."
+        },
+        {
+          "key": "c",
+          "text": "Eliminar la necesidad de aprendizaje continuo."
+        },
+        {
+          "key": "d",
+          "text": "Automatizar completamente el proceso de desarrollo."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-3",
+      "text": "El ciclo de 'construcción de modelos, experimentación y aprendizaje' es aplicable a muchas disciplinas científicas.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-4",
+      "text": "En el contexto de la ingeniería de software, ¿cuál es el rol del investigador?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Construir sistemas mejorados usando el conocimiento disponible."
+        },
+        {
+          "key": "b",
+          "text": "Entender la naturaleza de los objetos (productos), los procesos y su relación en el contexto del sistema."
+        },
+        {
+          "key": "c",
+          "text": "Recopilar datos de repeticiones exactas del mismo proceso."
+        },
+        {
+          "key": "d",
+          "text": "Desarrollar modelos sin necesidad de experimentación."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-5",
+      "text": "El rol del practicante en ingeniería de software es construir sistemas 'mejorados' utilizando el conocimiento disponible.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-6",
+      "text": "¿Qué se necesita para que los investigadores estudien los problemas que enfrentan los practicantes y desarrollen soluciones?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Una completa automatización de las tecnologías."
+        },
+        {
+          "key": "b",
+          "text": "Laboratorios para estudiar los problemas y desarrollar soluciones basadas en experimentación."
+        },
+        {
+          "key": "c",
+          "text": "Un conjunto insuficiente de modelos para razonar sobre la disciplina."
+        },
+        {
+          "key": "d",
+          "text": "Datos de repeticiones exactas del mismo proceso."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-7",
+      "text": "La ingeniería de software se considera una ciencia de laboratorio.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-8",
+      "text": "Los roles de investigador y practicante en ingeniería de software son independientes.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "false"
+      ]
+    },
+    {
+      "externalId": "q-9",
+      "text": "Los modelos en ingeniería de software evolucionan principalmente a través de la especulación teórica.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "false"
+      ]
+    },
+    {
+      "externalId": "q-10",
+      "text": "¿Qué implica la evolución del conocimiento en una disciplina según el texto?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "La permanencia de los modelos sin cambios."
+        },
+        {
+          "key": "b",
+          "text": "La evolución de los modelos probándolos mediante experimentos."
+        },
+        {
+          "key": "c",
+          "text": "La eliminación de la necesidad de experimentación."
+        },
+        {
+          "key": "d",
+          "text": "La dependencia exclusiva de observaciones iniciales."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-11",
+      "text": "La experimentación permite refinar los modelos a lo largo del tiempo.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-12",
+      "text": "¿Qué diferencia a las disciplinas científicas en cuanto a la experimentación?",
+      "type": "multiple_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "La naturaleza de los objetos básicos del campo."
+        },
+        {
+          "key": "b",
+          "text": "Las propiedades de los objetos y del sistema que los contiene."
+        },
+        {
+          "key": "c",
+          "text": "La cultura de la disciplina."
+        },
+        {
+          "key": "d",
+          "text": "La relación de los objetos con el sistema."
+        }
+      ],
+      "correctAnswerKeys": [
+        "a",
+        "b",
+        "c",
+        "d"
+      ]
+    },
+    {
+      "externalId": "q-13",
+      "text": "El practicante en ingeniería de software depende del investigador para obtener modelos que ayuden a construir mejores sistemas.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-14",
+      "text": "¿Qué se necesita para que la ingeniería de software evolucione como disciplina?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Exclusivamente la automatización de las tecnologías."
+        },
+        {
+          "key": "b",
+          "text": "El ciclo de construcción de modelos, experimentación y aprendizaje."
+        },
+        {
+          "key": "c",
+          "text": "Una dependencia total de la especulación teórica."
+        },
+        {
+          "key": "d",
+          "text": "La eliminación de la necesidad de identificar variables de contexto."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-15",
+      "text": "¿Qué implica el análisis de los resultados de un experimento?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "La eliminación de la necesidad de refinar modelos."
+        },
+        {
+          "key": "b",
+          "text": "El aprendizaje, la encapsulación del conocimiento y la capacidad de refinar modelos."
+        },
+        {
+          "key": "c",
+          "text": "La confirmación de la hipótesis sin necesidad de cambios."
+        },
+        {
+          "key": "d",
+          "text": "La recopilación de datos sin interpretación."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-16",
+      "text": "¿Cómo evolucionaron las disciplinas científicas desde sus inicios?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Comenzaron manipulando variables de modelo directamente."
+        },
+        {
+          "key": "b",
+          "text": "Pasaron de registrar observaciones a manipular variables de modelo y estudiar sus efectos."
+        },
+        {
+          "key": "c",
+          "text": "Se basaron únicamente en la especulación teórica."
+        },
+        {
+          "key": "d",
+          "text": "Eliminaron la necesidad de experimentación."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-17",
+      "text": "En ingeniería de software, las tecnologías son principalmente intensivas en recursos humanos.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-18",
+      "text": "¿Cuál es el problema principal en ingeniería de software, similar al de la fabricación?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "La falta de automatización en los procesos."
+        },
+        {
+          "key": "b",
+          "text": "La dificultad para entender y mejorar la relación entre procesos y productos."
+        },
+        {
+          "key": "c",
+          "text": "La incapacidad de construir modelos de alto nivel de abstracción."
+        },
+        {
+          "key": "d",
+          "text": "La repetición exacta de los mismos procesos."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-19",
+      "text": "En ingeniería de software, el proceso es de producción, no de desarrollo.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "false"
+      ]
+    },
+    {
+      "externalId": "q-20",
+      "text": "¿Qué desafío presenta la ingeniería de software en cuanto a la recolección de datos de procesos?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "La facilidad para repetir exactamente los mismos procesos."
+        },
+        {
+          "key": "b",
+          "text": "La imposibilidad de recolectar datos de repeticiones exactas del mismo proceso."
+        },
+        {
+          "key": "c",
+          "text": "La irrelevancia de los datos de procesos para la mejora."
+        },
+        {
+          "key": "d",
+          "text": "La automatización completa de la recolección de datos."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    }
+  ]
+}
+[chunk-1-parsed] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":20,"types":{"true_false":10,"single_choice":9,"multiple_choice":1},"sampleTexts":["La experimentaci\u00F3n es fundamental para cualquier esfuerzo cient\u00EDfico y de ingeni","\u00BFCu\u00E1l es el prop\u00F3sito principal de la experimentaci\u00F3n en la ingenier\u00EDa de softwa","El ciclo de \u0027construcci\u00F3n de modelos, experimentaci\u00F3n y aprendizaje\u0027 es aplicabl"]}
+--- GEMINI RESPONSE: chunk-2 model=gemini-2.5-flash len=10563 parsedQuestions=20 ---
+Parse: parsed OK
+{
+  "cqifVersion": "2.0",
+  "quiz": {
+    "title": "Quiz de Ingeniería de Software",
+    "description": "Preguntas sobre métodos de investigación y experimentación en ingeniería de software."
+  },
+  "questions": [
+    {
+      "externalId": "q-9",
+      "text": "¿Qué método se utiliza tradicionalmente en áreas formales como la teoría electromagnética y los algoritmos?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "El método científico"
+        },
+        {
+          "key": "b",
+          "text": "El método empírico"
+        },
+        {
+          "key": "c",
+          "text": "El método analítico"
+        },
+        {
+          "key": "d",
+          "text": "El método de ingeniería"
+        }
+      ],
+      "correctAnswerKeys": [
+        "c"
+      ]
+    },
+    {
+      "externalId": "q-10",
+      "text": "El método científico se utiliza en áreas aplicadas como la simulación de redes de telecomunicaciones.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-11",
+      "text": "¿Puede la simulación ser utilizada como un medio para realizar un experimento?",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-12",
+      "text": "El método de ingeniería es probablemente el que domina en la industria.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-13",
+      "text": "¿En qué campos se han utilizado tradicionalmente los estudios empíricos?",
+      "type": "multiple_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Ciencias sociales"
+        },
+        {
+          "key": "b",
+          "text": "Física"
+        },
+        {
+          "key": "c",
+          "text": "Psicología"
+        },
+        {
+          "key": "d",
+          "text": "Teoría electromagnética"
+        }
+      ],
+      "correctAnswerKeys": [
+        "a",
+        "c"
+      ]
+    },
+    {
+      "externalId": "q-14",
+      "text": "La ingeniería de software está muy influenciada por el comportamiento humano.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-15",
+      "text": "No se pueden esperar reglas o leyes formales en ingeniería de software, excepto en aspectos técnicos específicos.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-16",
+      "text": "¿Cuál es el enfoque principal del libro según el texto?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "La teoría electromagnética y los algoritmos."
+        },
+        {
+          "key": "b",
+          "text": "La aplicación y el uso de estudios empíricos en ingeniería de software, especialmente la experimentación."
+        },
+        {
+          "key": "c",
+          "text": "El desarrollo de modelos matemáticos para la fiabilidad del software."
+        },
+        {
+          "key": "d",
+          "text": "Las leyes de la evolución del software."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-17",
+      "text": "Los métodos analítico, científico y de ingeniería no son apropiados para la ingeniería de software.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "false"
+      ]
+    },
+    {
+      "externalId": "q-18",
+      "text": "Los métodos de investigación en ingeniería de software son completamente ortogonales.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "false"
+      ]
+    },
+    {
+      "externalId": "q-19",
+      "text": "¿Por qué es importante hacer un mejor uso de los métodos de investigación empírica en ingeniería de software?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Porque son los únicos métodos válidos en la industria."
+        },
+        {
+          "key": "b",
+          "text": "Porque la ingeniería de software tiene mucho en común con disciplinas fuera de las partes técnicas de la ingeniería."
+        },
+        {
+          "key": "c",
+          "text": "Para evitar la necesidad de modelos matemáticos."
+        },
+        {
+          "key": "d",
+          "text": "Para reemplazar completamente los métodos analíticos y científicos."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-20",
+      "text": "La naturaleza de la ingeniería de software tiene mucho en común con disciplinas fuera de las partes técnicas de la ingeniería.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-21",
+      "text": "¿Quiénes realizaron los primeros experimentos en ingeniería de software según el texto?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Basili et al."
+        },
+        {
+          "key": "b",
+          "text": "Sjøberg et al."
+        },
+        {
+          "key": "c",
+          "text": "Grant y Sackmann"
+        },
+        {
+          "key": "d",
+          "text": "Tichy et al."
+        }
+      ],
+      "correctAnswerKeys": [
+        "c"
+      ]
+    },
+    {
+      "externalId": "q-22",
+      "text": "Los primeros experimentos en ingeniería de software se realizaron en la década de 1990.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "false"
+      ]
+    },
+    {
+      "externalId": "q-23",
+      "text": "¿Qué se enfatizó a mediados de la década de 1980 en relación con la experimentación en ingeniería de software?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "La disminución de experimentos publicados."
+        },
+        {
+          "key": "b",
+          "text": "La necesidad de una experimentación sistemática."
+        },
+        {
+          "key": "c",
+          "text": "El predominio de la investigación de abogacía."
+        },
+        {
+          "key": "d",
+          "text": "La irrelevancia de los estudios empíricos."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-24",
+      "text": "La falta de evidencia empírica en la investigación de ingeniería de software ha sido un tema destacado.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-25",
+      "text": "¿Qué tipo de investigación se indica que todavía predomina en la ingeniería de software según algunas publicaciones?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Investigación empírica"
+        },
+        {
+          "key": "b",
+          "text": "Investigación de abogacía (advocacy research)"
+        },
+        {
+          "key": "c",
+          "text": "Experimentación formal"
+        },
+        {
+          "key": "d",
+          "text": "Estudios de caso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-26",
+      "text": "Se necesita un enfoque más científico para la ingeniería de software.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-27",
+      "text": "El número de experimentos publicados en ingeniería de software ha disminuido con el tiempo.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "false"
+      ]
+    },
+    {
+      "externalId": "q-28",
+      "text": "¿Cuáles son algunas de las estrategias empíricas en ingeniería de software mencionadas?",
+      "type": "multiple_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Establecer experimentos formales"
+        },
+        {
+          "key": "b",
+          "text": "Estudiar proyectos reales en la industria (estudios de caso)"
+        },
+        {
+          "key": "c",
+          "text": "Realizar encuestas a través de entrevistas"
+        },
+        {
+          "key": "d",
+          "text": "Desarrollar teorías analíticas"
+        }
+      ],
+      "correctAnswerKeys": [
+        "a",
+        "b",
+        "c"
+      ]
+    }
+  ]
+}
+[chunk-2-parsed] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":20,"types":{"single_choice":6,"true_false":12,"multiple_choice":2},"sampleTexts":["\u00BFQu\u00E9 m\u00E9todo se utiliza tradicionalmente en \u00E1reas formales como la teor\u00EDa electro","El m\u00E9todo cient\u00EDfico se utiliza en \u00E1reas aplicadas como la simulaci\u00F3n de redes d","\u00BFPuede la simulaci\u00F3n ser utilizada como un medio para realizar un experimento?"]}
+[merge.final] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":40,"types":{"true_false":22,"single_choice":15,"multiple_choice":3},"sampleTexts":["La experimentaci\u00F3n es fundamental para cualquier esfuerzo cient\u00EDfico y de ingeni","\u00BFCu\u00E1l es el prop\u00F3sito principal de la experimentaci\u00F3n en la ingenier\u00EDa de softwa","El ciclo de \u0027construcci\u00F3n de modelos, experimentaci\u00F3n y aprendizaje\u0027 es aplicabl"]}
+[post-gemini] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":40,"types":{"true_false":22,"single_choice":15,"multiple_choice":3},"sampleTexts":["La experimentaci\u00F3n es fundamental para cualquier esfuerzo cient\u00EDfico y de ingeni","\u00BFCu\u00E1l es el prop\u00F3sito principal de la experimentaci\u00F3n en la ingenier\u00EDa de softwa","El ciclo de \u0027construcci\u00F3n de modelos, experimentaci\u00F3n y aprendizaje\u0027 es aplicabl"]}
+[sanitize] Question type filter applied | {"before":40,"after":40,"allowedTypes":["single_choice","multiple_choice","true_false"],"typesBefore":{"true_false":22,"single_choice":15,"multiple_choice":3},"typesAfter":{"true_false":22,"single_choice":15,"multiple_choice":3}}
+[quiz.created] New quiz for AI import | {"targetQuizId":"46f45037-255d-4777-a7dd-cee3121d8311"}
+[import.populate] Import batch snapshot | {"totalRows":40,"validRows":40,"errorRows":0,"batchStatus":"ready_for_review","rows":[{"Row":1,"Status":"valid","ErrorCode":null,"message":null},{"Row":2,"Status":"valid","ErrorCode":null,"message":null},{"Row":3,"Status":"valid","ErrorCode":null,"message":null},{"Row":4,"Status":"valid","ErrorCode":null,"message":null},{"Row":5,"Status":"valid","ErrorCode":null,"message":null},{"Row":6,"Status":"valid","ErrorCode":null,"message":null},{"Row":7,"Status":"valid","ErrorCode":null,"message":null},{"Row":8,"Status":"valid","ErrorCode":null,"message":null},{"Row":9,"Status":"valid","ErrorCode":null,"message":null},{"Row":10,"Status":"valid","ErrorCode":null,"message":null}]}
+[import.batch] Import batch created from CQIF | {"ImportId":"5b9f21db-4e4c-4688-bdf9-1b6034e4e762","Status":"ready_for_review","TotalQuestionsDetected":40,"ValidQuestions":40,"QuestionsWithErrors":0,"QuestionsWithWarnings":0}
+=== AI generation trace ended ===

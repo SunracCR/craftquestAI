@@ -1,0 +1,1130 @@
+# CraftQuest TXT Import - Mundial de Futbol FIFA 2026 (70 preguntas)
+# Uso: Importar preguntas > TXT en un cuestionario publicado
+# Nota: plan Free permite 65 por cuestionario; este archivo tiene 70 para probar el aviso de limite.
+
+[QUIZ]
+title=Mundial de Futbol FIFA 2026 - Trivia
+description=70 preguntas sobre sedes, formato, equipos y datos del Mundial 2026 en EE.UU., Canada y Mexico
+default_points=1
+default_randomize_answers=true
+
+[QUESTION]
+external_id=WC26-001
+type=single_choice
+section=Sedes
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos paises seran sede conjunta del Mundial FIFA 2026?
+answer[A]=Dos paises
+answer[B]=Tres paises
+answer[C]=Cuatro paises
+answer[D]=Cinco paises
+correct=B
+justification=Estados Unidos, Canada y Mexico organizaran el torneo de forma conjunta.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-002
+type=single_choice
+section=Sedes
+points=1
+difficulty=easy
+randomize_answers=true
+text=Que paises del CONCACAF seran anfitriones del Mundial 2026?
+answer[A]=Estados Unidos y Canada
+answer[B]=Mexico y Brasil
+answer[C]=Estados Unidos, Mexico y Canada
+answer[D]=Canada y Argentina
+correct=C
+justification=La Copa Mundial 2026 sera la primera con tres sedes en la region CONCACAF.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-003
+type=single_choice
+section=Formato
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos selecciones participaran en el Mundial 2026?
+answer[A]=32 equipos
+answer[B]=40 equipos
+answer[C]=48 equipos
+answer[D]=56 equipos
+correct=C
+justification=FIFA amplio el torneo de 32 a 48 selecciones a partir de esta edicion.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-004
+type=single_choice
+section=Formato
+points=1
+difficulty=medium
+randomize_answers=true
+text=Cuantos partidos se jugaran en total en el Mundial 2026?
+answer[A]=64 partidos
+answer[B]=80 partidos
+answer[C]=104 partidos
+answer[D]=128 partidos
+correct=C
+justification=Con 48 equipos el calendario oficial contempla 104 encuentros.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-005
+type=single_choice
+section=Formato
+points=1
+difficulty=medium
+randomize_answers=true
+text=Cuantos grupos tendra la fase de grupos del Mundial 2026?
+answer[A]=8 grupos
+answer[B]=10 grupos
+answer[C]=12 grupos
+answer[D]=16 grupos
+correct=C
+justification=La fase inicial se divide en 12 grupos de cuatro selecciones.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-006
+type=single_choice
+section=Formato
+points=1
+difficulty=medium
+randomize_answers=true
+text=Cuantas selecciones clasifican de cada grupo como las dos primeras?
+answer[A]=Solo el primero
+answer[B]=Las dos primeras
+answer[C]=Las tres primeras
+answer[D]=Todo el grupo
+correct=B
+justification=Clasifican los dos mejores de cada uno de los 12 grupos.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-007
+type=single_choice
+section=Fechas
+points=1
+difficulty=easy
+randomize_answers=true
+text=En que mes de 2026 esta programado el inicio del Mundial?
+answer[A]=Abril
+answer[B]=Mayo
+answer[C]=Junio
+answer[D]=Agosto
+correct=C
+justification=El torneo comenzara en junio de 2026 segun el calendario oficial de FIFA.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-008
+type=single_choice
+section=Fechas
+points=1
+difficulty=easy
+randomize_answers=true
+text=En que estacion del hemisferio norte se disputara principalmente el Mundial 2026?
+answer[A]=Invierno
+answer[B]=Primavera
+answer[C]=Verano
+answer[D]=Otono
+correct=C
+justification=Junio y julio corresponden al verano boreal.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-009
+type=single_choice
+section=Sedes USA
+points=1
+difficulty=medium
+randomize_answers=true
+text=En que area de EE.UU. se jugara la final del Mundial 2026?
+answer[A]=Los Angeles
+answer[B]=Miami
+answer[C]=Nueva York / Nueva Jersey
+answer[D]=Dallas
+correct=C
+justification=La final esta prevista en MetLife Stadium en Nueva York / Nueva Jersey.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-010
+type=single_choice
+section=Sedes USA
+points=1
+difficulty=medium
+randomize_answers=true
+text=Cual estadio albergaria la final del Mundial 2026?
+answer[A]=SoFi Stadium
+answer[B]=AT&T Stadium
+answer[C]=MetLife Stadium
+answer[D]=Arrowhead Stadium
+correct=C
+justification=MetLife Stadium en East Rutherford fue designado para la final.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-011
+type=single_choice
+section=Sedes Mexico
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cual de estas ciudades mexicanas sera sede del Mundial 2026?
+answer[A]=Culiacan
+answer[B]=Guadalajara
+answer[C]=Tijuana
+answer[D]=Leon
+correct=B
+justification=Mexico tendra partidos en Ciudad de Mexico, Guadalajara y Monterrey.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-012
+type=single_choice
+section=Sedes Mexico
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantas ciudades de Mexico albergaran partidos del Mundial 2026?
+answer[A]=Una
+answer[B]=Dos
+answer[C]=Tres
+answer[D]=Cuatro
+correct=C
+justification=Las sedes mexicanas son Ciudad de Mexico, Guadalajara y Monterrey.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-013
+type=single_choice
+section=Sedes Canada
+points=1
+difficulty=easy
+randomize_answers=true
+text=Que ciudades canadienses seran sede del Mundial 2026?
+answer[A]=Montreal y Vancouver
+answer[B]=Toronto y Vancouver
+answer[C]=Calgary y Ottawa
+answer[D]=Quebec y Halifax
+correct=B
+justification=Canada organizara partidos en Toronto y Vancouver.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-014
+type=single_choice
+section=Sedes USA
+points=1
+difficulty=medium
+randomize_answers=true
+text=Cual sede estadounidense del oeste aloja partidos en la zona de San Francisco Bay?
+answer[A]=Seattle
+answer[B]=San Francisco Bay Area
+answer[C]=Houston
+answer[D]=Kansas City
+correct=B
+justification=Levis Stadium en Santa Clara representa la sede del area de San Francisco.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-015
+type=single_choice
+section=Sedes USA
+points=1
+difficulty=easy
+randomize_answers=true
+text=Que ciudad del sur de Florida sera sede del Mundial 2026?
+answer[A]=Orlando
+answer[B]=Miami
+answer[C]=Tampa Bay solamente
+answer[D]=Jacksonville
+correct=B
+justification=Miami (Hard Rock Stadium) figura en el listado de sedes.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-016
+type=single_choice
+section=Sedes USA
+points=1
+difficulty=medium
+randomize_answers=true
+text=En que sede de Texas se jugaran partidos del Mundial 2026?
+answer[A]=Austin
+answer[B]=Dallas / Arlington
+answer[C]=El Paso
+answer[D]=San Antonio
+correct=B
+justification=Dallas (AT&T Stadium en Arlington) es sede confirmada.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-017
+type=single_choice
+section=Sedes USA
+points=1
+difficulty=easy
+randomize_answers=true
+text=Que ciudad del Pacifico noroeste de EE.UU. sera sede?
+answer[A]=Portland
+answer[B]=Seattle
+answer[C]=Sacramento
+answer[D]=San Diego
+correct=B
+justification=Seattle (Lumen Field) alberga encuentros del torneo.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-018
+type=single_choice
+section=Sedes USA
+points=1
+difficulty=medium
+randomize_answers=true
+text=Que sede estadounidense corresponde al estadio Gillette?
+answer[A]=Boston / Foxborough
+answer[B]=Filadelfia
+answer[C]=Atlanta
+answer[D]=Denver
+correct=A
+justification=Gillette Stadium en Foxborough representa la sede de Boston.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-019
+type=single_choice
+section=Historia
+points=1
+difficulty=medium
+randomize_answers=true
+text=El Mundial 2026 tendra 48 equipos. Cuantos equipos tenia el formato desde 1998 hasta 2022?
+answer[A]=24
+answer[B]=32
+answer[C]=36
+answer[D]=40
+correct=B
+justification=Entre 1998 y 2022 el torneo se disputo con 32 selecciones.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-020
+type=single_choice
+section=Historia
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantas Copas Mundiales masculinas de FIFA se habran disputado incluyendo 2026?
+answer[A]=22
+answer[B]=23
+answer[C]=24
+answer[D]=25
+correct=B
+justification=Qatar 2022 fue la numero 22; 2026 sera la vigesimotercera.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-021
+type=single_choice
+section=Historia
+points=1
+difficulty=medium
+randomize_answers=true
+text=Que pais organizo la Copa Mundial inmediatamente anterior a 2026?
+answer[A]=Brasil
+answer[B]=Rusia
+answer[C]=Qatar
+answer[D]=Alemania
+correct=C
+justification=La edicion previa fue Qatar 2022.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-022
+type=single_choice
+section=Historia
+points=1
+difficulty=hard
+randomize_answers=true
+text=Mexico sera sede por tercera vez. En que anos fue sede anteriormente?
+answer[A]=1970 y 1986
+answer[B]=1986 y 1994
+answer[C]=1970 y 1994
+answer[D]=1968 y 1986
+correct=A
+justification=Mexico organizo el Mundial en 1970 y en 1986.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-023
+type=single_choice
+section=Historia
+points=1
+difficulty=medium
+randomize_answers=true
+text=Estados Unidos fue sede en 1994. Donde se jugo la final ese ano?
+answer[A]=Nueva York
+answer[B]=Los Angeles (Rose Bowl)
+answer[C]=Chicago
+answer[D]=Dallas
+correct=B
+justification=La final de USA 94 se jugo en el Rose Bowl de Pasadena.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-024
+type=single_choice
+section=Formato
+points=1
+difficulty=hard
+randomize_answers=true
+text=Ademas de los dos primeros de cada grupo, cuantas selecciones terceras pueden clasificar?
+answer[A]=Cuatro mejores terceros
+answer[B]=Seis mejores terceros
+answer[C]=Ocho mejores terceros
+answer[D]=Diez mejores terceros
+correct=C
+justification=Ocho de los doce terceros lugares avanzan a dieciseisavos de final.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-025
+type=single_choice
+section=Formato
+points=1
+difficulty=medium
+randomize_answers=true
+text=Cuantas selecciones llegan a dieciseisavos tras la fase de grupos en 2026?
+answer[A]=16
+answer[B]=24
+answer[C]=32
+answer[D]=48
+correct=C
+justification=24 de grupos + 8 terceros = 32 selecciones en dieciseisavos.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-026
+type=single_choice
+section=CONCACAF
+points=1
+difficulty=medium
+randomize_answers=true
+text=Como anfitriones, cuantos cupos automaticos obtienen USA, Mexico y Canada?
+answer[A]=Uno cada uno
+answer[B]=Dos cada uno
+answer[C]=Tres cada uno
+answer[D]=Ninguno automatico
+correct=A
+justification=Los tres paises sede clasifican automaticamente al torneo.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-027
+type=single_choice
+section=Sedes
+points=1
+difficulty=easy
+randomize_answers=true
+text=En que continente se disputara el Mundial 2026?
+answer[A]=Europa
+answer[B]=Asia
+answer[C]=Africa
+answer[D]=America del Norte
+correct=D
+justification=Todas las sedes estan en America del Norte.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-028
+type=single_choice
+section=Curiosidades
+points=1
+difficulty=medium
+randomize_answers=true
+text=El Mundial 2026 sera el primero con tres paises anfitriones en una misma edicion?
+answer[A]=Si
+answer[B]=No, ya ocurrio en 2002
+answer[C]=No, ya ocurrio en 2018
+answer[D]=Aun no esta definido
+correct=A
+justification=Es la primera Copa Mundial organizada por tres paises a la vez.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-029
+type=single_choice
+section=Sedes USA
+points=1
+difficulty=medium
+randomize_answers=true
+text=Que sede del sur de EE.UU. usa el Mercedes-Benz Stadium?
+answer[A]=Houston
+answer[B]=Atlanta
+answer[C]=Nashville
+answer[D]=Charlotte
+correct=B
+justification=Atlanta alberga partidos en el Mercedes-Benz Stadium.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-030
+type=single_choice
+section=Sedes USA
+points=1
+difficulty=easy
+randomize_answers=true
+text=Filadelfia sera sede. En que estado de EE.UU. se encuentra?
+answer[A]=Nueva York
+answer[B]=Pennsylvania
+answer[C]=Nueva Jersey
+answer[D]=Maryland
+correct=B
+justification=Lincoln Financial Field esta en Filadelfia, Pennsylvania.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-031
+type=single_choice
+section=Sedes USA
+points=1
+difficulty=medium
+randomize_answers=true
+text=Que sede del Medio Oeste usa Arrowhead Stadium?
+answer[A]=Chicago
+answer[B]=Kansas City
+answer[C]=Detroit
+answer[D]=Minneapolis
+correct=B
+justification=Kansas City es una de las sedes estadounidenses confirmadas.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-032
+type=single_choice
+section=Sedes USA
+points=1
+difficulty=easy
+randomize_answers=true
+text=Houston sera sede. Como se llama su estadio principal para el evento?
+answer[A]=NRG Stadium
+answer[B]=Cowboys Stadium
+answer[C]=SoFi Stadium
+answer[D]=Lambeau Field
+correct=A
+justification=NRG Stadium aloja partidos en Houston.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-033
+type=single_choice
+section=Torneo
+points=1
+difficulty=medium
+randomize_answers=true
+text=Quien organiza oficialmente la Copa Mundial de la FIFA?
+answer[A]=UEFA
+answer[B]=CONMEBOL
+answer[C]=FIFA
+answer[D]=CONCACAF
+correct=C
+justification=La Copa Mundial es el torneo oficial de selecciones organizado por FIFA.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-034
+type=single_choice
+section=Equipos
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantas confederaciones continentales de FIFA aportan clasificados al Mundial?
+answer[A]=Cuatro
+answer[B]=Cinco
+answer[C]=Seis
+answer[D]=Siete
+correct=C
+justification=UEFA, CONMEBOL, CONCACAF, CAF, AFC y OFC participan en las eliminatorias.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-035
+type=single_choice
+section=Formato
+points=1
+difficulty=medium
+randomize_answers=true
+text=En un grupo de 4 equipos (todos contra todos una vez), cuantos partidos hay?
+answer[A]=4
+answer[B]=5
+answer[C]=6
+answer[D]=8
+correct=C
+justification=Formula n*(n-1)/2: 4 equipos generan 6 partidos por grupo.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-036
+type=single_choice
+section=Sedes Mexico
+points=1
+difficulty=medium
+randomize_answers=true
+text=El Estadio Azteca sera sede otra vez. Cuantos Mundiales habra albergado antes de 2026?
+answer[A]=Ninguno
+answer[B]=Uno
+answer[C]=Dos
+answer[D]=Tres
+correct=C
+justification=Recibio Mundiales en 1970 y 1986; 2026 sera el tercero en ese estadio.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-037
+type=single_choice
+section=Records
+points=1
+difficulty=hard
+randomize_answers=true
+text=Brasil es el maximo campeon mundial. Cuantas Copas gano hasta 2022?
+answer[A]=4
+answer[B]=5
+answer[C]=6
+answer[D]=7
+correct=B
+justification=Brasil conquisto cinco titulos (1958, 1962, 1970, 1994, 2002).
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-038
+type=single_choice
+section=Records
+points=1
+difficulty=medium
+randomize_answers=true
+text=Que seleccion defiende el titulo de campeon entrando al Mundial 2026?
+answer[A]=Francia
+answer[B]=Argentina
+answer[C]=Alemania
+answer[D]=Espana
+correct=B
+justification=Argentina gano el Mundial de Qatar 2022.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-039
+type=single_choice
+section=Records
+points=1
+difficulty=medium
+randomize_answers=true
+text=Quien fue el campeon del Mundial 2022?
+answer[A]=Francia
+answer[B]=Brasil
+answer[C]=Argentina
+answer[D]=Croacia
+correct=C
+justification=Argentina vencio a Francia en la final de Qatar 2022.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-040
+type=single_choice
+section=Sedes Canada
+points=1
+difficulty=medium
+randomize_answers=true
+text=El estadio BC Place alberga partidos en que ciudad canadiense?
+answer[A]=Toronto
+answer[B]=Vancouver
+answer[C]=Montreal
+answer[D]=Calgary
+correct=B
+justification=Vancouver es sede con BC Place.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-041
+type=single_choice
+section=Sedes Canada
+points=1
+difficulty=medium
+randomize_answers=true
+text=Toronto sera sede. Que estadio se utiliza en esa ciudad?
+answer[A]=BMO Field
+answer[B]=BC Place
+answer[C]=Estadio Olimpico
+answer[D]=Estadio Azteca
+correct=A
+justification=BMO Field en Toronto aloja encuentros del Mundial 2026.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-042
+type=single_choice
+section=Clima
+points=1
+difficulty=easy
+randomize_answers=true
+text=Por que muchas sedes en EE.UU. y Mexico facilitan el torneo en junio-julio?
+answer[A]=Hay nieve constante
+answer[B]=Clima generalmente calido
+answer[C]=Hay 24 h de oscuridad
+answer[D]=Todas estan sobre 4000 m
+correct=B
+justification=La mayoria de las sedes tienen veranos aptos para futbol al aire libre.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-043
+type=single_choice
+section=Logistica
+points=1
+difficulty=medium
+randomize_answers=true
+text=Una ventaja de tres paises vecinos como sedes es:
+answer[A]=Cruzar solo oceanos
+answer[B]=Distancias menores que Mundiales multi-continente
+answer[C]=Cero viajes entre sedes
+answer[D]=Un solo estadio
+correct=B
+justification=Aunque hay distancias largas, todas las sedes estan en America del Norte.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-044
+type=single_choice
+section=Aficion
+points=1
+difficulty=easy
+randomize_answers=true
+text=La marca oficial del Mundial 2026 la gestiona principalmente:
+answer[A]=FIFA y comites locales
+answer[B]=Naciones Unidas
+answer[C]=UEFA solamente
+answer[D]=Major League Baseball
+correct=A
+justification=FIFA y los comites organizadores locales gestionan la marca del evento.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-045
+type=single_choice
+section=Boletos
+points=1
+difficulty=medium
+randomize_answers=true
+text=Los boletos oficiales del Mundial 2026 se venden principalmente a traves de:
+answer[A]=Plataformas autorizadas por FIFA
+answer[B]=Cualquier revendedor sin registro
+answer[C]=Entrada libre en todos los partidos
+answer[D]=Solo taquilla el dia del partido
+correct=A
+justification=FIFA administra o autoriza la venta oficial de entradas.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-046
+type=single_choice
+section=VAR
+points=1
+difficulty=easy
+randomize_answers=true
+text=En el Mundial 2026 se espera el uso del VAR. Que significa VAR?
+answer[A]=Video Assistant Referee
+answer[B]=Variedad de velocidad
+answer[C]=Virtualidad absoluta
+answer[D]=Voz del arbitro
+correct=A
+justification=VAR = arbitro asistente de video.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-047
+type=single_choice
+section=Reglas
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos jugadores puede incluir la lista final de cada seleccion (regla habitual reciente)?
+answer[A]=18
+answer[B]=23
+answer[C]=26
+answer[D]=30
+correct=C
+justification=Desde Qatar 2022 la lista oficial puede incluir hasta 26 jugadores.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-048
+type=single_choice
+section=Reglas
+points=1
+difficulty=medium
+randomize_answers=true
+text=Cuantos cambios permite el reglamento habitual actual en partidos de selecciones?
+answer[A]=3 cambios
+answer[B]=5 cambios
+answer[C]=5 cambios (6 si hay prorroga)
+answer[D]=10 cambios
+correct=C
+justification=El reglamento vigente permite hasta 5 sustituciones y una mas en prorroga.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-049
+type=single_choice
+section=Sedes USA
+points=1
+difficulty=medium
+randomize_answers=true
+text=Los Angeles sera sede. Que estadio de la region alberga partidos?
+answer[A]=Rose Bowl
+answer[B]=SoFi Stadium
+answer[C]=Yankee Stadium
+answer[D]=Wrigley Field
+correct=B
+justification=SoFi Stadium en Inglewood es la sede del area de Los Angeles.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-050
+type=single_choice
+section=Historia CONCACAF
+points=1
+difficulty=hard
+randomize_answers=true
+text=Cual fue el mejor resultado historico de Mexico en Copas Mundiales?
+answer[A]=Campeon
+answer[B]=Cuartos de final (1970 y 1986)
+answer[C]=Semifinales siempre
+answer[D]=Solo fase de grupos
+correct=B
+justification=Mexico llego a cuartos como anfitrion en 1970 y 1986.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-051
+type=single_choice
+section=USA
+points=1
+difficulty=medium
+randomize_answers=true
+text=La mejor actuacion historica de EE.UU. en un Mundial fue:
+answer[A]=Campeon
+answer[B]=Semifinales (1930)
+answer[C]=Cuartos (2002)
+answer[D]=Solo fase de grupos siempre
+correct=B
+justification=En el primer Mundial (1930) EE.UU. llego a semifinales.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-052
+type=single_choice
+section=Canada
+points=1
+difficulty=medium
+randomize_answers=true
+text=En Qatar 2022 Canada alcanzo octavos de final, su mejor resultado historico hasta entonces.
+answer[A]=Verdadero
+answer[B]=Falso
+answer[C]=Quedo campeon
+answer[D]=No participo
+correct=A
+justification=Canada clasifico de grupos y perdio en octavos; fue su mejor actuacion mundialista.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-053
+type=single_choice
+section=Formato
+points=1
+difficulty=easy
+randomize_answers=true
+text=En la fase de grupos, una victoria otorga cuantos puntos?
+answer[A]=1 punto
+answer[B]=2 puntos
+answer[C]=3 puntos
+answer[D]=5 puntos
+correct=C
+justification=Victoria = 3 puntos, empate = 1, derrota = 0.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-054
+type=single_choice
+section=Formato
+points=1
+difficulty=easy
+randomize_answers=true
+text=Cuantos partidos juega cada seleccion en la fase de grupos (grupo de 4)?
+answer[A]=2
+answer[B]=3
+answer[C]=4
+answer[D]=5
+correct=B
+justification=En un grupo de 4, cada equipo juega 3 encuentros.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-055
+type=single_choice
+section=Sedes
+points=1
+difficulty=medium
+randomize_answers=true
+text=Cuantas sedes en total tiene confirmadas el Mundial 2026 en los tres paises?
+answer[A]=8
+answer[B]=11
+answer[C]=16
+answer[D]=20
+correct=C
+justification=El torneo utilizara 16 estadios en Estados Unidos, Mexico y Canada.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-056
+type=single_choice
+section=Estados Unidos
+points=1
+difficulty=easy
+randomize_answers=true
+text=Que pais alberga la mayor cantidad de partidos del Mundial 2026?
+answer[A]=Mexico
+answer[B]=Canada
+answer[C]=Estados Unidos
+answer[D]=Los tres por igual
+correct=C
+justification=EE.UU. concentrara la mayoria de los encuentros, incluida la final.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-057
+type=single_choice
+section=Mexico
+points=1
+difficulty=easy
+randomize_answers=true
+text=En que ciudad mexicana esta el Estadio BBVA (sede mundialista)?
+answer[A]=Ciudad de Mexico
+answer[B]=Guadalajara
+answer[C]=Monterrey
+answer[D]=Puebla
+correct=C
+justification=El Estadio BBVA en Monterrey es sede confirmada.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-058
+type=single_choice
+section=Curiosidades
+points=1
+difficulty=medium
+randomize_answers=true
+text=CONCACAF y CONMEBOL son confederaciones de FIFA en:
+answer[A]=Europa
+answer[B]=America
+answer[C]=Asia
+answer[D]=Oceania solamente
+correct=B
+justification=Ambas agrupan selecciones americanas.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-059
+type=single_choice
+section=Idiomas
+points=1
+difficulty=easy
+randomize_answers=true
+text=Idiomas muy extendidos en las tres sedes del 2026 incluyen:
+answer[A]=Solo ingles en todos
+answer[B]=Ingles, espanol y frances (Canada)
+answer[C]=Solo espanol
+answer[D]=Solo portugues
+correct=B
+justification=EE.UU. (ingles), Mexico (espanol), Canada (ingles y frances).
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-060
+type=single_choice
+section=Balon
+points=1
+difficulty=easy
+randomize_answers=true
+text=La marca tradicional asociada al balon oficial del Mundial es:
+answer[A]=Nike
+answer[B]=Adidas
+answer[C]=Puma
+answer[D]=Wilson
+correct=B
+justification=Adidas ha sido proveedor oficial del balon en varios Mundiales.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-061
+type=single_choice
+section=Arbitraje
+points=1
+difficulty=medium
+randomize_answers=true
+text=Los arbitros del Mundial 2026 son designados por:
+answer[A]=Cada club
+answer[B]=FIFA y comites de arbitraje
+answer[C]=Medios de comunicacion
+answer[D]=Votacion popular
+correct=B
+justification=FIFA selecciona arbitros de distintas confederaciones.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-062
+type=single_choice
+section=Fair play
+points=1
+difficulty=easy
+randomize_answers=true
+text=Una tarjeta roja al jugador implica generalmente:
+answer[A]=Nada
+answer[B]=Expulsion del partido actual
+answer[C]=Dos goles en contra
+answer[D]=Tiro de esquina
+correct=B
+justification=La roja expulsa al jugador y el equipo juega con uno menos.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-063
+type=single_choice
+section=Prorroga
+points=1
+difficulty=medium
+randomize_answers=true
+text=En fase eliminatoria, si el partido empata tras 90 minutos puede haber:
+answer[A]=Prorroga y/o penales
+answer[B]=Repetir el partido al dia siguiente
+answer[C]=Empate y ambos pasan
+answer[D]=Solo sorteo
+correct=A
+justification=En eliminatorias FIFA suele haber prorroga y definicion por penales.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-064
+type=single_choice
+section=Estadistica
+points=1
+difficulty=hard
+randomize_answers=true
+text=Quien tiene el record de mas goles en un solo Mundial (13 en 1958)?
+answer[A]=Pele
+answer[B]=Just Fontaine
+answer[C]=Gerd Muller
+answer[D]=Batistuta
+correct=B
+justification=Just Fontaine de Francia anoto 13 goles en Suecia 1958.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-065
+type=single_choice
+section=Mujeres
+points=1
+difficulty=easy
+randomize_answers=true
+text=La Copa Mundial femenina y la masculina son:
+answer[A]=El mismo evento
+answer[B]=Competiciones distintas de FIFA
+answer[C]=No son de FIFA
+answer[D]=Solo de clubes
+correct=B
+justification=FIFA organiza Mundiales masculino y femenino por separado.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-066
+type=single_choice
+section=Europa
+points=1
+difficulty=medium
+randomize_answers=true
+text=Francia fue campeon mundial en 2018. Puede volver a clasificar para 2026?
+answer[A]=Si, como cualquier europea
+answer[B]=No, queda excluida
+answer[C]=Solo si es sede
+answer[D]=Solo por invitacion
+correct=A
+justification=Cualquier seleccion puede clasificar por su confederacion.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-067
+type=single_choice
+section=Infraestructura
+points=1
+difficulty=medium
+randomize_answers=true
+text=Muchos estadios del 2026 ya existian. Esto busca principalmente:
+answer[A]=Demoler todos
+answer[B]=Reutilizar infraestructura existente
+answer[C]=Cerrar ligas locales
+answer[D]=Jugar solo en playa
+correct=B
+justification=El plan aprovecha estadios NFL/MLS y futbol existentes.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-068
+type=single_choice
+section=Turismo
+points=1
+difficulty=easy
+randomize_answers=true
+text=Para visitar sedes en EE.UU. o Canada, los viajeros suelen necesitar:
+answer[A]=Solo DNI local
+answer[B]=Visa o autorizacion segun nacionalidad
+answer[C]=Ningun documento
+answer[D]=Solo invitacion FIFA
+correct=B
+justification=Cada pais exige requisitos migratorios segun el pasaporte.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-069
+type=single_choice
+section=Horarios
+points=1
+difficulty=medium
+randomize_answers=true
+text=Por la extension geografica de las sedes, los horarios de partidos en 2026:
+answer[A]=Seran todos a la misma hora local
+answer[B]=Varian segun zona horaria de cada ciudad
+answer[C]=Siempre a las 3 AM UTC
+answer[D]=Solo domingos
+correct=B
+justification=Habra partidos en distintas franjas horarias del continente.
+explanation_visibility=after_answer
+
+[QUESTION]
+external_id=WC26-070
+type=single_choice
+section=Entrenadores
+points=1
+difficulty=easy
+randomize_answers=true
+text=Quien dirige tecnicamente a una seleccion en el Mundial?
+answer[A]=Solo el capitan
+answer[B]=El entrenador / cuerpo tecnico
+answer[C]=El arbitro
+answer[D]=El presidente de la federacion
+correct=B
+justification=El seleccionador nacional conduce al equipo.
+explanation_visibility=after_answer
+

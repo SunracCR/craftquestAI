@@ -1,0 +1,11 @@
+@host = https://localhost:7080
+
+GET {{host}}/health
+Accept: application/json
+
+###
+
+GET {{host}}/api/status
+Accept: application/json
+
+###

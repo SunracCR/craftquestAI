@@ -1,0 +1,268 @@
+﻿=== AI generation trace started ===
+Utc: 2026-05-22T18:59:09.5603288Z
+Log file: C:\Users\cperaza_ga\Proyectos\CraftQuest\src\CraftQuest.Api\logs/ai-gen-trace\15d0df2f4fd04b9c9394d2eab8d6abef.log
+[job.input] Generation parameters | {"StudyMaterialId":"ac74ba87-edf6-41af-9874-46835c7b7e0d","QuestionCount":5,"Language":"es","Difficulty":"hard","AllowedQuestionTypes":["single_choice","multiple_choice"],"PageFrom":1,"PageTo":16,"TopicFocus":null,"Preset":"deep_practice","sourceChars":67819}
+[provider.start] GenerateAsync | {"sourceChars":67819,"chunkCount":1,"requestedQuestions":5,"allowedTypes":["single_choice","multiple_choice"],"pages":"1-16","language":"es"}
+--- PROMPT: outline (len=10600) ---
+You are a curriculum planner for CraftQuest. Output JSON only (no markdown).
+Return shape (example): { "items": [ { "index": 1, "topic": "...", "suggestedType": "single_choice", "chunkIndex": 1 } ] }
+Rules:
+- Exactly 5 items in "items".
+- chunkIndex must be between 1 and 1 (match --- Page N --- sections when present).
+- suggestedType must be one of: single_choice, multiple_choice.
+- Topics must be distinct and cover the material evenly.
+- Language for topic text: "es".
+- Difficulty target: hard.
+- Pedagogical goal: review.
+
+SOURCE EXCERPT:
+--- Page 1 ---
+ScalabilityinMicroservices:AsystematicliteraturereviewEscalabilidadenMicroservicios:Unarevisi´onsistem´aticadelaliteraturaNishalGurung1,SushilShrestha1,andRajaniChulyadyo11DepartmentofComputerScienceandEngineering,KathmanduUniversity,Nepalnishal.gurung4@gmail.com,sushil@ku.edu.np,rajani.chulyadyo@ku.edu.npAbstractThescalabilityofmicroservicesarchitecturesiscru-cialformodernsoftwaresystems,yetitpresentssig-nificantchallengesduetotheirinherentcomplexities.Thisstudyaimstosystematicallyreviewexistinglit-eratureonthescalabilityofmicroservices,identify-ingkeystrategies,challenges,andemergingtrends.Weconductedasystematicliteraturereviewfollow-ingthePRISMAguidelines,analyzing55scholarlyarticlesthatspecificallyaddressthescalabilityofmi-croservices.Thereviewfocusedonvariousscalingap-proaches,metrics,andtheeffectivenessofautoscalingmechanisms.Ourfindingsrevealadiversebodyoflit-eraturewithapredominantfocusonautoscalingstrate-gies,particularlythoseutilizingmachinelearning.Keychallengesidentifiedincludeaccuratemetricscollec-tion,dynamicscalingdecision-making,andbalancingperformancewithcostandsecurity.Whileprogresshasbeenmadeinaddressingscalabilitychallenges,significantgapsremain,particularlyinstandardizingautoscalingmetrics.Futureresearchshouldfocusondevelopingrobust,adaptiveautoscalingsystemsthatcaneffectivelymanagereal-worldcomplexitiesanddynamicworkloads,ensuringbothperformanceandcostoptimizationinmicroservicesarchitectures.Keywords:MicroservicesArchitecture,Scalability,ScalabilityChallenges,AutoscalingResumenLaescalabilidaddelasarquitecturasdemicroservi-ciosescrucialparalossistemasdesoftwaremodernos,peropresentadesaf´ıossignificativosdebidoasuscom-plejidadesinherentes.Esteestudiotienecomoobjetivorevisarsistem´aticamentelaliteraturaexistentesobrelaescalabilidaddelosmicroservicios,identificandoestrategiasclave,desaf´ıosytendenciasemergentes.Llevamosacabounarevisi´onsistem´aticadelaliter-aturasiguiendolasdirectricesPRISMA,analizando55art´ıculosacad´emicosqueabordanespec´ıficamentelaescalabilidaddelosmicroservicios.Larevisi´onsecentr´oendiversosenfoquesdeescalado,m´etricasylaefectividaddelosmecanismosdeautoescalado.Nuestroshallazgosrevelanuncuerpodiversodeliter-aturaconunenfoquepredominanteenlasestrategiasdeautoescalado,particularmenteaquellasqueutilizanaprendizajeautom´atico.Losdesaf´ıosclaveidentifi-cadosincluyenlarecopilaci´onprecisadem´etricas,latomadedecisionesdeescaladodin´amicoyelequilib-rioentreelrendimiento,elcostoylaseguridad.Sibiensehanlogradoavancesenlaresoluci´ondelosde-saf´ıosdeescalabilidad,persistenbrechassignificativas,particularmenteenlaestandarizaci´ondelasm´etricasdeautoescalado.Lasinvestigacionesfuturasdeber´ıancentrarseendesarrollarsistemasdeautoescaladoro-bustosyadaptativosquepuedangestionareficazmentelascomplejidadesdelmundorealylascargasdetra-bajodin´amicas,garantizandotantolaoptimizaci´ondelrendimientocomodelcostoenlasarquitecturasdemicroservicios.Palabrasclaves:ArquitecturadeMicroservicios,Es-calabilidad,Desaf´ıosdeEscalabilidad,Autoescalado1IntroductionInrecentyears,theadoptionofmicroservicesarchitec-turehasgainedsignificanttractionduetoitsabilitytoenhancethescalability,agility,andresilienceinsoft-waresystems[1].Microservicesareself-containedandindependentlydeployableservices,whichmakesthemmoreconvenienttoworkwithcomparedtolargermonolithicarchitectures[2].Thisarchitecturalstyleallowsorganizationstodevelopanddeployapplica-tionsmorerapidly,adapttochangingbusinessrequire-ments,andscalecomponentsindependentlybasedondemand.Withthegrowingpopularityofmicroservices,understandingscalabilitywithinthisarchitecturalparadigmhasbecomeincreasinglyimportant.Scal-ability,theabilityofasystemtohandleincreasedworkloadbyaddingresourcesorreplicatingcompo-nents,isessentialformaintainingoptimalperformanceanduserexperience[3].However,achievingscalabil-ityinmicroservicesintroducesuniquechallengesthatdiffersignificantlyfromtraditionalmonolithicarchi-tectures.Thesechallengesstemfromthedynamicandheterogeneousnatureofmicroservicesenviron-ments,whicharetypicallydeployedincontainerizedorvirtualizedsettingswhereinstancescanbeaddedor- ORIGINAL ARTICLE - Journal of Computer Science & Technology, Volume 25, Number 2, October 2025- 128 -
+
+--- Page 2 ---
+removeddynamicallybasedonworkloadfluctuations.Ensuringthescalabilityofindividualmicroserviceswhilepreservingoverallsystemperformanceandre-sourceefficiencyrequiressophisticatedorchestrationandautoscalingmechanisms.Despiteitsimportanceasakeyqualityattribute(QA)inmicroservicesarchitectures,scalabilityhasnotbeencomprehensivelystudiedinexistingliterature.WhilethereareseveralSystematicLiteratureReviews(SLRs)addressingvariousaspectsofmicroservices,onlyfewdirectlytargetsscalability,withtherestoffer-ingbroaderperspectivesonQAs,testing,securityandmigrations.Tobridgethesegaps,thisSLRaimstoprovideacomprehensiveanalysisofscalabilityinmicroservices.Bysynthesizingfindingsfromdiverseresearchstud-ies,itseekstouncoverkeyconcepts,methodologiesandchallengesrelatedtoscalabilityinthisarc
+
+[... middle of source omitted for outline ...]
+
+IEEE2ndInternationalWorkshopsonFoundationsandApplicationsofSelf*Systems(FAS*W).IEEE,2017,pp.207–214.[Online].Available:https://doi.org/10.1109/FAS-W.2017.149[61]P.AgarwalandJ.Lakshmi,“Costawareresourcesizingandscalingofmicroservices,”inProceedingsofthe20194thInternationalConferenceonCloudComputingandInternetofThings,2019,pp.66–74.Journal of Computer Science & Technology, Volume 25, Number 2, October 2025- 142 -
+
+--- Page 16 ---
+[Online].Available:https://doi.org/10.1145/3361821.3361823[62]T.LinandA.Leon-Garcia,“Towardsaclient-centricqosauto-scalingsystem,”inNOMS2020-2020IEEE/IFIPNetworkOperationsandManagementSymposium.IEEE,2020,pp.1–9.[Online].Available:https://doi.org/10.1109/NOMS47738.2020.9110450[63]A.Bhole,“Enhancingperformanceandscalabilityinmicroservices,”JournalofEngineeringandAppliedSciencesTechnology,pp.1–9,092024.[Online].Available:https://doi.org/10.47363/JEAST/2024(6)E162[64]K.Hu,L.Wen,M.Xu,andK.Ye,“Msars:Ameta-learningandreinforcementlearningframeworkforsloresourceallocationandadaptivescalingformicroservices,”arXivpreprintarXiv:2409.14953,2024.[Online].Available:https://doi.org/10.48550/arXiv.2409.14953[65]A.Cholomskis,O.Pozdniakova,andD.Maˇzeika,“Cloudsoftwareperformancemetricscollectionandaggregationforauto-scalingmodule,”inInformationandSoftwareTechnologies:24thInternationalConference,ICIST2018,Vilnius,Lithuania,October4–6,2018,Proceedings24.Springer,2018,pp.130–138.[Online].Available:https://doi.org/10.1007/978-3-319-99972-210[66]A.Jindal,V.Podolskiy,andM.Gerndt,“Performancemodelingforcloudmicroserviceapplications,”inProceedingsofthe2019ACM/SPECInternationalConferenceonPerformanceEngineering,2019,pp.25–32.[Online].Available:https://doi.org/10.1145/3297663.3310309[67]E.Casalicchio,“Astudyonperformancemeasuresforauto-scalingcpu-intensivecontainerizedapplications,”ClusterComputing,vol.22,no.3,pp.995–1006,2019.[Online].Available:https://doi.org/10.1007/s10586-018-02890-1[68]A.Kwan,J.Wong,H.-A.Jacobsen,andV.Muthusamy,“Hyscale:Hybridandnetworkscalingofdockerizedmicroservicesinclouddatacentres,”in2019IEEE39thInternationalConferenceonDistributedComputingSystems(ICDCS).IEEE,2019,pp.80–90.[Online].Available:https://doi.org/10.1109/ICDCS.2019.00017[69]V.Podolskiy,A.Jindal,andM.Gerndt,“Multilayeredautoscalingperformanceevaluation:canvirtualmachinesandcontainersco–scale?”Internationaljournalofappliedmathematicsandcomputerscience,vol.29,no.2,pp.227–244,2019.[Online].Available:https://doi.org/10.2478/amcs-2019-0017[70]Y.M.Ramirez,V.Podolskiy,andM.Gerndt,“Capacity-drivenscalingschedulesderivationforcoordinatedelasticityofcontainersandvirtualmachines,”in2019IEEEInternationalconferenceonautonomiccomputing(ICAC).IEEE,2019,pp.177–186.[Online].Available:https://doi.org/10.1109/ICAC.2019.00029[71]N.C.Coulson,S.Sotiriadis,andN.Bessis,“Adaptivemicroservicescalingforelasticapplications,”IEEEInternetofThingsJournal,vol.7,no.5,pp.4195–4202,2020.[Online].Available:https://doi.org/10.1109/JIOT.2020.2964405[72]C.K.Rudrabhatla,“Aquantitativeapproachforestimatingthescalingthresholdsandsteppoliciesinadistributedmicroservicearchitecture,”IEEEAccess,vol.8,pp.180246–180254,2020.[Online].Available:https://doi.org/10.1109/ACCESS.2020.3028310[73]B.Choi,J.Park,C.Lee,andD.Han,“phpa:Aproactiveautoscalingframeworkformicroservicechain,”inProceedingsofthe5thAsia-PacificWorkshoponNetworking,2021,pp.65–71.[Online].Available:https://doi.org/10.1145/3469393.3469401[74]H.X.Nguyen,S.Zhu,andM.Liu,“Graph-phpa:graph-basedproactivehorizontalpodautoscalingformicroservicesusinglstm-gnn,”in2022IEEE11thInternationalConferenceonCloudNetworking(CloudNet).IEEE,2022,pp.237–241.[Online].Available:https://doi.org/10.1109/CloudNet55617.2022.9978781[75]Y.Kim,J.Park,J.Yoon,andJ.Kim,“Improvedqnetworkauto-scalinginmicroservicearchitecture,”Ap-pliedSciences,vol.12,no.3,p.1206,2022.[Online].Available:https://doi.org/10.3390/app12031206[76]M.ZargarAzadandM.Ashtiani,“Anauto-scalingapproachformicroservicesincloudcomputingenvironments,”JournalofGridComputing,vol.21,no.4,p.73,2023.[Online].Available:https://doi.org/10.1007/s10723-023-09713-7[77]V.M.Mostofi,E.Krul,D.Krishnamurthy,andM.Arlitt,“Trace-drivenscalingofmicroserviceapplications,”IEEEAccess,vol.11,pp.29360–29379,2023.[Online].Available:https://doi.org/10.1109/ACCESS.2023.3260069[78]J.Santos,T.Wauters,B.Volckaert,andF.DeTurck,“gym-hpa:Efficientauto-scalingviareinforcementlearningforcomplexmicroservice-basedapplicationsinkubernetes,”inNOMS2023-2023IEEE/IFIPNetworkOperationsandManagementSymposium.IEEE,2023,pp.1–9.[Online].Available:https://doi.org/10.1109/NOMS56928.2023.10154298Citation: N. Gurung S. Shrestha and R. Chulyadyo. Scalability in Microservices: A Systematic Literature Review. Journal of Computer Science & Technology, vol. 25, no. 2, pp. 128–143, 2025. DOI: 10.24215/16666038.25.e11.Received: December 26, 2025 Accepted: May 8, 2025.Copyright:ThisarticleisdistributedunderthetermsoftheCreativeCommonsLicenseCC-BY-NC-SA.Journal of Computer Science & Technology, Volume 25, Number 2, October 2025- 143 -
+--- GEMINI RESPONSE: outline model=gemini-2.5-flash-lite len=1510 parsedQuestions=5 ---
+Parse: outline parsed
+{
+  "items": [
+    {
+      "index": 1,
+      "topic": "Identificar las principales estrategias de escalabilidad en arquitecturas de microservicios, con un enfoque particular en las que emplean aprendizaje automático, según la revisión sistemática de la literatura.",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 2,
+      "topic": "¿Cuáles son los desafíos clave identificados en la literatura para lograr la escalabilidad en microservicios, incluyendo la recopilación de métricas y la toma de decisiones dinámicas?",
+      "suggestedType": "multiple_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 3,
+      "topic": "Evaluar la efectividad de los mecanismos de autoescalado en microservicios, considerando el equilibrio entre rendimiento, costo y seguridad, basándose en los hallazgos de la revisión.",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 4,
+      "topic": "Analizar las brechas significativas que persisten en la estandarización de métricas de autoescalado para microservicios, según la revisión sistemática.",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 5,
+      "topic": "Proponer áreas de investigación futura para el desarrollo de sistemas de autoescalado robustos y adaptativos en microservicios, que gestionen complejidades del mundo real y cargas de trabajo dinámicas.",
+      "suggestedType": "multiple_choice",
+      "chunkIndex": 1
+    }
+  ]
+}
+[outline.ok] Outline plan ready | {"itemCount":5}
+[chunk.single] Single-chunk generation | {"questionCount":5,"chunkIndex":1,"chunkTotal":1}
+--- PROMPT: single-chunk (len=69882) ---
+You are CraftQuest quiz generator. Output valid CQIF JSON 2.0 only (no markdown).
+Root object MUST include: cqifVersion, quiz, questions (array).
+cqifVersion must be "2.0".
+Generate exactly 5 questions in language "es".
+QUESTION PLAN (follow this order and focus; one question per line):
+- Q1: Identificar las principales estrategias de escalabilidad en arquitecturas de microservicios, con un enfoque particular en las que emplean aprendizaje automático, según la revisión sistemática de la literatura. (prefer type: single_choice)
+- Q2: ¿Cuáles son los desafíos clave identificados en la literatura para lograr la escalabilidad en microservicios, incluyendo la recopilación de métricas y la toma de decisiones dinámicas? (prefer type: multiple_choice)
+- Q3: Evaluar la efectividad de los mecanismos de autoescalado en microservicios, considerando el equilibrio entre rendimiento, costo y seguridad, basándose en los hallazgos de la revisión. (prefer type: single_choice)
+- Q4: Analizar las brechas significativas que persisten en la estandarización de métricas de autoescalado para microservicios, según la revisión sistemática. (prefer type: single_choice)
+- Q5: Proponer áreas de investigación futura para el desarrollo de sistemas de autoescalado robustos y adaptativos en microservicios, que gestionen complejidades del mundo real y cargas de trabajo dinámicas. (prefer type: multiple_choice)
+Language for question text: "es".
+Difficulty mode: hard.
+Pedagogical goal: review.
+Allowed question types ONLY: single_choice, multiple_choice.
+NEVER use image_choice or image_based_question.
+Do not reference images, diagrams, or figures not described in text.
+Topic focus: cover this source section evenly.
+Use ONLY facts explicitly present in SOURCE. Do not invent.
+Each question needs: text, type, answerOptions (min 2) with unique key fields,
+correctAnswerKeys as JSON array referencing those keys (never a single string).
+For true_false use keys "true" and "false".
+Assign unique externalId per question (e.g. "q-1", "q-2").
+Omit justifications.
+
+SOURCE:
+--- Page 1 ---
+ScalabilityinMicroservices:AsystematicliteraturereviewEscalabilidadenMicroservicios:Unarevisi´onsistem´aticadelaliteraturaNishalGurung1,SushilShrestha1,andRajaniChulyadyo11DepartmentofComputerScienceandEngineering,KathmanduUniversity,Nepalnishal.gurung4@gmail.com,sushil@ku.edu.np,rajani.chulyadyo@ku.edu.npAbstractThescalabilityofmicroservicesarchitecturesiscru-cialformodernsoftwaresystems,yetitpresentssig-nificantchallengesduetotheirinherentcomplexities.Thisstudyaimstosystematicallyreviewexistinglit-eratureonthescalabilityofmicroservices,identify-ingkeystrategies,challenges,andemergingtrends.Weconductedasystematicliteraturereviewfollow-ingthePRISMAguidelines,analyzing55scholarlyarticlesthatspecificallyaddressthescalabilityofmi-croservices.Thereviewfocusedonvariousscalingap-proaches,metrics,andtheeffectivenessofautoscalingmechanisms.Ourfindingsrevealadiversebodyoflit-eraturewithapredominantfocusonautoscalingstrate-gies,particularlythoseutilizingmachinelearning.Keychallengesidentifiedincludeaccuratemetricscollec-tion,dynamicscalingdecision-making,andbalancingperformancewithcostandsecurity.Whileprogresshasbeenmadeinaddressingscalabilitychallenges,significantgapsremain,particularlyinstandardizingautoscalingmetrics.Futureresearchshouldfocusondevelopingrobust,adaptiveautoscalingsystemsthatcaneffectivelymanagereal-worldcomplexitiesanddynamicworkloads,ensuringbothperformanceandcostoptimizationinmicroservicesarchitectures.Keywords:MicroservicesArchitecture,Scalability,ScalabilityChallenges,AutoscalingResumenLaescalabilidaddelasarquitecturasdemicroservi-ciosescrucialparalossistemasdesoftwaremodernos,peropresentadesaf´ıossignificativosdebidoasuscom-plejidadesinherentes.Esteestudiotienecomoobjetivorevisarsistem´aticamentelaliteraturaexistentesobrelaescalabilidaddelosmicroservicios,identificandoestrategiasclave,desaf´ıosytendenciasemergentes.Llevamosacabounarevisi´onsistem´aticadelaliter-aturasiguiendolasdirectricesPRISMA,analizando55art´ıculosacad´emicosqueabordanespec´ıficamentelaescalabilidaddelosmicroservicios.Larevisi´onsecentr´oendiversosenfoquesdeescalado,m´etricasylaefectividaddelosmecanismosdeautoescalado.Nuestroshallazgosrevelanuncuerpodiversodeliter-aturaconunenfoquepredominanteenlasestrategiasdeautoescalado,particularmenteaquellasqueutilizanaprendizajeautom´atico.Losdesaf´ıosclaveidentifi-cadosincluyenlarecopilaci´onprecisadem´etricas,latomadedecisionesdeescaladodin´amicoyelequilib-rioentreelrendimiento,elcostoylaseguridad.Sibiensehanlogradoavancesenlaresoluci´ondelosde-saf´ıosdeescalabilidad,persistenbrechassignificativas,particularmenteenlaestandarizaci´ondelasm´etricasdeautoescalado.Lasinvestigacionesfuturasdeber´ıancentrarseendesarrollarsistemasdeautoescaladoro-bustosyadaptativosquepuedangestionareficazmentelascomplejidadesdelmundorealylascargasdetra-bajodin´amicas,garantizandotantolaoptimizaci´ondelrendimientocomodelcostoenlasarquitecturasdemicroservicios.Palabrasclaves:ArquitecturadeMicroservicios,Es-calabilidad,Desaf´ıosdeEscalabilidad,Autoescalado1IntroductionInrecentyears,theadoptionofmicroservicesarchitec-turehasgainedsignificanttractionduetoitsabilitytoenhancethescalability,agility,andresilienceinsoft-waresystems[1].Microservicesareself-containedandindependentlydeployableservices,whichmakesthemmoreconvenienttoworkwithcomparedtolargermonolithicarchitectures[2].Thisarchitecturalstyleallowsorganizationstodevelopanddeployapplica-tionsmorerapidly,adapttochangingbusinessrequire-ments,andscalecomponentsindependentlybasedondemand.Withthegrowingpopularityofmicroservices,understandingscalabilitywithinthisarchitecturalparadigmhasbecomeincreasinglyimportant.Scal-ability,theabilityofasystemtohandleincreasedworkloadbyaddingresourcesorreplicatingcompo-nents,isessentialformaintainingoptimalperformanceanduserexperience[3].However,achievingscalabil-ityinmicroservicesintroducesuniquechallengesthatdiffersignificantlyfromtraditionalmonolithicarchi-tectures.Thesechallengesstemfromthedynamicandheterogeneousnatureofmicroservicesenviron-ments,whicharetypicallydeployedincontainerizedorvirtualizedsettingswhereinstancescanbeaddedor- ORIGINAL ARTICLE - Journal of Computer Science & Technology, Volume 25, Number 2, October 2025- 128 -
+
+--- Page 2 ---
+removeddynamicallybasedonworkloadfluctuations.Ensuringthescalabilityofindividualmicroserviceswhilepreservingoverallsystemperformanceandre-sourceefficiencyrequiressophisticatedorchestrationandautoscalingmechanisms.Despiteitsimportanceasakeyqualityattribute(QA)inmicroservicesarchitectures,scalabilityhasnotbeencomprehensivelystudiedinexistingliterature.WhilethereareseveralSystematicLiteratureReviews(SLRs)addressingvariousaspectsofmicroservices,onlyfewdirectlytargetsscalability,withtherestoffer-ingbroaderperspectivesonQAs,testing,securityandmigrations.Tobridgethesegaps,thisSLRaimstoprovideacomprehensiveanalysisofscalabilityinmicroservices.Bysynthesizingfindingsfromdiverseresearchstud-ies,itseekstouncoverkeyconcepts,methodologiesandchallengesrelatedtoscalabilityinthisarchitec-turalparadigm.Thereviewalsoendeavorstoidentifyemergingtrendsandofferactionableinsightsforre-searchers,practitioners,andorganizationsaimingtobuildscalablemicroservicessystems.Throughthisstudy,weaimtoenhancetheunder-standingofscalabilityinmicroservicesandoffervalu-ableguidanceforfutureresearch.Thispaperseekstoaddressthefollowingresearchquestions:RQ1:Whattypesofresearchhavebeenconductedinthescalabilitydomainofmicroservices?RQ2:Whatarethemajorchallengesfacedbyre-searcherswhiletryingtoscalemicroservicesarchitectures?RQ3:Whatarethemostcommonlyusedtoolsinmi-croservicesarchitectures?Byaddressingthesequestions,thisSLRaspirestoadvanceknowledgeinthiscriticalareaofsoftwareen-gineeringandsupportorganizationsintheirmicroser-vicesadoptionjourneys.Thestructureofthispaperisasfollows:Section2providesanoverviewoftherelatedstudies.InSec-tion3,weoutlineourmethodology,whileSection4presentsourfindingsandaddressestheresearchquestions.OurevaluationsarediscussedinSection5.Finally,Section6concludesthepaperandexplorespotentialdirectionsforfutureresearch.2RelatedWorkAvarietyofSLRsandSystematicMappingStudies(SMSs)havebeenpublishedacrossdifferentdomainsofmicroservices.Amongthekeyresearchareas,scal-ability,especiallyitsgrowthalongsideMachineLearn-ing(ML),hasgainedsignificantattention.Therefore,thisreviewcomprehensivelyexaminesthebodyofworkrelatedtoscalabilityinthemicroservicesdo-main.Inaddition,weexplorethedifferenttypesofresearchinscalabilityandthechallengesfacedwhenscalingmicroservices.Table4providesacomparativeoverviewofexistingstudiesinthisareaandhighlightshowtheyrelatetoourwork.Severalpapershaveaddressedmigrationfrommonolithicarchitecturestomicroservices[4,5].Simi-larly,studieshavefocusedonmicroservicesadoptionandadaptation[6,7].Therearealsoworksthatex-ploredresearchtrendsandthechallengeswithinmi-croservicearchitecture[8,9,10].Meanwhile,otherpapershavereviewedtestingmethods,deploymentstrategies,andsecurityconcernsinmicroservices[11,12,13].Additionally,papersthatdiscussarchitec-turaldesignpatterns[14,15]andcoverthechallengesofmicroservicearchitecturealongwithproposedsolu-tions[16]arealsonotable.Intheautoscalingdomain,[10]reviewedrelevantstudies,identifyingkeychallengessuchasresourcepredictionaccuracy,suddendemandspikes,integra-tioncomplexities,andscalingoverhead.Thestudyex-aminedbothproactiveandreactiveautoscalingmeth-ods,emphasizingtheneedtobalanceperformance,cost,andenergyefficiency.Furthermore,thepaperhighlightedfutureresearchdirections,includingim-provementsinmachinelearning-basedpredictions,hy-bridscalingstrategies,cost-awarealgorithms,andse-curityenhancements.Otherworkshavealsotouchedonscalabilitywithinthebroadercontextofmicroservicesresearch.Forexample,anoverviewofmicroservices,highlightingtheirmotivationsandemergingstandards,hasbeenprovided[17].Likewise,theanalysisofvariousqualityattributes,suchastheinteractionsbetweenfunctional-ityandperformance,hasbeendiscussed,butwithoutdelvingdeeplyintoscalabilitychallenges[18].Despitetheconsiderablenumberofstudiesonmi-croservices,includingsignificantdiscussionsonscala-bility,thereremainsanoticeablegapinresearchthatthoroughlyexploresthespecifictrendsandchallengesofscalabilityinmicroservicearchitectures.ThisSLRaimstofillthisgapbyofferingacomprehensiveanal-ysisofscalabilityinmicroservices.3MethodsOurresearchmethodologywasbasedonthePreferredReportingItemsforSystematicReviewsandMeta-Analyses(PRISMA)2020statement[22].PRISMAoffersastandardizedandtransparentapproach,en-suringmethodologicalrigorinthereviewprocess.Itsuggestsdetailingthesearchstrategy,studyselectionprocess,datacollectionmethods,riskofbiasassess-ment,andpresentingresultssystematicallytoensureclarityandcomprehensivenessinthereview.Byad-heringtoPRISMAguidelines,weaimtoenhancethequalityandcredibilityofourSLR,providingreaderswithacomprehensivesynthesisofexistingevidenceinourresearchdomain.Journal of Computer Science & Technology, Volume 25, Number 2, October 2025- 129 -
+
+--- Page 3 ---
+Table1:ComparisonwithPreviousRelatedStudiesPaper#ofstudiesTimespanFocusAreas[19]332014-2016ArchitecturalChallenges,RepresentationMethodsandQAs[17]372015-2016MicroservicesResearchTypes,PracticalMotivations,EmergingStandardsandTools[14]42upto2016MicroservicesArchitecturePatterns,AdvantagesandDisadvantagesofPatterns[8]382016toearly2018MicroservicesResearchTrends,AreasofInterestandResearchGaps[15]422014-2016MicroservicesArchitecturePatterns,DeploymentStrategies,DataStoragePatterns,andDevOpsTechniques[11]152013-2018MicroservicesTestingIssues,QualityConcernsinTesting,ChallengesandSolutions[7]877January2013-April2020MicroservicesAdoptionandTransition,GranularityModelingApproaches,QAsandReason-ingforGranularity[18]72uptoJune2018QAsinMicroservices,TacticsforImprovingQAs[6]62uptoJanuary2021MicroservicesAdaptationTargets,Applicationvs.ArchitectureLevelAdaptationsTech-niques,andMachineLearninginAdaptations[20]552018-2021MicroserviceAnalysisMethods,ProblemsandOpportunitiesinMicroserviceAnalysis,Relati
+... [truncated 57882 chars] ...
+--- GEMINI RESPONSE: single-chunk model=gemini-2.5-flash len=5458 parsedQuestions=5 ---
+Parse: parsed OK
+{
+  "cqifVersion": "2.0",
+  "quiz": {
+    "title": "Escalabilidad en Microservicios: Revisión Sistemática",
+    "language": "es",
+    "difficulty": "hard",
+    "pedagogicalGoal": "review"
+  },
+  "questions": [
+    {
+      "externalId": "q-1",
+      "text": "Según la revisión sistemática de la literatura, ¿cuál es la estrategia de escalabilidad predominante en arquitecturas de microservicios, especialmente aquellas que emplean aprendizaje automático?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Estrategias de balanceo de carga."
+        },
+        {
+          "key": "b",
+          "text": "Estrategias de autoescalado, particularmente las que utilizan aprendizaje automático."
+        },
+        {
+          "key": "c",
+          "text": "Estrategias de descomposición y descubrimiento."
+        },
+        {
+          "key": "d",
+          "text": "Estrategias de pruebas de carga."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-2",
+      "text": "Según la literatura revisada, ¿cuáles son los desafíos clave para lograr la escalabilidad en arquitecturas de microservicios? (Seleccione todas las opciones correctas)",
+      "type": "multiple_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Recopilación precisa de métricas de servicio."
+        },
+        {
+          "key": "b",
+          "text": "Toma de decisiones de escalado dinámico."
+        },
+        {
+          "key": "c",
+          "text": "Equilibrio entre rendimiento, costo y seguridad."
+        },
+        {
+          "key": "d",
+          "text": "La estandarización de herramientas de desarrollo."
+        },
+        {
+          "key": "e",
+          "text": "La gestión de cargas de trabajo fluctuantes."
+        }
+      ],
+      "correctAnswerKeys": [
+        "a",
+        "b",
+        "c",
+        "e"
+      ]
+    },
+    {
+      "externalId": "q-3",
+      "text": "Basándose en los hallazgos de la revisión sistemática, ¿cómo se evalúa la efectividad de los mecanismos de autoescalado en microservicios, especialmente en relación con el equilibrio entre rendimiento, costo y seguridad?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Se ha logrado un equilibrio óptimo y estandarizado entre rendimiento, costo y seguridad."
+        },
+        {
+          "key": "b",
+          "text": "Aunque se han logrado avances, el equilibrio entre rendimiento, costo y seguridad sigue siendo un desafío complejo que requiere compensaciones."
+        },
+        {
+          "key": "c",
+          "text": "La seguridad es el único factor que se ha optimizado completamente en los mecanismos de autoescalado."
+        },
+        {
+          "key": "d",
+          "text": "Los mecanismos de autoescalado han resuelto completamente los problemas de costo y rendimiento."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-4",
+      "text": "Según la revisión sistemática, ¿cuáles son las brechas significativas que persisten en la estandarización de métricas de autoescalado para microservicios?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Existe una estandarización completa de las métricas de autoescalado, facilitando la comparación entre estudios."
+        },
+        {
+          "key": "b",
+          "text": "La principal brecha es la falta de directrices estandarizadas para seleccionar métricas de rendimiento y costo efectivas, lo que dificulta la comparación y el desarrollo de soluciones universales."
+        },
+        {
+          "key": "c",
+          "text": "Las métricas de autoescalado son irrelevantes, ya que el autoescalado se basa únicamente en la capacidad del hardware."
+        },
+        {
+          "key": "d",
+          "text": "La estandarización de métricas solo es necesaria para sistemas monolíticos, no para microservicios."
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-5",
+      "text": "¿Cuáles son las áreas de investigación futura propuestas para el desarrollo de sistemas de autoescalado robustos y adaptativos en microservicios, según la revisión sistemática? (Seleccione todas las opciones correctas)",
+      "type": "multiple_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Desarrollar sistemas de autoescalado robustos y adaptativos que gestionen complejidades del mundo real y cargas de trabajo dinámicas."
+        },
+        {
+          "key": "b",
+          "text": "Asegurar la optimización del rendimiento y el costo en arquitecturas de microservicios."
+        },
+        {
+          "key": "c",
+          "text": "Crear un enfoque de autoescalado que considere métricas retrasadas, inexactas o incompletas y dependencias entre servicios."
+        },
+        {
+          "key": "d",
+          "text": "Eliminar completamente la necesidad de autoescalado mediante el sobredimensionamiento de recursos."
+        },
+        {
+          "key": "e",
+          "text": "Un enfoque más holístico de la escalabilidad que considere el rendimiento, la optimización de costos y la resiliencia del sistema."
+        }
+      ],
+      "correctAnswerKeys": [
+        "a",
+        "b",
+        "c",
+        "e"
+      ]
+    }
+  ]
+}
+[single-chunk-parsed] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":5,"types":{"single_choice":3,"multiple_choice":2},"sampleTexts":["Seg\u00FAn la revisi\u00F3n sistem\u00E1tica de la literatura, \u00BFcu\u00E1l es la estrategia de escala","Seg\u00FAn la literatura revisada, \u00BFcu\u00E1les son los desaf\u00EDos clave para lograr la esca","Bas\u00E1ndose en los hallazgos de la revisi\u00F3n sistem\u00E1tica, \u00BFc\u00F3mo se eval\u00FAa la efecti"]}
+[single-chunk-merged] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":5,"types":{"single_choice":3,"multiple_choice":2},"sampleTexts":["Seg\u00FAn la revisi\u00F3n sistem\u00E1tica de la literatura, \u00BFcu\u00E1l es la estrategia de escala","Seg\u00FAn la literatura revisada, \u00BFcu\u00E1les son los desaf\u00EDos clave para lograr la esca","Bas\u00E1ndose en los hallazgos de la revisi\u00F3n sistem\u00E1tica, \u00BFc\u00F3mo se eval\u00FAa la efecti"]}
+[post-gemini] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":5,"types":{"single_choice":3,"multiple_choice":2},"sampleTexts":["Seg\u00FAn la revisi\u00F3n sistem\u00E1tica de la literatura, \u00BFcu\u00E1l es la estrategia de escala","Seg\u00FAn la literatura revisada, \u00BFcu\u00E1les son los desaf\u00EDos clave para lograr la esca","Bas\u00E1ndose en los hallazgos de la revisi\u00F3n sistem\u00E1tica, \u00BFc\u00F3mo se eval\u00FAa la efecti"]}
+[sanitize] Question type filter applied | {"before":5,"after":5,"allowedTypes":["single_choice","multiple_choice"],"typesBefore":{"single_choice":3,"multiple_choice":2},"typesAfter":{"single_choice":3,"multiple_choice":2}}
+[quiz.created] New quiz for AI import | {"targetQuizId":"287d97ff-4cb3-4bbf-bbe4-536d2a13d0f1"}
+[import.populate] Import batch snapshot | {"totalRows":5,"validRows":5,"errorRows":0,"batchStatus":"ready_for_review","rows":[{"Row":1,"Status":"valid","ErrorCode":null,"message":null},{"Row":2,"Status":"valid","ErrorCode":null,"message":null},{"Row":3,"Status":"valid","ErrorCode":null,"message":null},{"Row":4,"Status":"valid","ErrorCode":null,"message":null},{"Row":5,"Status":"valid","ErrorCode":null,"message":null}]}
+[import.batch] Import batch created from CQIF | {"ImportId":"1b33b84f-f330-4826-a12a-fa1807f0e96d","Status":"ready_for_review","TotalQuestionsDetected":5,"ValidQuestions":5,"QuestionsWithErrors":0,"QuestionsWithWarnings":0}
+=== AI generation trace ended ===

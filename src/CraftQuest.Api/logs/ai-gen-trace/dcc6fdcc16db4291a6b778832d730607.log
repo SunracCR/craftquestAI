@@ -1,0 +1,1320 @@
+﻿=== AI generation trace started ===
+Utc: 2026-05-22T21:43:34.1486868Z
+Log file: C:\Users\cperaza_ga\Proyectos\CraftQuest\src\CraftQuest.Api\logs/ai-gen-trace\dcc6fdcc16db4291a6b778832d730607.log
+[job.input] Generation parameters | {"StudyMaterialId":"27545260-cc9e-4538-a9e7-71fbf9c36dc3","QuestionCount":40,"Language":"es","Difficulty":"mixed","AllowedQuestionTypes":["single_choice","multiple_choice","true_false"],"PageFrom":16,"PageTo":40,"TopicFocus":null,"Preset":null,"sourceChars":61062}
+[provider.start] GenerateAsync | {"sourceChars":61062,"chunkCount":2,"requestedQuestions":40,"allowedTypes":["single_choice","multiple_choice","true_false"],"pages":"16-40","language":"es"}
+--- PROMPT: outline (len=10618) ---
+You are a curriculum planner for CraftQuest. Output JSON only (no markdown).
+Return shape (example): { "items": [ { "index": 1, "topic": "...", "suggestedType": "single_choice", "chunkIndex": 1 } ] }
+Rules:
+- Exactly 40 items in "items".
+- chunkIndex must be between 1 and 2 (match --- Page N --- sections when present).
+- suggestedType must be one of: single_choice, multiple_choice, true_false.
+- Topics must be distinct and cover the material evenly.
+- Language for topic text: "es".
+- Difficulty target: mixed.
+- Pedagogical goal: assessment.
+
+SOURCE EXCERPT:
+--- Page 16 ---
+Preface xv Table 1 Structure of the book Subject Revised Original Major updates version edition Part I. Background Introduction 1 1 Empirical Strategies 2 2 New sections on replication, synthesis, technology transfer and ethics Measurement 3 3 New section on measurement in practice Systematic Literature Reviews 4 10a New chapter Case Studies 5 New chapter Experiment Process 6 4 Part II. Steps in the Experiment Process New running example Scoping 7 5b Adapted terminology Planning 8 6 Operation 9 7 Analysis and Interpretation 10 8 Presentation and Package 11 9 Major revision Part III. Example Experiments Experiment Process Illustration 12 11 Are the Perspectives Really Different? 13 New chapter Appendices Exercises A 13 Understanding exercises moved to each chapter Statistical Tables B A a Entitled Survey, and with a different scope b Entitled Deﬁnition clear that most experiments suffer from some problems. This is mostly due to the inherit problems of performingexperimentationin software engineering.Instead of promoting criticism of work by others, we have provided some examples of studies that we have conducted ourselves. They are, in our opinion, representative of the type of experimentsthat are published in the literature. This includes that they have their strengths and weaknesses. Assignments. The objective of these exercises is to illustrate how experimentscan beusedin evaluation.Theseassignmentsareexamplesof studiesthatcanbecarried outwithin a course,either at a universityor in industry.They aredeliberately aimed at problems that can be addressed by fairly simple experiments. The assignments can either be done after reading the book or one of the assignments can be carried out as the book is read. The latter providesan opportunityto practice while reading the chapters. As an alternative, we would like to recommend teachers to formulate an assignment, within their area of expertise, that can be used throughout the book to exemplify the concepts presented in each chapter.
+
+--- Page 17 ---
+•
+
+--- Page 18 ---
+Acknowledgements Thisbookisbasedon“ExperimentationinSoftwareEngineering:AnIntroduction”, which was published in year 2000. This new version is both a revision and an extension of the former book. We have revised parts of the book, but also added new material, for example, concerning systematic literature reviews and case study research. Abookisalmostneverjustanachievementbytheauthors.Supportandhelpfrom several persons including families, friends, colleagues, international researchers in the ﬁeld and funding organizations are often a prerequisite for a new book. This book is certainly no exception. In particular, we would like to express our sincere gratitude to the readers of “Experimentation in Software Engineering: An Introduction”. Your use of the book has been a great source of inspiration and a motivation to publish the current version. In particular, we would like to thank Mr. Alan Kelon Oliveira de Moraes, Universidade Federal de Pernambuco, Brazil for sending the email that actually triggered the revision of the book. Furthermore, we wouldlike to thankthe followingindividualsfor havingcontributedto the book. First, we would like to thank the ﬁrst main external user of the book Prof. GiuseppeVisaggio,UniversityofBariinItalyforadoptingadraftofthisbookinone of his courses, and for providing valuable feedback. We would also like to express our gratitude to Prof. Anneliese Andrews, Denver University, USA and Dr. Khaled El Emam, University of Ottawa, Canada for encouraging us to publish the book in the ﬁrst place and for valuable comments. We also would like to thank Dr. Lionel Briand, University of Luxembourg, Luxembourg; Dr. Christian Bunse, University of Mannheim, Germany and Dr. John Daly formerly at Fraunhofer Institute for Experimental Software Engineering, Kaiserslautern, Germany for providing the data for the example on object-oriented design. Our thanks also to Dr. Thomas Thelin for allowing us to include an experiment he did together with two of the authors of the book. Early drafts of the book was used and evaluated internally within the Software Engineering Research Group at Lund University. Thus, we would like to thank the members of the group for providing feedback on different drafts of the book. In particular,we would like to thank Dr. Lars Bratthall for taking the time to review xvii
+
+--- Page 19 ---
+xviii Acknowledgements the manuscript very thoroughly and providing valuable comments. We would also like to acknowledgethe anonymousreviewers for their contribution to the book. For the current version of the book, we have received valuable input and improvementproposals,and hencewe wouldlike to thankthefollowingindividuals for their valuable input: Prof. Anneliese Andrews, Denver University, USA; Prof. David Budgen, Durham University, UK; Prof. Barbara Kitchenham, Keele Univer- sity, UK; Prof. Dieter Rombach and Moinul Islam, University of Kaiserslautern, Germany; Pro
+
+[... middle of source omitted for outline ...]
+
+ualities that an experiment cannot visualize, for example, scale, complexity, unpredictability, and dynamism. Some potential problems with case studies are: • A small or simpliﬁed case study is seldom a good instrument for discovering software engineering principles and techniques. Increases in scale lead to changes in the type of problems that become most indicative. In other words, that the problem may be differentin a small case study and in a large case study, although the objective is to study the same issues. For example, in a small case study the main problemmay bethe actualtechniquebeing studied,and in a large case study the major problem may be the amount of people involved and hence also the communicationbetween people. • Researchers are not in full control of a case study situation. This is good, from one perspective,because unpredictablechanges frequently tell them much about the problems being studied. The problem is that we cannot be sure about the effects due to confoundingfactors. Case studies are further elaborated in Chap.5. 2.4 Experiments Experiments are launched when we want control over the situation and want to manipulate behavior directly, precisely and systematically. Also, experiments involve more than one treatment to compare the outcomes. For example, if it is possible to control who is using one method and who is using another method, and when and where they are used, it is possible to perform an experiment.This type of manipulationcan be madein an off-linesituation,for examplein a laboratoryunder controlled conditions, where the events are organized to simulate their appearance in thereal world.Experimentsmay alternativelybe madeon-line,which meansthat theinvestigationis executedin theﬁeld inareallifecontext[6].Thelevelofcontrol is more difﬁcult in an on-line situation, but some factors may be possible to control while others may be impossible. Experimentsmaybehuman-orientedortechnology-oriented. Inhuman-oriented experiments,humansapplydifferenttreatmentsto objects,forexample,two inspec- tionmethodsareappliedto two piecesof code.Intechnology-orientedexperiments, typically different tools are applied to different objects, for example, two test case generation tools are applied to the same programs.The human-orientedexperiment has less control than the technology-orientedone, since humans behave differently atdifferentoccasions,whiletools(mostly)aredeterministic.Further,duetolearning effects,ahumansubjectcannotapplytwo methodstothesamepieceofcode,which two tools can do without bias.
+
+--- Page 40 ---
+2.4 Experiments 17 As mentionedearlier,consideringthe notion of contextmakesit possibleto state the difference between case studies and experiments more rigorously. Examples of different contexts could be the application area and the system type [132]. In an experiment,we identify the contextsof interest, its variablesand sample over them. This means that we select objects representing a variety of characteristics that are typical for the organization in which the experiment is conducted and design the research so that more than one value will be measured for each characteristic. An example could be to investigate the effect of an inspection method with respect to the faults found in test in two different systems, using two different programming languages, for example, in a situation where an organization has moved from one programming language to another. Then the different systems are the context for evaluating the inspection method, and hence similar objects are needed in the experiment. The inspection method becomes the independent variable and an experiment will involve objects where the different programming languages are used. The design of the experiment should be made so that the objects involved represent all the methods we are interested in. Also, it is possible to consider the current situation to be the baseline (control), which means that the baseline represents one level (or value) of the independent variable, and the new situation to be the one we want to evaluate.Then the levelof the independentvariablefor the newsituationdescribeshowtheevaluatedsituationdiffersfromthecontrol.Though, the values of all the other variables should stay the same, for example, application domain and programmingenvironment. 2.4.1 Characteristics Experimentsare appropriateto investigatedifferent aspects [72,162], including: • Conﬁrm theories, i.e. to test existing theories. • Conﬁrm conventionalwisdom, i.e. to test people’s conceptions. • Explore relationships, i.e. to test that a certain relationship holds. • Evaluate the accuracy of models, i.e. to test that the accuracy of certain models is as expected. • Validate measures, i.e. to ensure that a measure actually measures what it is supposed to. The strength of an experiment is that it can investigate in which situations the claims are true and they can provide a context in which certain standards, methods and tools are recommendedfor use.
+--- GEMINI RESPONSE: outline model=gemini-2.5-flash-lite len=8351 parsedQuestions=40 ---
+Parse: outline parsed
+{
+  "items": [
+    {
+      "index": 1,
+      "topic": "El propósito de los ejercicios de asignación es ilustrar cómo se pueden usar los experimentos en la evaluación.",
+      "suggestedType": "true_false",
+      "chunkIndex": 1
+    },
+    {
+      "index": 2,
+      "topic": "¿Qué tipo de investigación se enfoca en la manipulación directa, precisa y sistemática del comportamiento?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 3,
+      "topic": "Los experimentos pueden ser 'human-oriented' o 'technology-oriented'.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 4,
+      "topic": "En un experimento 'human-oriented', ¿qué se aplica a los objetos?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 5,
+      "topic": "Los experimentos 'technology-oriented' generalmente involucran la aplicación de diferentes herramientas a diferentes objetos.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 6,
+      "topic": "¿Cuál es una de las fortalezas de los experimentos en ingeniería de software?",
+      "suggestedType": "multiple_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 7,
+      "topic": "Los experimentos son apropiados para investigar la confirmación de teorías existentes.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 8,
+      "topic": "En el contexto de los experimentos, ¿qué significa 'identificar los contextos de interés'?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 9,
+      "topic": "Un experimento puede involucrar la comparación de dos métodos de inspección aplicados a dos piezas de código diferentes.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 10,
+      "topic": "¿Qué se considera la línea base o control en un diseño experimental?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 11,
+      "topic": "Los experimentos permiten investigar en qué situaciones las afirmaciones son verdaderas.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 12,
+      "topic": "Los experimentos 'on-line' se ejecutan en un contexto de la vida real.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 13,
+      "topic": "¿Qué tipo de experimentos tienen menos control debido a la variabilidad humana?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 14,
+      "topic": "Los experimentos son útiles para evaluar la precisión de los modelos.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 15,
+      "topic": "En ingeniería de software, los experimentos a menudo sufren de problemas inherentes a la realización de experimentación.",
+      "suggestedType": "true_false",
+      "chunkIndex": 1
+    },
+    {
+      "index": 16,
+      "topic": "¿Qué se busca ilustrar con los ejercicios de asignación mencionados en el prefacio?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 17,
+      "topic": "La nueva versión del libro se basa en 'Experimentation in Software Engineering: An Introduction' publicada en el año 2000.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 18,
+      "topic": "¿Qué nuevo material se ha añadido a la versión actual del libro?",
+      "suggestedType": "multiple_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 19,
+      "topic": "El libro proporciona ejemplos de estudios realizados por los propios autores.",
+      "suggestedType": "true_false",
+      "chunkIndex": 1
+    },
+    {
+      "index": 20,
+      "topic": "¿Qué tipo de problemas pueden ser abordados por experimentos relativamente simples en las asignaciones?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 1
+    },
+    {
+      "index": 21,
+      "topic": "Se recomienda a los profesores formular una asignación dentro de su área de experiencia para ejemplificar los conceptos del libro.",
+      "suggestedType": "true_false",
+      "chunkIndex": 1
+    },
+    {
+      "index": 22,
+      "topic": "La retroalimentación de lectores y colegas fue una fuente de inspiración para la nueva versión del libro.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 23,
+      "topic": "¿Quién envió un correo electrónico que desencadenó la revisión del libro?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 24,
+      "topic": "El Prof. Giuseppe Visaggio adoptó un borrador del libro y proporcionó retroalimentación valiosa.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 25,
+      "topic": "¿Qué individuos animaron a los autores a publicar el libro en primer lugar y proporcionaron comentarios valiosos?",
+      "suggestedType": "multiple_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 26,
+      "topic": "Se agradece a Dr. Lionel Briand, Dr. Christian Bunse y Dr. John Daly por proporcionar datos para un ejemplo sobre diseño orientado a objetos.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 27,
+      "topic": "Los miembros del grupo de investigación de ingeniería de software en la Universidad de Lund proporcionaron retroalimentación sobre borradores del libro.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 28,
+      "topic": "¿Quién revisó el manuscrito de manera muy exhaustiva y proporcionó comentarios valiosos?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 29,
+      "topic": "Los revisores anónimos también contribuyeron al libro.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 30,
+      "topic": "Se agradece a varios individuos por su valiosa aportación y propuestas de mejora para la versión actual del libro.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 31,
+      "topic": "¿Qué universidades o instituciones están representadas entre las personas agradecidas por su valiosa aportación a la versión actual?",
+      "suggestedType": "multiple_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 32,
+      "topic": "Los estudios de caso pueden tener problemas con factores de confusión que dificultan la atribución de efectos.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 33,
+      "topic": "Un estudio de caso simplificado es un buen instrumento para descubrir principios y técnicas de ingeniería de software.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 34,
+      "topic": "¿Qué cualidad de un sistema puede un experimento no visualizar fácilmente?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 35,
+      "topic": "Los investigadores tienen control total sobre la situación en un estudio de caso.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 36,
+      "topic": "Los experimentos se lanzan cuando se desea control sobre la situación y se quiere manipular el comportamiento.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 37,
+      "topic": "¿Qué implica que los eventos se organicen para simular su aparición en el mundo real en un experimento?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    },
+    {
+      "index": 38,
+      "topic": "Los experimentos 'off-line' se realizan en un laboratorio bajo condiciones controladas.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 39,
+      "topic": "En un experimento 'human-oriented', los humanos aplican diferentes tratamientos a los objetos.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 40,
+      "topic": "¿Por qué los sujetos humanos en experimentos 'human-oriented' no pueden aplicar dos métodos al mismo código sin sesgo?",
+      "suggestedType": "single_choice",
+      "chunkIndex": 2
+    }
+  ]
+}
+[outline.ok] Outline plan ready | {"itemCount":40}
+[chunks.parallel] Starting parallel chunk generation | {"chunks":2,"questionsPerChunk":[20,20],"outlineItems":40}
+--- PROMPT: chunk-1 (len=36435) ---
+You are CraftQuest quiz generator. Output valid CQIF JSON 2.0 only (no markdown).
+Root object MUST include: cqifVersion, quiz, questions (array).
+cqifVersion must be "2.0".
+This is SOURCE chunk 1 of 2.
+Generate exactly 20 questions using ONLY facts from this chunk.
+Do not duplicate questions that would belong to other parts of the material.
+QUESTION PLAN (follow this order and focus; one question per line):
+- Q1: El propósito de los ejercicios de asignación es ilustrar cómo se pueden usar los experimentos en la evaluación. (prefer type: true_false)
+- Q15: En ingeniería de software, los experimentos a menudo sufren de problemas inherentes a la realización de experimentación. (prefer type: true_false)
+- Q16: ¿Qué se busca ilustrar con los ejercicios de asignación mencionados en el prefacio? (prefer type: single_choice)
+- Q19: El libro proporciona ejemplos de estudios realizados por los propios autores. (prefer type: true_false)
+- Q20: ¿Qué tipo de problemas pueden ser abordados por experimentos relativamente simples en las asignaciones? (prefer type: single_choice)
+- Q21: Se recomienda a los profesores formular una asignación dentro de su área de experiencia para ejemplificar los conceptos del libro. (prefer type: true_false)
+Language for question text: "es".
+Difficulty mode: mixed.
+Pedagogical goal: assessment.
+Allowed question types ONLY: single_choice, multiple_choice, true_false.
+NEVER use image_choice or image_based_question.
+Do not reference images, diagrams, or figures not described in text.
+Topic focus: cover this source section evenly.
+Use ONLY facts explicitly present in SOURCE. Do not invent.
+Each question needs: text, type, answerOptions (min 2) with unique key fields,
+correctAnswerKeys as JSON array referencing those keys (never a single string).
+For true_false use keys "true" and "false".
+Assign unique externalId per question (e.g. "q-1", "q-2").
+Omit justifications.
+
+SOURCE:
+--- Page 16 ---
+Preface xv Table 1 Structure of the book Subject Revised Original Major updates version edition Part I. Background Introduction 1 1 Empirical Strategies 2 2 New sections on replication, synthesis, technology transfer and ethics Measurement 3 3 New section on measurement in practice Systematic Literature Reviews 4 10a New chapter Case Studies 5 New chapter Experiment Process 6 4 Part II. Steps in the Experiment Process New running example Scoping 7 5b Adapted terminology Planning 8 6 Operation 9 7 Analysis and Interpretation 10 8 Presentation and Package 11 9 Major revision Part III. Example Experiments Experiment Process Illustration 12 11 Are the Perspectives Really Different? 13 New chapter Appendices Exercises A 13 Understanding exercises moved to each chapter Statistical Tables B A a Entitled Survey, and with a different scope b Entitled Deﬁnition clear that most experiments suffer from some problems. This is mostly due to the inherit problems of performingexperimentationin software engineering.Instead of promoting criticism of work by others, we have provided some examples of studies that we have conducted ourselves. They are, in our opinion, representative of the type of experimentsthat are published in the literature. This includes that they have their strengths and weaknesses. Assignments. The objective of these exercises is to illustrate how experimentscan beusedin evaluation.Theseassignmentsareexamplesof studiesthatcanbecarried outwithin a course,either at a universityor in industry.They aredeliberately aimed at problems that can be addressed by fairly simple experiments. The assignments can either be done after reading the book or one of the assignments can be carried out as the book is read. The latter providesan opportunityto practice while reading the chapters. As an alternative, we would like to recommend teachers to formulate an assignment, within their area of expertise, that can be used throughout the book to exemplify the concepts presented in each chapter.
+
+--- Page 17 ---
+•
+
+--- Page 18 ---
+Acknowledgements Thisbookisbasedon“ExperimentationinSoftwareEngineering:AnIntroduction”, which was published in year 2000. This new version is both a revision and an extension of the former book. We have revised parts of the book, but also added new material, for example, concerning systematic literature reviews and case study research. Abookisalmostneverjustanachievementbytheauthors.Supportandhelpfrom several persons including families, friends, colleagues, international researchers in the ﬁeld and funding organizations are often a prerequisite for a new book. This book is certainly no exception. In particular, we would like to express our sincere gratitude to the readers of “Experimentation in Software Engineering: An Introduction”. Your use of the book has been a great source of inspiration and a motivation to publish the current version. In particular, we would like to thank Mr. Alan Kelon Oliveira de Moraes, Universidade Federal de Pernambuco, Brazil for sending the email that actually triggered the revision of the book. Furthermore, we wouldlike to thankthe followingindividualsfor havingcontributedto the book. First, we would like to thank the ﬁrst main external user of the book Prof. GiuseppeVisaggio,UniversityofBariinItalyforadoptingadraftofthisbookinone of his courses, and for providing valuable feedback. We would also like to express our gratitude to Prof. Anneliese Andrews, Denver University, USA and Dr. Khaled El Emam, University of Ottawa, Canada for encouraging us to publish the book in the ﬁrst place and for valuable comments. We also would like to thank Dr. Lionel Briand, University of Luxembourg, Luxembourg; Dr. Christian Bunse, University of Mannheim, Germany and Dr. John Daly formerly at Fraunhofer Institute for Experimental Software Engineering, Kaiserslautern, Germany for providing the data for the example on object-oriented design. Our thanks also to Dr. Thomas Thelin for allowing us to include an experiment he did together with two of the authors of the book. Early drafts of the book was used and evaluated internally within the Software Engineering Research Group at Lund University. Thus, we would like to thank the members of the group for providing feedback on different drafts of the book. In particular,we would like to thank Dr. Lars Bratthall for taking the time to review xvii
+
+--- Page 19 ---
+xviii Acknowledgements the manuscript very thoroughly and providing valuable comments. We would also like to acknowledgethe anonymousreviewers for their contribution to the book. For the current version of the book, we have received valuable input and improvementproposals,and hencewe wouldlike to thankthefollowingindividuals for their valuable input: Prof. Anneliese Andrews, Denver University, USA; Prof. David Budgen, Durham University, UK; Prof. Barbara Kitchenham, Keele Univer- sity, UK; Prof. Dieter Rombach and Moinul Islam, University of Kaiserslautern, Germany; Prof. J¨urgen B¨orstler, Dr. Samuel Fricker and Dr. Richard Torkar, Blekinge Institute of Technology, Sweden. Thanks also to Mr. Jesper Runeson for work on the LATEXtransformationof the book. In addition to the above individuals, we would also like to thank all members of ISERN (International Software Engineering Research Network) for interesting and enlightening discussion regarding empirical software engineering research in general. For the chapter on case studies, we are gratefulfor the feedbackto the checklists from the ISERN members and attendants of the International Advanced School of Empirical Software Engineering in September 2007. A special thank to Dr. Kim Weyns and Dr. Andreas Jedlitschka for their review of an early draft of the chapter. Numerous research projects at Lund University and Blekinge Institute of Tech- nology have over the years contributed to the book. Different grants have funded researchprojectswhereempiricalstudieshavebeenacornerstone,andhencehelped shapeour experiencethat we havetried to documentthroughthe book.This bookis to some extent a result of all these research projects. Prof. Claes Wohlin, Prof. Per Runeson, Prof. Martin H¨ost, Dr. Magnus C. Ohlsson, Prof. Bj¨orn Regnell, and Dr. Anders Wessl´en
+
+--- Page 20 ---
+Contents Part I Background 1 Introduction................................................................. 3 1.1 Software Engineering Context ..................................... 3 1.2 Science and Software Engineering................................. 5 1.3 Exercises ............................................................ 8 2 Empirical Strategies........................................................ 9 2.1 Overviewof Empirical Strategies.................................. 10 2.2 Surveys .............................................................. 12 2.2.1 Survey Characteristics ................................... 12 2.2.2 Survey Purposes ......................................... 13 2.2.3 Data Collection .......................................... 13 2.3 Case Studies......................................................... 14 2.3.1 Case Study Arrangements............................... 15 2.3.2 ConfoundingFactors and Other Aspects ............... 15 2.4 Experiments......................................................... 16 2.4.1 Characteristics ........................................... 17 2.4.2 ExperimentProcess...................................... 18 2.5 Empirical Strategies Comparison .................................. 18 2.6 Replications ......................................................... 19 2.7 Theory in Software Engineering ................................... 21 2.8 AggregatingEvidencefrom Empirical Studies.................... 22 2.9 Empiricism in a Software EngineeringContext ................... 24 2.9.1 Empirical Evaluation of Process Changes .............. 24 2.9.2 Quality ImprovementParadigm......................... 26 2.9.3 ExperienceFactory ...................................... 27 2.9.4 Goal/Question/MetricMethod .......................... 29 2.10 Empirically-Based Technology Transfer .......................... 30 2.11 Ethics in Experimentation .......................................... 33 2.12 Exercises ............................................................ 36 xix
+
+--- Page 21 ---
+xx Contents 3 Measurement................................................................ 37 3.1 Basic Concepts...................................................... 38 3.1.1 Scale Types............................................... 39 3.1.2 Objective and Subjective Measures ..................... 40 3.1.3 Direct or Indirect Measures ............................. 41 3.2 Measurements in Software Engineering ........................... 41 3.3 Measurements in Practice .......................................... 42 3.4 Exercises ............................................................ 43 4 Systematic Literature Reviews............................................ 45 4.1 Planning the Review ................................................ 45 4.2 Conducting the Review............................................. 46 4.3 Reporting the Review............................................... 51 4.4 Mapping Studies .................................................... 52 4.5 Example Reviews ................................................... 52 4.6 Exercises ............................................................ 54 5 Case Studies ................................................................. 55 5.1 Case Studies in Its Context ......................................... 56 5.1.1 Why Case Studies in Software Engineering?........... 57 5.1.2 Case Study Research Process ........................... 58 5.2 Design and Planning................................................ 58 5.2.1 Case Study Planning..................................... 58 5.2.2 Case Study Protocol ..................................... 60 5.3 Preparation and Collection of Data ................................ 61 5.3.1 Interviews ..........................................
+... [truncated 24435 chars] ...
+--- PROMPT: chunk-2 (len=32131) ---
+You are CraftQuest quiz generator. Output valid CQIF JSON 2.0 only (no markdown).
+Root object MUST include: cqifVersion, quiz, questions (array).
+cqifVersion must be "2.0".
+This is SOURCE chunk 2 of 2.
+Generate exactly 20 questions using ONLY facts from this chunk.
+Do not duplicate questions that would belong to other parts of the material.
+QUESTION PLAN (follow this order and focus; one question per line):
+- Q2: ¿Qué tipo de investigación se enfoca en la manipulación directa, precisa y sistemática del comportamiento? (prefer type: single_choice)
+- Q3: Los experimentos pueden ser 'human-oriented' o 'technology-oriented'. (prefer type: true_false)
+- Q4: En un experimento 'human-oriented', ¿qué se aplica a los objetos? (prefer type: single_choice)
+- Q5: Los experimentos 'technology-oriented' generalmente involucran la aplicación de diferentes herramientas a diferentes objetos. (prefer type: true_false)
+- Q6: ¿Cuál es una de las fortalezas de los experimentos en ingeniería de software? (prefer type: multiple_choice)
+- Q7: Los experimentos son apropiados para investigar la confirmación de teorías existentes. (prefer type: true_false)
+- Q8: En el contexto de los experimentos, ¿qué significa 'identificar los contextos de interés'? (prefer type: single_choice)
+- Q9: Un experimento puede involucrar la comparación de dos métodos de inspección aplicados a dos piezas de código diferentes. (prefer type: true_false)
+- Q10: ¿Qué se considera la línea base o control en un diseño experimental? (prefer type: single_choice)
+- Q11: Los experimentos permiten investigar en qué situaciones las afirmaciones son verdaderas. (prefer type: true_false)
+- Q12: Los experimentos 'on-line' se ejecutan en un contexto de la vida real. (prefer type: true_false)
+- Q13: ¿Qué tipo de experimentos tienen menos control debido a la variabilidad humana? (prefer type: single_choice)
+- Q14: Los experimentos son útiles para evaluar la precisión de los modelos. (prefer type: true_false)
+- Q17: La nueva versión del libro se basa en 'Experimentation in Software Engineering: An Introduction' publicada en el año 2000. (prefer type: true_false)
+- Q18: ¿Qué nuevo material se ha añadido a la versión actual del libro? (prefer type: multiple_choice)
+- Q22: La retroalimentación de lectores y colegas fue una fuente de inspiración para la nueva versión del libro. (prefer type: true_false)
+- Q23: ¿Quién envió un correo electrónico que desencadenó la revisión del libro? (prefer type: single_choice)
+- Q24: El Prof. Giuseppe Visaggio adoptó un borrador del libro y proporcionó retroalimentación valiosa. (prefer type: true_false)
+- Q25: ¿Qué individuos animaron a los autores a publicar el libro en primer lugar y proporcionaron comentarios valiosos? (prefer type: multiple_choice)
+- Q26: Se agradece a Dr. Lionel Briand, Dr. Christian Bunse y Dr. John Daly por proporcionar datos para un ejemplo sobre diseño orientado a objetos. (prefer type: true_false)
+- Q27: Los miembros del grupo de investigación de ingeniería de software en la Universidad de Lund proporcionaron retroalimentación sobre borradores del libro. (prefer type: true_false)
+- Q28: ¿Quién revisó el manuscrito de manera muy exhaustiva y proporcionó comentarios valiosos? (prefer type: single_choice)
+- Q29: Los revisores anónimos también contribuyeron al libro. (prefer type: true_false)
+- Q30: Se agradece a varios individuos por su valiosa aportación y propuestas de mejora para la versión actual del libro. (prefer type: true_false)
+- Q31: ¿Qué universidades o instituciones están representadas entre las personas agradecidas por su valiosa aportación a la versión actual? (prefer type: multiple_choice)
+- Q32: Los estudios de caso pueden tener problemas con factores de confusión que dificultan la atribución de efectos. (prefer type: true_false)
+- Q33: Un estudio de caso simplificado es un buen instrumento para descubrir principios y técnicas de ingeniería de software. (prefer type: true_false)
+- Q34: ¿Qué cualidad de un sistema puede un experimento no visualizar fácilmente? (prefer type: single_choice)
+- Q35: Los investigadores tienen control total sobre la situación en un estudio de caso. (prefer type: true_false)
+- Q36: Los experimentos se lanzan cuando se desea control sobre la situación y se quiere manipular el comportamiento. (prefer type: true_false)
+- Q37: ¿Qué implica que los eventos se organicen para simular su aparición en el mundo real en un experimento? (prefer type: single_choice)
+- Q38: Los experimentos 'off-line' se realizan en un laboratorio bajo condiciones controladas. (prefer type: true_false)
+- Q39: En un experimento 'human-oriented', los humanos aplican diferentes tratamientos a los objetos. (prefer type: true_false)
+- Q40: ¿Por qué los sujetos humanos en experimentos 'human-oriented' no pueden aplicar dos métodos al mismo código sin sesgo? (prefer type: single_choice)
+Language for question text: "es".
+Difficulty mode: mixed.
+Pedagogical goal: assessment.
+Allowed question types ONLY: single_choice, multiple_choice, true_false.
+NEVER use image_choice or image_based_question.
+Do not reference images, diagrams, or figures not described in text.
+Topic focus: cover this source section evenly.
+Use ONLY facts explicitly present in SOURCE. Do not invent.
+Each question needs: text, type, answerOptions (min 2) with unique key fields,
+correctAnswerKeys as JSON array referencing those keys (never a single string).
+For true_false use keys "true" and "false".
+Assign unique externalId per question (e.g. "q-1", "q-2").
+Omit justifications.
+
+SOURCE:
+--- Page 31 ---
+8 1 Introduction object-orientation improve reuse? Are inspections cost-effective? Should we have inspection meetings or is it sufﬁcient to hand-in the remarks to a moderator? This type of questions can be investigated in order to improve our understanding of software engineering. Improved understanding is the basis for changing and improvingthewaywework,henceempiricalstudiesingeneralandexperimentation in particular are important. The introduction to the area is based on the introduction of a process for experimentation. The basic steps in the process can be used for other types of empiricalstudiestoo.Thefocusis,however,onprovidingguidelinesandsupportfor performing experiments in software engineering. Furthermore, it should be noted that ‘true’ experiments, i.e. experiments with full randomization, are difﬁcult to performin softwareengineering.Softwareengineeringexperimentsareoftenquasi- experiments,i.e.experimentinwhichit,forexample,hasnotbeenpossibletoassign participants in the experiments to groups by random [37]. Quasi-experiments are important,and they can providevaluableresults.Theprocesspresentedin this book is aimed at both ‘true’ experimentsand quasi-experiments.The latter is particularly supported by a thorough discussion of threats to experiments. Thus, the intention of this book is to providean introductionto empirical studies and experimentation, in order to highlight the opportunities and beneﬁts of doing experimentsintheﬁeldofsoftwareengineering.Theempiricalresearchmethodcan, and should be used more in software engineering.The arguments against empirical studies in software engineering are refuted by Tichy et al. [169]. Hopefully, this practical guide to experimentation in software engineering facilitates the use of empirical studies and experimentation both within software engineering research and practice. 1.3 Exercises 1.1. Why can experimentsbe viewed as prototypingfor process changes? 1.2. How can experiments be used in improvementactivities? 1.3. Why are empirical studies importantin software engineering? 1.4. When is the empirical research method best suited in software engineering in comparison with the scientiﬁc, engineering and analytic methods respectively? 1.5. Which three strategies are empirical methods divided into?
+
+--- Page 32 ---
+Chapter 2 Empirical Strategies There are two types of research paradigms that have different approaches to empirical studies. Exploratory research is concerned with studying objects in their natural setting and letting the ﬁndings emerge from the observations. This implies that a ﬂexible research design [1] is needed to adapt to changes in the observed phenomenon.Flexible design research is also referred to as qualitative research, as it primarily is informed by qualitative data. Inductive research attempts to interpret aphenomenonbasedonexplanationsthatpeoplebringforward.Itisconcernedwith discoveringcausesnoticedbythesubjectsinthestudy,andunderstandingtheirview oftheproblemathand.Thesubjectistheperson,whichistakingpartinanempirical study in order to evaluate an object. Explanatory research is mainly concerned with quantifying a relationship or to compare two or more groups with the aim to identify a cause-effect relationship. The research is often conducted through setting up controlled experiment. This type of study is a ﬁxed design [1] study, implying that factors are ﬁxed before the study is launched.Fixed design research is also referred to as quantitativeresearch, as it primarily is informed by quantitative data. Quantitative investigations are appropriate when testing the effect of some manipulation or activity. An advantage is that quantitativedata promotescomparisonsand statistical analyses.It is possible for qualitative and quantitative research to investigate the same topics but each of them will address a different type of question. For example, a quantitative investigation could be launched to investigate how much a new inspection method decreases the number of faults found in test. To answer questions about the sources of variations between different inspection groups, a qualitative investigation could be launched. As mentionedearlier,ﬁxed design strategies,such as controlledexperiments,are appropriate when testing the effects of a treatment while a ﬂexible design study of beliefs, understandings, and multiple perspectives are appropriate to ﬁnd out why the results from a quantitative investigation are as they are. The two approaches should be regarded as complementaryrather than competitive. C. Wohlin et al., Experimentation in Software Engineering, DOI 10.1007/978-3-642-29044-2 2, © Springer-Verlag Berlin Heidelberg 2012 9
+
+--- Page 33 ---
+10 2 Empirical Strategies The objectives of this chapter are: (1) to introduce empirical research strategies, (2) to highlight some important aspects in relation to the empirical strategies, and (3) to illustrate how the strategies can be used in the context of technology transfer and improvement. To fulﬁl the ﬁrst objective, an overview of empirical strategies is provided, see Sect.2.1, and then surveys, case studies and experiments are discussed in some more detail. The different empirical strategies are presented brieﬂy in Sects.2.2–2.4, and a comparison of them is provided in Sect.2.5. The secondobjectiveis addressedbyaddressingreplicationsof experimentsin Sect.2.6, theories in relation to empirical studies are brieﬂy discussed in Sect.2.7, and aggregation of empirical studies are elaborated in Sect.2.8. Finally, the use of the research strategies within a technology transfer process and as being part of an improvementprogram is discussed in Sect.2.9. 2.1 Overview of Empirical Strategies Depending on the purpose of the evaluation, whether it is techniques, methods or tools,anddependingontheconditionsfortheempiricalinvestigation,therearethree major different types of investigations (strategies) that may be carried out, survey, case study and experiment [144]. Deﬁnition 2.1. A survey is a system for collecting information from or about peopleto describe,compareorexplaintheirknowledge,attitudesandbehavior[58]. A survey is often an investigation performed in retrospect, when, for example, a toolor technique,hasbeenin usefora while[133].Theprimarymeansofgathering qualitative or quantitative data are interviews or questionnaires. These are done through taking a sample which is
+... [truncated 20131 chars] ...
+--- GEMINI RESPONSE: chunk-2 model=gemini-2.5-flash len=9964 parsedQuestions=19 ---
+Parse: parsed OK
+{
+  "cqifVersion": "2.0",
+  "quiz": {
+    "title": "CraftQuest Quiz - Chunk 2",
+    "description": "Preguntas basadas en el chunk 2 del material de origen.",
+    "language": "es",
+    "difficulty": "mixed",
+    "pedagogicalGoal": "assessment"
+  },
+  "questions": [
+    {
+      "externalId": "q-2",
+      "text": "¿Qué tipo de investigación se enfoca en la manipulación directa, precisa y sistemática del comportamiento?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Estudio de caso"
+        },
+        {
+          "key": "b",
+          "text": "Encuesta"
+        },
+        {
+          "key": "c",
+          "text": "Experimento"
+        },
+        {
+          "key": "d",
+          "text": "Investigación exploratoria"
+        }
+      ],
+      "correctAnswerKeys": [
+        "c"
+      ]
+    },
+    {
+      "externalId": "q-3",
+      "text": "Los experimentos pueden ser 'human-oriented' o 'technology-oriented'.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-4",
+      "text": "En un experimento 'human-oriented', ¿qué se aplica a los objetos?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Diferentes herramientas"
+        },
+        {
+          "key": "b",
+          "text": "Diferentes tratamientos"
+        },
+        {
+          "key": "c",
+          "text": "Diferentes programas"
+        },
+        {
+          "key": "d",
+          "text": "Diferentes modelos"
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-5",
+      "text": "Los experimentos 'technology-oriented' generalmente involucran la aplicación de diferentes herramientas a diferentes objetos.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-6",
+      "text": "¿Cuál es una de las fortalezas de los experimentos en ingeniería de software?",
+      "type": "multiple_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Pueden investigar en qué situaciones las afirmaciones son verdaderas"
+        },
+        {
+          "key": "b",
+          "text": "Permiten un control total sobre la situación sin manipulación"
+        },
+        {
+          "key": "c",
+          "text": "Son ideales para descubrir principios y técnicas de ingeniería de software a gran escala"
+        },
+        {
+          "key": "d",
+          "text": "Proporcionan una visión general amplia de las actitudes de la población"
+        }
+      ],
+      "correctAnswerKeys": [
+        "a"
+      ]
+    },
+    {
+      "externalId": "q-7",
+      "text": "Los experimentos son apropiados para investigar la confirmación de teorías existentes.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-8",
+      "text": "En el contexto de los experimentos, ¿qué significa 'identificar los contextos de interés'?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Seleccionar objetos con características variadas típicas de la organización"
+        },
+        {
+          "key": "b",
+          "text": "Definir el alcance geográfico del estudio"
+        },
+        {
+          "key": "c",
+          "text": "Determinar el número de participantes humanos"
+        },
+        {
+          "key": "d",
+          "text": "Establecer los objetivos financieros del experimento"
+        }
+      ],
+      "correctAnswerKeys": [
+        "a"
+      ]
+    },
+    {
+      "externalId": "q-9",
+      "text": "Un experimento puede involucrar la comparación de dos métodos de inspección aplicados a dos piezas de código diferentes.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-10",
+      "text": "¿Qué se considera la línea base o control en un diseño experimental?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "La nueva situación a evaluar"
+        },
+        {
+          "key": "b",
+          "text": "La situación actual"
+        },
+        {
+          "key": "c",
+          "text": "El resultado de la manipulación"
+        },
+        {
+          "key": "d",
+          "text": "El contexto de interés"
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    },
+    {
+      "externalId": "q-11",
+      "text": "Los experimentos permiten investigar en qué situaciones las afirmaciones son verdaderas.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-12",
+      "text": "Los experimentos 'on-line' se ejecutan en un contexto de la vida real.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-13",
+      "text": "¿Qué tipo de experimentos tienen menos control debido a la variabilidad humana?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Experimentos 'technology-oriented'"
+        },
+        {
+          "key": "b",
+          "text": "Experimentos 'off-line'"
+        },
+        {
+          "key": "c",
+          "text": "Experimentos 'human-oriented'"
+        },
+        {
+          "key": "d",
+          "text": "Experimentos de laboratorio"
+        }
+      ],
+      "correctAnswerKeys": [
+        "c"
+      ]
+    },
+    {
+      "externalId": "q-14",
+      "text": "Los experimentos son útiles para evaluar la precisión de los modelos.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-32",
+      "text": "Los estudios de caso pueden tener problemas con factores de confusión que dificultan la atribución de efectos.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-33",
+      "text": "Un estudio de caso simplificado es un buen instrumento para descubrir principios y técnicas de ingeniería de software.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "false"
+      ]
+    },
+    {
+      "externalId": "q-34",
+      "text": "¿Qué cualidad de un sistema puede un experimento no visualizar fácilmente?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Escala"
+        },
+        {
+          "key": "b",
+          "text": "Precisión"
+        },
+        {
+          "key": "c",
+          "text": "Control"
+        },
+        {
+          "key": "d",
+          "text": "Manipulación"
+        }
+      ],
+      "correctAnswerKeys": [
+        "a"
+      ]
+    },
+    {
+      "externalId": "q-35",
+      "text": "Los investigadores tienen control total sobre la situación en un estudio de caso.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "false"
+      ]
+    },
+    {
+      "externalId": "q-36",
+      "text": "Los experimentos se lanzan cuando se desea control sobre la situación y se quiere manipular el comportamiento.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-37",
+      "text": "¿Qué implica que los eventos se organicen para simular su aparición en el mundo real en un experimento?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "a",
+          "text": "Que el experimento es 'on-line'"
+        },
+        {
+          "key": "b",
+          "text": "Que el experimento es 'off-line'"
+        },
+        {
+          "key": "c",
+          "text": "Que el experimento es 'human-oriented'"
+        },
+        {
+          "key": "d",
+          "text": "Que el experimento es 'technology-oriented'"
+        }
+      ],
+      "correctAnswerKeys": [
+        "b"
+      ]
+    }
+  ]
+}
+[chunk-2-parsed] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":19,"types":{"single_choice":7,"true_false":11,"multiple_choice":1},"sampleTexts":["\u00BFQu\u00E9 tipo de investigaci\u00F3n se enfoca en la manipulaci\u00F3n directa, precisa y siste","Los experimentos pueden ser \u0027human-oriented\u0027 o \u0027technology-oriented\u0027.","En un experimento \u0027human-oriented\u0027, \u00BFqu\u00E9 se aplica a los objetos?"]}
+--- GEMINI RESPONSE: chunk-1 model=gemini-2.5-flash len=12212 parsedQuestions=21 ---
+Parse: parsed OK
+{
+  "cqifVersion": "2.0",
+  "quiz": {
+    "title": "CraftQuest Quiz",
+    "description": "Quiz generated from source chunk 1 of 2."
+  },
+  "questions": [
+    {
+      "externalId": "q-1",
+      "text": "El propósito de los ejercicios de asignación es ilustrar cómo se pueden usar los experimentos en la evaluación.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-2",
+      "text": "La nueva versión del libro es una revisión y una extensión de una versión anterior publicada en el año 2000.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-3",
+      "text": "¿Qué capítulo de la Parte I del libro es completamente nuevo en la versión revisada?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "k1",
+          "text": "Capítulo 2: Estrategias Empíricas"
+        },
+        {
+          "key": "k2",
+          "text": "Capítulo 4: Revisiones Sistemáticas de Literatura"
+        },
+        {
+          "key": "k3",
+          "text": "Capítulo 6: Proceso del Experimento"
+        },
+        {
+          "key": "k4",
+          "text": "Capítulo 1: Introducción"
+        }
+      ],
+      "correctAnswerKeys": [
+        "k2"
+      ]
+    },
+    {
+      "externalId": "q-4",
+      "text": "¿Quién envió el correo electrónico que desencadenó la revisión del libro?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "k1",
+          "text": "Prof. Giuseppe Visaggio"
+        },
+        {
+          "key": "k2",
+          "text": "Dr. Khaled El Emam"
+        },
+        {
+          "key": "k3",
+          "text": "Mr. Alan Kelon Oliveira de Moraes"
+        },
+        {
+          "key": "k4",
+          "text": "Dr. Lars Bratthall"
+        }
+      ],
+      "correctAnswerKeys": [
+        "k3"
+      ]
+    },
+    {
+      "externalId": "q-5",
+      "text": "¿Qué tipo de nuevo material se añadió a la versión actual del libro?",
+      "type": "multiple_choice",
+      "answerOptions": [
+        {
+          "key": "k1",
+          "text": "Revisiones sistemáticas de literatura"
+        },
+        {
+          "key": "k2",
+          "text": "Investigación de estudios de caso"
+        },
+        {
+          "key": "k3",
+          "text": "Nuevas secciones sobre replicación y ética"
+        },
+        {
+          "key": "k4",
+          "text": "Ejemplos de experimentos de hardware"
+        }
+      ],
+      "correctAnswerKeys": [
+        "k1",
+        "k2"
+      ]
+    },
+    {
+      "externalId": "q-6",
+      "text": "El profesor Giuseppe Visaggio fue el primer usuario externo principal del libro y proporcionó comentarios valiosos.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-7",
+      "text": "¿Quiénes proporcionaron los datos para el ejemplo de diseño orientado a objetos?",
+      "type": "multiple_choice",
+      "answerOptions": [
+        {
+          "key": "k1",
+          "text": "Dr. Lionel Briand"
+        },
+        {
+          "key": "k2",
+          "text": "Dr. Christian Bunse"
+        },
+        {
+          "key": "k3",
+          "text": "Dr. John Daly"
+        },
+        {
+          "key": "k4",
+          "text": "Dr. Thomas Thelin"
+        }
+      ],
+      "correctAnswerKeys": [
+        "k1",
+        "k2",
+        "k3"
+      ]
+    },
+    {
+      "externalId": "q-8",
+      "text": "Los borradores iniciales del libro fueron evaluados internamente por el Grupo de Investigación de Ingeniería de Software de la Universidad de Lund.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-9",
+      "text": "¿En qué año se acuñó el término 'ingeniería de software'?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "k1",
+          "text": "1950"
+        },
+        {
+          "key": "k2",
+          "text": "1968"
+        },
+        {
+          "key": "k3",
+          "text": "1975"
+        },
+        {
+          "key": "k4",
+          "text": "1980"
+        }
+      ],
+      "correctAnswerKeys": [
+        "k2"
+      ]
+    },
+    {
+      "externalId": "q-10",
+      "text": "Según la definición de IEEE, ¿cuáles son los tres aspectos de particular importancia en la ingeniería de software?",
+      "type": "multiple_choice",
+      "answerOptions": [
+        {
+          "key": "k1",
+          "text": "Un enfoque sistemático y disciplinado"
+        },
+        {
+          "key": "k2",
+          "text": "La importancia de la cuantificación"
+        },
+        {
+          "key": "k3",
+          "text": "Un proceso de software a través de fases del ciclo de vida"
+        },
+        {
+          "key": "k4",
+          "text": "La creatividad del desarrollador"
+        }
+      ],
+      "correctAnswerKeys": [
+        "k1",
+        "k2",
+        "k3"
+      ]
+    },
+    {
+      "externalId": "q-11",
+      "text": "¿Qué modelo de proceso de mejora está adaptado para el desarrollo de software y fue definido por Basili?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "k1",
+          "text": "Ciclo Plan/Do/Study/Act"
+        },
+        {
+          "key": "k2",
+          "text": "Capability Maturity Model (CMM)"
+        },
+        {
+          "key": "k3",
+          "text": "Quality Improvement Paradigm (QIP)"
+        },
+        {
+          "key": "k4",
+          "text": "Modelo en cascada"
+        }
+      ],
+      "correctAnswerKeys": [
+        "k3"
+      ]
+    },
+    {
+      "externalId": "q-12",
+      "text": "El Capability Maturity Model (CMM) tiene cinco niveles de madurez con áreas de proceso clave en cada nivel.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-13",
+      "text": "¿Cuál es la única evaluación 'real' de un proceso o propuesta de mejora de procesos?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "k1",
+          "text": "Construir un prototipo del proceso"
+        },
+        {
+          "key": "k2",
+          "text": "Realizar simulaciones del proceso"
+        },
+        {
+          "key": "k3",
+          "text": "Tener a las personas usando el proceso"
+        },
+        {
+          "key": "k4",
+          "text": "Comparar con modelos teóricos"
+        }
+      ],
+      "correctAnswerKeys": [
+        "k3"
+      ]
+    },
+    {
+      "externalId": "q-14",
+      "text": "¿Cuáles son los cuatro métodos de investigación en ingeniería de software resumidos por Glass y presentados por Basili?",
+      "type": "multiple_choice",
+      "answerOptions": [
+        {
+          "key": "k1",
+          "text": "Científico"
+        },
+        {
+          "key": "k2",
+          "text": "Ingeniería"
+        },
+        {
+          "key": "k3",
+          "text": "Empírico"
+        },
+        {
+          "key": "k4",
+          "text": "Analítico"
+        },
+        {
+          "key": "k5",
+          "text": "Intuitivo"
+        }
+      ],
+      "correctAnswerKeys": [
+        "k1",
+        "k2",
+        "k3",
+        "k4"
+      ]
+    },
+    {
+      "externalId": "q-15",
+      "text": "En ingeniería de software, los experimentos a menudo sufren de problemas inherentes a la realización de experimentación.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-16",
+      "text": "¿Qué se busca ilustrar con los ejercicios de asignación mencionados en el prefacio?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "k1",
+          "text": "Cómo se pueden usar los experimentos en la evaluación."
+        },
+        {
+          "key": "k2",
+          "text": "La complejidad de los experimentos en la industria."
+        },
+        {
+          "key": "k3",
+          "text": "La importancia de la crítica a trabajos de otros."
+        },
+        {
+          "key": "k4",
+          "text": "Problemas que requieren experimentos complejos."
+        }
+      ],
+      "correctAnswerKeys": [
+        "k1"
+      ]
+    },
+    {
+      "externalId": "q-17",
+      "text": "¿Quiénes realizaron los primeros experimentos en ingeniería de software a finales de la década de 1960?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "k1",
+          "text": "Basili et al."
+        },
+        {
+          "key": "k2",
+          "text": "Grant y Sackmann"
+        },
+        {
+          "key": "k3",
+          "text": "Tichy et al."
+        },
+        {
+          "key": "k4",
+          "text": "Sjøberg et al."
+        }
+      ],
+      "correctAnswerKeys": [
+        "k2"
+      ]
+    },
+    {
+      "externalId": "q-18",
+      "text": "¿Cuáles son las estrategias empíricas en ingeniería de software mencionadas en el texto?",
+      "type": "multiple_choice",
+      "answerOptions": [
+        {
+          "key": "k1",
+          "text": "Establecer experimentos formales"
+        },
+        {
+          "key": "k2",
+          "text": "Estudiar proyectos reales en la industria (estudios de caso)"
+        },
+        {
+          "key": "k3",
+          "text": "Realizar encuestas a través de entrevistas"
+        },
+        {
+          "key": "k4",
+          "text": "Desarrollar modelos matemáticos"
+        }
+      ],
+      "correctAnswerKeys": [
+        "k1",
+        "k2",
+        "k3"
+      ]
+    },
+    {
+      "externalId": "q-19",
+      "text": "El libro proporciona ejemplos de estudios realizados por los propios autores.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ]
+    },
+    {
+      "externalId": "q-20",
+      "text": "¿Qué tipo de problemas pueden ser abordados por experimentos relativamente simples en las asignaciones?",
+      "type": "single_choice",
+      "answerOptions": [
+        {
+          "key": "k1",
+          "text": "Problemas que requieren una gran inversión de tiempo y recursos."
+        },
+        {
+          "key": "k2",
+          "text": "Problemas que pueden ser abordados por experimentos bastante simples."
+        },
+        {
+          "key": "k3",
+          "text": "Problemas que solo pueden ser resueltos por expertos en la materia."
+        },
+        {
+          "key": "k4",
+          "text": "Problemas que no tienen soluciones empíricas."
+        }
+      ],
+      "correctAnswerKeys": [
+        "k2"
+      ]
+    },
+    {
+      "externalId": "q-21",
+      "text": "Se recomienda a los profesores formular una asignación dentro de su área de experiencia para ejemplificar los conceptos del libro.",
+      "type": "true_false",
+      "answerOptions": [
+        
+... [truncated 212 chars] ...
+[chunk-1-parsed] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":21,"types":{"true_false":8,"single_choice":8,"multiple_choice":5},"sampleTexts":["El prop\u00F3sito de los ejercicios de asignaci\u00F3n es ilustrar c\u00F3mo se pueden usar los","La nueva versi\u00F3n del libro es una revisi\u00F3n y una extensi\u00F3n de una versi\u00F3n anteri","\u00BFQu\u00E9 cap\u00EDtulo de la Parte I del libro es completamente nuevo en la versi\u00F3n revis"]}
+[merge.final] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":40,"types":{"true_false":19,"single_choice":15,"multiple_choice":6},"sampleTexts":["El prop\u00F3sito de los ejercicios de asignaci\u00F3n es ilustrar c\u00F3mo se pueden usar los","La nueva versi\u00F3n del libro es una revisi\u00F3n y una extensi\u00F3n de una versi\u00F3n anteri","\u00BFQu\u00E9 cap\u00EDtulo de la Parte I del libro es completamente nuevo en la versi\u00F3n revis"]}
+[post-gemini] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":40,"types":{"true_false":19,"single_choice":15,"multiple_choice":6},"sampleTexts":["El prop\u00F3sito de los ejercicios de asignaci\u00F3n es ilustrar c\u00F3mo se pueden usar los","La nueva versi\u00F3n del libro es una revisi\u00F3n y una extensi\u00F3n de una versi\u00F3n anteri","\u00BFQu\u00E9 cap\u00EDtulo de la Parte I del libro es completamente nuevo en la versi\u00F3n revis"]}
+[sanitize] Question type filter applied | {"before":40,"after":40,"allowedTypes":["single_choice","multiple_choice","true_false"],"typesBefore":{"true_false":19,"single_choice":15,"multiple_choice":6},"typesAfter":{"true_false":19,"single_choice":15,"multiple_choice":6}}
+[quiz.created] New quiz for AI import | {"targetQuizId":"c85496fa-2e94-4e81-ac35-c00a513ca379"}
+[import.populate] Import batch snapshot | {"totalRows":40,"validRows":40,"errorRows":0,"batchStatus":"ready_for_review","rows":[{"Row":1,"Status":"valid","ErrorCode":null,"message":null},{"Row":2,"Status":"valid","ErrorCode":null,"message":null},{"Row":3,"Status":"valid","ErrorCode":null,"message":null},{"Row":4,"Status":"valid","ErrorCode":null,"message":null},{"Row":5,"Status":"valid","ErrorCode":null,"message":null},{"Row":6,"Status":"valid","ErrorCode":null,"message":null},{"Row":7,"Status":"valid","ErrorCode":null,"message":null},{"Row":8,"Status":"valid","ErrorCode":null,"message":null},{"Row":9,"Status":"valid","ErrorCode":null,"message":null},{"Row":10,"Status":"valid","ErrorCode":null,"message":null}]}
+[import.batch] Import batch created from CQIF | {"ImportId":"1857b24c-eaa2-4c9a-ac1d-94c5be87283d","Status":"ready_for_review","TotalQuestionsDetected":40,"ValidQuestions":40,"QuestionsWithErrors":0,"QuestionsWithWarnings":0}
+=== AI generation trace ended ===

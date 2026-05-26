@@ -1,0 +1,138 @@
+import 'package:craftquest_app/core/network/api_client.dart';
+import 'package:craftquest_app/features/quizzes/data/models/quiz_models.dart';
+import 'package:craftquest_app/core/network/dio_error_mapper.dart';
+import 'package:dio/dio.dart';
+
+class QuizRepository {
+  QuizRepository(this._apiClient);
+
+  final ApiClient _apiClient;
+
+  Future<List<QuizModel>> getMyQuizzes() async {
+    final response =
+        await _apiClient.dio.get<List<dynamic>>('/api/quizzes');
+    return (response.data ?? [])
+        .map((e) => QuizModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<QuizModel> getQuiz(String quizId) async {
+    final response = await _apiClient.dio.get<Map<String, dynamic>>(
+      '/api/quizzes/$quizId',
+    );
+    return QuizModel.fromJson(response.data!);
+  }
+
+  Future<QuizModel> createQuiz({
+    required String title,
+    String? description,
+  }) async {
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/api/quizzes',
+      data: {
+        'title': title,
+        if (description != null && description.isNotEmpty)
+          'description': description,
+      },
+    );
+    return QuizModel.fromJson(response.data!);
+  }
+
+  Future<List<QuestionTypeModel>> getQuestionTypes() async {
+    final response =
+        await _apiClient.dio.get<List<dynamic>>('/api/question-types');
+    return (response.data ?? [])
+        .map((e) => QuestionTypeModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<QuestionModel> createQuestion({
+    required String quizId,
+    required String questionType,
+    required String text,
+    double points = 1,
+    required List<Map<String, dynamic>> answerOptions,
+    required List<String> correctAnswerKeys,
+  }) async {
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/api/quizzes/$quizId/questions',
+      data: {
+        'questionType': questionType,
+        'text': text,
+        'points': points,
+        'answerOptions': answerOptions,
+        'correctAnswerKeys': correctAnswerKeys,
+      },
+    );
+    return QuestionModel.fromJson(response.data!);
+  }
+
+  Future<QuestionModel> updateQuestion({
+    required String quizId,
+    required String questionId,
+    required String questionType,
+    required String text,
+    double points = 1,
+    required List<Map<String, dynamic>> answerOptions,
+    required List<String> correctAnswerKeys,
+  }) async {
+    final response = await _apiClient.dio.put<Map<String, dynamic>>(
+      '/api/quizzes/$quizId/questions/$questionId',
+      data: {
+        'questionType': questionType,
+        'text': text,
+        'points': points,
+        'answerOptions': answerOptions,
+        'correctAnswerKeys': correctAnswerKeys,
+      },
+    );
+    return QuestionModel.fromJson(response.data!);
+  }
+
+  Future<void> deleteQuestion({
+    required String quizId,
+    required String questionId,
+  }) async {
+    await _apiClient.dio.delete<void>(
+      '/api/quizzes/$quizId/questions/$questionId',
+    );
+  }
+
+  Future<List<QuestionModel>> getQuestions(String quizId) async {
+    final response = await _apiClient.dio.get<List<dynamic>>(
+      '/api/quizzes/$quizId/questions',
+    );
+    return (response.data ?? [])
+        .map((e) => QuestionModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<QuizModel> updateQuiz({
+    required String quizId,
+    String? title,
+    String? description,
+  }) async {
+    final response = await _apiClient.dio.patch<Map<String, dynamic>>(
+      '/api/quizzes/$quizId',
+      data: {
+        if (title != null) 'title': title,
+        if (description != null) 'description': description,
+      },
+    );
+    return QuizModel.fromJson(response.data!);
+  }
+
+  Future<QuizModel> publishQuiz(String quizId) async {
+    final response = await _apiClient.dio.patch<Map<String, dynamic>>(
+      '/api/quizzes/$quizId',
+      data: {'publicationStatus': 'published'},
+    );
+    return QuizModel.fromJson(response.data!);
+  }
+
+  Future<void> deleteQuiz(String quizId) async {
+    await _apiClient.dio.delete<void>('/api/quizzes/$quizId');
+  }
+
+  String mapError(DioException error) => DioErrorMapper.map(error);
+}

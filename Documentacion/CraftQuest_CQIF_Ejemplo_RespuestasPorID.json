@@ -1,0 +1,88 @@
+{
+  "cqifVersion": "2.0",
+  "quiz": {
+    "title": "Practica de supuestos y razonamiento",
+    "description": "Ejemplo v4 donde la respuesta correcta no depende de A/B/C/D.",
+    "defaultPoints": 1,
+    "defaultRandomizeAnswerOptions": true,
+    "tags": [
+      "razonamiento",
+      "supuestos"
+    ]
+  },
+  "questions": [
+    {
+      "externalId": "Q-SUP-001",
+      "section": "Razonamiento",
+      "order": 1,
+      "type": "single_choice",
+      "text": "Analice los siguientes tres supuestos y seleccione la alternativa correcta.",
+      "points": 1,
+      "difficulty": "medium",
+      "randomizeAnswerOptions": true,
+      "scoringPolicy": "strict",
+      "answerOptions": [
+        {
+          "key": "ONLY_1",
+          "text": "Solo Supuesto 1 correcto",
+          "defaultOrder": 1
+        },
+        {
+          "key": "ONE_TWO",
+          "text": "Supuesto 1 y 2 correctos",
+          "defaultOrder": 2
+        },
+        {
+          "key": "ALL",
+          "text": "Todos los supuestos son correctos",
+          "defaultOrder": 3
+        },
+        {
+          "key": "NONE",
+          "text": "Ningun Supuesto es correcto",
+          "defaultOrder": 4
+        }
+      ],
+      "correctAnswerKeys": [
+        "ALL"
+      ],
+      "justification": {
+        "text": "Los tres supuestos cumplen la condicion indicada; por eso la alternativa correcta es 'Todos los supuestos son correctos'.",
+        "status": "needs_review",
+        "visibility": "after_quiz",
+        "sources": []
+      }
+    },
+    {
+      "externalId": "Q-TF-001",
+      "section": "Bases de datos",
+      "order": 2,
+      "type": "true_false",
+      "text": "Azure SQL Database es un servicio administrado de base de datos relacional.",
+      "points": 1,
+      "difficulty": "easy",
+      "randomizeAnswerOptions": false,
+      "answerOptions": [
+        {
+          "key": "TRUE",
+          "text": "Verdadero",
+          "defaultOrder": 1
+        },
+        {
+          "key": "FALSE",
+          "text": "Falso",
+          "defaultOrder": 2
+        }
+      ],
+      "correctAnswerKeys": [
+        "TRUE"
+      ],
+      "justification": {
+        "text": "Azure SQL Database es un servicio administrado basado en el motor de SQL Server.",
+        "status": "needs_review",
+        "visibility": "after_answer",
+        "sources": []
+      }
+    }
+  ]
+}

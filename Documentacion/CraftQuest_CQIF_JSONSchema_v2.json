@@ -1,0 +1,276 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://craftquestai.com/schemas/cqif-v2.schema.json",
+  "title": "CraftQuest Question Import Format v2",
+  "type": "object",
+  "required": [
+    "cqifVersion",
+    "quiz",
+    "questions"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cqifVersion": {
+      "type": "string",
+      "const": "2.0"
+    },
+    "quiz": {
+      "type": "object",
+      "required": [
+        "title"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "defaultPoints": {
+          "type": "number",
+          "minimum": 0
+        },
+        "defaultRandomizeAnswerOptions": {
+          "type": "boolean",
+          "default": true
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "questions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/question"
+      }
+    }
+  },
+  "$defs": {
+    "questionType": {
+      "type": "string",
+      "enum": [
+        "single_choice",
+        "multiple_choice",
+        "true_false",
+        "image_choice",
+        "image_based_question"
+      ]
+    },
+    "question": {
+      "type": "object",
+      "required": [
+        "type",
+        "text",
+        "answerOptions",
+        "correctAnswerKeys"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "externalId": {
+          "type": "string"
+        },
+        "section": {
+          "type": "string"
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "type": {
+          "$ref": "#/$defs/questionType"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "points": {
+          "type": "number",
+          "minimum": 0
+        },
+        "difficulty": {
+          "type": "string",
+          "enum": [
+            "easy",
+            "medium",
+            "hard"
+          ]
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "randomizeAnswerOptions": {
+          "type": "boolean",
+          "default": true
+        },
+        "scoringPolicy": {
+          "type": "string",
+          "enum": [
+            "strict",
+            "partial_future"
+          ],
+          "default": "strict"
+        },
+        "media": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/mediaRef"
+          }
+        },
+        "answerOptions": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "$ref": "#/$defs/answerOption"
+          }
+        },
+        "correctAnswerKeys": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_\\-\\.]+$"
+          },
+          "uniqueItems": true,
+          "description": "Keys from answerOptions. These are not visual labels."
+        },
+        "justification": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "text": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "missing",
+                "ai_generated",
+                "needs_review",
+                "approved"
+              ]
+            },
+            "visibility": {
+              "type": "string",
+              "enum": [
+                "never",
+                "after_answer",
+                "after_quiz",
+                "teacher_only"
+              ]
+            },
+            "sources": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/source"
+              }
+            }
+          }
+        }
+      }
+    },
+    "answerOption": {
+      "type": "object",
+      "required": [
+        "key"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_\\-\\.]+$",
+          "description": "Stable key for import. The backend converts it to StableKey and AnswerOptionId."
+        },
+        "text": {
+          "type": "string"
+        },
+        "mediaFileName": {
+          "type": "string"
+        },
+        "mediaUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "defaultOrder": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "text"
+          ]
+        },
+        {
+          "required": [
+            "mediaFileName"
+          ]
+        },
+        {
+          "required": [
+            "mediaUrl"
+          ]
+        }
+      ]
+    },
+    "mediaRef": {
+      "type": "object",
+      "required": [
+        "role"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": [
+            "question_image",
+            "explanation_image",
+            "source_image"
+          ]
+        },
+        "fileName": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "altText": {
+          "type": "string"
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "provider": {
+          "type": "string"
+        },
+        "snippet": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
