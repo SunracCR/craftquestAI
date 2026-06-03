@@ -234,6 +234,7 @@ public class QuestionImportService(
     {
         var batch = await LoadOwnedBatchAsync(userId, importId, cancellationToken);
 
+        var warningCount = batch.Rows.Count(r => r.Status == "warning");
         var validRows = batch.Rows
             .Where(r => r.Status is "valid" or "warning")
             .OrderBy(r => r.RowNumber)
@@ -264,6 +265,10 @@ public class QuestionImportService(
         {
             ImportId = batch.QuestionImportBatchId,
             Status = batch.Status,
+            TotalQuestionsDetected = batch.TotalRows,
+            ValidQuestions = batch.ValidRows,
+            QuestionsWithWarnings = warningCount,
+            QuestionsWithErrors = batch.ErrorRows,
             Questions = questions,
             ImportableQuestionCount = importableCount,
             MaxQuestionsPerQuiz = maxPerQuiz,

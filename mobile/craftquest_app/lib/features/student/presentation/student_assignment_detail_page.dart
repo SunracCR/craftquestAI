@@ -4,6 +4,8 @@ import 'package:craftquest_app/core/utils/assignment_dates.dart';
 import 'package:craftquest_app/core/widgets/app_section_card.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/features/practice/presentation/practice_navigation.dart';
+import 'package:craftquest_app/features/practice/presentation/widgets/practice_launch_options_card.dart';
+import 'package:craftquest_app/features/student/data/assignment_randomize_preference_store.dart';
 import 'package:craftquest_app/features/student/data/models/student_models.dart';
 import 'package:craftquest_app/features/student/presentation/student_assignment_attempts_page.dart';
 import 'package:craftquest_app/features/student/presentation/student_assignment_progress_page.dart';
@@ -11,7 +13,7 @@ import 'package:craftquest_app/features/student/presentation/student_assignment_
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
-class StudentAssignmentDetailPage extends StatelessWidget {
+class StudentAssignmentDetailPage extends StatefulWidget {
   const StudentAssignmentDetailPage({
     super.key,
     required this.assignment,
@@ -20,6 +22,45 @@ class StudentAssignmentDetailPage extends StatelessWidget {
 
   final StudentAssignmentModel assignment;
   final VoidCallback onChanged;
+
+  @override
+  State<StudentAssignmentDetailPage> createState() =>
+      _StudentAssignmentDetailPageState();
+}
+
+class _StudentAssignmentDetailPageState extends State<StudentAssignmentDetailPage> {
+  final _assignmentRandomizeStore = AssignmentRandomizePreferenceStore();
+  bool _randomizeQuestions = false;
+
+  StudentAssignmentModel get assignment => widget.assignment;
+
+  bool get _effectiveRandomize => assignment.allowStudentRandomizeQuestions
+      ? _randomizeQuestions
+      : assignment.randomizeQuestions;
+
+  @override
+  void initState() {
+    super.initState();
+    _randomizeQuestions = assignment.randomizeQuestions;
+    _loadAssignmentRandomizePreference();
+  }
+
+  Future<void> _loadAssignmentRandomizePreference() async {
+    if (!assignment.allowStudentRandomizeQuestions) {
+      return;
+    }
+    final saved =
+        await _assignmentRandomizeStore.load(assignment.assignmentId);
+    if (!mounted || saved == null) {
+      return;
+    }
+    setState(() => _randomizeQuestions = saved);
+  }
+
+  Future<void> _updateRandomizeQuestions(bool value) async {
+    setState(() => _randomizeQuestions = value);
+    await _assignmentRandomizeStore.save(assignment.assignmentId, value);
+  }
 
   String _formatDate(String locale, DateTime date) =>
       AssignmentDates.formatWithLocale(locale, date);
@@ -43,14 +84,19 @@ class StudentAssignmentDetailPage extends StatelessWidget {
 
   Future<void> _start(BuildContext context) async {
     if (!assignment.isOpen) return;
-    await openPracticeSession(
+    final shouldRefresh = await openPracticeSession(
       context,
       quizId: assignment.quizId,
       quizTitle: assignment.title,
       classId: assignment.classId,
       assignmentId: assignment.assignmentId,
+      assignmentRandomizeQuestions: _effectiveRandomize,
+      allowStudentRandomizeQuestions: assignment.allowStudentRandomizeQuestions,
+      forfeitExitCountsAsAttempt: assignment.forfeitExitApplies,
     );
-    onChanged();
+    if (shouldRefresh == true) {
+      widget.onChanged();
+    }
   }
 
   void _openMyAttempts(BuildContext context) {
@@ -230,7 +276,44 @@ class StudentAssignmentDetailPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          if (canStart)
+          if (canStart) ...[
+            if (assignment.allowStudentRandomizeQuestions)
+              PracticeLaunchOptionsCard(
+                randomizeQuestions: _randomizeQuestions,
+                showTimer: false,
+                showTimerOption: false,
+                onRandomizeQuestionsChanged: _updateRandomizeQuestions,
+                onShowTimerChanged: (_) {},
+                randomizeQuestionsHint: l10n.practiceRandomizeQuestionsHint,
+              )
+            else
+              AppSectionCard(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      assignment.randomizeQuestions
+                          ? Icons.shuffle_rounded
+                          : Icons.format_list_numbered_rounded,
+                      color: AppColors.accentViolet,
+                      size: 22,
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        assignment.randomizeQuestions
+                            ? l10n.studentAssignmentRandomizeLockedShuffled
+                            : l10n.studentAssignmentRandomizeLockedOrdered,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppColors.textSecondary,
+                              height: 1.4,
+                            ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: AppSpacing.md),
             SizedBox(
               width: double.infinity,
               height: 48,
@@ -249,8 +332,8 @@ class StudentAssignmentDetailPage extends StatelessWidget {
                   style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
               ),
-            )
-          else
+            ),
+          ] else
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(

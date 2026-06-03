@@ -89,11 +89,11 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.craftquest" "\0"
+            VALUE "CompanyName", "com.craftquestai" "\0"
             VALUE "FileDescription", "craftquest_app" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "craftquest_app" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.craftquest. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 com.craftquestai. All rights reserved." "\0"
             VALUE "OriginalFilename", "craftquest_app.exe" "\0"
             VALUE "ProductName", "craftquest_app" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"

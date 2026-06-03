@@ -1,7 +1,11 @@
 import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
+import 'package:craftquest_app/core/widgets/app_padded_scroll.dart';
+import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/features/teacher/data/teacher_class_repository.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 class TeacherCreateClassPage extends StatefulWidget {
@@ -57,13 +61,12 @@ class _TeacherCreateClassPageState extends State<TeacherCreateClassPage> {
         );
       }
       if (mounted) Navigator.pop(context, true);
-    } catch (e) {
+    } on DioException catch (e) {
+      if (mounted) context.showDioErrorSnackBar(e);
+    } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: AppColors.error,
-          ),
+        context.showErrorSnackBar(
+          DioErrorMapper.genericMessage(AppLocalizations.of(context)!),
         );
       }
     } finally {
@@ -94,8 +97,8 @@ class _TeacherCreateClassPageState extends State<TeacherCreateClassPage> {
       ),
       body: Form(
         key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(20),
+        child: AppPaddedScrollBody(
+          child: ListView(
           children: [
             Text(
               l10n.teacherClassNameLabel,
@@ -182,6 +185,7 @@ class _TeacherCreateClassPageState extends State<TeacherCreateClassPage> {
               ),
             ),
           ],
+        ),
         ),
       ),
     );

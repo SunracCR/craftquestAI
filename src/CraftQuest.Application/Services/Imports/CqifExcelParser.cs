@@ -152,6 +152,18 @@ public static class CqifExcelParser
                 continue;
             }
 
+            if (IsJustificationHeader(normalized))
+            {
+                map["justification"] = columnIndex;
+                continue;
+            }
+
+            if (IsSourcePageHeader(normalized))
+            {
+                map["source_page"] = columnIndex;
+                continue;
+            }
+
             var optionKey = TryParseOptionColumn(normalized);
             if (optionKey is not null)
             {
@@ -211,6 +223,30 @@ public static class CqifExcelParser
             points = parsedPoints;
         }
 
+        var justificationText = GetCell(row, columnMap, "justification");
+        var pageRaw = GetCell(row, columnMap, "source_page");
+        int? pageNumber = int.TryParse(pageRaw, out var parsedPage) ? parsedPage : null;
+
+        CqifJustification? justification = null;
+        if (!string.IsNullOrWhiteSpace(justificationText))
+        {
+            justification = new CqifJustification
+            {
+                Text = justificationText,
+                Visibility = "never",
+                Status = "approved",
+            };
+            if (pageNumber is > 0)
+            {
+                justification.Sources.Add(new CqifJustificationSource
+                {
+                    PageNumber = pageNumber,
+                    Url = $"craftquest://source#page={pageNumber.Value}",
+                    IsPrimary = true,
+                });
+            }
+        }
+
         return new CqifQuestion
         {
             ExternalId = GetCell(row, columnMap, "external_id"),
@@ -223,6 +259,7 @@ public static class CqifExcelParser
             ScoringPolicy = "strict",
             AnswerOptions = answerOptions,
             CorrectAnswerKeys = correctKeys,
+            Justification = justification,
         };
     }
 
@@ -304,6 +341,24 @@ public static class CqifExcelParser
 
     private static bool IsExternalIdHeader(string h) =>
         h is "id" or "external_id" or "external id" or "codigo";
+
+    private static bool IsJustificationHeader(string h) =>
+        h is "justificacion"
+            or "justificación"
+            or "justification"
+            or "justificacao"
+            or "explicacion"
+            or "explicación"
+            or "explanation";
+
+    private static bool IsSourcePageHeader(string h) =>
+        h is "pagina fuente"
+            or "pagina"
+            or "página"
+            or "página fuente"
+            or "source page"
+            or "page"
+            or "pagina origem";
 
     private static string? TryParseOptionColumn(string header)
     {

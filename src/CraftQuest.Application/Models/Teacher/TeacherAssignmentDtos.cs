@@ -1,3 +1,5 @@
+using CraftQuest.Application.Models.Analytics;
+
 namespace CraftQuest.Application.Models.Teacher;
 
 public sealed class AssignmentSummaryDto
@@ -12,6 +14,9 @@ public sealed class AssignmentSummaryDto
     public required DateTime? StartsAt { get; init; }
     public required DateTime? DueAt { get; init; }
     public required int? MaxAttempts { get; init; }
+    public required bool RandomizeQuestions { get; init; }
+    public required bool AllowStudentRandomizeQuestions { get; init; }
+    public required bool ForfeitExitCountsAsAttempt { get; init; }
     public required int CompletedCount { get; init; }
     public required int TotalMembers { get; init; }
     public required DateTime CreatedAt { get; init; }
@@ -30,6 +35,9 @@ public sealed class AssignmentDetailDto
     public required DateTime? StartsAt { get; init; }
     public required DateTime? DueAt { get; init; }
     public required int? MaxAttempts { get; init; }
+    public required bool RandomizeQuestions { get; init; }
+    public required bool AllowStudentRandomizeQuestions { get; init; }
+    public required bool ForfeitExitCountsAsAttempt { get; init; }
     public required int CompletedCount { get; init; }
     public required int TotalMembers { get; init; }
     public required DateTime CreatedAt { get; init; }
@@ -76,6 +84,9 @@ public sealed class CreateAssignmentRequest
 
     /// <summary>never | after_attempt | after_due_date | teacher_only</summary>
     public string ShowCorrectAnswersMode { get; init; } = "after_due_date";
+    public bool RandomizeQuestions { get; init; }
+    public bool AllowStudentRandomizeQuestions { get; init; }
+    public bool ForfeitExitCountsAsAttempt { get; init; }
 }
 
 public sealed class UpdateAssignmentRequest
@@ -88,6 +99,9 @@ public sealed class UpdateAssignmentRequest
 
     /// <summary>never | after_attempt | after_due_date | teacher_only</summary>
     public string ShowCorrectAnswersMode { get; init; } = "after_due_date";
+    public bool RandomizeQuestions { get; init; }
+    public bool AllowStudentRandomizeQuestions { get; init; }
+    public bool ForfeitExitCountsAsAttempt { get; init; }
 }
 
 public sealed class AssignmentAnalyticsDto
@@ -104,6 +118,8 @@ public sealed class AssignmentAnalyticsDto
     public required int TotalSessions { get; init; }
     public required IReadOnlyList<AssignmentStudentProgressDto> Students { get; init; }
     public required IReadOnlyList<AssignmentQuestionDifficultyDto> HardQuestions { get; init; }
+    /// <summary>Per-question distractor rates for this assignment's finished sessions (RF-ANA-001).</summary>
+    public required IReadOnlyList<QuestionAnalyticsDto> DistractorQuestions { get; init; }
     public required IReadOnlyList<ScoreDistributionBucketDto> ScoreDistribution { get; init; }
 }
 

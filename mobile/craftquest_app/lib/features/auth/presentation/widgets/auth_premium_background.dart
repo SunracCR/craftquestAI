@@ -1,7 +1,8 @@
+import 'package:craftquest_app/core/assets/auth_assets.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
-/// Fondo atmosférico para pantallas de autenticación (gradiente + halos).
+/// Fondo de autenticación (imagen + velo para legibilidad del formulario).
 class AuthPremiumBackground extends StatelessWidget {
   const AuthPremiumBackground({super.key, required this.child});
 
@@ -9,8 +10,42 @@ class AuthPremiumBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(
+          AuthAssets.loginBackground,
+          fit: BoxFit.cover,
+          alignment: Alignment.center,
+          filterQuality: FilterQuality.high,
+          errorBuilder: (_, __, ___) => const _GradientFallbackBackground(),
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                AppColors.background.withValues(alpha: 0.35),
+                AppColors.background.withValues(alpha: 0.72),
+                AppColors.background.withValues(alpha: 0.88),
+              ],
+            ),
+          ),
+        ),
+        child,
+      ],
+    );
+  }
+}
+
+class _GradientFallbackBackground extends StatelessWidget {
+  const _GradientFallbackBackground();
+
+  @override
+  Widget build(BuildContext context) {
+    return const DecoratedBox(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -22,70 +57,29 @@ class AuthPremiumBackground extends StatelessWidget {
           stops: [0.0, 0.45, 1.0],
         ),
       ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: -80,
-            right: -40,
-            child: _GlowOrb(
-              size: 220,
-              color: AppColors.accent.withValues(alpha: 0.22),
-            ),
-          ),
-          Positioned(
-            bottom: 120,
-            left: -60,
-            child: _GlowOrb(
-              size: 180,
-              color: AppColors.accentCool.withValues(alpha: 0.14),
-            ),
-          ),
-          Positioned(
-            top: MediaQuery.sizeOf(context).height * 0.35,
-            left: MediaQuery.sizeOf(context).width * 0.5 - 1,
-            child: _GlowOrb(
-              size: 120,
-              color: AppColors.accentGold.withValues(alpha: 0.08),
-            ),
-          ),
-          child,
-        ],
-      ),
-    );
-  }
-}
-
-class _GlowOrb extends StatelessWidget {
-  const _GlowOrb({required this.size, required this.color});
-
-  final double size;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(
-            colors: [color, Colors.transparent],
-          ),
-        ),
-      ),
     );
   }
 }
 
 /// Tarjeta de formulario con borde sutil y elevación premium.
 class AuthPremiumCard extends StatelessWidget {
-  const AuthPremiumCard({super.key, required this.child});
+  const AuthPremiumCard({
+    super.key,
+    required this.child,
+    this.dense = false,
+  });
 
   final Widget child;
 
+  /// Menos padding interno (p. ej. login sin scroll vertical).
+  final bool dense;
+
   @override
   Widget build(BuildContext context) {
+    final padding = dense
+        ? const EdgeInsets.fromLTRB(20, 16, 20, 16)
+        : const EdgeInsets.fromLTRB(24, 28, 24, 24);
+
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppColors.radiusMd + 4),
@@ -114,7 +108,7 @@ class AuthPremiumCard extends StatelessWidget {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+        padding: padding,
         child: child,
       ),
     );

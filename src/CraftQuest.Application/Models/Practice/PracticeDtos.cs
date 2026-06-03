@@ -10,7 +10,8 @@ public class StartPracticeSessionRequest
     public string Mode { get; set; } = "practice";
 
     /// <summary>
-    /// When set, overrides the quiz's <c>RandomizeQuestions</c> setting for this session.
+    /// When set, overrides the quiz setting for free practice. For class assignments,
+    /// only honored when the assignment allows student control.
     /// </summary>
     public bool? RandomizeQuestions { get; set; }
 

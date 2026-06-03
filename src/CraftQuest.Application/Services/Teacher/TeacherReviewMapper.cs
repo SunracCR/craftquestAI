@@ -1,5 +1,6 @@
 using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Models.Teacher;
+using CraftQuest.Application.Services.Quizzes;
 using CraftQuest.Domain.Entities;
 
 namespace CraftQuest.Application.Services.Teacher;
@@ -73,6 +74,9 @@ public static class TeacherReviewMapper
                     IsCorrect = revealCorrectAnswers && a.IsCorrectSnapshot,
                 })
                 .ToList(),
+            JustificationText = q.JustificationTextSnapshot,
+            JustificationSources = QuestionJustificationMapper.ParseSnapshotSources(
+                q.JustificationSourcesSnapshot),
         };
     }
 

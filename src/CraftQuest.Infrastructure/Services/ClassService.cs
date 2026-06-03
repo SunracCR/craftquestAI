@@ -12,12 +12,24 @@ public class ClassService(
 {
     public async Task<IReadOnlyList<TeacherClassSummaryDto>> ListTeacherClassesAsync(
         Guid teacherUserId,
+        string? status = "active",
         CancellationToken cancellationToken = default)
     {
-        var classes = await dbContext.TeacherClasses
+        var query = dbContext.TeacherClasses
             .AsNoTracking()
-            .Where(c => c.TeacherUserId == teacherUserId && c.Status == "active")
-            .OrderBy(c => c.Name)
+            .Where(c => c.TeacherUserId == teacherUserId);
+
+        query = query.Where(c => c.Status != "deleted");
+
+        if (!string.Equals(status, "all", StringComparison.OrdinalIgnoreCase))
+        {
+            var filterStatus = string.IsNullOrWhiteSpace(status) ? "active" : status.Trim().ToLowerInvariant();
+            query = query.Where(c => c.Status == filterStatus);
+        }
+
+        var classes = await query
+            .OrderBy(c => c.Status == "active" ? 0 : 1)
+            .ThenBy(c => c.Name)
             .Select(c => new
             {
                 c.ClassId,
@@ -96,7 +108,53 @@ public class ClassService(
         CancellationToken cancellationToken = default)
     {
         var entity = await LoadOwnedClassAsync(teacherUserId, classId, cancellationToken);
+        if (entity.Status == "archived")
+        {
+            return;
+        }
+
         entity.Status = "archived";
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RestoreAsync(
+        Guid teacherUserId,
+        Guid classId,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await LoadOwnedClassAsync(teacherUserId, classId, cancellationToken);
+        if (entity.Status != "archived")
+        {
+            throw new AppException(
+                "Class is not archived.",
+                400,
+                "CLASS_NOT_ARCHIVED");
+        }
+
+        entity.Status = "active";
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DeleteAsync(
+        Guid teacherUserId,
+        Guid classId,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await LoadOwnedClassAsync(teacherUserId, classId, cancellationToken);
+        if (entity.Status != "archived")
+        {
+            throw new AppException(
+                "Only archived classes can be deleted. Archive the class first.",
+                400,
+                "CLASS_MUST_BE_ARCHIVED");
+        }
+
+        if (entity.Status == "deleted")
+        {
+            return;
+        }
+
+        entity.Status = "deleted";
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
@@ -105,7 +163,7 @@ public class ClassService(
         Guid classId,
         CancellationToken cancellationToken = default)
     {
-        await EnsureTeacherOwnsClassAsync(teacherUserId, classId, cancellationToken);
+        await EnsureTeacherOwnsClassForReadAsync(teacherUserId, classId, cancellationToken);
 
         var entity = await dbContext.TeacherClasses
             .AsNoTracking()
@@ -146,6 +204,9 @@ public class ClassService(
                 StartsAt = a.StartsAt,
                 DueAt = a.DueAt,
                 MaxAttempts = a.MaxAttempts,
+                RandomizeQuestions = a.RandomizeQuestions,
+                AllowStudentRandomizeQuestions = a.AllowStudentRandomizeQuestions,
+                ForfeitExitCountsAsAttempt = a.ForfeitExitCountsAsAttempt,
                 CompletedCount = completed,
                 TotalMembers = memberCount,
                 CreatedAt = a.CreatedAt,
@@ -282,6 +343,21 @@ public class ClassService(
             c => c.ClassId == classId
                 && c.TeacherUserId == teacherUserId
                 && c.Status == "active",
+            cancellationToken);
+
+        if (!owns)
+            throw new AppException("Class not found or you do not own it.", 404);
+    }
+
+    private async Task EnsureTeacherOwnsClassForReadAsync(
+        Guid teacherUserId,
+        Guid classId,
+        CancellationToken cancellationToken)
+    {
+        var owns = await dbContext.TeacherClasses.AnyAsync(
+            c => c.ClassId == classId
+                && c.TeacherUserId == teacherUserId
+                && c.Status != "deleted",
             cancellationToken);
 
         if (!owns)

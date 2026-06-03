@@ -4,6 +4,7 @@ import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/api_client.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
+import 'package:craftquest_app/core/theme/app_media_display.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_answer_tile.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
@@ -31,6 +32,8 @@ class PracticeSessionPage extends StatefulWidget {
     this.resumeSessionId,
     this.classId,
     this.assignmentId,
+    this.allowAssignmentRandomizeOverride = false,
+    this.forfeitExitCountsAsAttempt = false,
   });
 
   final String quizId;
@@ -39,6 +42,8 @@ class PracticeSessionPage extends StatefulWidget {
   final String? resumeSessionId;
   final String? classId;
   final String? assignmentId;
+  final bool allowAssignmentRandomizeOverride;
+  final bool forfeitExitCountsAsAttempt;
 
   @override
   State<PracticeSessionPage> createState() => _PracticeSessionPageState();
@@ -159,6 +164,67 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
     }
   }
 
+  bool get _forfeitExitApplies =>
+      widget.assignmentId != null && widget.forfeitExitCountsAsAttempt;
+
+  Future<bool> _confirmForfeitExit() async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.practiceForfeitExitDialogTitle),
+        content: Text(l10n.practiceForfeitExitDialogMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.practiceForfeitExitCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.practiceForfeitExitConfirm),
+          ),
+        ],
+      ),
+    );
+    return confirmed == true;
+  }
+
+  Future<void> _forfeitAndExit() async {
+    final session = _session;
+    if (session == null) {
+      return;
+    }
+    _stopElapsedTimer();
+    setState(() => _savingProgress = true);
+    try {
+      await _repository.forfeitSession(session.practiceSessionId);
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } on DioException catch (e) {
+      if (!mounted) return;
+      context.showDioErrorSnackBar(e);
+    } catch (_) {
+      if (!mounted) return;
+      context.showErrorSnackBar(DioErrorMapper.genericMessage());
+    } finally {
+      if (mounted) {
+        setState(() => _savingProgress = false);
+      }
+    }
+  }
+
+  Future<void> _handleExitAttempt() async {
+    if (_forfeitExitApplies) {
+      final confirmed = await _confirmForfeitExit();
+      if (!confirmed || !mounted) {
+        return;
+      }
+      await _forfeitAndExit();
+      return;
+    }
+    await _saveAndExit();
+  }
+
   Future<void> _saveAndExit() async {
     _stopElapsedTimer();
     await _saveProgress();
@@ -193,7 +259,11 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
     try {
       final session = await _repository.startSession(
         quizId: widget.quizId,
-        randomizeQuestions: widget.options.randomizeQuestions,
+        randomizeQuestions: widget.assignmentId != null
+            ? (widget.allowAssignmentRandomizeOverride
+                ? widget.options.randomizeQuestions
+                : null)
+            : widget.options.randomizeQuestions,
         showElapsedTimer: widget.options.showTimer,
         classId: widget.classId,
         assignmentId: widget.assignmentId,
@@ -415,7 +485,7 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
       canPop: false,
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
-        await _saveAndExit();
+        await _handleExitAttempt();
       },
       child: EdgeAwareScaffold(
       appBar: craftQuestAppBar(
@@ -435,16 +505,17 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
                 ),
               ),
             ),
-          IconButton(
-            tooltip: l10n.practiceSaveAndExitAction,
-            onPressed: (_session == null ||
-                    _finishing ||
-                    _savingProgress ||
-                    _submittingAnswer)
-                ? null
-                : _saveAndExit,
-            icon: const Icon(Icons.pause_circle_outline_rounded),
-          ),
+          if (!_forfeitExitApplies)
+            IconButton(
+              tooltip: l10n.practiceSaveAndExitAction,
+              onPressed: (_session == null ||
+                      _finishing ||
+                      _savingProgress ||
+                      _submittingAnswer)
+                  ? null
+                  : _saveAndExit,
+              icon: const Icon(Icons.pause_circle_outline_rounded),
+            ),
         ],
       ),
       bottomBar: _buildBottomBar(l10n),
@@ -511,7 +582,7 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
                                     imageUrl: _resolveMediaUrl(
                                       question.questionMediaUrl,
                                     )!,
-                                    height: 200,
+                                    height: AppMediaDisplay.questionImageHeight,
                                     borderRadius: BorderRadius.circular(
                                       AppColors.radiusSm,
                                     ),

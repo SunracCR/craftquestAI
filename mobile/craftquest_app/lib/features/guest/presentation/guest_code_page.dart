@@ -5,6 +5,7 @@ import 'package:craftquest_app/core/widgets/app_buttons.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/features/guest/presentation/bloc/guest_session_cubit.dart';
+import 'package:craftquest_app/features/guest/presentation/guest_session_navigation.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -46,11 +47,18 @@ class _GuestCodePageState extends State<GuestCodePage> {
     return BlocListener<GuestSessionCubit, GuestSessionState>(
       listenWhen: (previous, current) =>
           (current.isActive && !previous.isActive) ||
-          (current.isError && !previous.isError),
-      listener: (context, state) {
+          (current.isError && !previous.isError) ||
+          (current.isLimitReached && !previous.isLimitReached),
+      listener: (context, state) async {
         if (state.isActive) {
           // La visita quedó activa en _AuthGate; cerrar esta ruta para mostrar GuestShellPage.
           Navigator.of(context).pop();
+          return;
+        }
+        if (state.isLimitReached) {
+          await showAnonymousPracticeLimitDialog(context, l10n);
+          if (!context.mounted) return;
+          context.read<GuestSessionCubit>().acknowledgeLimitReached();
           return;
         }
         if (state.isError) {

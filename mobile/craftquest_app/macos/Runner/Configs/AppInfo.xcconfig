@@ -8,7 +8,7 @@
 PRODUCT_NAME = craftquest_app
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.craftquest.craftquestApp
+PRODUCT_BUNDLE_IDENTIFIER = com.craftquestai.craftquestaiApp
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 com.craftquest. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 com.craftquestai. All rights reserved.

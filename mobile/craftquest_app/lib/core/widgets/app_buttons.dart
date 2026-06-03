@@ -3,6 +3,32 @@ import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:flutter/material.dart';
 
+/// Icono + etiqueta que encaja en botones estrechos (p. ej. dos CTAs en fila).
+Widget _iconButtonLabelRow({
+  required IconData icon,
+  required String label,
+  required double iconSize,
+  Color? iconColor,
+  TextStyle? textStyle,
+}) {
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Icon(icon, size: iconSize, color: iconColor),
+      const SizedBox(width: AppSpacing.xs),
+      Flexible(
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: textStyle,
+        ),
+      ),
+    ],
+  );
+}
+
 /// CTA principal a ancho completo.
 class AppPrimaryButton extends StatelessWidget {
   const AppPrimaryButton({
@@ -23,15 +49,7 @@ class AppPrimaryButton extends StatelessWidget {
     final child = isLoading
         ? const AppButtonLoader()
         : (icon != null
-            ? Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(icon, size: 20),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(label),
-                ],
-              )
+            ? _iconButtonLabelRow(icon: icon!, label: label, iconSize: 20)
             : Text(label));
 
     return SizedBox(
@@ -99,19 +117,15 @@ class AppGradientPrimaryButton extends StatelessWidget {
               child: isLoading
                   ? const AppButtonLoader()
                   : (icon != null
-                      ? Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(icon, size: 22, color: AppColors.textPrimary),
-                            const SizedBox(width: AppSpacing.xs),
-                            Text(
-                              label,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .labelLarge
-                                  ?.copyWith(color: AppColors.textPrimary),
-                            ),
-                          ],
+                      ? _iconButtonLabelRow(
+                          icon: icon!,
+                          label: label,
+                          iconSize: 22,
+                          iconColor: AppColors.textPrimary,
+                          textStyle: Theme.of(context)
+                              .textTheme
+                              .labelLarge
+                              ?.copyWith(color: AppColors.textPrimary),
                         )
                       : Text(
                           label,
@@ -150,15 +164,7 @@ class AppSecondaryButton extends StatelessWidget {
     final child = isLoading
         ? const AppButtonLoader()
         : (icon != null
-            ? Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(icon, size: 20),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(label),
-                ],
-              )
+            ? _iconButtonLabelRow(icon: icon!, label: label, iconSize: 20)
             : Text(label));
 
     final tint = accentColor ?? AppColors.textPrimary;

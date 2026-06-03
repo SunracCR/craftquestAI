@@ -9,7 +9,7 @@ class AppLocalizationsEs extends AppLocalizations {
   AppLocalizationsEs([String locale = 'es']) : super(locale);
 
   @override
-  String get appTitle => 'CraftQuest';
+  String get appTitle => 'CraftQuestAI';
 
   @override
   String get homeWelcome => 'Bienvenido a CraftQuest';
@@ -66,6 +66,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Sin conexión. Revisa tu internet e inténtalo de nuevo.';
 
   @override
+  String get errorDevApiUnreachable =>
+      'No se pudo conectar con la API en el teléfono. Con el USB conectado ejecuta: adb reverse tcp:7080 tcp:7080 y reinicia la app.';
+
+  @override
   String get genericRequestErrorMessage =>
       'No se pudo completar la solicitud. Inténtalo de nuevo en unos momentos.';
 
@@ -100,13 +104,42 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get loginSubtitle =>
-      'Accede gratis a tu cuenta CraftQuest — entra o regístrate en segundos';
+      'Accede gratis a tu cuenta CraftQuestAI — entra o regístrate en segundos';
+
+  @override
+  String get parentalConsentTitle => 'Se requiere aprobación parental';
+
+  @override
+  String get parentalConsentBodyDefault =>
+      'Tu cuenta está supervisada o eres menor en una región con normas de edad (p. ej. Texas). Un padre o tutor debe autorizar el uso de CraftQuestAI en Google Play antes de continuar.';
+
+  @override
+  String get parentalConsentBodyPending =>
+      'Hay cambios pendientes de aprobación por tu padre o tutor en Google Play. Pídele que revise la solicitud en Family Link o en la Play Store y vuelve a comprobar el estado.';
+
+  @override
+  String get parentalConsentBodyDenied =>
+      'Tu padre o tutor no aprobó el acceso a CraftQuestAI. Abre Google Play para revisar la configuración de la cuenta supervisada o contacta a quien administra tu cuenta.';
+
+  @override
+  String get parentalConsentBodyUnknown =>
+      'Google Play no pudo confirmar tu edad. Abre la Play Store, inicia sesión con la misma cuenta y completa la verificación de edad; después pulsa «Comprobar de nuevo».';
+
+  @override
+  String get parentalConsentOpenPlayStore => 'Abrir Google Play';
+
+  @override
+  String get parentalConsentRecheckAction => 'Comprobar de nuevo';
 
   @override
   String get loginAction => 'Entrar';
 
   @override
-  String get loginRememberCredentials => 'Recordar usuario y contraseña';
+  String get loginRememberCredentials => 'Recordar correo electrónico';
+
+  @override
+  String get loginInvalidCredentials =>
+      'Correo o contraseña incorrectos. Comprueba los datos e inténtalo de nuevo.';
 
   @override
   String get registerTitle => 'Crear cuenta';
@@ -116,6 +149,112 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get goToRegister => '¿No tienes cuenta? Regístrate';
+
+  @override
+  String get forgotPasswordLink => '¿Olvidaste tu contraseña?';
+
+  @override
+  String get forgotPasswordTitle => 'Recuperar contraseña';
+
+  @override
+  String get forgotPasswordSubtitle =>
+      'Te enviaremos un enlace a tu correo si la cuenta existe.';
+
+  @override
+  String get forgotPasswordAction => 'Enviar enlace';
+
+  @override
+  String get forgotPasswordSuccess =>
+      'Si el correo está registrado, recibirás instrucciones en breve.';
+
+  @override
+  String get resetPasswordTitle => 'Nueva contraseña';
+
+  @override
+  String get resetPasswordSubtitle =>
+      'Introduce el código del correo y tu nueva contraseña.';
+
+  @override
+  String get resetPasswordTokenLabel => 'Código de recuperación';
+
+  @override
+  String get resetPasswordAction => 'Guardar contraseña';
+
+  @override
+  String get resetPasswordSuccess =>
+      'Contraseña actualizada. Ya puedes iniciar sesión.';
+
+  @override
+  String get backToLogin => 'Volver al inicio de sesión';
+
+  @override
+  String get resetPasswordHaveCode => 'Ya tengo el código de recuperación';
+
+  @override
+  String get oauthDividerLabel => 'o continúa con';
+
+  @override
+  String get oauthSignInWithGoogle => 'Iniciar sesión con Google';
+
+  @override
+  String get oauthSignInWithApple => 'Iniciar sesión con Apple';
+
+  @override
+  String get oauthSignInGoogleShort => 'Google';
+
+  @override
+  String get oauthSignInAppleShort => 'Apple';
+
+  @override
+  String get oauthSignInFailed =>
+      'No se pudo completar el inicio de sesión social.';
+
+  @override
+  String get oauthGoogleWebOriginHint =>
+      ' En Google Cloud (cliente Web), añade orígenes JavaScript autorizados: http://localhost:7357 y http://127.0.0.1:7357 (mismo puerto que flutter run --web-port).';
+
+  @override
+  String get oauthGooglePeopleApiHint =>
+      ' Habilita People API en Google Cloud (mismo proyecto que tu Client ID): https://console.cloud.google.com/apis/library/people.googleapis.com';
+
+  @override
+  String get oauthGoogleNotConfigured =>
+      'Google no está configurado. Añade ExternalAuth:Google:WebClientId en la API o GOOGLE_SERVER_CLIENT_ID al ejecutar la app.';
+
+  @override
+  String get oauthAppleNotConfigured =>
+      'Apple no está configurado en el servidor (ExternalAuth:Apple:BundleId).';
+
+  @override
+  String get oauthAppleNotAvailable =>
+      'Iniciar sesión con Apple no está disponible en este dispositivo.';
+
+  @override
+  String get oauthAppleWebNotConfigured =>
+      'Apple en web requiere Services ID y WebRedirectUri en la API (ExternalAuth:Apple). Regístralos en Apple Developer.';
+
+  @override
+  String get billingCycleMonthly => 'Mensual';
+
+  @override
+  String get billingCycleAnnual => 'Anual';
+
+  @override
+  String get billingCycleAnnualPriceSuffix => '/ año';
+
+  @override
+  String get billingAnnualNotAvailable => 'Anual no disponible para este plan';
+
+  @override
+  String get billingPlanInstitutionName => 'Institución';
+
+  @override
+  String get upgradeInstitutionHighlight =>
+      'Licencias para centros educativos, sedes y docentes';
+
+  @override
+  String get institutionPlanContactHint =>
+      'Contacta con ventas para un presupuesto a medida.';
 
   @override
   String get emailLabel => 'Correo electrónico';
@@ -139,7 +278,275 @@ class AppLocalizationsEs extends AppLocalizations {
   String get navHomeLabel => 'Inicio';
 
   @override
+  String get navPrepPlusLabel => 'Preparación+';
+
+  @override
   String get navProfileLabel => 'Perfil';
+
+  @override
+  String get prepPlusScreenTitle => 'Preparación+';
+
+  @override
+  String get prepPlusScreenSubtitle =>
+      'Cuestionarios curados para tu examen. Compra acceso por tiempo.';
+
+  @override
+  String get homePrepPlusCardTitle => 'Preparación+';
+
+  @override
+  String get homePrepPlusCardSubtitle =>
+      'Explora por país o tema y compra solo lo que necesitas.';
+
+  @override
+  String get prepPlusByCountrySection => 'Por país';
+
+  @override
+  String get prepPlusInternationalSection => 'Internacional';
+
+  @override
+  String prepPlusInternationalSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count cuestionarios disponibles',
+      one: '1 cuestionario disponible',
+      zero: 'Sin cuestionarios disponibles',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String prepPlusCategoryItemCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count cuestionarios',
+      one: '1 cuestionario',
+      zero: 'Sin cuestionarios',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get prepPlusMyAccessesTitle => 'Mis accesos';
+
+  @override
+  String prepPlusMyAccessesActiveCount(int count) {
+    return '$count activos';
+  }
+
+  @override
+  String get prepPlusTabActive => 'Activos';
+
+  @override
+  String get prepPlusTabExpired => 'Expirados';
+
+  @override
+  String get prepPlusMyAccessesActiveEmpty => 'No tienes accesos activos.';
+
+  @override
+  String get prepPlusMyAccessesExpiredEmpty => 'No tienes accesos expirados.';
+
+  @override
+  String get prepPlusSearchHint => 'Buscar cuestionario…';
+
+  @override
+  String get prepPlusCategoryEmpty => 'No hay cuestionarios en esta categoría.';
+
+  @override
+  String get prepPlusFiltersAction => 'Filtros';
+
+  @override
+  String get prepPlusFiltersTitle => 'Filtros';
+
+  @override
+  String get prepPlusFiltersApply => 'Aplicar';
+
+  @override
+  String get prepPlusFilterPriceLabel => 'Precio';
+
+  @override
+  String get prepPlusFilterAccessLabel => 'Tu acceso';
+
+  @override
+  String get prepPlusFilterAll => 'Todos';
+
+  @override
+  String get prepPlusFilterFree => 'Gratis';
+
+  @override
+  String get prepPlusFilterPaid => 'De pago';
+
+  @override
+  String get prepPlusFilterInstitutionLabel => 'Institución o examen';
+
+  @override
+  String get prepPlusAccessNone => 'Sin comprar';
+
+  @override
+  String get prepPlusAccessActive => 'Activo';
+
+  @override
+  String get prepPlusAccessExpired => 'Expirado';
+
+  @override
+  String prepPlusQuestionCount(int count) {
+    return '$count preguntas';
+  }
+
+  @override
+  String get prepPlusHasFreeOffer => 'Incluye opción gratis';
+
+  @override
+  String prepPlusFromPrice(double price, String currency) {
+    final intl.NumberFormat priceNumberFormat = intl
+        .NumberFormat.decimalPattern(localeName);
+    final String priceString = priceNumberFormat.format(price);
+
+    return 'Desde $priceString $currency';
+  }
+
+  @override
+  String get prepPlusItemDetailTitle => 'Detalle';
+
+  @override
+  String get prepPlusPreviewAction => 'Probar simulación (3 preguntas)';
+
+  @override
+  String get prepPlusPreviewSimulationCtaTitle => 'Simulación interactiva';
+
+  @override
+  String get prepPlusPreviewSimulationCtaSubtitle =>
+      'Responde como en la práctica real — sin guardar resultados.';
+
+  @override
+  String get prepPlusPreviewTitle => 'Vista previa';
+
+  @override
+  String prepPlusPreviewSubtitle(String title) {
+    return 'Muestra de «$title»';
+  }
+
+  @override
+  String get prepPlusPreviewSimulationTitle => 'Simulación';
+
+  @override
+  String get prepPlusPreviewSimulationBanner => 'Modo demostración';
+
+  @override
+  String prepPlusPreviewSimulationSubtitle(String title) {
+    return '«$title» — experiencia igual a practicar';
+  }
+
+  @override
+  String get prepPlusPreviewTryInteraction =>
+      'Toca una respuesta para ver cómo funciona la herramienta.';
+
+  @override
+  String get prepPlusPreviewPrevious => 'Anterior';
+
+  @override
+  String get prepPlusPreviewNext => 'Siguiente';
+
+  @override
+  String get prepPlusPreviewFinishCta => 'Cerrar simulación';
+
+  @override
+  String prepPlusPreviewQuestionLabel(int number) {
+    return 'Pregunta $number';
+  }
+
+  @override
+  String get prepPlusAccessCombosTitle => 'Elige tu combo de acceso';
+
+  @override
+  String get prepPlusAccessCombosSubtitle =>
+      'Incluye el cuestionario completo durante el periodo seleccionado.';
+
+  @override
+  String get prepPlusBestValueBadge => 'MEJOR VALOR';
+
+  @override
+  String prepPlusPricePerDay(String price) {
+    return '$price / día';
+  }
+
+  @override
+  String get prepPlusComboIncludesAccess =>
+      'Acceso total al banco de preguntas';
+
+  @override
+  String get prepPlusSelectDuration => 'Duración del acceso';
+
+  @override
+  String get prepPlusDuration30 => '30 días';
+
+  @override
+  String get prepPlusDuration60 => '60 días';
+
+  @override
+  String get prepPlusDuration90 => '90 días';
+
+  @override
+  String get prepPlusDuration6Months => '6 meses';
+
+  @override
+  String prepPlusDurationDays(int days) {
+    return '$days días';
+  }
+
+  @override
+  String prepPlusOfferPrice(double price, String currency) {
+    final intl.NumberFormat priceNumberFormat = intl
+        .NumberFormat.decimalPattern(localeName);
+    final String priceString = priceNumberFormat.format(price);
+
+    return '$priceString $currency';
+  }
+
+  @override
+  String get prepPlusPracticeAction => 'Practicar';
+
+  @override
+  String get prepPlusBuyAction => 'Comprar acceso';
+
+  @override
+  String get prepPlusGetFreeAccessAction => 'Obtener acceso gratis';
+
+  @override
+  String get prepPlusRenewAction => 'Renovar acceso';
+
+  @override
+  String prepPlusAccessUntil(String date) {
+    return 'Vence el $date';
+  }
+
+  @override
+  String prepPlusExpiresOn(String date) {
+    return 'Vence el $date';
+  }
+
+  @override
+  String prepPlusExpiredOn(String date) {
+    return 'Expiró el $date';
+  }
+
+  @override
+  String get prepPlusNotAvailableForPurchase =>
+      'No disponible para compra en este momento.';
+
+  @override
+  String get prepPlusViewHistory => 'Ver mi historial';
+
+  @override
+  String get prepPlusAccessGranted => 'Acceso concedido. ¡Ya puedes practicar!';
+
+  @override
+  String get prepPlusConfirmPayPalPayment => 'Confirmar pago PayPal';
+
+  @override
+  String get prepPlusStoreProductMissing =>
+      'Pago en tienda no configurado para esta oferta. Usa la versión web con PayPal.';
 
   @override
   String get profileTitle => 'Perfil';
@@ -208,6 +615,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get passwordChangedMessage => 'Contraseña actualizada';
+
+  @override
+  String get currentPasswordIncorrectError =>
+      'La contraseña actual no es correcta.';
+
+  @override
+  String get passwordChangeUnavailableError =>
+      'Esta cuenta no tiene contraseña local. Usa el inicio de sesión con Google o Apple.';
 
   @override
   String get myQuizzesAction => 'Mis cuestionarios';
@@ -388,6 +803,45 @@ class AppLocalizationsEs extends AppLocalizations {
   String get questionTextLabel => 'Enunciado';
 
   @override
+  String get questionJustificationLabel => 'Justificación (respuesta correcta)';
+
+  @override
+  String get questionJustificationHint =>
+      'Explica en un solo texto por qué la(s) respuesta(s) correcta(s) lo son.';
+
+  @override
+  String get questionJustificationReviewHint =>
+      'Visible al revisar los intentos del cuestionario (no durante la práctica).';
+
+  @override
+  String get explanationVisibilityAfterQuiz => 'Al terminar el cuestionario';
+
+  @override
+  String get explanationVisibilityAfterAnswer => 'Tras cada respuesta';
+
+  @override
+  String get explanationVisibilityNever => 'No mostrar en práctica';
+
+  @override
+  String get practiceReviewJustificationTitle => 'Justificación';
+
+  @override
+  String get practiceReviewJustificationTapToExpand =>
+      'Toca para ver la explicación';
+
+  @override
+  String practiceReviewSourcePage(int page) {
+    return 'Página $page';
+  }
+
+  @override
+  String get aiGenerationIncludeExplanationsLabel => 'Incluir justificaciones';
+
+  @override
+  String get aiGenerationIncludeExplanationsHint =>
+      'La IA generará texto explicativo y número de página del material cuando aplique.';
+
+  @override
   String get questionPointsLabel => 'Puntos';
 
   @override
@@ -464,6 +918,10 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get practiceRandomizeQuestionsHint =>
       'Las preguntas se muestran en un orden distinto en cada práctica';
+
+  @override
+  String get quizRandomizeQuestionsHint =>
+      'Aplica a las asignaciones de tus estudiantes y cuando practican este cuestionario';
 
   @override
   String get practiceShowTimerLabel => 'Mostrar tiempo transcurrido';
@@ -750,6 +1208,29 @@ class AppLocalizationsEs extends AppLocalizations {
   String importSummaryLabel(int valid, int total, int errors) {
     return '$valid válidas de $total ($errors con error)';
   }
+
+  @override
+  String get importSummaryLoading => 'Cargando preguntas…';
+
+  @override
+  String importSummaryReady(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count preguntas listas para revisar',
+      one: '1 pregunta lista para revisar',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String importSummaryWithErrors(int valid, int total, int errors) {
+    return '$valid válidas de $total · $errors con error';
+  }
+
+  @override
+  String get importSummaryEmpty =>
+      'No se detectaron preguntas en esta importación';
 
   @override
   String importErrorLine(int row, String message) {
@@ -1201,6 +1682,41 @@ class AppLocalizationsEs extends AppLocalizations {
   String get attachImageAction => 'Adjuntar imagen';
 
   @override
+  String get imagePickPermissionDenied =>
+      'Permite el acceso a fotos en Ajustes para adjuntar imágenes.';
+
+  @override
+  String get imagePickFailed =>
+      'No se pudo abrir la galería. Inténtalo de nuevo.';
+
+  @override
+  String get imageTooLargeForUpload =>
+      'La imagen es demasiado grande (máx. 5 MB). Elige otra o una foto más pequeña.';
+
+  @override
+  String get imageAttachedSuccess => 'Imagen adjuntada correctamente.';
+
+  @override
+  String get imageUploadInvalidResponse =>
+      'El servidor respondió de forma inesperada. Reinicia la API y vuelve a intentarlo.';
+
+  @override
+  String get imageUploadInvalidMultipart =>
+      'No se pudo enviar la imagen al servidor. Reinicia la app y la API e inténtalo de nuevo.';
+
+  @override
+  String get imageUploadFileRequired =>
+      'No se recibió ningún archivo de imagen. Vuelve a seleccionar la foto.';
+
+  @override
+  String get imageUploadUnsupportedType =>
+      'Formato de imagen no admitido. Usa JPG, PNG, WebP o GIF.';
+
+  @override
+  String get imagePreviewLoadFailed =>
+      'Imagen guardada, pero no se pudo mostrar la vista previa. Comprueba la conexión con el servidor.';
+
+  @override
   String get removeImageAction => 'Quitar imagen';
 
   @override
@@ -1227,16 +1743,23 @@ class AppLocalizationsEs extends AppLocalizations {
       'Ya tienes el plan más alto disponible. No hay más mejoras por ahora.';
 
   @override
-  String get upgradeProHighlightQuizzes =>
-      'Cuestionarios ilimitados (tu plan actual: máx. 5)';
+  String upgradeProHighlightQuizzesLimit(int max) {
+    return 'Cuestionarios ilimitados (tu plan actual: máx. $max)';
+  }
 
   @override
-  String get upgradeProHighlightQuestions =>
-      'Sin límite de preguntas por cuestionario (tu plan actual: 65)';
+  String upgradeProHighlightQuestionsLimit(int max) {
+    return 'Sin límite de preguntas por cuestionario (tu plan actual: $max)';
+  }
 
   @override
   String get upgradeProHighlightAiCredits =>
       '150 créditos IA al mes (tu plan actual: 20)';
+
+  @override
+  String upgradePlanHighlightAiCredits(int credits, int currentCredits) {
+    return '$credits créditos IA al mes (tu plan actual: $currentCredits)';
+  }
 
   @override
   String get upgradeProHighlightShared =>
@@ -1281,6 +1804,14 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get paypalAwaitingCapture =>
       'Completa el pago en PayPal y confirma la captura.';
+
+  @override
+  String get paypalAwaitingSubscriptionActivation =>
+      'Aprueba la suscripción en PayPal y vuelve a la app para activarla.';
+
+  @override
+  String get subscriptionAutoRenewDisclaimer =>
+      'Renovación automática cada periodo hasta que la canceles. Puedes desactivarla en cualquier momento.';
 
   @override
   String upgradeSuccess(String plan) {
@@ -1660,6 +2191,55 @@ class AppLocalizationsEs extends AppLocalizations {
       'No tienes créditos IA suficientes para esta generación.';
 
   @override
+  String get errorAiCreditPacksNotAvailable =>
+      'Los paquetes de créditos IA están disponibles en los planes Pro y Teacher.';
+
+  @override
+  String get aiCreditPacksTitle => 'Comprar créditos IA';
+
+  @override
+  String get aiCreditPacksSubtitle =>
+      'Recarga créditos para seguir generando con IA. Los paquetes comprados no expiran; el cupo mensual del plan sí se reinicia cada mes.';
+
+  @override
+  String aiCreditPacksCurrentBalance(int credits) {
+    return 'Saldo actual: $credits créditos';
+  }
+
+  @override
+  String aiCreditPacksCreditsLabel(int credits) {
+    return '$credits créditos IA';
+  }
+
+  @override
+  String aiCreditPacksBuyForPrice(String price) {
+    return 'Comprar · $price';
+  }
+
+  @override
+  String get aiCreditPacksEmpty =>
+      'No hay paquetes disponibles. Reinicia la API o contacta soporte si el problema continúa.';
+
+  @override
+  String get aiCreditPacksBuyAction => 'Comprar créditos';
+
+  @override
+  String aiCreditPacksPurchaseSuccess(int credits) {
+    return 'Se añadieron $credits créditos IA a tu cuenta.';
+  }
+
+  @override
+  String get aiCreditsInsufficientDialogMessage =>
+      'Puedes comprar un paquete de créditos para seguir generando con IA.';
+
+  @override
+  String get aiCreditsInsufficientFreePlanMessage =>
+      'Mejora a Pro o Teacher para comprar paquetes de créditos IA.';
+
+  @override
+  String get homeBuyAiCreditsAction => 'Comprar créditos IA';
+
+  @override
   String get errorMaterialNeedsOcr =>
       'Hay poco texto extraíble. Usa PDF o Word con texto seleccionable, o revisa y pega el contenido.';
 
@@ -1723,6 +2303,10 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get errorAiGeminiOverloaded =>
       'Gemini tiene mucha demanda ahora mismo. Espera unos minutos y vuelve a intentar la generación.';
+
+  @override
+  String get errorAiGeminiApiKeyInvalid =>
+      'La API key de Gemini no es válida (expirada, revocada o filtrada). Crea una clave nueva en Google AI Studio, actualízala en appsettings.Development.local.json y reinicia la API.';
 
   @override
   String get aiActivityTitle => 'Actividad IA';
@@ -1852,6 +2436,19 @@ class AppLocalizationsEs extends AppLocalizations {
       'Esta sesión es temporal. Al salir se borra todo.';
 
   @override
+  String get guestAnonymousLimitTitle => '¡Buen trabajo practicando!';
+
+  @override
+  String get guestAnonymousLimitMessage =>
+      'Has alcanzado el límite de prácticas anónimas. Crea una cuenta gratis en 10 segundos para seguir jugando, guardar tu progreso y crear tus propios cuestionarios.';
+
+  @override
+  String get guestAnonymousLimitLater => 'Más tarde';
+
+  @override
+  String get guestAnonymousLimitSignUp => 'Crear cuenta';
+
+  @override
   String get guestPracticeWithCodeAction => 'Practicar con código';
 
   @override
@@ -1918,7 +2515,33 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get guestRegisterBenefit3 =>
-      'Plan Free: 5 cuestionarios y 20 créditos IA, gratis';
+      'Plan Free: 2 cuestionarios y 20 créditos IA, gratis';
+
+  @override
+  String get guestRegisterBenefit4 => 'Experiencia sin anuncios';
+
+  @override
+  String get guestRegisterBenefit5 =>
+      'Comparte cuestionarios con códigos o invitaciones';
+
+  @override
+  String get guestRegisterBenefit6 =>
+      'Analítica de práctica: descubre dónde fallas más';
+
+  @override
+  String get guestRegisterPromoSubtitle =>
+      'Crea una cuenta gratis en segundos y desbloquea todo esto.';
+
+  @override
+  String get guestRegisterPromoBenefitsTitle => 'Con tu cuenta registrada';
+
+  @override
+  String guestRegisterPromoCountdown(int seconds) {
+    return 'Ver resultados en $seconds s';
+  }
+
+  @override
+  String get guestRegisterPromoSkipTooltip => 'Ver resultados ahora';
 
   @override
   String get guestExitPracticeTitle => '¿Salir de la práctica?';
@@ -1969,7 +2592,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get teacherDashboardInventoryClasses => 'Clases';
 
   @override
-  String get teacherDashboardInventoryQuizzes => 'Quizzes';
+  String get teacherDashboardInventoryQuizzes => 'Asignados';
 
   @override
   String get teacherDashboardUrgentTitle => 'Requiere atención';
@@ -2018,6 +2641,10 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get teacherAssignmentAnalyticsHardQuestionsTitle =>
       'Preguntas difíciles';
+
+  @override
+  String get teacherAssignmentAnalyticsDistractorTitle =>
+      'Selección por opción (esta tarea)';
 
   @override
   String get teacherAssignmentAnalyticsDistributionTitle =>
@@ -2086,12 +2713,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String practiceResultTrendUp(String points) {
-    return '+$points pts vs intento anterior';
+    return '$points pts más que en tu intento anterior';
   }
 
   @override
   String practiceResultTrendDown(String points) {
-    return '$points pts vs intento anterior';
+    return '$points pts menos que en tu intento anterior';
   }
 
   @override
@@ -2152,6 +2779,53 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get teacherClassArchiveConfirmAction => 'Archivar';
+
+  @override
+  String get teacherClassesArchivedSectionTitle => 'Clases archivadas';
+
+  @override
+  String get teacherClassRestoreAction => 'Restaurar clase';
+
+  @override
+  String get teacherClassRestoreConfirmTitle => '¿Restaurar clase?';
+
+  @override
+  String get teacherClassRestoreConfirmMessage =>
+      'La clase volverá a estar activa y los estudiantes verán de nuevo sus asignaciones abiertas.';
+
+  @override
+  String get teacherClassRestoreConfirmAction => 'Restaurar';
+
+  @override
+  String get teacherClassArchivedBanner =>
+      'Esta clase está archivada. Restáurala para editarla o asignar tareas.';
+
+  @override
+  String get teacherClassRestoredMessage => 'Clase restaurada';
+
+  @override
+  String get teacherClassDeletePermanentAction => 'Eliminar';
+
+  @override
+  String get teacherClassDeletePermanentTitle => '¿Eliminar clase archivada?';
+
+  @override
+  String teacherClassDeletePermanentMessage(String name) {
+    return '«$name» dejará de mostrarse en tu lista. Los datos (miembros, asignaciones e historial) se conservan en el sistema. Solo aplica a clases ya archivadas.';
+  }
+
+  @override
+  String get teacherClassDeletePermanentConfirm => 'Eliminar';
+
+  @override
+  String get teacherClassDeletedMessage => 'Clase eliminada de tu lista';
+
+  @override
+  String get teacherClassDeleteRequiresArchiveError =>
+      'Archiva la clase antes de eliminarla.';
+
+  @override
+  String get teacherClassNotArchivedError => 'Esta clase no está archivada.';
 
   @override
   String get teacherClassMembersTab => 'Miembros';
@@ -2255,6 +2929,61 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get teacherAssignmentShowAnswersTeacherOnly => 'Solo el profesor';
+
+  @override
+  String get teacherAssignmentRandomizeQuestionsLabel =>
+      'Orden aleatorio de preguntas';
+
+  @override
+  String get teacherAssignmentRandomizeQuestionsHint =>
+      'Define cómo se muestran las preguntas en esta tarea de clase.';
+
+  @override
+  String get teacherAssignmentAllowStudentRandomizeLabel =>
+      'El alumno puede cambiar el orden';
+
+  @override
+  String get teacherAssignmentAllowStudentRandomizeHint =>
+      'Si está desactivado, todos los alumnos usan la opción de arriba.';
+
+  @override
+  String get teacherAssignmentForfeitExitLabel =>
+      'Salir sin terminar consume un intento';
+
+  @override
+  String get teacherAssignmentForfeitExitHint =>
+      'Solo aplica cuando hay un máximo de intentos definido. El alumno no podrá pausar y reanudar.';
+
+  @override
+  String get teacherAssignmentForfeitRequiresMaxAttempts =>
+      'Define al menos 1 intento máximo para activar esta regla.';
+
+  @override
+  String get practiceForfeitExitDialogTitle => '¿Salir de la práctica?';
+
+  @override
+  String get practiceForfeitExitDialogMessage =>
+      'Si sales ahora, se contará como un intento usado aunque no hayas finalizado el cuestionario.';
+
+  @override
+  String get practiceForfeitExitConfirm => 'Salir y usar intento';
+
+  @override
+  String get practiceForfeitExitCancel => 'Seguir practicando';
+
+  @override
+  String get studentAssignmentAttemptStatusForfeited => 'Salida anticipada';
+
+  @override
+  String get studentAssignmentRandomizeLockedShuffled =>
+      'Orden aleatorio fijado por el profesor';
+
+  @override
+  String get studentAssignmentRandomizeLockedOrdered =>
+      'Orden del cuestionario fijado por el profesor';
+
+  @override
+  String get studentAssignmentPracticeOptionsTitle => 'Opciones de práctica';
 
   @override
   String get teacherAssignmentCreateAction => 'Crear asignación';
@@ -2436,18 +3165,111 @@ class AppLocalizationsEs extends AppLocalizations {
       'Ya tienes un plan Profesor activo.';
 
   @override
+  String teacherUpgradeNextRenewal(String date) {
+    return 'Próxima renovación: $date';
+  }
+
+  @override
+  String teacherUpgradeAccessUntil(String date) {
+    return 'Acceso hasta el $date (sin renovación automática)';
+  }
+
+  @override
   String get teacherUpgradeCancelTitle => '¿Cancelar suscripción?';
 
   @override
   String get teacherUpgradeCancelMessage =>
-      'Perderás el acceso al módulo Profesor y tus clases serán archivadas. Puedes volver a suscribirte en cualquier momento.';
+      'Se desactivará la renovación automática. Mantendrás el plan Profesor hasta el final del periodo pagado; después pasarás a Free.';
 
   @override
-  String get teacherUpgradeCancelConfirm => 'Cancelar plan';
+  String get teacherUpgradeCancelConfirm => 'Desactivar renovación';
 
   @override
   String get teacherUpgradeCancelSuccess =>
       'Suscripción cancelada. ¡Hasta pronto!';
+
+  @override
+  String teacherUpgradeCancelSuccessUntil(String date) {
+    return 'Renovación automática desactivada. Acceso al plan Profesor hasta el $date.';
+  }
+
+  @override
+  String get billingCancelStoreTitle => 'Gestionar suscripción en la tienda';
+
+  @override
+  String get billingCancelStoreMessageGoogle =>
+      'Los cobros recurrentes de CraftQuest se gestionan en Google Play. Abre tus suscripciones en Play Store, cancela CraftQuest y conservarás el acceso hasta el final del periodo pagado.';
+
+  @override
+  String get billingCancelStoreMessageApple =>
+      'Los cobros recurrentes de CraftQuest se gestionan en el App Store. Abre tus suscripciones en Ajustes de Apple, cancela CraftQuest y conservarás el acceso hasta el final del periodo pagado.';
+
+  @override
+  String get billingCancelStoreOpenGooglePlay => 'Abrir Google Play';
+
+  @override
+  String get billingCancelStoreOpenAppStore => 'Abrir App Store';
+
+  @override
+  String get billingCancelStoreSyncTitle => '¿Actualizar estado en CraftQuest?';
+
+  @override
+  String get billingCancelStoreSyncMessage =>
+      'Si ya cancelaste en la tienda, puedes desactivar la renovación en CraftQuest para reflejar el fin de periodo en la app. El cobro real solo se detiene en la tienda.';
+
+  @override
+  String get billingCancelStoreSyncConfirm => 'Desactivar renovación en la app';
+
+  @override
+  String get billingResumeAutoRenewTitle => '¿Reactivar renovación automática?';
+
+  @override
+  String get billingResumeAutoRenewMessage =>
+      'Se volverá a cobrar al final del periodo actual. Mantendrás el acceso hasta entonces.';
+
+  @override
+  String get billingResumeAutoRenewConfirm => 'Reactivar renovación';
+
+  @override
+  String get billingResumeAutoRenewSuccess =>
+      'Renovación automática reactivada.';
+
+  @override
+  String billingResumeAutoRenewSuccessUntil(String date) {
+    return 'Próxima renovación el $date.';
+  }
+
+  @override
+  String get billingResumeStoreTitle => 'Reactivar suscripción en la tienda';
+
+  @override
+  String get billingResumeStoreMessageGoogle =>
+      'Para volver a cobrar de forma recurrente, reactiva CraftQuest en Google Play (Suscripciones). Después puedes sincronizar el estado en la app.';
+
+  @override
+  String get billingResumeStoreMessageApple =>
+      'Para volver a cobrar de forma recurrente, reactiva CraftQuest en el App Store (Suscripciones). Después puedes sincronizar el estado en la app.';
+
+  @override
+  String get billingResumeStoreSyncTitle => '¿Actualizar estado en CraftQuest?';
+
+  @override
+  String get billingResumeStoreSyncMessage =>
+      'Si ya reactivaste la suscripción en la tienda, confirma aquí para mostrar la próxima renovación en la app.';
+
+  @override
+  String get billingResumeStoreSyncConfirm => 'Reactivar renovación en la app';
+
+  @override
+  String get billingResumeRequiresResubscribeTitle =>
+      'Volver a suscribirse con PayPal';
+
+  @override
+  String get billingResumeRequiresResubscribeMessage =>
+      'La renovación en PayPal ya se canceló. Para seguir con cobros automáticos, crea una nueva suscripción.';
+
+  @override
+  String get billingResumeRequiresResubscribeConfirm => 'Suscribirse de nuevo';
 
   @override
   String get teacherUpgradeExpiryWarning =>
@@ -2464,7 +3286,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get homeTeacherBannerAction => 'Ver plan Profesor';
 
   @override
-  String get homeTeacherBannerDismissTooltip => 'No mostrar más';
+  String get homeTeacherBannerDismissTooltipWeekly => 'Ocultar esta semana';
+
+  @override
+  String get homeTeacherBannerDismissTooltipMonthly => 'Ocultar este mes';
 
   @override
   String get studentAssignmentsTitle => 'Mis asignaciones';
@@ -2654,6 +3479,25 @@ class AppLocalizationsEs extends AppLocalizations {
   String get studentAssignmentDetailTitle => 'Detalle de asignación';
 
   @override
+  String subscriptionPlanActive(String planName) {
+    return 'Plan $planName activo.';
+  }
+
+  @override
+  String get profileProPlanSectionTitle => 'Plan Pro';
+
+  @override
+  String get profileProPlanManageTitle => 'Gestionar plan Pro';
+
+  @override
+  String get profileProPlanActiveSubtitle =>
+      'Plan activo · toca para gestionar';
+
+  @override
+  String get profileProPlanInactiveSubtitle =>
+      'Quizzes ilimitados y más · Suscripción mensual o anual';
+
+  @override
   String get profileTeacherPlanSectionTitle => 'Plan Profesor';
 
   @override
@@ -2666,6 +3510,76 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get profileTeacherPlanInactiveSubtitle =>
       'Clases, asignaciones y analítica · Suscripción mensual';
+
+  @override
+  String get profilePaymentHistorySectionTitle => 'Pagos';
+
+  @override
+  String get profilePaymentHistoryAction => 'Historial de transacciones';
+
+  @override
+  String get profilePaymentHistorySubtitle =>
+      'Suscripciones, Preparación+ y otros pagos';
+
+  @override
+  String get paymentHistoryTitle => 'Historial de pagos';
+
+  @override
+  String get paymentHistoryEmpty =>
+      'Aún no hay transacciones registradas en tu cuenta.';
+
+  @override
+  String paymentHistoryAmount(String amount, String currency) {
+    return '$amount $currency';
+  }
+
+  @override
+  String get paymentPurchaseStatusValidated => 'Completado';
+
+  @override
+  String get paymentPurchaseStatusPending => 'Pendiente';
+
+  @override
+  String get paymentPurchaseStatusRejected => 'Rechazado';
+
+  @override
+  String get paymentPurchaseStatusRefunded => 'Reembolsado';
+
+  @override
+  String get paymentPurchaseStatusCancelled => 'Cancelado';
+
+  @override
+  String get paymentProviderPayPal => 'PayPal';
+
+  @override
+  String get paymentProviderGooglePlay => 'Google Play';
+
+  @override
+  String get paymentProviderAppStore => 'App Store';
+
+  @override
+  String get paymentProviderOther => 'Otro';
+
+  @override
+  String get paymentProductTypeSubscription => 'Suscripción';
+
+  @override
+  String get paymentProductTypePrepAccess => 'Preparación+';
+
+  @override
+  String get paymentProductTypeAiCredits => 'Créditos IA';
+
+  @override
+  String get paymentProductTypeShareCodes => 'Códigos compartidos';
+
+  @override
+  String get paymentProductTypeCuratedPackage => 'Paquete';
+
+  @override
+  String get paymentProductTypeTeacherSeats => 'Plazas profesor';
+
+  @override
+  String get paymentProductTypeOther => 'Otro';
 
   @override
   String get teacherUpgradeKeepPlan => 'No, mantener';
@@ -2722,4 +3636,431 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get teacherOnboardingGoToDashboardAction => 'Ir al Panel de Profesor';
+
+  @override
+  String get prepAdminProfileSectionTitle => 'Administración';
+
+  @override
+  String get prepAdminProfileAction => 'Preparación+ (catálogo)';
+
+  @override
+  String get prepAdminProfileSubtitle =>
+      'Categorías, ítems, precios y publicación';
+
+  @override
+  String get prepAdminHubTitle => 'Admin Preparación+';
+
+  @override
+  String get prepAdminHubSubtitle =>
+      'Gestiona el catálogo B2C curado de la plataforma.';
+
+  @override
+  String get prepAdminCategoriesAction => 'Categorías';
+
+  @override
+  String get prepAdminCategoriesSubtitle => 'Países, regiones e Internacional';
+
+  @override
+  String get prepAdminCatalogAction => 'Ítems del catálogo';
+
+  @override
+  String get prepAdminCatalogSubtitle => 'Cuestionarios, ofertas y muestras';
+
+  @override
+  String get prepAdminCategoriesTitle => 'Categorías Prep+';
+
+  @override
+  String get prepAdminAddRootCategory => 'Categoría raíz';
+
+  @override
+  String get prepAdminAddSubcategory => 'Subcategoría';
+
+  @override
+  String get prepAdminEditCategoryTitle => 'Editar categoría';
+
+  @override
+  String get prepAdminDeleteCategoryTitle => '¿Eliminar categoría?';
+
+  @override
+  String prepAdminDeleteCategoryMessage(String name) {
+    return 'Se eliminará «$name» y sus subcategorías si no tienen ítems.';
+  }
+
+  @override
+  String get prepAdminCategoryDeleted => 'Categoría eliminada';
+
+  @override
+  String get prepAdminCategorySaved => 'Categoría guardada';
+
+  @override
+  String get prepAdminActive => 'Activa';
+
+  @override
+  String get prepAdminInactive => 'Inactiva';
+
+  @override
+  String get prepAdminCategoryTypeLabel => 'Tipo';
+
+  @override
+  String get prepAdminCategoryTypeGeographic => 'Geográfica (país)';
+
+  @override
+  String get prepAdminCategoryTypeThematic => 'Temática (Internacional)';
+
+  @override
+  String get prepAdminNameLabel => 'Nombre';
+
+  @override
+  String get prepAdminSlugLabel => 'Slug (URL)';
+
+  @override
+  String get prepAdminRequiredField => 'Campo obligatorio';
+
+  @override
+  String get prepAdminDescriptionLabel => 'Descripción';
+
+  @override
+  String get prepAdminCountryCodeLabel => 'Código país (ISO)';
+
+  @override
+  String get prepAdminIconKeyLabel => 'Icono (clave)';
+
+  @override
+  String get prepAdminSortOrderLabel => 'Orden';
+
+  @override
+  String get prepAdminCatalogTitle => 'Catálogo Prep+';
+
+  @override
+  String get prepAdminNewCatalogItem => 'Nuevo ítem';
+
+  @override
+  String get prepAdminPublishedFilter => 'Publicados';
+
+  @override
+  String get prepAdminDraftFilter => 'Borradores';
+
+  @override
+  String get prepAdminCatalogEmpty => 'No hay ítems en el catálogo.';
+
+  @override
+  String prepAdminItemSummarySubtitle(
+    String category,
+    int questions,
+    int offers,
+    int samples,
+    String status,
+  ) {
+    return '$category · $questions preg. · $offers ofertas · $samples muestras · $status';
+  }
+
+  @override
+  String get prepAdminEditItemTitle => 'Editar ítem';
+
+  @override
+  String get prepAdminMetadataSection => 'Metadatos';
+
+  @override
+  String get prepAdminOffersSection => 'Matriz de precios';
+
+  @override
+  String get prepAdminSamplesSection => 'Preguntas muestra';
+
+  @override
+  String get prepAdminPublishSection => 'Publicación';
+
+  @override
+  String get prepAdminQuizIdLabel => 'ID del cuestionario';
+
+  @override
+  String get prepAdminQuizIdHint => 'GUID del quiz existente en la plataforma';
+
+  @override
+  String get prepAdminQuizIdRequired => 'Indica el ID del cuestionario';
+
+  @override
+  String get prepAdminQuizSearchLabel => 'Buscar cuestionario';
+
+  @override
+  String get prepAdminSelectQuizLabel => 'Cuestionario';
+
+  @override
+  String get prepAdminSelectQuizHint =>
+      'Solo cuestionarios creados por administradores de contenido, aún no en el catálogo.';
+
+  @override
+  String get prepAdminSelectQuizError => 'Selecciona un cuestionario.';
+
+  @override
+  String get prepAdminLinkableQuizzesEmpty =>
+      'No hay cuestionarios disponibles. Crea uno con una cuenta admin o quita los que ya están en el catálogo.';
+
+  @override
+  String prepAdminLinkableQuizOption(String title, int count, String author) {
+    return '$title · $count preg. · $author';
+  }
+
+  @override
+  String get prepAdminSubcategoryLabel => 'Subcategoría';
+
+  @override
+  String get prepAdminSelectCategoryError => 'Selecciona una subcategoría';
+
+  @override
+  String get prepAdminTitleOverrideLabel => 'Título en catálogo (opcional)';
+
+  @override
+  String get prepAdminTagsLabel => 'Etiquetas';
+
+  @override
+  String get prepAdminTagsHint => 'Separadas por comas';
+
+  @override
+  String get prepAdminListingStartLabel => 'Inicio de venta';
+
+  @override
+  String get prepAdminListingEndLabel => 'Fin de venta';
+
+  @override
+  String get prepAdminOptionalDate => 'Sin definir';
+
+  @override
+  String get prepAdminCreateItemAction => 'Crear ítem';
+
+  @override
+  String get prepAdminSaveMetadataAction => 'Guardar metadatos';
+
+  @override
+  String get prepAdminSaveOffersAction => 'Guardar precios';
+
+  @override
+  String get prepAdminPickSamplesAction => 'Elegir 3 preguntas';
+
+  @override
+  String get prepAdminSamplesEmpty => 'Aún no hay preguntas muestra.';
+
+  @override
+  String get prepAdminPublishAction => 'Publicar en catálogo';
+
+  @override
+  String get prepAdminUnpublishAction => 'Despublicar';
+
+  @override
+  String get prepAdminDeleteItemAction => 'Eliminar ítem';
+
+  @override
+  String get prepAdminDeleteItemTitle => '¿Eliminar ítem del catálogo?';
+
+  @override
+  String get prepAdminDeleteItemMessage =>
+      'El ítem dejará de mostrarse. Los accesos ya comprados se conservan en historial.';
+
+  @override
+  String get prepAdminItemCreated => 'Ítem creado';
+
+  @override
+  String get prepAdminMetadataSaved => 'Metadatos guardados';
+
+  @override
+  String get prepAdminOffersRequired => 'Activa al menos una oferta de acceso';
+
+  @override
+  String get prepAdminOffersSaved => 'Precios guardados';
+
+  @override
+  String get prepAdminSamplesSaved => 'Muestras guardadas';
+
+  @override
+  String get prepAdminPublished => 'Publicado en catálogo';
+
+  @override
+  String get prepAdminUnpublished => 'Despublicado';
+
+  @override
+  String get prepAdminItemDeleted => 'Ítem eliminado';
+
+  @override
+  String prepAdminLinkedQuiz(String title) {
+    return 'Cuestionario: $title';
+  }
+
+  @override
+  String prepAdminOffersChip(int count) {
+    return '$count ofertas activas';
+  }
+
+  @override
+  String prepAdminSamplesChip(int count) {
+    return '$count/3 muestras';
+  }
+
+  @override
+  String get prepAdminOfferFreeLabel => 'Acceso gratis';
+
+  @override
+  String get prepAdminOfferPriceLabel => 'Precio';
+
+  @override
+  String get prepAdminOfferCurrencyLabel => 'Moneda';
+
+  @override
+  String get prepAdminStoreProductIdLabel => 'ID producto tienda (IAP)';
+
+  @override
+  String get prepAdminSamplesLoadError => 'No se pudieron cargar las preguntas';
+
+  @override
+  String get prepAdminSamplesCountError => 'Selecciona exactamente 3 preguntas';
+
+  @override
+  String get prepAdminSamplesPickerTitle => 'Preguntas muestra';
+
+  @override
+  String prepAdminSamplesPickerSubtitle(int selected, int required) {
+    return '$selected de $required seleccionadas';
+  }
+
+  @override
+  String get errorPrepCategoryNotFound => 'Categoría no encontrada.';
+
+  @override
+  String get errorPrepCategoryHasSubcategories =>
+      'No se puede eliminar: tiene subcategorías activas.';
+
+  @override
+  String get errorPrepCategoryHasItems =>
+      'No se puede eliminar: tiene ítems en el catálogo.';
+
+  @override
+  String get errorPrepQuizNotFound => 'Cuestionario no encontrado.';
+
+  @override
+  String get errorPrepQuizNotEligible =>
+      'Solo se pueden añadir cuestionarios creados por un administrador de contenido.';
+
+  @override
+  String get errorPrepQuizAlreadyInCatalog =>
+      'Este cuestionario ya está en Preparación+.';
+
+  @override
+  String get errorPrepCatalogItemNotFound => 'Ítem de catálogo no encontrado.';
+
+  @override
+  String errorPrepSampleCountRequired(int count) {
+    return 'Se requieren exactamente $count preguntas muestra.';
+  }
+
+  @override
+  String get errorPrepSampleQuestionsNotInQuiz =>
+      'Las preguntas muestra deben pertenecer al cuestionario vinculado.';
+
+  @override
+  String get errorPrepInvalidCategoryType => 'Tipo de categoría no válido.';
+
+  @override
+  String get errorPrepNameSlugRequired => 'Nombre y slug son obligatorios.';
+
+  @override
+  String get errorPrepParentCategoryNotFound =>
+      'Categoría padre no encontrada.';
+
+  @override
+  String get errorPrepSubcategoryTypeMismatch =>
+      'El tipo de subcategoría debe coincidir con el padre.';
+
+  @override
+  String get errorPrepCategorySelfParent =>
+      'Una categoría no puede ser su propio padre.';
+
+  @override
+  String get errorPrepSlugDuplicate => 'Ese slug ya existe en este nivel.';
+
+  @override
+  String get errorPrepCategoryInactive => 'Categoría no encontrada o inactiva.';
+
+  @override
+  String get errorPrepItemRequiresSubcategory =>
+      'El ítem debe asignarse a una subcategoría, no a una raíz.';
+
+  @override
+  String get errorPrepInstitutionTagGeographicOnly =>
+      'La etiqueta de institución solo aplica en categorías geográficas.';
+
+  @override
+  String get errorPrepCategoryHierarchyBroken =>
+      'La jerarquía de categorías está incompleta.';
+
+  @override
+  String get errorPrepOffersRequired =>
+      'Se requiere al menos una oferta de acceso.';
+
+  @override
+  String get errorPrepInvalidDuration =>
+      'Duración no válida. Permitidas: 30, 60, 90 y 183 días.';
+
+  @override
+  String get errorPrepPriceNegative => 'El precio no puede ser negativo.';
+
+  @override
+  String get errorPrepOfferDurationDuplicate =>
+      'Hay duraciones duplicadas en las ofertas.';
+
+  @override
+  String get errorPrepActiveOfferRequiredPublish =>
+      'Activa al menos una oferta antes de publicar.';
+
+  @override
+  String errorPrepSamplesRequiredPublish(int count) {
+    return 'Configura exactamente $count preguntas muestra antes de publicar.';
+  }
+
+  @override
+  String get errorPrepQuizNoQuestions =>
+      'El cuestionario vinculado debe tener al menos una pregunta.';
+
+  @override
+  String get errorPrepListingEndBeforeStart =>
+      'La fecha de fin de venta debe ser posterior al inicio.';
+
+  @override
+  String get errorPrepPreviewNotAvailable =>
+      'La vista previa no está disponible para este ítem.';
+
+  @override
+  String get errorPrepItemNotAvailable =>
+      'Este ítem no está disponible para compra en este momento.';
+
+  @override
+  String get errorPrepOfferNotFound => 'Oferta no encontrada.';
+
+  @override
+  String get errorPrepOfferIsFree =>
+      'Esta oferta es gratis. Usa el checkout sin pago.';
+
+  @override
+  String get errorPrepPayPalPurchaseNotFound =>
+      'Compra PayPal de Preparación+ no encontrada.';
+
+  @override
+  String get errorPrepMobilePlatformInvalid =>
+      'La plataforma debe ser google_play o app_store.';
+
+  @override
+  String get errorPrepStoreProductMismatch =>
+      'El producto de tienda no coincide con esta oferta.';
+
+  @override
+  String get errorPrepOfferNoLongerExists => 'La oferta ya no existe.';
+
+  @override
+  String get errorPrepInvalidProductCode =>
+      'Código de producto de compra no válido.';
+
+  @override
+  String get errorPrepGooglePlayNotConfigured =>
+      'Google Play no está configurado en el servidor.';
+
+  @override
+  String get errorPrepAppStoreNotConfigured =>
+      'App Store no está configurado. Usa pagos mock en desarrollo.';
 }

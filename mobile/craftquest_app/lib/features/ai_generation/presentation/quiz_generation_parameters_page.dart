@@ -10,6 +10,7 @@ import 'package:craftquest_app/core/widgets/app_section_title.dart';
 import 'package:craftquest_app/core/network/api_error_mapper.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
+import 'package:craftquest_app/features/billing/presentation/ai_credits_insufficient_dialog.dart';
 import 'package:craftquest_app/features/ai_generation/ai_generation_limits.dart';
 import 'package:craftquest_app/features/ai_generation/data/models/study_material_models.dart';
 import 'package:craftquest_app/features/ai_generation/data/study_material_repository.dart';
@@ -63,6 +64,7 @@ class _QuizGenerationParametersPageState extends State<QuizGenerationParametersP
   bool _loadingEstimate = true;
   bool _refreshingEstimate = false;
   bool _starting = false;
+  bool _includeExplanations = true;
 
   static const _allQuestionTypes = [
     ('single_choice', 'aiGenerationTypeSingleChoice'),
@@ -180,6 +182,7 @@ class _QuizGenerationParametersPageState extends State<QuizGenerationParametersP
       pageFrom: _pageFrom,
       pageTo: _pageTo,
       topicFocus: topic.isEmpty ? null : topic,
+      includeExplanations: _includeExplanations,
     );
   }
 
@@ -287,7 +290,11 @@ class _QuizGenerationParametersPageState extends State<QuizGenerationParametersP
         );
         return;
       }
-      context.showDioErrorSnackBar(e);
+      if (ApiErrorMapper.isAiCreditsInsufficient(e)) {
+        await showAiCreditsInsufficientDialog(context);
+      } else {
+        context.showDioErrorSnackBar(e);
+      }
     } finally {
       if (mounted) setState(() => _starting = false);
     }
@@ -523,6 +530,19 @@ class _QuizGenerationParametersPageState extends State<QuizGenerationParametersP
         const SizedBox(height: AppSpacing.lg),
         AppSectionTitle(title: l10n.aiGenerationParamsTitle),
         const SizedBox(height: AppSpacing.sm),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(l10n.aiGenerationIncludeExplanationsLabel),
+          subtitle: Text(
+            l10n.aiGenerationIncludeExplanationsHint,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          value: _includeExplanations,
+          activeThumbColor: AppColors.accentGold,
+          onChanged: (v) => setState(() => _includeExplanations = v),
+        ),
       ],
     );
   }

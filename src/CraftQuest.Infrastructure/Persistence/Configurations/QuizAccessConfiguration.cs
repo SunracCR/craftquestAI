@@ -26,5 +26,15 @@ public class QuizAccessConfiguration : IEntityTypeConfiguration<QuizAccess>
         builder.HasOne(x => x.GrantedByShareCode)
             .WithMany()
             .HasForeignKey(x => x.GrantedByShareCodeId);
+
+        builder.HasOne(x => x.GrantedByPurchase)
+            .WithMany()
+            .HasForeignKey(x => x.GrantedByPurchaseId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(x => x.PrepCatalogItem)
+            .WithMany()
+            .HasForeignKey(x => x.PrepCatalogItemId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

@@ -71,6 +71,9 @@ public class StudentService(CraftQuestDbContext dbContext) : IStudentService
                 assignment.StartsAt,
                 assignment.DueAt,
                 assignment.MaxAttempts,
+                assignment.RandomizeQuestions,
+                assignment.AllowStudentRandomizeQuestions,
+                assignment.ForfeitExitCountsAsAttempt,
                 assignment.CreatedAt,
                 TeacherDisplayName = teacher.DisplayName ?? teacher.Email,
             })
@@ -87,7 +90,7 @@ public class StudentService(CraftQuestDbContext dbContext) : IStudentService
             .Where(ps => ps.StudentUserId == userId
                 && ps.AssignmentId.HasValue
                 && assignmentIds.Contains(ps.AssignmentId.Value)
-                && ps.Status == "finished")
+                && (ps.Status == "finished" || ps.Status == "forfeited"))
             .GroupBy(ps => ps.AssignmentId!.Value)
             .Select(g => new { AssignmentId = g.Key, Count = g.Count() })
             .ToDictionaryAsync(x => x.AssignmentId, x => x.Count, cancellationToken);
@@ -106,6 +109,9 @@ public class StudentService(CraftQuestDbContext dbContext) : IStudentService
                 StartsAt = a.StartsAt,
                 DueAt = a.DueAt,
                 MaxAttempts = a.MaxAttempts,
+                RandomizeQuestions = a.RandomizeQuestions,
+                AllowStudentRandomizeQuestions = a.AllowStudentRandomizeQuestions,
+                ForfeitExitCountsAsAttempt = a.ForfeitExitCountsAsAttempt,
                 MyAttemptCount = attemptCounts.GetValueOrDefault(a.AssignmentId),
                 TeacherDisplayName = a.TeacherDisplayName,
                 CreatedAt = a.CreatedAt,
@@ -143,7 +149,7 @@ public class StudentService(CraftQuestDbContext dbContext) : IStudentService
             .AsNoTracking()
             .Where(ps => ps.AssignmentId == assignmentId
                 && ps.StudentUserId == userId
-                && ps.Status == "finished")
+                && (ps.Status == "finished" || ps.Status == "forfeited"))
             .OrderByDescending(ps => ps.FinishedAt ?? ps.StartedAt)
             .Select(ps => new
             {

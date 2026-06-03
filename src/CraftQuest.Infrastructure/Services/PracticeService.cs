@@ -1,9 +1,11 @@
+using CraftQuest.Application.Analytics;
 using CraftQuest.Application.Services;
 using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Exceptions;
 using CraftQuest.Application.Models.Analytics;
 using CraftQuest.Application.Models.Practice;
 using CraftQuest.Application.Models.Teacher;
+using CraftQuest.Application.Services.Quizzes;
 using CraftQuest.Application.Services.Teacher;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
@@ -34,6 +36,7 @@ public class PracticeService(
             throw new AppException("Quiz is not published.", 403);
         }
 
+        Assignment? assignment = null;
         if (request.AssignmentId.HasValue)
         {
             await ValidateAssignmentPracticeWindowAsync(
@@ -42,6 +45,13 @@ public class PracticeService(
                 request.QuizId,
                 request.ClientUtcOffsetMinutes,
                 cancellationToken);
+
+            assignment = await dbContext.Assignments
+                .AsNoTracking()
+                .FirstOrDefaultAsync(
+                    a => a.AssignmentId == request.AssignmentId.Value,
+                    cancellationToken)
+                ?? throw new AppException("Assignment not found.", 404);
         }
         else
         {
@@ -62,6 +72,8 @@ public class PracticeService(
             .Include(q => q.QuestionType)
             .Include(q => q.AnswerOptions.Where(o => o.IsActive))
             .Include(q => q.CorrectAnswerOptions)
+            .Include(q => q.Justification!)
+                .ThenInclude(j => j.Sources)
             .Where(q => q.QuizId == request.QuizId && q.DeletedAt == null)
             .OrderBy(q => q.SortOrder)
             .ToListAsync(cancellationToken);
@@ -71,10 +83,13 @@ public class PracticeService(
             throw new AppException("Quiz has no questions.", 400);
         }
 
-        var randomizeQuestions = request.RandomizeQuestions ?? quiz.RandomizeQuestions;
-        var questionList = randomizeQuestions
-            ? questions.OrderBy(_ => Random.Shared.Next()).ToList()
-            : questions;
+        var randomizeQuestions = PracticeSessionOrdering.ResolveRandomizeQuestions(
+            request.AssignmentId.HasValue,
+            request.RandomizeQuestions,
+            quiz.RandomizeQuestions,
+            assignment?.RandomizeQuestions ?? false,
+            assignment?.AllowStudentRandomizeQuestions ?? false);
+        var questionList = PracticeSessionOrdering.OrderQuestions(questions, randomizeQuestions);
 
         var sessionId = Guid.NewGuid();
         var session = new PracticeSession
@@ -114,7 +129,7 @@ public class PracticeService(
                 .ToHashSet();
 
             var orderedOptions = question.RandomizeAnswerOptions
-                ? Shuffle(selectableOptions, seed)
+                ? PracticeSessionOrdering.ShuffleAnswerOptions(selectableOptions, seed)
                 : selectableOptions.OrderBy(o => o.DefaultSortOrder).ToList();
 
             var labels = AnswerGradingService.BuildDisplayLabels(orderedOptions.Count);
@@ -157,6 +172,9 @@ public class PracticeService(
                 });
             }
 
+            var (justificationText, justificationSourcesJson) =
+                QuestionJustificationMapper.BuildPracticeSnapshot(question.Justification);
+
             session.QuestionSnapshots.Add(new PracticeQuestionSnapshot
             {
                 PracticeQuestionSnapshotId = snapshotId,
@@ -168,6 +186,8 @@ public class PracticeService(
                 DisplayOrder = displayOrder,
                 AnswerStatus = "unanswered",
                 RandomizationSeed = seed,
+                JustificationTextSnapshot = justificationText,
+                JustificationSourcesSnapshot = justificationSourcesJson,
                 CreatedAt = DateTime.UtcNow,
                 AnswerOptionSnapshots = answerSnapshots,
             });
@@ -221,10 +241,23 @@ public class PracticeService(
             .Select(a => a.AnswerOptionId)
             .ToHashSet();
 
-        var isCorrect = AnswerGradingService.IsAnswerCorrect(
+        var scoringPolicy = await dbContext.Questions
+            .AsNoTracking()
+            .Where(q => q.QuestionId == questionSnapshot.QuestionId)
+            .Select(q => q.ScoringPolicy)
+            .FirstOrDefaultAsync(cancellationToken) ?? "strict";
+
+        if (questionType.SupportsMultipleCorrectAnswers)
+        {
+            scoringPolicy = AnswerGradingService.PartialScoringPolicy;
+        }
+
+        var grading = AnswerGradingService.GradeAnswer(
             selectedIds.ToHashSet(),
             correctIds,
-            questionType.SupportsMultipleCorrectAnswers);
+            questionType.SupportsMultipleCorrectAnswers,
+            scoringPolicy,
+            questionSnapshot.PointsPossible);
 
         var now = DateTime.UtcNow;
         foreach (var answer in questionSnapshot.AnswerOptionSnapshots)
@@ -234,8 +267,8 @@ public class PracticeService(
         }
 
         questionSnapshot.AnswerStatus = "answered";
-        questionSnapshot.IsCorrect = isCorrect;
-        questionSnapshot.PointsAwarded = isCorrect ? questionSnapshot.PointsPossible : 0;
+        questionSnapshot.IsCorrect = grading.IsFullyCorrect;
+        questionSnapshot.PointsAwarded = grading.PointsAwarded;
         questionSnapshot.SubmittedAt = now;
         session.LastActivityAt = now;
 
@@ -256,43 +289,17 @@ public class PracticeService(
     {
         var session = await LoadSessionForStudentAsync(studentUserId, sessionId, cancellationToken);
 
-        var correct = 0;
-        var incorrect = 0;
-        var omitted = 0;
-        decimal scoreObtained = 0;
-
-        foreach (var question in session.QuestionSnapshots)
-        {
-            switch (question.AnswerStatus)
-            {
-                case "answered" when question.IsCorrect == true:
-                    correct++;
-                    scoreObtained += question.PointsAwarded;
-                    break;
-                case "answered":
-                    incorrect++;
-                    break;
-                case "skipped":
-                default:
-                    omitted++;
-                    question.AnswerStatus = "omitted";
-                    break;
-            }
-        }
+        ApplyPartialSessionScoring(session);
 
         session.Status = "finished";
         session.FinishedAt = DateTime.UtcNow;
         session.DurationSeconds = (int)(session.FinishedAt.Value - session.StartedAt).TotalSeconds;
-        session.ScoreObtained = scoreObtained;
-        session.CorrectAnswers = correct;
-        session.IncorrectAnswers = incorrect;
-        session.OmittedAnswers = omitted;
 
         await analyticsService.RecordFinishedPracticeSessionAsync(session, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         var percentage = session.ScorePossible > 0
-            ? Math.Round(scoreObtained / session.ScorePossible * 100, 2)
+            ? Math.Round(session.ScoreObtained / session.ScorePossible * 100, 2)
             : 0;
 
         var revealContext = await GetAssignmentRevealContextAsync(session, cancellationToken);
@@ -319,12 +326,12 @@ public class PracticeService(
         return new PracticeSessionResultDto
         {
             PracticeSessionId = session.PracticeSessionId,
-            ScoreObtained = scoreObtained,
+            ScoreObtained = session.ScoreObtained,
             ScorePossible = session.ScorePossible,
             Percentage = percentage,
-            CorrectAnswers = correct,
-            IncorrectAnswers = incorrect,
-            OmittedAnswers = omitted,
+            CorrectAnswers = session.CorrectAnswers,
+            IncorrectAnswers = session.IncorrectAnswers,
+            OmittedAnswers = session.OmittedAnswers,
             CanViewDetailedReview = revealContext.CanViewDetailedReview,
             AssignmentShowCorrectAnswersMode = revealContext.ShowCorrectAnswersMode,
             AssignmentDueAt = revealContext.AssignmentDueAt,
@@ -499,6 +506,90 @@ public class PracticeService(
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task ForfeitSessionAsync(
+        Guid studentUserId,
+        Guid sessionId,
+        CancellationToken cancellationToken = default)
+    {
+        var session = await LoadSessionForStudentAsync(studentUserId, sessionId, cancellationToken);
+
+        if (session.Status != "in_progress")
+        {
+            throw new AppException("Practice session is not in progress.", 400);
+        }
+
+        if (!session.AssignmentId.HasValue)
+        {
+            throw new AppException(
+                "Forfeit is only available for class assignment practice.",
+                400);
+        }
+
+        var assignment = await dbContext.Assignments
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                a => a.AssignmentId == session.AssignmentId.Value,
+                cancellationToken)
+            ?? throw new AppException("Assignment not found.", 404);
+
+        if (!assignment.ForfeitExitCountsAsAttempt
+            || !assignment.MaxAttempts.HasValue
+            || assignment.MaxAttempts < 1)
+        {
+            throw new AppException(
+                "This assignment does not forfeit attempts on exit.",
+                403,
+                errorCode: "ASSIGNMENT_FORFEIT_NOT_ENABLED");
+        }
+
+        ApplyPartialSessionScoring(session);
+
+        var now = DateTime.UtcNow;
+        session.Status = "forfeited";
+        session.FinishedAt = now;
+        session.LastActivityAt = now;
+        session.DurationSeconds = (int)(now - session.StartedAt).TotalSeconds;
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private static void ApplyPartialSessionScoring(PracticeSession session)
+    {
+        var correct = 0;
+        var incorrect = 0;
+        var omitted = 0;
+        decimal scoreObtained = 0;
+
+        foreach (var question in session.QuestionSnapshots)
+        {
+            switch (question.AnswerStatus)
+            {
+                case "answered":
+                    scoreObtained += question.PointsAwarded;
+                    if (question.IsCorrect == true)
+                    {
+                        correct++;
+                    }
+                    else
+                    {
+                        incorrect++;
+                    }
+
+                    break;
+                case "skipped":
+                default:
+                    omitted++;
+                    question.AnswerStatus = "omitted";
+                    break;
+            }
+        }
+
+        session.ScoreObtained = scoreObtained;
+        session.CorrectAnswers = correct;
+        session.IncorrectAnswers = incorrect;
+        session.OmittedAnswers = omitted;
+    }
+
     private async Task ExpireStaleInProgressSessionsAsync(
         Guid studentUserId,
         CancellationToken cancellationToken)
@@ -585,19 +676,6 @@ public class PracticeService(
         }
 
         return session;
-    }
-
-    private static List<QuestionAnswerOption> Shuffle(List<QuestionAnswerOption> options, string seed)
-    {
-        var list = options.ToList();
-        var random = new Random(HashCode.Combine(seed.GetHashCode()));
-        for (var i = list.Count - 1; i > 0; i--)
-        {
-            var j = random.Next(i + 1);
-            (list[i], list[j]) = (list[j], list[i]);
-        }
-
-        return list;
     }
 
     private PracticeSessionDto MapSession(PracticeSession session)
@@ -752,80 +830,7 @@ public class PracticeService(
             .Include(q => q.CorrectAnswerOptions)
             .ToListAsync(cancellationToken);
 
-        var questionStats = new Dictionary<Guid, (int Attempts, int Correct, int Incorrect, int Omitted)>();
-        var optionSelected = new Dictionary<Guid, int>();
-
-        foreach (var session in sessions)
-        {
-            foreach (var snapshot in session.QuestionSnapshots)
-            {
-                if (!questionStats.TryGetValue(snapshot.QuestionId, out var stats))
-                {
-                    stats = (0, 0, 0, 0);
-                }
-
-                stats.Attempts++;
-                switch (snapshot.AnswerStatus)
-                {
-                    case "answered" when snapshot.IsCorrect == true:
-                        stats.Correct++;
-                        break;
-                    case "answered":
-                        stats.Incorrect++;
-                        break;
-                    default:
-                        stats.Omitted++;
-                        break;
-                }
-
-                questionStats[snapshot.QuestionId] = stats;
-
-                foreach (var answer in snapshot.AnswerOptionSnapshots.Where(a => a.WasSelected))
-                {
-                    optionSelected[answer.AnswerOptionId] =
-                        optionSelected.GetValueOrDefault(answer.AnswerOptionId) + 1;
-                }
-            }
-        }
-
-        var questionAnalytics = questions
-            .Select(q =>
-            {
-                questionStats.TryGetValue(q.QuestionId, out var stats);
-                var attempts = stats.Attempts;
-                var correctIds = q.CorrectAnswerOptions
-                    .Select(c => c.AnswerOptionId)
-                    .ToHashSet();
-
-                return new QuestionAnalyticsDto
-                {
-                    QuestionId = q.QuestionId,
-                    QuestionText = q.QuestionText,
-                    AttemptsCount = attempts,
-                    CorrectCount = stats.Correct,
-                    IncorrectCount = stats.Incorrect,
-                    OmittedCount = stats.Omitted,
-                    AnswerOptions = q.AnswerOptions
-                        .OrderBy(o => o.DefaultSortOrder)
-                        .Select(o =>
-                        {
-                            var selected = optionSelected.GetValueOrDefault(o.AnswerOptionId);
-                            return new AnswerOptionAnalyticsDto
-                            {
-                                AnswerOptionId = o.AnswerOptionId,
-                                StableKey = o.StableKey,
-                                Text = o.AnswerText,
-                                IsCorrect = correctIds.Contains(o.AnswerOptionId),
-                                SelectedCount = selected,
-                                SelectionRate = attempts > 0
-                                    ? Math.Round((decimal)selected / attempts * 100, 2)
-                                    : 0,
-                            };
-                        })
-                        .ToList(),
-                };
-            })
-            .ToList();
+        var questionAnalytics = DistractorAnalyticsAggregator.BuildFromSessions(questions, sessions);
 
         return new MyQuizPracticeAnalyticsDto
         {
@@ -941,13 +946,13 @@ public class PracticeService(
 
         if (assignment.MaxAttempts.HasValue)
         {
-            var finishedAttempts = await dbContext.PracticeSessions.CountAsync(
+            var usedAttempts = await dbContext.PracticeSessions.CountAsync(
                 ps => ps.AssignmentId == assignmentId
                     && ps.StudentUserId == studentUserId
-                    && ps.Status == "finished",
+                    && (ps.Status == "finished" || ps.Status == "forfeited"),
                 cancellationToken);
 
-            if (finishedAttempts >= assignment.MaxAttempts.Value)
+            if (usedAttempts >= assignment.MaxAttempts.Value)
             {
                 throw new AppException(
                     "You have reached the maximum number of attempts for this assignment.",

@@ -8,71 +8,43 @@ import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
-/// Mensajes de feedback estandarizados (éxito verde / error rojo).
-extension AppSnackBar on BuildContext {
-  void showSuccessSnackBar(String message) {
-    _showFeedbackSnackBar(
+/// Mensajes de feedback globales (no dependen del [BuildContext] de una ruta).
+abstract final class AppSnackBars {
+  static void showSuccess(String message) {
+    _show(
       message: message,
       backgroundColor: AppColors.success,
       icon: Icons.check_circle_outline_rounded,
     );
   }
 
-  void showErrorSnackBar(String message) {
-    _showFeedbackSnackBar(
+  static void showError(String message) {
+    _show(
       message: message,
       backgroundColor: AppColors.error,
       icon: Icons.error_outline_rounded,
     );
   }
 
-  void showInfoSnackBar(String message) {
-    _showFeedbackSnackBar(
+  static void showInfo(String message) {
+    _show(
       message: message,
       backgroundColor: AppColors.surfaceHighlight,
       icon: Icons.info_outline_rounded,
     );
   }
 
-  void showDioErrorSnackBar(DioException error) {
-    final l10n = AppLocalizations.of(this)!;
-    final message = DioErrorMapper.map(error, l10n);
-    if (DioErrorMapper.isConnectivityFailure(error)) {
-      showInfoSnackBar(message);
-      return;
-    }
-
-    if (ApiErrorMapper.isPlanLimitError(error)) {
-      _showFeedbackSnackBar(
-        message: message,
-        backgroundColor: AppColors.error,
-        icon: Icons.error_outline_rounded,
-        actionLabel: l10n.upgradePlanAction,
-        onAction: () {
-          (rootScaffoldMessengerKey.currentState ?? ScaffoldMessenger.of(this))
-              .hideCurrentSnackBar();
-          Navigator.of(this).push<void>(
-            MaterialPageRoute<void>(
-              builder: (_) => const UpgradePlanPage(),
-            ),
-          );
-        },
-      );
-      return;
-    }
-
-    showErrorSnackBar(message);
-  }
-
-  void _showFeedbackSnackBar({
+  static void _show({
     required String message,
     required Color backgroundColor,
     required IconData icon,
     String? actionLabel,
     VoidCallback? onAction,
   }) {
-    final messenger =
-        rootScaffoldMessengerKey.currentState ?? ScaffoldMessenger.of(this);
+    final messenger = rootScaffoldMessengerKey.currentState;
+    if (messenger == null) {
+      return;
+    }
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(
       SnackBar(
@@ -109,5 +81,52 @@ extension AppSnackBar on BuildContext {
             : null,
       ),
     );
+  }
+}
+
+/// Mensajes de feedback estandarizados (éxito verde / error rojo).
+extension AppSnackBar on BuildContext {
+  void showSuccessSnackBar(String message) {
+    AppSnackBars.showSuccess(message);
+  }
+
+  void showErrorSnackBar(String message) {
+    AppSnackBars.showError(message);
+  }
+
+  void showInfoSnackBar(String message) {
+    AppSnackBars.showInfo(message);
+  }
+
+  void showDioErrorSnackBar(DioException error) {
+    final l10n = AppLocalizations.of(this)!;
+    final message = DioErrorMapper.map(error, l10n);
+    if (DioErrorMapper.isConnectivityFailure(error)) {
+      showInfoSnackBar(message);
+      return;
+    }
+
+    if (ApiErrorMapper.isPlanLimitError(error)) {
+      AppSnackBars._show(
+        message: message,
+        backgroundColor: AppColors.error,
+        icon: Icons.error_outline_rounded,
+        actionLabel: l10n.upgradePlanAction,
+        onAction: () {
+          rootScaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+          if (!mounted) {
+            return;
+          }
+          Navigator.of(this).push<void>(
+            MaterialPageRoute<void>(
+              builder: (_) => const UpgradePlanPage(),
+            ),
+          );
+        },
+      );
+      return;
+    }
+
+    showErrorSnackBar(message);
   }
 }

@@ -120,7 +120,7 @@ class PracticeResultPage extends StatelessWidget {
                           ),
                     variant: result.scoreTrendVsPrevious! >= 0
                         ? AppNoticeVariant.success
-                        : AppNoticeVariant.info,
+                        : AppNoticeVariant.warning,
                   ),
                 ],
                 if (canViewReview && result.questionsToReview.isNotEmpty) ...[
@@ -147,7 +147,11 @@ class PracticeResultPage extends StatelessWidget {
                               ),
                             ),
                             TextButton(
-                              onPressed: () => _viewResults(context),
+                              onPressed: () => _viewResults(
+                                context,
+                                questionSnapshotId:
+                                    q.practiceQuestionSnapshotId,
+                              ),
                               child: Text(l10n.practiceResultReviewQuestionAction),
                             ),
                           ],
@@ -177,13 +181,17 @@ class PracticeResultPage extends StatelessWidget {
     );
   }
 
-  void _viewResults(BuildContext context) {
+  void _viewResults(
+    BuildContext context, {
+    String? questionSnapshotId,
+  }) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => TeacherSessionReviewPage(
           sessionId: result.practiceSessionId,
           quizTitle: quizTitle,
           isMyReview: true,
+          initialQuestionSnapshotId: questionSnapshotId,
         ),
       ),
     );

@@ -41,6 +41,10 @@ class ImportPreviewModel {
   const ImportPreviewModel({
     required this.importId,
     required this.status,
+    required this.totalQuestionsDetected,
+    required this.validQuestions,
+    required this.questionsWithWarnings,
+    required this.questionsWithErrors,
     required this.questions,
     required this.errors,
     this.maxQuestionsPerQuiz,
@@ -56,6 +60,11 @@ class ImportPreviewModel {
     return ImportPreviewModel(
       importId: json['importId'] as String,
       status: json['status'] as String,
+      totalQuestionsDetected: json['totalQuestionsDetected'] as int? ??
+          questions.length,
+      validQuestions: json['validQuestions'] as int? ?? questions.length,
+      questionsWithWarnings: json['questionsWithWarnings'] as int? ?? 0,
+      questionsWithErrors: json['questionsWithErrors'] as int? ?? 0,
       questions: questions,
       importableQuestionCount: _resolveImportableCount(
         json['importableQuestionCount'] as int?,
@@ -73,6 +82,10 @@ class ImportPreviewModel {
 
   final String importId;
   final String status;
+  final int totalQuestionsDetected;
+  final int validQuestions;
+  final int questionsWithWarnings;
+  final int questionsWithErrors;
   final List<PreviewQuestionModel> questions;
   final List<ImportErrorModel> errors;
   final int? maxQuestionsPerQuiz;

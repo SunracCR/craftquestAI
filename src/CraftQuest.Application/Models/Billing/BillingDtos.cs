@@ -24,6 +24,13 @@ public sealed class SubscriptionDto
     public required string Status { get; init; }
     public required DateTime StartedAt { get; init; }
     public DateTime? EndsAt { get; init; }
+    public string BillingCycle { get; init; } = "monthly";
+    public bool AutoRenewEnabled { get; init; } = true;
+    public bool CancelAtPeriodEnd { get; init; }
+    public DateTime? LastPaymentAt { get; init; }
+    public DateTime? NextBillingAt { get; init; }
+    public string? ProviderCode { get; init; }
+    public bool IsRecurring { get; init; }
 }
 
 public sealed class BillingUsageDto
@@ -56,4 +63,18 @@ public sealed class QuizQuestionCapacityDto
     public int? MaxQuestionsPerQuiz { get; init; }
     public required int CurrentQuestionCount { get; init; }
     public required int RemainingSlots { get; init; }
+}
+
+public sealed class PurchaseHistoryItemDto
+{
+    public required Guid PurchaseId { get; init; }
+    public required string ProductCode { get; init; }
+    public string? ProductDisplayName { get; init; }
+    public required string ProductType { get; init; }
+    public required string ProviderCode { get; init; }
+    public decimal? Amount { get; init; }
+    public string? CurrencyCode { get; init; }
+    public required string Status { get; init; }
+    public DateTime? PurchasedAt { get; init; }
+    public required DateTime CreatedAt { get; init; }
 }

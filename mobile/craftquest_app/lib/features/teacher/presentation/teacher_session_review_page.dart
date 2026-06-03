@@ -4,9 +4,11 @@ import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/widgets/app_zoomable_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
+import 'package:craftquest_app/core/theme/app_media_display.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_section_card.dart';
 import 'package:craftquest_app/core/widgets/app_section_title.dart';
+import 'package:craftquest_app/core/widgets/app_padded_scroll.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/features/guest/data/guest_repository.dart';
@@ -25,6 +27,7 @@ class TeacherSessionReviewPage extends StatefulWidget {
     this.isGuestMode = false,
     this.guestVisitId,
     this.guestToken,
+    this.initialQuestionSnapshotId,
   });
 
   final String sessionId;
@@ -33,6 +36,7 @@ class TeacherSessionReviewPage extends StatefulWidget {
   final bool isGuestMode;
   final String? guestVisitId;
   final String? guestToken;
+  final String? initialQuestionSnapshotId;
 
   @override
   State<TeacherSessionReviewPage> createState() =>
@@ -42,9 +46,11 @@ class TeacherSessionReviewPage extends StatefulWidget {
 class _TeacherSessionReviewPageState extends State<TeacherSessionReviewPage> {
   final _teacherRepository = getIt<TeacherReviewRepository>();
   final _practiceRepository = getIt<PracticeRepository>();
+  final _questionAnchorKeys = <String, GlobalKey>{};
   TeacherPracticeReviewModel? _review;
   bool _loading = true;
   String? _error;
+  bool _didScrollToInitialQuestion = false;
 
   @override
   void initState() {
@@ -78,6 +84,7 @@ class _TeacherSessionReviewPageState extends State<TeacherSessionReviewPage> {
         _review = review;
         _loading = false;
       });
+      _scheduleScrollToInitialQuestion();
     } on DioException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -184,7 +191,61 @@ class _TeacherSessionReviewPageState extends State<TeacherSessionReviewPage> {
     return '$baseUrl$path';
   }
 
-  Widget? _buildMediaPreview(String? mediaUrl, {double height = 160}) {
+  Widget? _buildCollapsibleJustification(
+    BuildContext context,
+    AppLocalizations l10n,
+    TeacherQuestionReviewModel question,
+  ) {
+    final text = question.justificationText?.trim() ?? '';
+    if (text.isEmpty) {
+      return null;
+    }
+
+    return _PracticeReviewJustificationPanel(
+      title: l10n.practiceReviewJustificationTitle,
+      expandHint: l10n.practiceReviewJustificationTapToExpand,
+      text: text,
+      sources: question.justificationSources,
+      pageLabel: l10n.practiceReviewSourcePage,
+    );
+  }
+
+  GlobalKey _anchorKeyFor(String practiceQuestionSnapshotId) =>
+      _questionAnchorKeys.putIfAbsent(practiceQuestionSnapshotId, GlobalKey.new);
+
+  void _scheduleScrollToInitialQuestion() {
+    final targetId = widget.initialQuestionSnapshotId;
+    if (targetId == null || _didScrollToInitialQuestion) {
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _didScrollToInitialQuestion) {
+          return;
+        }
+        final context = _questionAnchorKeys[targetId]?.currentContext;
+        if (context == null) {
+          return;
+        }
+        _didScrollToInitialQuestion = true;
+        Scrollable.ensureVisible(
+          context,
+          duration: const Duration(milliseconds: 450),
+          curve: Curves.easeInOut,
+          alignment: 0.08,
+        );
+      });
+    });
+  }
+
+  Widget? _buildMediaPreview(
+    String? mediaUrl, {
+    double height = AppMediaDisplay.optionImageHeight,
+  }) {
     final resolved = _resolveMediaUrl(mediaUrl);
     if (resolved == null) {
       return null;
@@ -221,8 +282,8 @@ class _TeacherSessionReviewPageState extends State<TeacherSessionReviewPage> {
                 )
               : review == null
                   ? const SizedBox.shrink()
-                  : ListView(
-                      padding: AppSpacing.listBottom,
+                  : AppPaddedScrollBody(
+                      child: ListView(
                       children: [
                         Text(
                           widget.quizTitle,
@@ -244,9 +305,26 @@ class _TeacherSessionReviewPageState extends State<TeacherSessionReviewPage> {
                         ),
                         const SizedBox(height: 16),
                         ...review.questions.map((q) {
+                          final highlightTarget =
+                              widget.initialQuestionSnapshotId ==
+                                  q.practiceQuestionSnapshotId;
                           return Padding(
+                            key: _anchorKeyFor(q.practiceQuestionSnapshotId),
                             padding: const EdgeInsets.only(bottom: 12),
-                            child: AppSectionCard(
+                            child: DecoratedBox(
+                              decoration: highlightTarget
+                                  ? BoxDecoration(
+                                      borderRadius: BorderRadius.circular(
+                                        AppColors.radiusSm,
+                                      ),
+                                      border: Border.all(
+                                        color: AppColors.accent
+                                            .withValues(alpha: 0.85),
+                                        width: 2,
+                                      ),
+                                    )
+                                  : const BoxDecoration(),
+                              child: AppSectionCard(
                               padding: const EdgeInsets.all(12),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -261,7 +339,7 @@ class _TeacherSessionReviewPageState extends State<TeacherSessionReviewPage> {
                                   ),
                                   if (_buildMediaPreview(
                                         q.questionMediaUrl,
-                                        height: 200,
+                                        height: AppMediaDisplay.questionImageHeight,
                                       )
                                       case final questionImage?)
                                     questionImage,
@@ -335,14 +413,139 @@ class _TeacherSessionReviewPageState extends State<TeacherSessionReviewPage> {
                                       ),
                                     );
                                   }),
+                                  if (_buildCollapsibleJustification(
+                                        context,
+                                        l10n,
+                                        q,
+                                      )
+                                      case final justificationPanel?) ...[
+                                    const SizedBox(height: 12),
+                                    justificationPanel,
+                                  ],
                                 ],
                               ),
                             ),
+                            ),
                           );
                         }),
-                        const SizedBox(height: 32),
                       ],
                     ),
+                    ),
+    );
+  }
+}
+
+class _PracticeReviewJustificationPanel extends StatefulWidget {
+  const _PracticeReviewJustificationPanel({
+    required this.title,
+    required this.expandHint,
+    required this.text,
+    required this.sources,
+    required this.pageLabel,
+  });
+
+  final String title;
+  final String expandHint;
+  final String text;
+  final List<TeacherJustificationSourceReviewModel> sources;
+  final String Function(int page) pageLabel;
+
+  @override
+  State<_PracticeReviewJustificationPanel> createState() =>
+      _PracticeReviewJustificationPanelState();
+}
+
+class _PracticeReviewJustificationPanelState
+    extends State<_PracticeReviewJustificationPanel> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final titleStyle = Theme.of(context).textTheme.labelLarge?.copyWith(
+          color: AppColors.accentGold,
+          fontWeight: FontWeight.w800,
+        );
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: AppColors.accentGold.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppColors.radiusSm),
+        border: Border.all(
+          color: AppColors.accentGold.withValues(alpha: 0.35),
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => setState(() => _expanded = !_expanded),
+          borderRadius: BorderRadius.circular(AppColors.radiusSm),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(widget.title, style: titleStyle),
+                          if (!_expanded) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              widget.expandHint,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(color: AppColors.textSecondary),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      _expanded
+                          ? Icons.expand_less_rounded
+                          : Icons.expand_more_rounded,
+                      color: AppColors.accentGold,
+                    ),
+                  ],
+                ),
+                if (_expanded) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    widget.text,
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(height: 1.35),
+                  ),
+                  ...widget.sources.map((s) {
+                    if (s.pageNumber == null &&
+                        (s.snippet == null || s.snippet!.isEmpty)) {
+                      return const SizedBox.shrink();
+                    }
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(
+                        s.pageNumber != null
+                            ? widget.pageLabel(s.pageNumber!)
+                            : s.snippet!,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppColors.textSecondary,
+                              fontStyle: FontStyle.italic,
+                            ),
+                      ),
+                    );
+                  }),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

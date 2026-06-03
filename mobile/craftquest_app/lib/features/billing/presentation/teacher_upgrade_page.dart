@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:craftquest_app/core/billing/payment_platform.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
@@ -12,6 +13,9 @@ import 'package:craftquest_app/features/auth/data/models/auth_models.dart';
 import 'package:craftquest_app/features/auth/presentation/auth_bloc.dart';
 import 'package:craftquest_app/features/billing/data/billing_repository.dart';
 import 'package:craftquest_app/features/billing/data/models/billing_models.dart';
+import 'package:craftquest_app/features/billing/presentation/billing_cycle_selector.dart';
+import 'package:craftquest_app/features/billing/presentation/subscription_cancel_flow.dart';
+import 'package:craftquest_app/features/billing/presentation/subscription_resume_flow.dart';
 import 'package:craftquest_app/features/billing/presentation/upgrade_plan_page.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
@@ -37,10 +41,13 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
   final _repo = getIt<BillingRepository>();
 
   UpgradeablePlanModel? _teacherPlan;
+  SubscriptionModel? _subscription;
+  BillingCycle _billingCycle = BillingCycle.monthly;
   bool _loadingPlans = true;
   String? _plansLoadError;
   bool _purchasing = false;
   bool _cancelling = false;
+  bool _resuming = false;
   StreamSubscription<List<PurchaseDetails>>? _purchaseSub;
 
   bool get _isAlreadyTeacher => widget.user.roles.contains('teacher');
@@ -76,9 +83,15 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
     try {
       final plans = await _repo.getUpgradeablePlans();
       final teacher = plans.where((p) => p.code == 'teacher').firstOrNull;
+      SubscriptionModel? subscription;
+      if (_isAlreadyTeacher) {
+        final billing = await _repo.getMyBilling();
+        subscription = billing.subscription;
+      }
       if (!mounted) return;
       setState(() {
         _teacherPlan = teacher;
+        _subscription = subscription;
         _loadingPlans = false;
       });
     } on DioException catch (e) {
@@ -113,22 +126,28 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
         await _buyWithStore(plan);
         return;
       }
+      context.showErrorSnackBar(l10n.storeProductNotConfigured);
+      return;
     }
-    await _buyWithPayPal(plan);
+    if (PaymentPlatform.supportsPayPalCheckout) {
+      await _buyWithPayPal(plan);
+    }
   }
 
   Future<void> _buyWithStore(UpgradeablePlanModel plan) async {
     final iap = InAppPurchase.instance;
-    final productId = defaultTargetPlatform == TargetPlatform.iOS
-        ? plan.appStoreProductId
-        : plan.googlePlayProductId;
+    final productId = plan.storeProductId(
+      isIos: defaultTargetPlatform == TargetPlatform.iOS,
+      billingCycle: _billingCycle.apiValue,
+    );
+    final l10n = AppLocalizations.of(context)!;
     if (productId == null) {
-      await _buyWithPayPal(plan);
+      context.showErrorSnackBar(l10n.storeProductNotConfigured);
       return;
     }
     final response = await iap.queryProductDetails({productId});
     if (response.productDetails.isEmpty) {
-      await _buyWithPayPal(plan);
+      context.showErrorSnackBar(l10n.storeProductNotFound(productId));
       return;
     }
     setState(() => _purchasing = true);
@@ -140,11 +159,16 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
     final l10n = AppLocalizations.of(context)!;
     setState(() => _purchasing = true);
     try {
-      final order = await _repo.createPayPalOrder(plan.code);
-      if (order.mockMode) {
-        await _repo.capturePayPalOrder(order.orderId);
+      final subscription = await _repo.createPayPalSubscription(
+        plan.code,
+        billingCycle: _billingCycle.apiValue,
+      );
+      if (subscription.mockMode) {
+        await _repo.activatePayPalSubscription(
+          subscription.subscriptionId,
+          billingCycle: _billingCycle.apiValue,
+        );
         if (!mounted) return;
-        // Refrescar perfil para actualizar roles en el shell
         context.read<AuthBloc>().add(const AuthProfileRefreshRequested());
         context.showSuccessSnackBar(
           l10n.upgradeSuccess(
@@ -154,10 +178,14 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
         Navigator.of(context).pop(true);
         return;
       }
-      if (order.approvalUrl != null) {
-        final uri = Uri.parse(order.approvalUrl!);
+      if (subscription.approvalUrl != null) {
+        final uri = Uri.parse(subscription.approvalUrl!);
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
+          if (!mounted) return;
+          context.showSuccessSnackBar(
+            l10n.paypalAwaitingSubscriptionActivation,
+          );
         }
       }
     } on DioException catch (e) {
@@ -177,11 +205,14 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
           final platform = defaultTargetPlatform == TargetPlatform.iOS
               ? 'app_store'
               : 'google_play';
+          final token =
+              purchase.verificationData.serverVerificationData;
           final verified = await _repo.verifyMobilePurchase(
             platform: platform,
             productId: purchase.productID,
-            purchaseToken: purchase.verificationData.serverVerificationData,
+            purchaseToken: token.isNotEmpty ? token : purchase.purchaseID ?? '',
             transactionId: purchase.purchaseID,
+            billingCycle: _billingCycle.apiValue,
           );
           if (purchase.pendingCompletePurchase) {
             await InAppPurchase.instance.completePurchase(purchase);
@@ -233,18 +264,44 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
 
     setState(() => _cancelling = true);
     try {
-      await _repo.cancelSubscription();
+      final result = await _repo.cancelSubscription();
       if (!mounted) return;
-      // Refrescar perfil para que el shell elimine el tab Teacher
-      context.read<AuthBloc>().add(const AuthProfileRefreshRequested());
-      context.showSuccessSnackBar(l10n.teacherUpgradeCancelSuccess);
-      Navigator.of(context).pop(true);
+      final accessDate = BillingDisplay.formatSubscriptionDate(
+        context,
+        result.accessUntil,
+      );
+      context.showSuccessSnackBar(
+        l10n.teacherUpgradeCancelSuccessUntil(accessDate),
+      );
+      await _load();
+      if (!mounted) return;
+      Navigator.of(context).pop();
     } on DioException catch (e) {
       if (!mounted) return;
       context.showDioErrorSnackBar(e);
     } finally {
       if (mounted) setState(() => _cancelling = false);
     }
+  }
+
+  Future<void> _resumeSubscription() async {
+    final subscription = _subscription;
+    if (subscription == null) {
+      return;
+    }
+    await SubscriptionResumeFlow.showResumeDialog(
+      context: context,
+      providerCode: subscription.providerCode,
+      onCompleted: () async {
+        setState(() => _resuming = true);
+        try {
+          await _load();
+        } finally {
+          if (mounted) setState(() => _resuming = false);
+        }
+      },
+      onRequiresResubscribe: _buy,
+    );
   }
 
   @override
@@ -329,9 +386,12 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
   }
 
   Widget _buildBody(AppLocalizations l10n) {
-    final price = BillingDisplay.formatMonthlyPrice(
+    final price = BillingDisplay.formatPlanPrice(
       context,
-      _teacherPlan?.monthlyPrice,
+      l10n,
+      monthlyPrice: _teacherPlan?.monthlyPrice,
+      annualPrice: _teacherPlan?.annualPrice,
+      cycle: _billingCycle,
     );
 
     return Padding(
@@ -362,34 +422,25 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
               padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
               child: AppLoadingView(),
             )
-          else
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  price,
-                  style: const TextStyle(
-                    color: AppColors.teacherAccent,
-                    fontSize: 40,
-                    fontWeight: FontWeight.w900,
-                    height: 1,
-                  ),
-                ),
-                if (_teacherPlan?.monthlyPrice != null) ...[
-                  const SizedBox(width: 4),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: Text(
-                      l10n.teacherUpgradePriceLabel,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
+          else ...[
+            if (!_isAlreadyTeacher) ...[
+              BillingCycleSelector(
+                value: _billingCycle,
+                enabled: !_purchasing && !_cancelling,
+                onChanged: (cycle) => setState(() => _billingCycle = cycle),
+              ),
+              const SizedBox(height: AppSpacing.md),
+            ],
+            Text(
+              price,
+              style: const TextStyle(
+                color: AppColors.teacherAccent,
+                fontSize: 40,
+                fontWeight: FontWeight.w900,
+                height: 1.1,
+              ),
             ),
+          ],
           const SizedBox(height: 28),
           _pillar(
             icon: Icons.class_rounded,
@@ -414,24 +465,55 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
 
           if (_isAlreadyTeacher) ...[
             AppNoticeBanner(
-              message: l10n.teacherUpgradeAlreadyActive,
+              message: _activePlanBannerMessage(l10n),
               variant: AppNoticeVariant.success,
             ),
-            const SizedBox(height: AppSpacing.md),
-            TextButton(
-              onPressed: _cancelling ? null : _cancelSubscription,
-              style: TextButton.styleFrom(foregroundColor: AppColors.error),
-              child: _cancelling
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppColors.error,
+            if (_subscription?.canResumeAutoRenew == true) ...[
+              const SizedBox(height: AppSpacing.md),
+              TextButton(
+                onPressed: _resuming ? null : _resumeSubscription,
+                style: TextButton.styleFrom(foregroundColor: AppColors.accentCool),
+                child: _resuming
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.accentCool,
+                        ),
+                      )
+                    : Text(
+                        SubscriptionCancelFlow.isMobileStore(
+                              _subscription?.providerCode,
+                            )
+                            ? l10n.billingResumeStoreTitle
+                            : l10n.billingResumeAutoRenewConfirm,
                       ),
-                    )
-                  : Text(l10n.teacherUpgradeCancelConfirm),
-            ),
+              ),
+            ],
+            if (_subscription?.autoRenewEnabled == true) ...[
+              const SizedBox(height: AppSpacing.md),
+              TextButton(
+                onPressed: _cancelling ? null : _cancelSubscription,
+                style: TextButton.styleFrom(foregroundColor: AppColors.error),
+                child: _cancelling
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.error,
+                        ),
+                      )
+                    : Text(
+                        SubscriptionCancelFlow.isMobileStore(
+                              _subscription?.providerCode,
+                            )
+                            ? l10n.billingCancelStoreTitle
+                            : l10n.teacherUpgradeCancelConfirm,
+                      ),
+              ),
+            ],
           ] else ...[
             // CTA principal
             SizedBox(
@@ -492,6 +574,20 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
           const SizedBox(height: AppSpacing.lg),
         ],
       ),
+    );
+  }
+
+  String _activePlanBannerMessage(AppLocalizations l10n) {
+    final subscription = _subscription;
+    if (subscription == null) {
+      return l10n.teacherUpgradeAlreadyActive;
+    }
+    return BillingDisplay.activePlanBannerMessage(
+      context,
+      l10n,
+      planName: BillingDisplay.localizedPlanName(l10n, code: 'teacher'),
+      subscription: subscription,
+      activeMessage: l10n.teacherUpgradeAlreadyActive,
     );
   }
 

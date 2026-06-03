@@ -1,8 +1,10 @@
 import 'package:craftquest_app/core/utils/assignment_dates.dart';
 import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/utils/email_utils.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
+import 'package:craftquest_app/core/widgets/app_padded_scroll.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/core/widgets/member_avatar.dart';
 import 'package:craftquest_app/features/teacher/data/models/teacher_class_models.dart';
@@ -15,6 +17,7 @@ import 'package:craftquest_app/features/teacher/presentation/teacher_assignment_
 import 'package:craftquest_app/features/teacher/data/models/teacher_dashboard_models.dart';
 import 'package:craftquest_app/features/teacher/presentation/widgets/teacher_class_ring.dart';
 import 'package:craftquest_app/features/teacher/presentation/widgets/teacher_completion_bar.dart';
+import 'package:craftquest_app/features/teacher/presentation/widgets/teacher_detail_sliver_header.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -68,8 +71,8 @@ class _TeacherClassDetailPageState extends State<TeacherClassDetailPage>
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancelar',
-                  style: TextStyle(color: AppColors.textSecondary))),
+              child: Text(l10n.cancel,
+                  style: const TextStyle(color: AppColors.textSecondary))),
           TextButton(
               onPressed: () => Navigator.pop(ctx, true),
               child: Text(l10n.teacherClassArchiveConfirmAction,
@@ -80,6 +83,95 @@ class _TeacherClassDetailPageState extends State<TeacherClassDetailPage>
     if (confirmed != true || !mounted) return;
     await _classRepo.archiveClass(widget.classId);
     if (mounted) Navigator.pop(context, true);
+  }
+
+  Future<void> _restore(AppLocalizations l10n) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text(
+          l10n.teacherClassRestoreConfirmTitle,
+          style: const TextStyle(color: AppColors.textPrimary),
+        ),
+        content: Text(
+          l10n.teacherClassRestoreConfirmMessage,
+          style: const TextStyle(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              l10n.cancel,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              l10n.teacherClassRestoreConfirmAction,
+              style: const TextStyle(color: AppColors.accentMint),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      await _classRepo.restoreClass(widget.classId);
+      if (!mounted) return;
+      context.showSuccessSnackBar(l10n.teacherClassRestoredMessage);
+      Navigator.pop(context, true);
+    } on DioException catch (e) {
+      if (!mounted) return;
+      context.showErrorSnackBar(DioErrorMapper.map(e, l10n));
+    }
+  }
+
+  Future<void> _deletePermanently(
+    AppLocalizations l10n,
+    String className,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text(
+          l10n.teacherClassDeletePermanentTitle,
+          style: const TextStyle(color: AppColors.textPrimary),
+        ),
+        content: Text(
+          l10n.teacherClassDeletePermanentMessage(className),
+          style: const TextStyle(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              l10n.cancel,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              l10n.teacherClassDeletePermanentConfirm,
+              style: const TextStyle(color: AppColors.error),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      await _classRepo.deleteClass(widget.classId);
+      if (!mounted) return;
+      context.showSuccessSnackBar(l10n.teacherClassDeletedMessage);
+      Navigator.pop(context, true);
+    } on DioException catch (e) {
+      if (!mounted) return;
+      context.showErrorSnackBar(DioErrorMapper.map(e, l10n));
+    }
   }
 
   @override
@@ -103,61 +195,75 @@ class _TeacherClassDetailPageState extends State<TeacherClassDetailPage>
               body: AppErrorView(
                 message: snapshot.error.toString(),
                 onRetry: _load,
-                retryLabel: 'Reintentar',
+                retryLabel: l10n.retry,
               ),
             );
           }
 
           final detail = snapshot.data!;
+          final isArchived = detail.status == 'archived';
           return NestedScrollView(
             headerSliverBuilder: (_, __) => [
-              SliverAppBar(
-                expandedHeight: 140,
-                pinned: true,
-                backgroundColor: AppColors.surface,
-                foregroundColor: AppColors.textPrimary,
+              TeacherDetailTabbedAppBar(
+                title: detail.name,
                 actions: [
-                  IconButton(
-                    icon: const Icon(Icons.edit_outlined),
-                    onPressed: () async {
-                      final edited = await Navigator.push<bool>(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => TeacherCreateClassPage(
-                            classId: detail.classId,
-                            initialName: detail.name,
-                            initialDescription: detail.description,
+                  if (!isArchived)
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined),
+                      onPressed: () async {
+                        final edited = await Navigator.push<bool>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => TeacherCreateClassPage(
+                              classId: detail.classId,
+                              initialName: detail.name,
+                              initialDescription: detail.description,
+                            ),
                           ),
-                        ),
-                      );
-                      if (edited == true) _load();
-                    },
-                  ),
+                        );
+                        if (edited == true) _load();
+                      },
+                    ),
                   PopupMenuButton<String>(
                     color: AppColors.surface,
                     onSelected: (v) {
                       if (v == 'archive') _archive(l10n);
+                      if (v == 'restore') _restore(l10n);
+                      if (v == 'delete') {
+                        _deletePermanently(l10n, detail.name);
+                      }
                     },
                     itemBuilder: (_) => [
-                      PopupMenuItem(
-                        value: 'archive',
-                        child: Text(l10n.teacherClassArchiveAction,
-                            style:
-                                const TextStyle(color: AppColors.textPrimary)),
-                      ),
+                      if (isArchived) ...[
+                        PopupMenuItem(
+                          value: 'restore',
+                          child: Text(
+                            l10n.teacherClassRestoreAction,
+                            style: const TextStyle(
+                              color: AppColors.accentMint,
+                            ),
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Text(
+                            l10n.teacherClassDeletePermanentAction,
+                            style: const TextStyle(color: AppColors.error),
+                          ),
+                        ),
+                      ] else
+                        PopupMenuItem(
+                          value: 'archive',
+                          child: Text(
+                            l10n.teacherClassArchiveAction,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ],
-                flexibleSpace: FlexibleSpaceBar(
-                  titlePadding: const EdgeInsets.only(left: 16, bottom: 60),
-                  title: Text(
-                    detail.name,
-                    style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 18),
-                  ),
-                ),
                 bottom: TabBar(
                   controller: _tabController,
                   indicatorColor: AppColors.teacherAccent,
@@ -170,12 +276,29 @@ class _TeacherClassDetailPageState extends State<TeacherClassDetailPage>
                   ],
                 ),
               ),
+              if (isArchived)
+                SliverToBoxAdapter(
+                  child: TeacherDetailNoticeBanner(
+                    message: l10n.teacherClassArchivedBanner,
+                    icon: Icons.inventory_2_outlined,
+                  ),
+                ),
             ],
             body: TabBarView(
               controller: _tabController,
               children: [
-                _MembersTab(classId: widget.classId, detail: detail, onChanged: _load),
-                _AssignmentsTab(classId: widget.classId, detail: detail, onChanged: _load),
+                _MembersTab(
+                  classId: widget.classId,
+                  detail: detail,
+                  readOnly: isArchived,
+                  onChanged: _load,
+                ),
+                _AssignmentsTab(
+                  classId: widget.classId,
+                  detail: detail,
+                  readOnly: isArchived,
+                  onChanged: _load,
+                ),
                 _AnalyticsTab(classId: widget.classId),
               ],
             ),
@@ -189,10 +312,16 @@ class _TeacherClassDetailPageState extends State<TeacherClassDetailPage>
 // ─── Members Tab ──────────────────────────────────────────────────────────────
 
 class _MembersTab extends StatefulWidget {
-  const _MembersTab({required this.classId, required this.detail, required this.onChanged});
+  const _MembersTab({
+    required this.classId,
+    required this.detail,
+    required this.readOnly,
+    required this.onChanged,
+  });
 
   final String classId;
   final ClassDetailModel detail;
+  final bool readOnly;
   final VoidCallback onChanged;
 
   @override
@@ -236,46 +365,46 @@ class _MembersTabState extends State<_MembersTab> {
     final pending = widget.detail.members.where((m) => m.status == 'pending').toList();
     final active = widget.detail.members.where((m) => m.status == 'active').toList();
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
+    return AppPaddedScrollBody(
+      includeTop: false,
+      child: ListView(
       children: [
-        // Add member
-        Row(
-          children: [
-            Expanded(
-              child: TextFormField(
-                controller: _emailCtrl,
-                keyboardType: TextInputType.emailAddress,
-                style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
-                decoration: InputDecoration(
-                  hintText: l10n.teacherClassAddMemberEmailHint,
-                  hintStyle: const TextStyle(color: AppColors.textSecondary),
-                  filled: true,
-                  fillColor: AppColors.surface,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppColors.radiusSm),
-                    borderSide: BorderSide.none,
+        if (!widget.readOnly)
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _emailCtrl,
+                  keyboardType: TextInputType.emailAddress,
+                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
+                  decoration: InputDecoration(
+                    hintText: l10n.teacherClassAddMemberEmailHint,
+                    hintStyle: const TextStyle(color: AppColors.textSecondary),
+                    filled: true,
+                    fillColor: AppColors.surface,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppColors.radiusSm),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 ),
               ),
-            ),
-            const SizedBox(width: 8),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.teacherAccent,
-                foregroundColor: AppColors.background,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              const SizedBox(width: 8),
+              FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.teacherAccent,
+                  foregroundColor: AppColors.background,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                onPressed: _addLoading ? null : _addMember,
+                child: _addLoading
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.background))
+                    : Text(l10n.teacherClassAddMemberAction, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
               ),
-              onPressed: _addLoading ? null : _addMember,
-              child: _addLoading
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.background))
-                  : Text(l10n.teacherClassAddMemberAction, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
-            ),
-          ],
-        ),
-        // Pending approvals
+            ],
+          ),
         if (pending.isNotEmpty) ...[
           const SizedBox(height: 20),
           _sectionHeader(l10n.teacherClassPendingApprovalsTitle, badge: pending.length),
@@ -283,10 +412,11 @@ class _MembersTabState extends State<_MembersTab> {
           ...pending.map((m) => _MemberTile(
                 member: m,
                 classId: widget.classId,
+                readOnly: widget.readOnly,
                 onChanged: widget.onChanged,
               )),
         ],
-        const SizedBox(height: 20),
+        SizedBox(height: widget.readOnly ? 0 : 20),
         _sectionHeader('${l10n.teacherClassMembersTab} (${active.length})'),
         const SizedBox(height: 8),
         if (active.isEmpty)
@@ -302,9 +432,11 @@ class _MembersTabState extends State<_MembersTab> {
           ...active.map((m) => _MemberTile(
                 member: m,
                 classId: widget.classId,
+                readOnly: widget.readOnly,
                 onChanged: widget.onChanged,
               )),
       ],
+      ),
     );
   }
 
@@ -337,10 +469,16 @@ class _MembersTabState extends State<_MembersTab> {
 }
 
 class _MemberTile extends StatelessWidget {
-  const _MemberTile({required this.member, required this.classId, required this.onChanged});
+  const _MemberTile({
+    required this.member,
+    required this.classId,
+    required this.readOnly,
+    required this.onChanged,
+  });
 
   final ClassMemberModel member;
   final String classId;
+  final bool readOnly;
   final VoidCallback onChanged;
 
   @override
@@ -377,24 +515,25 @@ class _MemberTile extends StatelessWidget {
                 ],
               ),
             ),
-            if (isPending)
-              TextButton(
-                onPressed: () async {
-                  await repo.approveMember(classId: classId, userId: member.userId);
-                  onChanged();
-                },
-                style: TextButton.styleFrom(foregroundColor: AppColors.accentMint),
-                child: Text(l10n.teacherClassApproveAction),
-              )
-            else
-              IconButton(
-                icon: const Icon(Icons.person_remove_outlined, size: 18),
-                color: AppColors.textSecondary,
-                onPressed: () async {
-                  await repo.removeMember(classId: classId, userId: member.userId);
-                  onChanged();
-                },
-              ),
+            if (!readOnly)
+              if (isPending)
+                TextButton(
+                  onPressed: () async {
+                    await repo.approveMember(classId: classId, userId: member.userId);
+                    onChanged();
+                  },
+                  style: TextButton.styleFrom(foregroundColor: AppColors.accentMint),
+                  child: Text(l10n.teacherClassApproveAction),
+                )
+              else
+                IconButton(
+                  icon: const Icon(Icons.person_remove_outlined, size: 18),
+                  color: AppColors.textSecondary,
+                  onPressed: () async {
+                    await repo.removeMember(classId: classId, userId: member.userId);
+                    onChanged();
+                  },
+                ),
           ],
         ),
       ),
@@ -405,36 +544,45 @@ class _MemberTile extends StatelessWidget {
 // ─── Assignments Tab ─────────────────────────────────────────────────────────
 
 class _AssignmentsTab extends StatelessWidget {
-  const _AssignmentsTab({required this.classId, required this.detail, required this.onChanged});
+  const _AssignmentsTab({
+    required this.classId,
+    required this.detail,
+    required this.readOnly,
+    required this.onChanged,
+  });
 
   final String classId;
   final ClassDetailModel detail;
+  final bool readOnly;
   final VoidCallback onChanged;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
+    return AppPaddedScrollBody(
+      includeTop: false,
+      child: ListView(
       children: [
-        FilledButton.icon(
-          style: FilledButton.styleFrom(
-            backgroundColor: AppColors.teacherAccent,
-            foregroundColor: AppColors.background,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        if (!readOnly) ...[
+          FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.teacherAccent,
+              foregroundColor: AppColors.background,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            icon: const Icon(Icons.add, size: 18),
+            label: Text(l10n.teacherAssignmentCreateTitle),
+            onPressed: () async {
+              final created = await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(builder: (_) => TeacherCreateAssignmentPage(classId: classId)),
+              );
+              if (created == true) onChanged();
+            },
           ),
-          icon: const Icon(Icons.add, size: 18),
-          label: Text(l10n.teacherAssignmentCreateTitle),
-          onPressed: () async {
-            final created = await Navigator.push<bool>(
-              context,
-              MaterialPageRoute(builder: (_) => TeacherCreateAssignmentPage(classId: classId)),
-            );
-            if (created == true) onChanged();
-          },
-        ),
-        const SizedBox(height: 16),
+          const SizedBox(height: 16),
+        ],
         if (detail.assignments.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 32),
@@ -485,7 +633,7 @@ class _AssignmentsTab extends StatelessWidget {
                               const Icon(Icons.schedule, size: 12, color: AppColors.textSecondary),
                               const SizedBox(width: 4),
                               Text(
-                                '${l10n.teacherAssignmentDueLabel}: ${_formatDate(a.dueAt!)}',
+                                '${l10n.teacherAssignmentDueLabel}: ${AssignmentDates.format(context, a.dueAt!)}',
                                 style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
                               ),
                             ],
@@ -497,6 +645,7 @@ class _AssignmentsTab extends StatelessWidget {
                 ),
               )),
       ],
+      ),
     );
   }
 
@@ -517,10 +666,6 @@ class _AssignmentsTab extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime dt) {
-    final d = AssignmentDates.calendarUtc(dt);
-    return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
-  }
 }
 
 // ─── Analytics Tab ────────────────────────────────────────────────────────────
@@ -556,7 +701,7 @@ class _AnalyticsTabState extends State<_AnalyticsTab> {
         }
         if (snapshot.hasError) {
           return AppErrorView(
-            message: snapshot.error.toString(),
+            message: DioErrorMapper.mapAny(snapshot.error!, l10n),
             onRetry: () {
               setState(() {
                 _future = _repo.getClassAnalytics(widget.classId);
@@ -574,8 +719,9 @@ class _AnalyticsTabState extends State<_AnalyticsTab> {
                     .fold<double>(0, (s, r) => s + r) /
                 data.assignments.length;
 
-        return ListView(
-          padding: const EdgeInsets.all(16),
+        return AppPaddedScrollBody(
+          includeTop: false,
+          child: ListView(
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -640,6 +786,7 @@ class _AnalyticsTabState extends State<_AnalyticsTab> {
                   ),
                 )),
           ],
+          ),
         );
       },
     );

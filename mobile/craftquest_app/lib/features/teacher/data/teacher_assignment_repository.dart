@@ -26,6 +26,9 @@ class TeacherAssignmentRepository {
     DateTime? dueAt,
     int? maxAttempts,
     String showCorrectAnswersMode = 'after_due_date',
+    bool randomizeQuestions = false,
+    bool allowStudentRandomizeQuestions = false,
+    bool forfeitExitCountsAsAttempt = false,
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/api/teacher/classes/$classId/assignments',
@@ -37,6 +40,9 @@ class TeacherAssignmentRepository {
         if (dueAt != null) 'dueAt': AssignmentDates.toApiIso(dueAt),
         if (maxAttempts != null) 'maxAttempts': maxAttempts,
         'showCorrectAnswersMode': showCorrectAnswersMode,
+        'randomizeQuestions': randomizeQuestions,
+        'allowStudentRandomizeQuestions': allowStudentRandomizeQuestions,
+        'forfeitExitCountsAsAttempt': forfeitExitCountsAsAttempt,
       },
     );
     return AssignmentSummaryModel.fromJson(response.data!);
@@ -81,6 +87,9 @@ class TeacherAssignmentRepository {
     DateTime? dueAt,
     int? maxAttempts,
     required String showCorrectAnswersMode,
+    required bool randomizeQuestions,
+    required bool allowStudentRandomizeQuestions,
+    required bool forfeitExitCountsAsAttempt,
   }) async {
     await _apiClient.dio.patch<void>(
       '/api/teacher/assignments/$assignmentId',
@@ -91,6 +100,9 @@ class TeacherAssignmentRepository {
         if (dueAt != null) 'dueAt': AssignmentDates.toApiIso(dueAt),
         if (maxAttempts != null) 'maxAttempts': maxAttempts,
         'showCorrectAnswersMode': showCorrectAnswersMode,
+        'randomizeQuestions': randomizeQuestions,
+        'allowStudentRandomizeQuestions': allowStudentRandomizeQuestions,
+        'forfeitExitCountsAsAttempt': forfeitExitCountsAsAttempt,
       },
     );
   }

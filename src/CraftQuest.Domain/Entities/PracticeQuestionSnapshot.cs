@@ -16,6 +16,8 @@ public class PracticeQuestionSnapshot
     public int? TimeSpentSeconds { get; set; }
     public string? RandomizationSeed { get; set; }
     public DateTime? SubmittedAt { get; set; }
+    public string? JustificationTextSnapshot { get; set; }
+    public string? JustificationSourcesSnapshot { get; set; }
     public DateTime CreatedAt { get; set; }
 
     public PracticeSession PracticeSession { get; set; } = null!;

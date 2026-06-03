@@ -11,8 +11,13 @@ public class QuizAccess
     public Guid? GrantedByShareCodeId { get; set; }
     public DateTime GrantedAt { get; set; }
     public DateTime? LastPracticedAt { get; set; }
+    public DateTime? ExpiresAt { get; set; }
+    public Guid? GrantedByPurchaseId { get; set; }
+    public Guid? PrepCatalogItemId { get; set; }
 
     public User User { get; set; } = null!;
+    public Purchase? GrantedByPurchase { get; set; }
+    public PrepCatalogItem? PrepCatalogItem { get; set; }
     public Quiz Quiz { get; set; } = null!;
     public ShareCode? GrantedByShareCode { get; set; }
 }

@@ -5,6 +5,7 @@ using CraftQuest.Application.Models.Guest;
 using CraftQuest.Application.Models.Practice;
 using CraftQuest.Application.Models.Teacher;
 using CraftQuest.Application.Services;
+using CraftQuest.Application.Services.Quizzes;
 using CraftQuest.Application.Services.Teacher;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
@@ -174,6 +175,8 @@ public class GuestService(
             .Include(q => q.QuestionType)
             .Include(q => q.AnswerOptions.Where(o => o.IsActive))
             .Include(q => q.CorrectAnswerOptions)
+            .Include(q => q.Justification!)
+                .ThenInclude(j => j.Sources)
             .Where(q => q.QuizId == visit.QuizId && q.DeletedAt == null)
             .OrderBy(q => q.SortOrder)
             .ToListAsync(cancellationToken);
@@ -270,6 +273,9 @@ public class GuestService(
                 });
             }
 
+            var (justificationText, justificationSourcesJson) =
+                QuestionJustificationMapper.BuildPracticeSnapshot(question.Justification);
+
             session.QuestionSnapshots.Add(new PracticeQuestionSnapshot
             {
                 PracticeQuestionSnapshotId = snapshotId,
@@ -281,6 +287,8 @@ public class GuestService(
                 DisplayOrder = displayOrder,
                 AnswerStatus = "unanswered",
                 RandomizationSeed = seed,
+                JustificationTextSnapshot = justificationText,
+                JustificationSourcesSnapshot = justificationSourcesJson,
                 CreatedAt = now,
                 AnswerOptionSnapshots = answerSnapshots,
             });
@@ -384,10 +392,23 @@ public class GuestService(
             .Select(a => a.AnswerOptionId)
             .ToHashSet();
 
-        var isCorrect = AnswerGradingService.IsAnswerCorrect(
+        var scoringPolicy = await dbContext.Questions
+            .AsNoTracking()
+            .Where(q => q.QuestionId == questionSnapshot.QuestionId)
+            .Select(q => q.ScoringPolicy)
+            .FirstOrDefaultAsync(cancellationToken) ?? "strict";
+
+        if (questionType.SupportsMultipleCorrectAnswers)
+        {
+            scoringPolicy = AnswerGradingService.PartialScoringPolicy;
+        }
+
+        var grading = AnswerGradingService.GradeAnswer(
             selectedIds.ToHashSet(),
             correctIds,
-            questionType.SupportsMultipleCorrectAnswers);
+            questionType.SupportsMultipleCorrectAnswers,
+            scoringPolicy,
+            questionSnapshot.PointsPossible);
 
         var now = DateTime.UtcNow;
         foreach (var answer in questionSnapshot.AnswerOptionSnapshots)
@@ -397,8 +418,8 @@ public class GuestService(
         }
 
         questionSnapshot.AnswerStatus = "answered";
-        questionSnapshot.IsCorrect = isCorrect;
-        questionSnapshot.PointsAwarded = isCorrect ? questionSnapshot.PointsPossible : 0;
+        questionSnapshot.IsCorrect = grading.IsFullyCorrect;
+        questionSnapshot.PointsAwarded = grading.PointsAwarded;
         questionSnapshot.SubmittedAt = now;
         session.LastActivityAt = now;
 
@@ -455,12 +476,17 @@ public class GuestService(
         {
             switch (question.AnswerStatus)
             {
-                case "answered" when question.IsCorrect == true:
-                    correct++;
-                    scoreObtained += question.PointsAwarded;
-                    break;
                 case "answered":
-                    incorrect++;
+                    scoreObtained += question.PointsAwarded;
+                    if (question.IsCorrect == true)
+                    {
+                        correct++;
+                    }
+                    else
+                    {
+                        incorrect++;
+                    }
+
                     break;
                 default:
                     omitted++;

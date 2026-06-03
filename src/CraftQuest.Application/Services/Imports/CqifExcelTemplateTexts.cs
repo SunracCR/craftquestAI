@@ -47,6 +47,7 @@ internal sealed class CqifExcelTemplateTexts
             "Respuesta correcta",
             "Puntos",
             "Sección",
+            "Justificación",
         ],
         TypeValidationErrorTitle = "Tipo no válido",
         TypeValidationErrorMessage =
@@ -59,7 +60,8 @@ internal sealed class CqifExcelTemplateTexts
                 ["Londres", "París", "Berlín", "Madrid"],
                 "B",
                 1,
-                "Geografía"),
+                "Geografía",
+                "París es la capital y sede del gobierno de Francia."),
             new(
                 "Seleccione lenguajes de programación",
                 "multiple_choice",
@@ -105,6 +107,7 @@ internal sealed class CqifExcelTemplateTexts
             "Correct answer",
             "Points",
             "Section",
+            "Justification",
         ],
         TypeValidationErrorTitle = "Invalid type",
         TypeValidationErrorMessage =
@@ -117,7 +120,8 @@ internal sealed class CqifExcelTemplateTexts
                 ["London", "Paris", "Berlin", "Madrid"],
                 "B",
                 1,
-                "Geography"),
+                "Geography",
+                "Paris is the capital and seat of government of France."),
             new(
                 "Select programming languages",
                 "multiple_choice",
@@ -163,6 +167,7 @@ internal sealed class CqifExcelTemplateTexts
             "Resposta correta",
             "Pontos",
             "Seção",
+            "Justificação",
         ],
         TypeValidationErrorTitle = "Tipo inválido",
         TypeValidationErrorMessage =
@@ -175,7 +180,8 @@ internal sealed class CqifExcelTemplateTexts
                 ["Londres", "Paris", "Berlim", "Madrid"],
                 "B",
                 1,
-                "Geografia"),
+                "Geografia",
+                "Paris é a capital e sede do governo da França."),
             new(
                 "Selecione linguagens de programação",
                 "multiple_choice",
@@ -214,4 +220,5 @@ internal sealed record ExcelTemplateExampleRow(
     string?[] Options,
     string Correct,
     decimal Points,
-    string? Section);
+    string? Section,
+    string? Justification = null);

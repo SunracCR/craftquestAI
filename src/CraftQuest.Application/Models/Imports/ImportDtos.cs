@@ -22,6 +22,10 @@ public sealed class QuestionImportPreviewDto
 {
     public required Guid ImportId { get; init; }
     public required string Status { get; init; }
+    public required int TotalQuestionsDetected { get; init; }
+    public required int ValidQuestions { get; init; }
+    public required int QuestionsWithWarnings { get; init; }
+    public required int QuestionsWithErrors { get; init; }
     public required IReadOnlyList<CqifQuestion> Questions { get; init; }
     public required IReadOnlyList<ImportErrorDto> Errors { get; init; }
     public int? MaxQuestionsPerQuiz { get; init; }

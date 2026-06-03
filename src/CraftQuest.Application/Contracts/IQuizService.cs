@@ -23,5 +23,4 @@ public interface IQuizService
         Guid questionId,
         CancellationToken cancellationToken = default);
     Task<IReadOnlyList<QuestionDto>> GetQuestionsForAuthorAsync(Guid userId, Guid quizId, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<QuestionStudentDto>> GetQuestionsForStudentAsync(Guid quizId, CancellationToken cancellationToken = default);
 }

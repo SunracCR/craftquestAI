@@ -228,8 +228,10 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
           await _preferencesRepository.getPreferences(widget.quizId);
       if (!mounted) return;
       setState(() {
-        _randomizeQuestions = prefs.randomizeQuestions;
         _showTimer = prefs.showElapsedTimer;
+        if (!widget.isOwner) {
+          _randomizeQuestions = prefs.randomizeQuestions;
+        }
         _loadingPreferences = false;
       });
     } catch (_) {
@@ -238,7 +240,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
     }
   }
 
-  Future<void> _persistPracticePreferences() async {
+  Future<void> _persistShowTimerPreference() async {
     try {
       await _preferencesRepository.savePreferences(
         quizId: widget.quizId,
@@ -251,14 +253,32 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
     }
   }
 
-  void _updateRandomizeQuestions(bool value) {
+  Future<void> _updateRandomizeQuestions(bool value) async {
+    final previous = _randomizeQuestions;
     setState(() => _randomizeQuestions = value);
-    _persistPracticePreferences();
+    try {
+      if (widget.isOwner) {
+        await _repository.updateQuiz(
+          quizId: widget.quizId,
+          randomizeQuestions: value,
+        );
+      } else {
+        await _preferencesRepository.savePreferences(
+          quizId: widget.quizId,
+          randomizeQuestions: value,
+          showElapsedTimer: _showTimer,
+        );
+      }
+    } on DioException catch (e) {
+      if (!mounted) return;
+      setState(() => _randomizeQuestions = previous);
+      context.showDioErrorSnackBar(e);
+    }
   }
 
   void _updateShowTimer(bool value) {
     setState(() => _showTimer = value);
-    _persistPracticePreferences();
+    _persistShowTimerPreference();
   }
 
   Future<void> _openPendingAiImport() async {
@@ -299,14 +319,30 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
       });
     }
     try {
-      final QuizModel quiz = await _repository.getQuiz(widget.quizId);
+      var quiz = await _repository.getQuiz(widget.quizId);
       if (!mounted) return;
       if (widget.isOwner) {
+        if (!quiz.randomizeQuestions) {
+          try {
+            final prefs =
+                await _preferencesRepository.getPreferences(widget.quizId);
+            if (prefs.randomizeQuestions) {
+              quiz = await _repository.updateQuiz(
+                quizId: widget.quizId,
+                randomizeQuestions: true,
+              );
+            }
+          } catch (_) {
+            // Ignore; quiz setting stays as returned by the API.
+          }
+        }
+        if (!mounted) return;
         final questions = await _repository.getQuestions(widget.quizId);
         if (!mounted) return;
         setState(() {
           _questionCount = questions.length;
           _publicationStatus = quiz.publicationStatus;
+          _randomizeQuestions = quiz.randomizeQuestions;
           _pendingReviewImportId = quiz.pendingReviewImportId;
           _pendingReviewValidQuestions = quiz.pendingReviewValidQuestions;
           if (showLoading) {
@@ -1008,6 +1044,10 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
                                     )
                                   : PracticeLaunchOptionsCard(
                                       randomizeQuestions: _randomizeQuestions,
+                                      randomizeQuestionsHint: widget.isOwner
+                                          ? AppLocalizations.of(context)!
+                                              .quizRandomizeQuestionsHint
+                                          : null,
                                       showTimer: _showTimer,
                                       onRandomizeQuestionsChanged:
                                           _updateRandomizeQuestions,

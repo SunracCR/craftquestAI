@@ -10,6 +10,11 @@ namespace CraftQuest.Api.Controllers;
 [Route("api/auth")]
 public class AuthController(IAuthService authService) : ApiControllerBase
 {
+    [HttpGet("oauth-config")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(OAuthPublicConfigDto), StatusCodes.Status200OK)]
+    public IActionResult GetOAuthConfig() => Ok(authService.GetOAuthPublicConfig());
+
     [HttpPost("register")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status201Created)]
@@ -77,16 +82,47 @@ public class AuthController(IAuthService authService) : ApiControllerBase
         return NoContent();
     }
 
+    [HttpPost("forgot-password")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> ForgotPassword(
+        [FromBody] ForgotPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        await authService.RequestPasswordResetAsync(request, cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> ResetPassword(
+        [FromBody] ResetPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        await authService.ResetPasswordAsync(request, cancellationToken);
+        return NoContent();
+    }
+
     [HttpPost("google")]
     [AllowAnonymous]
-    [ProducesResponseType(StatusCodes.Status501NotImplemented)]
-    public IActionResult Google() =>
-        StatusCode(StatusCodes.Status501NotImplemented, new { message = "Google sign-in is not implemented yet." });
+    [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> Google(
+        [FromBody] ExternalLoginRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await authService.LoginWithGoogleAsync(request, cancellationToken);
+        return Ok(result);
+    }
 
     [HttpPost("apple")]
     [AllowAnonymous]
-    [ProducesResponseType(StatusCodes.Status501NotImplemented)]
-    public IActionResult Apple() =>
-        StatusCode(StatusCodes.Status501NotImplemented, new { message = "Apple sign-in is not implemented yet." });
-
+    [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> Apple(
+        [FromBody] ExternalLoginRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await authService.LoginWithAppleAsync(request, cancellationToken);
+        return Ok(result);
+    }
 }

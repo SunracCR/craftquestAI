@@ -1,52 +1,41 @@
 import 'package:craftquest_app/core/theme/app_colors.dart';
+import 'package:craftquest_app/core/widgets/brand_logo_mark.dart';
 import 'package:flutter/material.dart';
 
-/// Cabecera de marca para login/registro (icono + títulos).
+/// Cabecera de marca para login/registro (logo + títulos).
 class AuthPremiumHeader extends StatelessWidget {
   const AuthPremiumHeader({
     super.key,
     required this.title,
     this.subtitle,
+    this.dense = false,
+    this.logoSize = 160,
   });
 
   final String title;
   final String? subtitle;
 
+  /// Menos espacio vertical entre logo y textos.
+  final bool dense;
+
+  final double logoSize;
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final gapAfterLogo = dense ? 8.0 : 12.0;
+    final gapAfterTitle = dense ? 6.0 : 8.0;
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            gradient: const LinearGradient(
-              colors: [AppColors.accent, AppColors.accentGold],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.accent.withValues(alpha: 0.45),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: const Padding(
-            padding: EdgeInsets.all(14),
-            child: Icon(
-              Icons.school_rounded,
-              color: AppColors.textPrimary,
-              size: 32,
-            ),
-          ),
-        ),
-        const SizedBox(height: 20),
+        BrandLogoMark(size: logoSize),
+        SizedBox(height: gapAfterLogo),
         Text(
           title,
           textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w700,
             letterSpacing: -0.3,
@@ -54,13 +43,16 @@ class AuthPremiumHeader extends StatelessWidget {
           ),
         ),
         if (subtitle != null) ...[
-          const SizedBox(height: 8),
+          SizedBox(height: gapAfterTitle),
           Text(
             subtitle!,
             textAlign: TextAlign.center,
+            maxLines: dense ? 2 : 3,
+            overflow: TextOverflow.ellipsis,
             style: textTheme.bodyMedium?.copyWith(
               color: AppColors.textSecondary,
-              height: 1.45,
+              height: 1.35,
+              fontSize: dense ? 13 : null,
             ),
           ),
         ],

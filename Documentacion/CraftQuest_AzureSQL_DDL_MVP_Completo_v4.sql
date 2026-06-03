@@ -150,7 +150,7 @@ CREATE TABLE billing.CreditLedger (
     ReferenceId UNIQUEIDENTIFIER NULL,
     CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_CreditLedger_CreatedAt DEFAULT SYSUTCDATETIME(),
     CONSTRAINT FK_CreditLedger_Users FOREIGN KEY (UserId) REFERENCES core.Users(UserId),
-    CONSTRAINT CK_CreditLedger_CreditType CHECK (CreditType IN ('ai','share_code','teacher_seat')),
+    CONSTRAINT CK_CreditLedger_CreditType CHECK (CreditType IN ('ai','ai_purchased','share_code','teacher_seat')),
     CONSTRAINT CK_CreditLedger_Reason CHECK (Reason IN ('grant_plan','purchase','consume','refund','admin_adjustment','monthly_reset'))
 );
 GO
@@ -403,6 +403,9 @@ CREATE TABLE teacher.Assignments (
     StartsAt DATETIME2(7) NULL,
     DueAt DATETIME2(7) NULL,
     MaxAttempts INT NULL,
+    RandomizeQuestions BIT NOT NULL CONSTRAINT DF_Assignments_RandomizeQuestions DEFAULT(0),
+    AllowStudentRandomizeQuestions BIT NOT NULL CONSTRAINT DF_Assignments_AllowStudentRandomizeQuestions DEFAULT(0),
+    ForfeitExitCountsAsAttempt BIT NOT NULL CONSTRAINT DF_Assignments_ForfeitExitCountsAsAttempt DEFAULT(0),
     ShowCorrectAnswersMode NVARCHAR(40) NOT NULL CONSTRAINT DF_Assignments_ShowCorrectAnswersMode DEFAULT('after_due_date'),
     Status NVARCHAR(30) NOT NULL CONSTRAINT DF_Assignments_Status DEFAULT('active'),
     CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_Assignments_CreatedAt DEFAULT SYSUTCDATETIME(),
@@ -578,7 +581,7 @@ CREATE TABLE practice.PracticeSessions (
     CONSTRAINT FK_PracticeSessions_Quizzes FOREIGN KEY (QuizId) REFERENCES quiz.Quizzes(QuizId),
     CONSTRAINT FK_PracticeSessions_Classes FOREIGN KEY (ClassId) REFERENCES teacher.Classes(ClassId),
     CONSTRAINT FK_PracticeSessions_Assignments FOREIGN KEY (AssignmentId) REFERENCES teacher.Assignments(AssignmentId),
-    CONSTRAINT CK_PracticeSessions_Status CHECK (Status IN ('in_progress','finished','abandoned','expired'))
+    CONSTRAINT CK_PracticeSessions_Status CHECK (Status IN ('in_progress','finished','abandoned','expired','forfeited'))
 );
 GO
 
@@ -748,7 +751,7 @@ GO
 
 MERGE billing.Plans AS target
 USING (VALUES
-    ('free', 'Free', NULL, NULL, 5, 65, 20, 2, 0, 0),
+    ('free', 'Free', NULL, NULL, 2, 50, 20, 2, 0, 0),
     ('pro', 'Pro', 4.99, 48.99, NULL, NULL, 150, 20, 0, 0),
     ('teacher', 'Teacher', 9.99, 99.99, NULL, NULL, 360, 200, 1, 0),
     ('institution', 'Institution', NULL, NULL, NULL, NULL, 5000, 1000, 1, 1)

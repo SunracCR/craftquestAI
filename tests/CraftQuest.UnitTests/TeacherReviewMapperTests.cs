@@ -8,6 +8,70 @@ namespace CraftQuest.UnitTests;
 public class TeacherReviewMapperTests
 {
     private static readonly StubMediaService Media = new();
+    /// <summary>TST-TCH-001: teacher review shows answers in session snapshot order, not canonical A,B sort.</summary>
+    [Fact]
+    public void MapReview_TST_TCH_001_PreservesShuffledAnswerSnapshotOrder()
+    {
+        var sessionId = Guid.NewGuid();
+        var optionB = Guid.NewGuid();
+        var optionA = Guid.NewGuid();
+        var session = new PracticeSession
+        {
+            PracticeSessionId = sessionId,
+            StudentUserId = Guid.NewGuid(),
+            QuizId = Guid.NewGuid(),
+            Status = "finished",
+            ScoreObtained = 1,
+            ScorePossible = 1,
+            StudentUser = new User
+            {
+                UserId = Guid.NewGuid(),
+                Email = "student@test.com",
+            },
+            QuestionSnapshots =
+            [
+                new PracticeQuestionSnapshot
+                {
+                    PracticeQuestionSnapshotId = Guid.NewGuid(),
+                    PracticeSessionId = sessionId,
+                    QuestionId = Guid.NewGuid(),
+                    QuestionTextSnapshot = "Q1",
+                    DisplayOrder = 1,
+                    PointsPossible = 1,
+                    AnswerStatus = "answered",
+                    AnswerOptionSnapshots =
+                    [
+                        new PracticeAnswerOptionSnapshot
+                        {
+                            AnswerOptionId = optionB,
+                            DisplayOrder = 1,
+                            DisplayLabel = "B",
+                            AnswerTextSnapshot = "Second shown",
+                        },
+                        new PracticeAnswerOptionSnapshot
+                        {
+                            AnswerOptionId = optionA,
+                            DisplayOrder = 2,
+                            DisplayLabel = "A",
+                            AnswerTextSnapshot = "First shown",
+                            WasSelected = true,
+                            IsCorrectSnapshot = true,
+                        },
+                    ],
+                },
+            ],
+        };
+
+        var review = TeacherReviewMapper.MapReview(session, Media);
+        var answers = review.Questions[0].AnswersAsDisplayedToStudent;
+
+        Assert.Equal(2, answers.Count);
+        Assert.Equal("B", answers[0].DisplayLabel);
+        Assert.Equal("Second shown", answers[0].Text);
+        Assert.Equal("A", answers[1].DisplayLabel);
+        Assert.True(answers[1].WasSelected);
+    }
+
     [Fact]
     public void MapReview_PreservesQuestionAndAnswerDisplayOrder()
     {

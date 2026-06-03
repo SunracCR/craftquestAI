@@ -13,7 +13,7 @@ class PracticeRepository {
   Future<PracticeSessionModel> startSession({
     required String quizId,
     String mode = 'practice',
-    bool randomizeQuestions = false,
+    bool? randomizeQuestions,
     bool showElapsedTimer = false,
     String? classId,
     String? assignmentId,
@@ -23,7 +23,8 @@ class PracticeRepository {
       data: {
         'quizId': quizId,
         'mode': mode,
-        'randomizeQuestions': randomizeQuestions,
+        if (randomizeQuestions != null)
+          'randomizeQuestions': randomizeQuestions,
         'showElapsedTimer': showElapsedTimer,
         'clientUtcOffsetMinutes': DateTime.now().timeZoneOffset.inMinutes,
         if (classId != null) 'classId': classId,
@@ -87,6 +88,12 @@ class PracticeRepository {
   Future<void> abandonSession(String sessionId) async {
     await _apiClient.dio.post<void>(
       '/api/practice-sessions/$sessionId/abandon',
+    );
+  }
+
+  Future<void> forfeitSession(String sessionId) async {
+    await _apiClient.dio.post<void>(
+      '/api/practice-sessions/$sessionId/forfeit',
     );
   }
 

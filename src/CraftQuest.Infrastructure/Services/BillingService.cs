@@ -5,6 +5,7 @@ using CraftQuest.Application.Models.Billing;
 using CraftQuest.Domain.Constants;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
+using CraftQuest.Infrastructure.Services.Billing;
 using Microsoft.EntityFrameworkCore;
 
 namespace CraftQuest.Infrastructure.Services;
@@ -18,7 +19,8 @@ public class BillingService(CraftQuestDbContext dbContext) : IBillingService
         var subscription = await GetActiveSubscriptionAsync(userId, cancellationToken);
         var plan = subscription.Plan;
 
-        await EnsureMonthlyAiCreditsAsync(userId, plan, cancellationToken);
+        await EnsureMonthlyAiCreditsAsync(userId, subscription, cancellationToken);
+        await EnsureAiCreditBalanceMatchesPlanAsync(userId, subscription, cancellationToken);
 
         var quizzesCreated = await dbContext.Quizzes
             .CountAsync(q => q.CreatedByUserId == userId && q.DeletedAt == null, cancellationToken);
@@ -34,12 +36,7 @@ public class BillingService(CraftQuestDbContext dbContext) : IBillingService
         return new UserBillingDto
         {
             Plan = MapPlan(plan),
-            Subscription = new SubscriptionDto
-            {
-                Status = subscription.Status,
-                StartedAt = subscription.StartedAt,
-                EndsAt = subscription.EndsAt,
-            },
+            Subscription = MapSubscription(subscription),
             Usage = new BillingUsageDto
             {
                 QuizzesCreated = quizzesCreated,
@@ -52,10 +49,50 @@ public class BillingService(CraftQuestDbContext dbContext) : IBillingService
                 cancellationToken),
             Credits = new CreditBalancesDto
             {
-                AiCredits = await GetCreditBalanceAsync(userId, "ai", cancellationToken),
-                ShareCodeCredits = await GetCreditBalanceAsync(userId, "share_code", cancellationToken),
+                AiCredits = await GetTotalAiCreditsBalanceAsync(userId, cancellationToken),
+                ShareCodeCredits = await GetCreditBalanceAsync(
+                    userId,
+                    BillingCreditTypes.ShareCode,
+                    cancellationToken),
             },
         };
+    }
+
+    public async Task<IReadOnlyList<PurchaseHistoryItemDto>> GetMyPurchasesAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        const int maxItems = 100;
+        var purchases = await dbContext.Purchases
+            .AsNoTracking()
+            .Where(p => p.UserId == userId)
+            .OrderByDescending(p => p.PurchasedAt ?? p.CreatedAt)
+            .Take(maxItems)
+            .ToListAsync(cancellationToken);
+
+        if (purchases.Count == 0)
+        {
+            return [];
+        }
+
+        var planNames = await ResolvePlanNamesAsync(purchases, cancellationToken);
+        var prepTitles = await ResolvePrepCatalogTitlesAsync(purchases, cancellationToken);
+
+        return purchases
+            .Select(p => new PurchaseHistoryItemDto
+            {
+                PurchaseId = p.PurchaseId,
+                ProductCode = p.ProductCode,
+                ProductDisplayName = ResolveProductDisplayName(p, planNames, prepTitles),
+                ProductType = p.ProductType,
+                ProviderCode = p.ProviderCode,
+                Amount = p.Amount,
+                CurrencyCode = p.CurrencyCode,
+                Status = p.Status,
+                PurchasedAt = p.PurchasedAt,
+                CreatedAt = p.CreatedAt,
+            })
+            .ToList();
     }
 
     public async Task EnsureCanCreateQuizAsync(
@@ -201,9 +238,9 @@ public class BillingService(CraftQuestDbContext dbContext) : IBillingService
         }
 
         var subscription = await GetActiveSubscriptionAsync(userId, cancellationToken);
-        await EnsureMonthlyAiCreditsAsync(userId, subscription.Plan, cancellationToken);
+        await EnsureMonthlyAiCreditsAsync(userId, subscription, cancellationToken);
 
-        var balance = await GetCreditBalanceAsync(userId, "ai", cancellationToken);
+        var balance = await GetTotalAiCreditsBalanceAsync(userId, cancellationToken);
         if (balance < amount)
         {
             throw new AppException(
@@ -232,23 +269,54 @@ public class BillingService(CraftQuestDbContext dbContext) : IBillingService
         }
 
         var subscription = await GetActiveSubscriptionAsync(userId, cancellationToken);
-        await EnsureMonthlyAiCreditsAsync(userId, subscription.Plan, cancellationToken);
+        await EnsureMonthlyAiCreditsAsync(userId, subscription, cancellationToken);
 
         await EnsureHasAiCreditsAsync(userId, amount, cancellationToken);
-        var balance = await GetCreditBalanceAsync(userId, "ai", cancellationToken) - amount;
 
-        dbContext.CreditLedgerEntries.Add(new CreditLedgerEntry
+        var remaining = amount;
+        var planBalance = await GetCreditBalanceAsync(
+            userId,
+            BillingCreditTypes.AiPlan,
+            cancellationToken);
+        if (remaining > 0 && planBalance > 0)
         {
-            CreditLedgerId = Guid.NewGuid(),
-            UserId = userId,
-            CreditType = "ai",
-            Delta = -amount,
-            BalanceAfter = balance,
-            Reason = "consume",
-            ReferenceType = referenceType,
-            ReferenceId = referenceId,
-            CreatedAt = DateTime.UtcNow,
-        });
+            var fromPlan = Math.Min(remaining, planBalance);
+            var newPlanBalance = planBalance - fromPlan;
+            dbContext.CreditLedgerEntries.Add(new CreditLedgerEntry
+            {
+                CreditLedgerId = Guid.NewGuid(),
+                UserId = userId,
+                CreditType = BillingCreditTypes.AiPlan,
+                Delta = -fromPlan,
+                BalanceAfter = newPlanBalance,
+                Reason = "consume",
+                ReferenceType = referenceType,
+                ReferenceId = referenceId,
+                CreatedAt = DateTime.UtcNow,
+            });
+            remaining -= fromPlan;
+        }
+
+        if (remaining > 0)
+        {
+            var purchasedBalance = await GetCreditBalanceAsync(
+                userId,
+                BillingCreditTypes.AiPurchased,
+                cancellationToken);
+            var newPurchasedBalance = purchasedBalance - remaining;
+            dbContext.CreditLedgerEntries.Add(new CreditLedgerEntry
+            {
+                CreditLedgerId = Guid.NewGuid(),
+                UserId = userId,
+                CreditType = BillingCreditTypes.AiPurchased,
+                Delta = -remaining,
+                BalanceAfter = newPurchasedBalance,
+                Reason = "consume",
+                ReferenceType = referenceType,
+                ReferenceId = referenceId,
+                CreatedAt = DateTime.UtcNow,
+            });
+        }
 
         if (saveImmediately)
         {
@@ -256,11 +324,56 @@ public class BillingService(CraftQuestDbContext dbContext) : IBillingService
         }
     }
 
+    public async Task<int> GrantPurchasedAiCreditsAsync(
+        Guid userId,
+        int amount,
+        Guid purchaseId,
+        CancellationToken cancellationToken = default)
+    {
+        if (amount <= 0)
+        {
+            throw new AppException("Invalid credit amount.", 400);
+        }
+
+        var subscription = await GetActiveSubscriptionAsync(userId, cancellationToken);
+        if (subscription.Plan.Code.Equals("free", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new AppException(
+                "AI credit packs are not available on the Free plan. Upgrade to Pro or Teacher first.",
+                403,
+                "AI_CREDIT_PACKS_NOT_AVAILABLE");
+        }
+
+        await EnsureMonthlyAiCreditsAsync(userId, subscription, cancellationToken);
+
+        var purchasedBalance = await GetCreditBalanceAsync(
+            userId,
+            BillingCreditTypes.AiPurchased,
+            cancellationToken);
+        var newPurchasedBalance = purchasedBalance + amount;
+        dbContext.CreditLedgerEntries.Add(new CreditLedgerEntry
+        {
+            CreditLedgerId = Guid.NewGuid(),
+            UserId = userId,
+            CreditType = BillingCreditTypes.AiPurchased,
+            Delta = amount,
+            BalanceAfter = newPurchasedBalance,
+            Reason = "purchase",
+            ReferenceType = "purchase",
+            ReferenceId = purchaseId,
+            CreatedAt = DateTime.UtcNow,
+        });
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return await GetTotalAiCreditsBalanceAsync(userId, cancellationToken);
+    }
+
     public async Task ActivatePlanAsync(
         Guid userId,
         string planCode,
         string providerCode,
         string? providerSubscriptionId,
+        SubscriptionActivationOptions? options = null,
         CancellationToken cancellationToken = default)
     {
         var plan = await dbContext.Plans
@@ -272,14 +385,20 @@ public class BillingService(CraftQuestDbContext dbContext) : IBillingService
             throw new AppException("Cannot activate the free plan through payments.", 400);
         }
 
-        var now = DateTime.UtcNow;
+        options ??= new SubscriptionActivationOptions();
+        var billingCycle = SubscriptionPeriodCalculator.NormalizeBillingCycle(options.BillingCycle);
+        var now = options.PeriodStart ?? DateTime.UtcNow;
+        var periodEnd = options.PeriodEnd
+            ?? SubscriptionPeriodCalculator.CalculatePeriodEnd(now, billingCycle);
+        var isRecurring = SubscriptionPeriodCalculator.IsRecurringProvider(providerCode);
+
         var activeSubscriptions = await dbContext.UserSubscriptions
-            .Where(s => s.UserId == userId && s.Status == "active")
+            .Where(s => s.UserId == userId && s.Status == SubscriptionStatuses.Active)
             .ToListAsync(cancellationToken);
 
         foreach (var subscription in activeSubscriptions)
         {
-            subscription.Status = "cancelled";
+            subscription.Status = SubscriptionStatuses.Cancelled;
             subscription.EndsAt = now;
         }
 
@@ -288,49 +407,265 @@ public class BillingService(CraftQuestDbContext dbContext) : IBillingService
             UserSubscriptionId = Guid.NewGuid(),
             UserId = userId,
             PlanId = plan.PlanId,
-            Status = "active",
+            Status = SubscriptionStatuses.Active,
             StartedAt = now,
+            EndsAt = periodEnd,
             ProviderCode = providerCode,
             ProviderSubscriptionId = providerSubscriptionId,
             CreatedAt = now,
+            BillingCycle = billingCycle,
+            AutoRenewEnabled = isRecurring && options.AutoRenewEnabled,
+            CancelAtPeriodEnd = options.CancelAtPeriodEnd,
+            LastPaymentAt = options.LastPaymentAt ?? now,
         });
 
         if (plan.MonthlyAiCredits > 0)
         {
             await SetCreditBalanceAsync(
                 userId,
-                "ai",
+                BillingCreditTypes.AiPlan,
                 plan.MonthlyAiCredits,
                 "grant_plan",
                 cancellationToken,
                 saveImmediately: false);
         }
 
-        // Asignar/revocar rol teacher según el plan activado
         await SyncTeacherRoleAsync(userId, plan.IsTeacherPlan, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<CancelAutoRenewResponse> CancelAutoRenewAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var subscription = await dbContext.UserSubscriptions
+            .Include(s => s.Plan)
+            .Where(s => s.UserId == userId && s.Status == SubscriptionStatuses.Active)
+            .OrderByDescending(s => s.StartedAt)
+            .FirstOrDefaultAsync(cancellationToken)
+            ?? throw new AppException("No active subscription.", 404);
+
+        if (subscription.Plan.Code.Equals("free", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new AppException("Free plan has no auto-renewal to cancel.", 400);
+        }
+
+        subscription.AutoRenewEnabled = false;
+        subscription.CancelAtPeriodEnd = true;
+
+        var accessUntil = subscription.EndsAt
+            ?? SubscriptionPeriodCalculator.CalculatePeriodEnd(
+                subscription.StartedAt,
+                subscription.BillingCycle);
+
+        if (subscription.EndsAt is null)
+        {
+            subscription.EndsAt = accessUntil;
+        }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        var manageInStore = SubscriptionPeriodCalculator.IsMobileStoreProvider(subscription.ProviderCode);
+
+        return new CancelAutoRenewResponse
+        {
+            AccessUntil = accessUntil,
+            AutoRenewEnabled = false,
+            ProviderCode = subscription.ProviderCode,
+            ManageInStore = manageInStore,
+        };
+    }
+
+    public async Task<ReactivateAutoRenewResponse> ReactivateAutoRenewAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var subscription = await dbContext.UserSubscriptions
+            .Include(s => s.Plan)
+            .Where(s => s.UserId == userId && s.Status == SubscriptionStatuses.Active)
+            .OrderByDescending(s => s.StartedAt)
+            .FirstOrDefaultAsync(cancellationToken)
+            ?? throw new AppException("No active subscription.", 404);
+
+        if (subscription.Plan.Code.Equals("free", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new AppException("Free plan has no auto-renewal to reactivate.", 400);
+        }
+
+        if (!SubscriptionPeriodCalculator.IsRecurringProvider(subscription.ProviderCode))
+        {
+            throw new AppException("This subscription does not support auto-renewal.", 400);
+        }
+
+        if (subscription.AutoRenewEnabled && !subscription.CancelAtPeriodEnd)
+        {
+            throw new AppException("Auto-renewal is already enabled.", 400);
+        }
+
+        var accessUntil = subscription.EndsAt
+            ?? SubscriptionPeriodCalculator.CalculatePeriodEnd(
+                subscription.StartedAt,
+                subscription.BillingCycle);
+
+        if (accessUntil <= DateTime.UtcNow)
+        {
+            throw new AppException("The paid period has already ended.", 400);
+        }
+
+        subscription.AutoRenewEnabled = true;
+        subscription.CancelAtPeriodEnd = false;
+
+        if (subscription.EndsAt is null)
+        {
+            subscription.EndsAt = accessUntil;
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        var manageInStore = SubscriptionPeriodCalculator.IsMobileStoreProvider(subscription.ProviderCode);
+
+        return new ReactivateAutoRenewResponse
+        {
+            AutoRenewEnabled = true,
+            NextRenewalAt = accessUntil,
+            ProviderCode = subscription.ProviderCode,
+            ManageInStore = manageInStore,
+            RequiresResubscribe = false,
+        };
     }
 
     public async Task CancelSubscriptionAsync(
         Guid userId,
         CancellationToken cancellationToken = default)
     {
+        var subscription = await dbContext.UserSubscriptions
+            .Include(s => s.Plan)
+            .Where(s => s.UserId == userId && s.Status == SubscriptionStatuses.Active)
+            .OrderByDescending(s => s.StartedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (subscription is not null
+            && !subscription.Plan.Code.Equals("free", StringComparison.OrdinalIgnoreCase)
+            && SubscriptionPeriodCalculator.IsRecurringProvider(subscription.ProviderCode))
+        {
+            await CancelAutoRenewAsync(userId, cancellationToken);
+            return;
+        }
+
+        await DowngradeToFreePlanAsync(userId, cancellationToken);
+    }
+
+    public async Task<int> ProcessExpiredSubscriptionsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var now = DateTime.UtcNow;
+        var graceThreshold = now.AddDays(-3);
+
+        var toExpire = await dbContext.UserSubscriptions
+            .Include(s => s.Plan)
+            .Where(s => s.Status == SubscriptionStatuses.Active
+                        && s.EndsAt != null
+                        && s.EndsAt <= now
+                        && !s.Plan.Code.Equals("free")
+                        && (s.CancelAtPeriodEnd
+                            || !s.AutoRenewEnabled
+                            || s.EndsAt <= graceThreshold))
+            .ToListAsync(cancellationToken);
+
+        var count = 0;
+        foreach (var group in toExpire.GroupBy(s => s.UserId))
+        {
+            await DowngradeToFreePlanAsync(group.Key, cancellationToken);
+            count++;
+        }
+
+        return count;
+    }
+
+    public async Task RenewSubscriptionPeriodAsync(
+        string providerSubscriptionId,
+        string providerCode,
+        DateTime? periodEnd,
+        string? paymentTransactionId,
+        CancellationToken cancellationToken = default)
+    {
+        var subscription = await dbContext.UserSubscriptions
+            .Include(s => s.Plan)
+            .Where(s => s.ProviderSubscriptionId == providerSubscriptionId
+                        && s.ProviderCode == providerCode
+                        && s.Status == SubscriptionStatuses.Active)
+            .OrderByDescending(s => s.StartedAt)
+            .FirstOrDefaultAsync(cancellationToken)
+            ?? throw new AppException("Subscription not found for renewal.", 404);
+
+        var now = DateTime.UtcNow;
+        subscription.LastPaymentAt = now;
+        subscription.AutoRenewEnabled = true;
+        subscription.CancelAtPeriodEnd = false;
+        subscription.EndsAt = periodEnd
+            ?? SubscriptionPeriodCalculator.CalculatePeriodEnd(now, subscription.BillingCycle);
+
+        if (!string.IsNullOrWhiteSpace(paymentTransactionId))
+        {
+            var exists = await dbContext.Purchases.AnyAsync(
+                p => p.ProviderCode == providerCode
+                     && p.ProviderTransactionId == paymentTransactionId,
+                cancellationToken);
+
+            if (!exists)
+            {
+                dbContext.Purchases.Add(new Purchase
+                {
+                    PurchaseId = Guid.NewGuid(),
+                    UserId = subscription.UserId,
+                    ProductCode = subscription.Plan.Code,
+                    ProductType = "subscription",
+                    ProviderCode = providerCode,
+                    ProviderTransactionId = paymentTransactionId,
+                    Amount = subscription.BillingCycle == BillingCycles.Annual
+                        ? subscription.Plan.AnnualPrice
+                        : subscription.Plan.MonthlyPrice,
+                    CurrencyCode = "USD",
+                    Status = "validated",
+                    PurchasedAt = now,
+                    CreatedAt = now,
+                });
+            }
+        }
+
+        if (subscription.Plan.MonthlyAiCredits > 0)
+        {
+            await SetCreditBalanceAsync(
+                subscription.UserId,
+                BillingCreditTypes.AiPlan,
+                subscription.Plan.MonthlyAiCredits,
+                "grant_plan",
+                cancellationToken,
+                saveImmediately: false);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task DowngradeToFreePlanAsync(
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
         var now = DateTime.UtcNow;
         var active = await dbContext.UserSubscriptions
             .Include(s => s.Plan)
-            .Where(s => s.UserId == userId && s.Status == "active")
+            .Where(s => s.UserId == userId && s.Status == SubscriptionStatuses.Active)
             .ToListAsync(cancellationToken);
 
         var wasTeacherPlan = active.Any(s => s.Plan.IsTeacherPlan);
 
         foreach (var sub in active)
         {
-            sub.Status = "cancelled";
+            sub.Status = SubscriptionStatuses.Cancelled;
             sub.EndsAt = now;
+            sub.AutoRenewEnabled = false;
         }
 
-        // Volver al plan free
         var freePlan = await dbContext.Plans
             .FirstOrDefaultAsync(p => p.Code == "free" && p.IsActive, cancellationToken)
             ?? throw new AppException("Free plan is not configured.", 500);
@@ -340,13 +675,15 @@ public class BillingService(CraftQuestDbContext dbContext) : IBillingService
             UserSubscriptionId = Guid.NewGuid(),
             UserId = userId,
             PlanId = freePlan.PlanId,
-            Status = "active",
+            Status = SubscriptionStatuses.Active,
             StartedAt = now,
             ProviderCode = "internal",
             CreatedAt = now,
+            BillingCycle = BillingCycles.Monthly,
+            AutoRenewEnabled = false,
+            CancelAtPeriodEnd = false,
         });
 
-        // Revocar rol teacher si venía de un plan teacher
         if (wasTeacherPlan)
         {
             await SyncTeacherRoleAsync(userId, false, cancellationToken);
@@ -356,7 +693,7 @@ public class BillingService(CraftQuestDbContext dbContext) : IBillingService
         {
             await SetCreditBalanceAsync(
                 userId,
-                "ai",
+                BillingCreditTypes.AiPlan,
                 freePlan.MonthlyAiCredits,
                 "grant_plan",
                 cancellationToken,
@@ -439,16 +776,19 @@ public class BillingService(CraftQuestDbContext dbContext) : IBillingService
             UserSubscriptionId = Guid.NewGuid(),
             UserId = userId,
             PlanId = freePlan.PlanId,
-            Status = "active",
+            Status = SubscriptionStatuses.Active,
             StartedAt = now,
             CreatedAt = now,
+            BillingCycle = BillingCycles.Monthly,
+            AutoRenewEnabled = false,
+            CancelAtPeriodEnd = false,
         });
 
         if (freePlan.MonthlyAiCredits > 0)
         {
             await SetCreditBalanceAsync(
                 userId,
-                "ai",
+                BillingCreditTypes.AiPlan,
                 freePlan.MonthlyAiCredits,
                 "grant_plan",
                 cancellationToken,
@@ -494,45 +834,98 @@ public class BillingService(CraftQuestDbContext dbContext) : IBillingService
         return entries.Sum();
     }
 
-    private async Task EnsureMonthlyAiCreditsAsync(
+    /// <summary>
+    /// Corrige el saldo IA al cupo del plan activo si el usuario no ha consumido créditos
+    /// en el periodo actual (calendario o ciclo de suscripción).
+    /// </summary>
+    private async Task EnsureAiCreditBalanceMatchesPlanAsync(
         Guid userId,
-        Plan plan,
+        UserSubscription subscription,
         CancellationToken cancellationToken)
     {
+        var plan = subscription.Plan;
         if (plan.MonthlyAiCredits <= 0)
         {
             return;
         }
 
-        var monthStart = new DateTime(
-            DateTime.UtcNow.Year,
-            DateTime.UtcNow.Month,
-            1,
-            0,
-            0,
-            0,
-            DateTimeKind.Utc);
+        var periodStart = AiCreditPeriodCalculator.GetCreditPeriodStartUtc(
+            subscription,
+            plan,
+            DateTime.UtcNow);
 
-        var refreshedThisMonth = await dbContext.CreditLedgerEntries
+        var consumedThisPeriod = await dbContext.CreditLedgerEntries
             .AnyAsync(
                 e => e.UserId == userId
-                    && e.CreditType == "ai"
-                    && (e.Reason == "grant_plan" || e.Reason == "reset_monthly")
-                    && e.CreatedAt >= monthStart,
+                    && e.CreditType == BillingCreditTypes.AiPlan
+                    && e.Reason == "consume"
+                    && e.CreatedAt >= periodStart,
                 cancellationToken);
 
-        if (refreshedThisMonth)
+        if (consumedThisPeriod)
+        {
+            return;
+        }
+
+        var balance = await GetCreditBalanceAsync(
+            userId,
+            BillingCreditTypes.AiPlan,
+            cancellationToken);
+        if (balance == plan.MonthlyAiCredits)
         {
             return;
         }
 
         await SetCreditBalanceAsync(
             userId,
-            "ai",
+            BillingCreditTypes.AiPlan,
             plan.MonthlyAiCredits,
-            "reset_monthly",
+            "grant_plan",
             cancellationToken);
     }
+
+    private async Task EnsureMonthlyAiCreditsAsync(
+        Guid userId,
+        UserSubscription subscription,
+        CancellationToken cancellationToken)
+    {
+        var plan = subscription.Plan;
+        if (plan.MonthlyAiCredits <= 0)
+        {
+            return;
+        }
+
+        var periodStart = AiCreditPeriodCalculator.GetCreditPeriodStartUtc(
+            subscription,
+            plan,
+            DateTime.UtcNow);
+
+        var refreshedThisPeriod = await dbContext.CreditLedgerEntries
+            .AnyAsync(
+                e => e.UserId == userId
+                    && e.CreditType == BillingCreditTypes.AiPlan
+                    && (e.Reason == "grant_plan" || e.Reason == "monthly_reset")
+                    && e.CreatedAt >= periodStart,
+                cancellationToken);
+
+        if (refreshedThisPeriod)
+        {
+            return;
+        }
+
+        await SetCreditBalanceAsync(
+            userId,
+            BillingCreditTypes.AiPlan,
+            plan.MonthlyAiCredits,
+            "monthly_reset",
+            cancellationToken);
+    }
+
+    private async Task<int> GetTotalAiCreditsBalanceAsync(
+        Guid userId,
+        CancellationToken cancellationToken) =>
+        await GetCreditBalanceAsync(userId, BillingCreditTypes.AiPlan, cancellationToken)
+        + await GetCreditBalanceAsync(userId, BillingCreditTypes.AiPurchased, cancellationToken);
 
     private async Task SetCreditBalanceAsync(
         Guid userId,
@@ -563,6 +956,28 @@ public class BillingService(CraftQuestDbContext dbContext) : IBillingService
         {
             await dbContext.SaveChangesAsync(cancellationToken);
         }
+    }
+
+    private static SubscriptionDto MapSubscription(UserSubscription subscription)
+    {
+        var recurring = SubscriptionPeriodCalculator.IsRecurringProvider(subscription.ProviderCode)
+            && !subscription.Plan.Code.Equals("free", StringComparison.OrdinalIgnoreCase);
+
+        return new SubscriptionDto
+        {
+            Status = subscription.Status,
+            StartedAt = subscription.StartedAt,
+            EndsAt = subscription.EndsAt,
+            BillingCycle = subscription.BillingCycle,
+            AutoRenewEnabled = subscription.AutoRenewEnabled,
+            CancelAtPeriodEnd = subscription.CancelAtPeriodEnd,
+            LastPaymentAt = subscription.LastPaymentAt,
+            NextBillingAt = subscription.AutoRenewEnabled && !subscription.CancelAtPeriodEnd
+                ? subscription.EndsAt
+                : null,
+            ProviderCode = subscription.ProviderCode,
+            IsRecurring = recurring,
+        };
     }
 
     private static PlanDto MapPlan(Plan plan) => new()
@@ -636,6 +1051,92 @@ public class BillingService(CraftQuestDbContext dbContext) : IBillingService
         planCode.Equals("free", StringComparison.OrdinalIgnoreCase)
             ? SharingLimits.FreeMaxRedeemedSharedQuizzes
             : null;
+
+    private async Task<Dictionary<string, string>> ResolvePlanNamesAsync(
+        IReadOnlyList<Purchase> purchases,
+        CancellationToken cancellationToken)
+    {
+        var planCodes = purchases
+            .Where(p => p.ProductType == "subscription")
+            .Select(p => p.ProductCode)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (planCodes.Count == 0)
+        {
+            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        return await dbContext.Plans
+            .AsNoTracking()
+            .Where(p => planCodes.Contains(p.Code))
+            .ToDictionaryAsync(p => p.Code, p => p.Name, StringComparer.OrdinalIgnoreCase, cancellationToken);
+    }
+
+    private async Task<Dictionary<Guid, string>> ResolvePrepCatalogTitlesAsync(
+        IReadOnlyList<Purchase> purchases,
+        CancellationToken cancellationToken)
+    {
+        var catalogIds = purchases
+            .Where(p => p.ProductType == "prep_access")
+            .Select(p => TryParsePrepCatalogItemId(p.ProductCode))
+            .Where(id => id.HasValue)
+            .Select(id => id!.Value)
+            .Distinct()
+            .ToList();
+
+        if (catalogIds.Count == 0)
+        {
+            return [];
+        }
+
+        var items = await dbContext.PrepCatalogItems
+            .AsNoTracking()
+            .Include(c => c.Quiz)
+            .Where(c => catalogIds.Contains(c.CatalogItemId))
+            .Select(c => new
+            {
+                c.CatalogItemId,
+                Title = c.TitleOverride ?? c.Quiz.Title,
+            })
+            .ToListAsync(cancellationToken);
+
+        return items.ToDictionary(i => i.CatalogItemId, i => i.Title);
+    }
+
+    private static Guid? TryParsePrepCatalogItemId(string productCode)
+    {
+        var parts = productCode.Split('|', StringSplitOptions.TrimEntries);
+        return parts.Length >= 1 && Guid.TryParse(parts[0], out var catalogItemId)
+            ? catalogItemId
+            : null;
+    }
+
+    private static string? ResolveProductDisplayName(
+        Purchase purchase,
+        IReadOnlyDictionary<string, string> planNames,
+        IReadOnlyDictionary<Guid, string> prepTitles)
+    {
+        if (purchase.ProductType == "subscription"
+            && planNames.TryGetValue(purchase.ProductCode, out var planName))
+        {
+            return planName;
+        }
+
+        if (purchase.ProductType == "prep_access"
+            && TryParsePrepCatalogItemId(purchase.ProductCode) is { } catalogItemId
+            && prepTitles.TryGetValue(catalogItemId, out var prepTitle))
+        {
+            return prepTitle;
+        }
+
+        if (purchase.ProductType == "ai_credits")
+        {
+            return purchase.ProductCode;
+        }
+
+        return null;
+    }
 
     private async Task<int> CountRedeemedSharedQuizzesAsync(
         Guid userId,

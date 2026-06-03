@@ -98,6 +98,7 @@ class _StudentAssignmentAttemptsPageState
   String _localizedStatus(AppLocalizations l10n, String status) {
     return switch (status) {
       'finished' => l10n.studentAssignmentAttemptStatusFinished,
+      'forfeited' => l10n.studentAssignmentAttemptStatusForfeited,
       _ => status,
     };
   }

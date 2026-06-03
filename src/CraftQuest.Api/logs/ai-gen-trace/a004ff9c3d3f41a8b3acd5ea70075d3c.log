@@ -1,0 +1,275 @@
+﻿=== AI generation trace started ===
+Utc: 2026-05-26T22:27:40.5355327Z
+Log file: C:\Users\cperaza_ga\Proyectos\CraftQuest\src\CraftQuest.Api\logs/ai-gen-trace\a004ff9c3d3f41a8b3acd5ea70075d3c.log
+[job.input] Generation parameters | {"StudyMaterialId":"6aa9ddb9-58f9-4346-a499-2cb5a8c0900c","QuestionCount":5,"Language":"es","Difficulty":"mixed","AllowedQuestionTypes":["true_false"],"PageFrom":1,"PageTo":2,"TopicFocus":null,"Preset":null,"sourceChars":2759}
+[provider.start] GenerateAsync | {"sourceChars":2759,"chunkCount":1,"requestedQuestions":5,"allowedTypes":["true_false"],"pages":"1-2","language":"es"}
+--- PROMPT: outline (len=3290) ---
+You are a curriculum planner for CraftQuest. Output JSON only (no markdown).
+Return shape (example): { "items": [ { "index": 1, "topic": "...", "suggestedType": "single_choice", "chunkIndex": 1 } ] }
+Rules:
+- Exactly 5 items in "items".
+- chunkIndex must be between 1 and 1 (match --- Page N --- sections when present).
+- suggestedType must be one of: true_false.
+- Topics must be distinct and cover the material evenly.
+- Language for topic text: "es".
+- Difficulty target: mixed.
+- Pedagogical goal: assessment.
+
+SOURCE EXCERPT:
+--- Page 1 ---
+HISTORIA Y LORE DE REGRETEVATOR: Un Análisis Completo
+1. Introducción: ¿Qué es Regretevator?
+Regretevator es un popular juego de la plataforma Roblox creado por el grupo de desarrollo The Axolotl Sun. A primera vista, el juego se presenta como un simulador de elevador, un género clásico en Roblox que se popularizó con títulos como The Normal Elevator. Sin embargo, Regretevator toma esta premisa básica y la transforma en una experiencia profundamente surrealista, caótica y rica en historia.
+En lugar de ser un simple viaje de piso en piso donde ocurren eventos aleatorios sin conexión, Regretevator construye un ecosistema vivo. A medida que los jugadores viajan en el ascensor, las puertas se abren a diversos minijuegos, acertijos y escenarios absurdos. Pero el verdadero corazón del juego radica en sus NPCs (Personajes No Jugables), quienes abordan el elevador, interactúan entre sí, tienen historias de fondo complejas, relaciones dinámicas y un lore oscuro que contrasta marcadamente con la estética colorida, a menudo descrita como weirdcore, dreamcore o inspirada en la internet de los años 2000 (Y2K).
+El título del juego es un juego de palabras entre "Regret" (arrepentimiento) y "Elevator" (ascensor), lo que sirve como presagio temático de las historias melancólicas o trágicas que muchos de sus personajes ocultan.
+2. El Elevador y el Entorno: El Espacio Liminal
+El elevador en sí funciona como un espacio liminal, un área de transición que sirve como "zona segura" para los jugadores. Es el lugar donde la comunidad socializa, se tiran bolas de nieve, se lanzan pasteles y, lo más importante, se observa la interacción de los personajes.
+
+--- Page 2 ---
+La Mecánica de Supervivencia y Colección
+A lo largo de los pisos, los jugadores deben sobrevivir a diferentes amenazas para ganar monedas y "Tickets". Las monedas se usan en el piso de la tienda (Shop Floor) para comprar objetos interactivos temporales (linternas, paraguas, comida), mientras que los tickets permiten comprar accesorios permanentes, mascotas o alterar la música del elevador.
+El entorno está diseñado para desorientar. Los pisos pueden variar desde un apacible supermercado o una pista de baile, hasta laberintos oscuros habitados por entidades hostiles, o la oficina de un psiquiatra. Esta desconexión espacial refuerza la idea de que el elevador viaja a través de dimensiones o sueños, más que por un edificio físico.
+3. Personajes Principales y sus Dinámicas (El Corazón del Lore)
+Lo que eleva a Regretevator por encima de otros juegos de su género es su extenso elenco de personajes. Cada NPC que entra al ascensor tiene su propia personalidad, animaciones y líneas de diálogo que cambian dependiendo de qué otros personajes estén presentes.
+--- GEMINI RESPONSE: outline model=gemini-2.5-flash-lite len=1052 parsedQuestions=5 ---
+Parse: outline parsed
+{
+  "items": [
+    {
+      "index": 1,
+      "topic": "¿Cuál es el género principal de Regretevator según la descripción inicial?",
+      "suggestedType": "true_false",
+      "chunkIndex": 1
+    },
+    {
+      "index": 2,
+      "topic": "El título 'Regretevator' es una combinación de las palabras 'Regret' y 'Elevator'.",
+      "suggestedType": "true_false",
+      "chunkIndex": 1
+    },
+    {
+      "index": 3,
+      "topic": "El elevador en Regretevator se describe como un espacio liminal, sirviendo como zona de transición y socialización.",
+      "suggestedType": "true_false",
+      "chunkIndex": 1
+    },
+    {
+      "index": 4,
+      "topic": "Las 'monedas' en Regretevator se utilizan para comprar accesorios permanentes y mascotas.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    },
+    {
+      "index": 5,
+      "topic": "La variedad de entornos en los pisos de Regretevator refuerza la idea de que el elevador viaja a través de dimensiones o sueños.",
+      "suggestedType": "true_false",
+      "chunkIndex": 2
+    }
+  ]
+}
+[outline.ok] Outline plan ready | {"itemCount":5}
+[chunk.single] Single-chunk generation | {"questionCount":5,"chunkIndex":1,"chunkTotal":1}
+--- PROMPT: single-chunk (len=4798) ---
+You are CraftQuest quiz generator. Output valid CQIF JSON 2.0 only (no markdown).
+Root object MUST include: cqifVersion, quiz, questions (array).
+cqifVersion must be "2.0".
+Generate exactly 5 questions in language "es".
+QUESTION PLAN (follow this order and focus; one question per line):
+- Q1: ¿Cuál es el género principal de Regretevator según la descripción inicial? (prefer type: true_false)
+- Q2: El título 'Regretevator' es una combinación de las palabras 'Regret' y 'Elevator'. (prefer type: true_false)
+- Q3: El elevador en Regretevator se describe como un espacio liminal, sirviendo como zona de transición y socialización. (prefer type: true_false)
+- Q4: Las 'monedas' en Regretevator se utilizan para comprar accesorios permanentes y mascotas. (prefer type: true_false)
+- Q5: La variedad de entornos en los pisos de Regretevator refuerza la idea de que el elevador viaja a través de dimensiones o sueños. (prefer type: true_false)
+Language for question text: "es".
+Difficulty mode: mixed.
+Pedagogical goal: assessment.
+Allowed question types ONLY: true_false.
+NEVER use image_choice or image_based_question.
+Do not reference images, diagrams, or figures not described in text.
+Topic focus: cover this source section evenly.
+Use ONLY facts explicitly present in SOURCE. Do not invent.
+Each question needs: text, type, answerOptions (min 2) with unique key fields,
+correctAnswerKeys as JSON array referencing those keys (never a single string).
+For true_false use keys "true" and "false".
+Assign unique externalId per question (e.g. "q-1", "q-2").
+Each question MUST include a justification object:
+- text: one paragraph explaining why the correct answer(s) are correct (cover all relevant options in this single text).
+- visibility: "never" (review only; not shown during practice)
+- sources: when SOURCE contains "--- Page N ---" markers, include at least one source per question with pageNumber (integer N) and snippet (short quote from that page). Use url "craftquest://source#page=N" when no external URL exists.
+
+SOURCE:
+--- Page 1 ---
+HISTORIA Y LORE DE REGRETEVATOR: Un Análisis Completo
+1. Introducción: ¿Qué es Regretevator?
+Regretevator es un popular juego de la plataforma Roblox creado por el grupo de desarrollo The Axolotl Sun. A primera vista, el juego se presenta como un simulador de elevador, un género clásico en Roblox que se popularizó con títulos como The Normal Elevator. Sin embargo, Regretevator toma esta premisa básica y la transforma en una experiencia profundamente surrealista, caótica y rica en historia.
+En lugar de ser un simple viaje de piso en piso donde ocurren eventos aleatorios sin conexión, Regretevator construye un ecosistema vivo. A medida que los jugadores viajan en el ascensor, las puertas se abren a diversos minijuegos, acertijos y escenarios absurdos. Pero el verdadero corazón del juego radica en sus NPCs (Personajes No Jugables), quienes abordan el elevador, interactúan entre sí, tienen historias de fondo complejas, relaciones dinámicas y un lore oscuro que contrasta marcadamente con la estética colorida, a menudo descrita como weirdcore, dreamcore o inspirada en la internet de los años 2000 (Y2K).
+El título del juego es un juego de palabras entre "Regret" (arrepentimiento) y "Elevator" (ascensor), lo que sirve como presagio temático de las historias melancólicas o trágicas que muchos de sus personajes ocultan.
+2. El Elevador y el Entorno: El Espacio Liminal
+El elevador en sí funciona como un espacio liminal, un área de transición que sirve como "zona segura" para los jugadores. Es el lugar donde la comunidad socializa, se tiran bolas de nieve, se lanzan pasteles y, lo más importante, se observa la interacción de los personajes.
+
+--- Page 2 ---
+La Mecánica de Supervivencia y Colección
+A lo largo de los pisos, los jugadores deben sobrevivir a diferentes amenazas para ganar monedas y "Tickets". Las monedas se usan en el piso de la tienda (Shop Floor) para comprar objetos interactivos temporales (linternas, paraguas, comida), mientras que los tickets permiten comprar accesorios permanentes, mascotas o alterar la música del elevador.
+El entorno está diseñado para desorientar. Los pisos pueden variar desde un apacible supermercado o una pista de baile, hasta laberintos oscuros habitados por entidades hostiles, o la oficina de un psiquiatra. Esta desconexión espacial refuerza la idea de que el elevador viaja a través de dimensiones o sueños, más que por un edificio físico.
+3. Personajes Principales y sus Dinámicas (El Corazón del Lore)
+Lo que eleva a Regretevator por encima de otros juegos de su género es su extenso elenco de personajes. Cada NPC que entra al ascensor tiene su propia personalidad, animaciones y líneas de diálogo que cambian dependiendo de qué otros personajes estén presentes.
+--- GEMINI RESPONSE: single-chunk model=gemini-2.5-flash len=5319 parsedQuestions=5 ---
+Parse: parsed OK
+{
+  "cqifVersion": "2.0",
+  "quiz": {
+    "language": "es",
+    "difficulty": "mixed",
+    "pedagogicalGoal": "assessment"
+  },
+  "questions": [
+    {
+      "externalId": "q-1",
+      "text": "¿Regretevator se presenta inicialmente como un simulador de elevador?",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ],
+      "justification": {
+        "text": "Según la introducción, Regretevator se presenta a primera vista como un simulador de elevador, un género clásico en Roblox. Aunque luego se transforma en una experiencia más compleja, su descripción inicial lo sitúa en este género.",
+        "visibility": "never",
+        "sources": [
+          {
+            "pageNumber": 1,
+            "snippet": "A primera vista, el juego se presenta como un simulador de elevador, un género clásico en Roblox que se popularizó con títulos como The Normal Elevator."
+          }
+        ]
+      }
+    },
+    {
+      "externalId": "q-2",
+      "text": "El título 'Regretevator' es una combinación de las palabras 'Regret' y 'Elevator'.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ],
+      "justification": {
+        "text": "El texto explica explícitamente que el título del juego es un juego de palabras entre 'Regret' (arrepentimiento) y 'Elevator' (ascensor), lo que también presagia los temas melancólicos del juego.",
+        "visibility": "never",
+        "sources": [
+          {
+            "pageNumber": 1,
+            "snippet": "El título del juego es un juego de palabras entre \"Regret\" (arrepentimiento) y \"Elevator\" (ascensor), lo que sirve como presagio temático de las historias melancólicas o trágicas que muchos de sus personajes ocultan."
+          }
+        ]
+      }
+    },
+    {
+      "externalId": "q-3",
+      "text": "El elevador en Regretevator se describe como un espacio liminal, sirviendo como zona de transición y socialización.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ],
+      "justification": {
+        "text": "El texto afirma que el elevador funciona como un espacio liminal, un área de transición y una 'zona segura' donde la comunidad socializa e interactúa con los personajes.",
+        "visibility": "never",
+        "sources": [
+          {
+            "pageNumber": 1,
+            "snippet": "El elevador en sí funciona como un espacio liminal, un área de transición que sirve como \"zona segura\" para los jugadores. Es el lugar donde la comunidad socializa, se tiran bolas de nieve, se lanzan pasteles y, lo más importante, se observa la interacción de los personajes."
+          }
+        ]
+      }
+    },
+    {
+      "externalId": "q-4",
+      "text": "Las 'monedas' en Regretevator se utilizan para comprar accesorios permanentes y mascotas.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "false"
+      ],
+      "justification": {
+        "text": "El texto especifica que las monedas se usan para comprar objetos interactivos temporales, mientras que los 'Tickets' son los que permiten comprar accesorios permanentes, mascotas o alterar la música del elevador. Por lo tanto, la afirmación es falsa.",
+        "visibility": "never",
+        "sources": [
+          {
+            "pageNumber": 2,
+            "snippet": "Las monedas se usan en el piso de la tienda (Shop Floor) para comprar objetos interactivos temporales (linternas, paraguas, comida), mientras que los tickets permiten comprar accesorios permanentes, mascotas o alterar la música del elevador."
+          }
+        ]
+      }
+    },
+    {
+      "externalId": "q-5",
+      "text": "La variedad de entornos en los pisos de Regretevator refuerza la idea de que el elevador viaja a través de dimensiones o sueños.",
+      "type": "true_false",
+      "answerOptions": [
+        {
+          "key": "true",
+          "text": "Verdadero"
+        },
+        {
+          "key": "false",
+          "text": "Falso"
+        }
+      ],
+      "correctAnswerKeys": [
+        "true"
+      ],
+      "justification": {
+        "text": "El texto indica que la desconexión espacial y la gran variedad de entornos en los pisos (desde supermercados hasta laberintos oscuros) refuerzan la idea de que el elevador viaja a través de dimensiones o sueños, en lugar de un edificio físico.",
+        "visibility": "never",
+        "sources": [
+          {
+            "pageNumber": 2,
+            "snippet": "Esta desconexión espacial refuerza la idea de que el elevador viaja a través de dimensiones o sueños, más que por un edificio físico."
+          }
+        ]
+      }
+    }
+  ]
+}
+[single-chunk-parsed] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":5,"types":{"true_false":5},"sampleTexts":["\u00BFRegretevator se presenta inicialmente como un simulador de elevador?","El t\u00EDtulo \u0027Regretevator\u0027 es una combinaci\u00F3n de las palabras \u0027Regret\u0027 y \u0027Elevator","El elevador en Regretevator se describe como un espacio liminal, sirviendo como "]}
+[single-chunk-merged] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":5,"types":{"true_false":5},"sampleTexts":["\u00BFRegretevator se presenta inicialmente como un simulador de elevador?","El t\u00EDtulo \u0027Regretevator\u0027 es una combinaci\u00F3n de las palabras \u0027Regret\u0027 y \u0027Elevator","El elevador en Regretevator se describe como un espacio liminal, sirviendo como "]}
+[post-gemini] CQIF document snapshot | {"cqifVersion":"2.0","questionCount":5,"types":{"true_false":5},"sampleTexts":["\u00BFRegretevator se presenta inicialmente como un simulador de elevador?","El t\u00EDtulo \u0027Regretevator\u0027 es una combinaci\u00F3n de las palabras \u0027Regret\u0027 y \u0027Elevator","El elevador en Regretevator se describe como un espacio liminal, sirviendo como "]}
+[sanitize] Question type filter applied | {"before":5,"after":5,"allowedTypes":["true_false"],"typesBefore":{"true_false":5},"typesAfter":{"true_false":5}}
+[quiz.created] New quiz for AI import | {"targetQuizId":"f1b95c27-c587-4a0d-befa-9bb1a69b3e30"}
+[import.populate] Import batch snapshot | {"totalRows":5,"validRows":5,"errorRows":0,"batchStatus":"ready_for_review","rows":[{"Row":1,"Status":"valid","ErrorCode":null,"message":null},{"Row":2,"Status":"valid","ErrorCode":null,"message":null},{"Row":3,"Status":"valid","ErrorCode":null,"message":null},{"Row":4,"Status":"valid","ErrorCode":null,"message":null},{"Row":5,"Status":"valid","ErrorCode":null,"message":null}]}
+[import.batch] Import batch created from CQIF | {"ImportId":"f7251478-512b-4aec-b9c1-896ca5cbcf45","Status":"ready_for_review","TotalQuestionsDetected":5,"ValidQuestions":5,"QuestionsWithErrors":0,"QuestionsWithWarnings":0}
+=== AI generation trace ended ===

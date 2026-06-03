@@ -43,9 +43,11 @@ public class TeacherController(
     [HttpGet("classes")]
     [Authorize(Policy = "Teacher")]
     [ProducesResponseType(typeof(IReadOnlyList<TeacherClassSummaryDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> ListClasses(CancellationToken cancellationToken)
+    public async Task<IActionResult> ListClasses(
+        [FromQuery] string? status = "active",
+        CancellationToken cancellationToken = default)
     {
-        var classes = await classService.ListTeacherClassesAsync(GetUserId(), cancellationToken);
+        var classes = await classService.ListTeacherClassesAsync(GetUserId(), status, cancellationToken);
         return Ok(classes);
     }
 
@@ -91,6 +93,28 @@ public class TeacherController(
         CancellationToken cancellationToken)
     {
         await classService.ArchiveAsync(GetUserId(), classId, cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPost("classes/{classId:guid}/restore")]
+    [Authorize(Policy = "Teacher")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> RestoreClass(
+        Guid classId,
+        CancellationToken cancellationToken)
+    {
+        await classService.RestoreAsync(GetUserId(), classId, cancellationToken);
+        return NoContent();
+    }
+
+    [HttpDelete("classes/{classId:guid}")]
+    [Authorize(Policy = "Teacher")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> DeleteClass(
+        Guid classId,
+        CancellationToken cancellationToken)
+    {
+        await classService.DeleteAsync(GetUserId(), classId, cancellationToken);
         return NoContent();
     }
 
@@ -275,10 +299,12 @@ public class TeacherController(
     [ProducesResponseType(typeof(QuizAnalyticsDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetQuizAnalytics(
         Guid quizId,
+        [FromQuery] Guid? classId,
+        [FromQuery] Guid? assignmentId,
         CancellationToken cancellationToken)
     {
         var analytics = await analyticsService.GetQuizAnalyticsAsync(
-            GetUserId(), quizId, cancellationToken);
+            GetUserId(), quizId, classId, assignmentId, cancellationToken);
         return Ok(analytics);
     }
 }

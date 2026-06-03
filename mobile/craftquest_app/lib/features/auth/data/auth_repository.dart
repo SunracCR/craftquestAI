@@ -1,5 +1,6 @@
 import 'package:craftquest_app/core/network/api_client.dart';
 import 'package:craftquest_app/features/auth/data/models/auth_models.dart';
+import 'package:craftquest_app/features/auth/data/models/oauth_config_model.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:dio/dio.dart';
 
@@ -18,6 +19,38 @@ class AuthRepository {
       data: {
         'email': email,
         'password': password,
+        if (displayName != null && displayName.isNotEmpty)
+          'displayName': displayName,
+      },
+    );
+    return _persistAndMap(response.data!);
+  }
+
+  Future<OAuthConfigModel> getOAuthConfig() async {
+    final response = await _apiClient.dio.get<Map<String, dynamic>>(
+      '/api/auth/oauth-config',
+    );
+    return OAuthConfigModel.fromJson(response.data!);
+  }
+
+  Future<AuthResponseModel> loginWithGoogle({required String idToken}) async {
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/api/auth/google',
+      data: {'idToken': idToken},
+    );
+    return _persistAndMap(response.data!);
+  }
+
+  Future<AuthResponseModel> loginWithApple({
+    required String idToken,
+    String? email,
+    String? displayName,
+  }) async {
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/api/auth/apple',
+      data: {
+        'idToken': idToken,
+        if (email != null && email.isNotEmpty) 'email': email,
         if (displayName != null && displayName.isNotEmpty)
           'displayName': displayName,
       },
@@ -45,6 +78,18 @@ class AuthRepository {
     return UserProfileModel.fromJson(response.data!);
   }
 
+  /// Actualiza JWT (roles en el token) y devuelve el perfil desde la API.
+  Future<UserProfileModel> refreshSession() async {
+    final renewed = await _apiClient.refreshTokens();
+    if (!renewed) {
+      throw DioException(
+        requestOptions: RequestOptions(path: '/api/auth/refresh'),
+        type: DioExceptionType.badResponse,
+      );
+    }
+    return getProfile();
+  }
+
   Future<UserProfileModel> updateProfile({
     String? displayName,
     String? avatarId,
@@ -59,6 +104,26 @@ class AuthRepository {
       },
     );
     return UserProfileModel.fromJson(response.data!);
+  }
+
+  Future<void> requestPasswordReset({required String email}) async {
+    await _apiClient.dio.post<void>(
+      '/api/auth/forgot-password',
+      data: {'email': email},
+    );
+  }
+
+  Future<void> resetPassword({
+    required String token,
+    required String newPassword,
+  }) async {
+    await _apiClient.dio.post<void>(
+      '/api/auth/reset-password',
+      data: {
+        'token': token,
+        'newPassword': newPassword,
+      },
+    );
   }
 
   Future<void> changePassword({

@@ -6,6 +6,7 @@ public interface IClassService
 {
     Task<IReadOnlyList<TeacherClassSummaryDto>> ListTeacherClassesAsync(
         Guid teacherUserId,
+        string? status = "active",
         CancellationToken cancellationToken = default);
 
     Task<TeacherClassSummaryDto> CreateAsync(
@@ -20,6 +21,16 @@ public interface IClassService
         CancellationToken cancellationToken = default);
 
     Task ArchiveAsync(
+        Guid teacherUserId,
+        Guid classId,
+        CancellationToken cancellationToken = default);
+
+    Task RestoreAsync(
+        Guid teacherUserId,
+        Guid classId,
+        CancellationToken cancellationToken = default);
+
+    Task DeleteAsync(
         Guid teacherUserId,
         Guid classId,
         CancellationToken cancellationToken = default);

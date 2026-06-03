@@ -6,9 +6,13 @@ class TeacherClassRepository {
 
   final ApiClient _apiClient;
 
-  Future<List<TeacherClassSummaryModel>> listClasses() async {
-    final response =
-        await _apiClient.dio.get<List<dynamic>>('/api/teacher/classes');
+  Future<List<TeacherClassSummaryModel>> listClasses({String? status}) async {
+    final response = await _apiClient.dio.get<List<dynamic>>(
+      '/api/teacher/classes',
+      queryParameters: {
+        if (status != null) 'status': status,
+      },
+    );
     return (response.data ?? [])
         .map((e) =>
             TeacherClassSummaryModel.fromJson(e as Map<String, dynamic>))
@@ -46,6 +50,15 @@ class TeacherClassRepository {
   Future<void> archiveClass(String classId) async {
     await _apiClient.dio
         .post<void>('/api/teacher/classes/$classId/archive');
+  }
+
+  Future<void> restoreClass(String classId) async {
+    await _apiClient.dio
+        .post<void>('/api/teacher/classes/$classId/restore');
+  }
+
+  Future<void> deleteClass(String classId) async {
+    await _apiClient.dio.delete<void>('/api/teacher/classes/$classId');
   }
 
   Future<void> addMemberByEmail({

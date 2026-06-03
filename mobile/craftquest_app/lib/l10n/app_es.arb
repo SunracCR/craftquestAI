@@ -1,6 +1,6 @@
 {
   "@@locale": "es",
-  "appTitle": "CraftQuest",
+  "appTitle": "CraftQuestAI",
   "homeWelcome": "Bienvenido a CraftQuest",
   "homeWelcomeUser": "Hola, {name}",
   "@homeWelcomeUser": {
@@ -31,6 +31,7 @@
   "noInternetBannerTitle": "Sin conexión a internet",
   "noInternetBannerMessage": "Puedes seguir navegando, pero los datos no se actualizarán hasta que vuelva la red.",
   "noInternetSnackBarMessage": "Sin conexión. Revisa tu internet e inténtalo de nuevo.",
+  "errorDevApiUnreachable": "No se pudo conectar con la API en el teléfono. Con el USB conectado ejecuta: adb reverse tcp:7080 tcp:7080 y reinicia la app.",
   "genericRequestErrorMessage": "No se pudo completar la solicitud. Inténtalo de nuevo en unos momentos.",
   "errorHttpMethodNotAllowed": "El servidor no admite esta operación. Reinicia la API e inténtalo de nuevo.",
   "errorQuestionLimitReached": "Has alcanzado el límite de {max} preguntas por cuestionario en tu plan {plan}.",
@@ -52,12 +53,51 @@
   "billingPlanPremiumName": "Premium",
   "billingPlanTeacherName": "Profesor",
   "loginTitle": "Iniciar sesión",
-  "loginSubtitle": "Accede gratis a tu cuenta CraftQuest — entra o regístrate en segundos",
+  "loginSubtitle": "Accede gratis a tu cuenta CraftQuestAI — entra o regístrate en segundos",
+  "parentalConsentTitle": "Se requiere aprobación parental",
+  "parentalConsentBodyDefault": "Tu cuenta está supervisada o eres menor en una región con normas de edad (p. ej. Texas). Un padre o tutor debe autorizar el uso de CraftQuestAI en Google Play antes de continuar.",
+  "parentalConsentBodyPending": "Hay cambios pendientes de aprobación por tu padre o tutor en Google Play. Pídele que revise la solicitud en Family Link o en la Play Store y vuelve a comprobar el estado.",
+  "parentalConsentBodyDenied": "Tu padre o tutor no aprobó el acceso a CraftQuestAI. Abre Google Play para revisar la configuración de la cuenta supervisada o contacta a quien administra tu cuenta.",
+  "parentalConsentBodyUnknown": "Google Play no pudo confirmar tu edad. Abre la Play Store, inicia sesión con la misma cuenta y completa la verificación de edad; después pulsa «Comprobar de nuevo».",
+  "parentalConsentOpenPlayStore": "Abrir Google Play",
+  "parentalConsentRecheckAction": "Comprobar de nuevo",
   "loginAction": "Entrar",
-  "loginRememberCredentials": "Recordar usuario y contraseña",
+  "loginRememberCredentials": "Recordar correo electrónico",
+  "loginInvalidCredentials": "Correo o contraseña incorrectos. Comprueba los datos e inténtalo de nuevo.",
   "registerTitle": "Crear cuenta",
   "registerAction": "Registrarse",
   "goToRegister": "¿No tienes cuenta? Regístrate",
+  "forgotPasswordLink": "¿Olvidaste tu contraseña?",
+  "forgotPasswordTitle": "Recuperar contraseña",
+  "forgotPasswordSubtitle": "Te enviaremos un enlace a tu correo si la cuenta existe.",
+  "forgotPasswordAction": "Enviar enlace",
+  "forgotPasswordSuccess": "Si el correo está registrado, recibirás instrucciones en breve.",
+  "resetPasswordTitle": "Nueva contraseña",
+  "resetPasswordSubtitle": "Introduce el código del correo y tu nueva contraseña.",
+  "resetPasswordTokenLabel": "Código de recuperación",
+  "resetPasswordAction": "Guardar contraseña",
+  "resetPasswordSuccess": "Contraseña actualizada. Ya puedes iniciar sesión.",
+  "backToLogin": "Volver al inicio de sesión",
+  "resetPasswordHaveCode": "Ya tengo el código de recuperación",
+  "oauthDividerLabel": "o continúa con",
+  "oauthSignInWithGoogle": "Iniciar sesión con Google",
+  "oauthSignInWithApple": "Iniciar sesión con Apple",
+  "oauthSignInGoogleShort": "Google",
+  "oauthSignInAppleShort": "Apple",
+  "oauthSignInFailed": "No se pudo completar el inicio de sesión social.",
+  "oauthGoogleWebOriginHint": " En Google Cloud (cliente Web), añade orígenes JavaScript autorizados: http://localhost:7357 y http://127.0.0.1:7357 (mismo puerto que flutter run --web-port).",
+  "oauthGooglePeopleApiHint": " Habilita People API en Google Cloud (mismo proyecto que tu Client ID): https://console.cloud.google.com/apis/library/people.googleapis.com",
+  "oauthGoogleNotConfigured": "Google no está configurado. Añade ExternalAuth:Google:WebClientId en la API o GOOGLE_SERVER_CLIENT_ID al ejecutar la app.",
+  "oauthAppleNotConfigured": "Apple no está configurado en el servidor (ExternalAuth:Apple:BundleId).",
+  "oauthAppleNotAvailable": "Iniciar sesión con Apple no está disponible en este dispositivo.",
+  "oauthAppleWebNotConfigured": "Apple en web requiere Services ID y WebRedirectUri en la API (ExternalAuth:Apple). Regístralos en Apple Developer.",
+  "billingCycleMonthly": "Mensual",
+  "billingCycleAnnual": "Anual",
+  "billingCycleAnnualPriceSuffix": "/ año",
+  "billingAnnualNotAvailable": "Anual no disponible para este plan",
+  "billingPlanInstitutionName": "Institución",
+  "upgradeInstitutionHighlight": "Licencias para centros educativos, sedes y docentes",
+  "institutionPlanContactHint": "Contacta con ventas para un presupuesto a medida.",
   "emailLabel": "Correo electrónico",
   "passwordLabel": "Contraseña",
   "displayNameLabel": "Nombre para mostrar",
@@ -65,7 +105,125 @@
   "passwordMinLength": "Mínimo 8 caracteres",
   "logoutAction": "Cerrar sesión",
   "navHomeLabel": "Inicio",
+  "navPrepPlusLabel": "Preparación+",
   "navProfileLabel": "Perfil",
+  "prepPlusScreenTitle": "Preparación+",
+  "prepPlusScreenSubtitle": "Cuestionarios curados para tu examen. Compra acceso por tiempo.",
+  "homePrepPlusCardTitle": "Preparación+",
+  "homePrepPlusCardSubtitle": "Explora por país o tema y compra solo lo que necesitas.",
+  "prepPlusByCountrySection": "Por país",
+  "prepPlusInternationalSection": "Internacional",
+  "prepPlusInternationalSubtitle": "{count, plural, =0{Sin cuestionarios disponibles} =1{1 cuestionario disponible} other{{count} cuestionarios disponibles}}",
+  "@prepPlusInternationalSubtitle": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "prepPlusCategoryItemCount": "{count, plural, =0{Sin cuestionarios} =1{1 cuestionario} other{{count} cuestionarios}}",
+  "@prepPlusCategoryItemCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "prepPlusMyAccessesTitle": "Mis accesos",
+  "prepPlusMyAccessesActiveCount": "{count} activos",
+  "@prepPlusMyAccessesActiveCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "prepPlusTabActive": "Activos",
+  "prepPlusTabExpired": "Expirados",
+  "prepPlusMyAccessesActiveEmpty": "No tienes accesos activos.",
+  "prepPlusMyAccessesExpiredEmpty": "No tienes accesos expirados.",
+  "prepPlusSearchHint": "Buscar cuestionario…",
+  "prepPlusCategoryEmpty": "No hay cuestionarios en esta categoría.",
+  "prepPlusFiltersAction": "Filtros",
+  "prepPlusFiltersTitle": "Filtros",
+  "prepPlusFiltersApply": "Aplicar",
+  "prepPlusFilterPriceLabel": "Precio",
+  "prepPlusFilterAccessLabel": "Tu acceso",
+  "prepPlusFilterAll": "Todos",
+  "prepPlusFilterFree": "Gratis",
+  "prepPlusFilterPaid": "De pago",
+  "prepPlusFilterInstitutionLabel": "Institución o examen",
+  "prepPlusAccessNone": "Sin comprar",
+  "prepPlusAccessActive": "Activo",
+  "prepPlusAccessExpired": "Expirado",
+  "prepPlusQuestionCount": "{count} preguntas",
+  "@prepPlusQuestionCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "prepPlusHasFreeOffer": "Incluye opción gratis",
+  "prepPlusFromPrice": "Desde {price} {currency}",
+  "@prepPlusFromPrice": {
+    "placeholders": {
+      "price": { "type": "double", "format": "decimalPattern" },
+      "currency": { "type": "String" }
+    }
+  },
+  "prepPlusItemDetailTitle": "Detalle",
+  "prepPlusPreviewAction": "Probar simulación (3 preguntas)",
+  "prepPlusPreviewSimulationCtaTitle": "Simulación interactiva",
+  "prepPlusPreviewSimulationCtaSubtitle": "Responde como en la práctica real — sin guardar resultados.",
+  "prepPlusPreviewTitle": "Vista previa",
+  "prepPlusPreviewSubtitle": "Muestra de «{title}»",
+  "@prepPlusPreviewSubtitle": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "prepPlusPreviewSimulationTitle": "Simulación",
+  "prepPlusPreviewSimulationBanner": "Modo demostración",
+  "prepPlusPreviewSimulationSubtitle": "«{title}» — experiencia igual a practicar",
+  "@prepPlusPreviewSimulationSubtitle": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "prepPlusPreviewTryInteraction": "Toca una respuesta para ver cómo funciona la herramienta.",
+  "prepPlusPreviewPrevious": "Anterior",
+  "prepPlusPreviewNext": "Siguiente",
+  "prepPlusPreviewFinishCta": "Cerrar simulación",
+  "prepPlusPreviewQuestionLabel": "Pregunta {number}",
+  "@prepPlusPreviewQuestionLabel": {
+    "placeholders": { "number": { "type": "int" } }
+  },
+  "prepPlusAccessCombosTitle": "Elige tu combo de acceso",
+  "prepPlusAccessCombosSubtitle": "Incluye el cuestionario completo durante el periodo seleccionado.",
+  "prepPlusBestValueBadge": "MEJOR VALOR",
+  "prepPlusPricePerDay": "{price} / día",
+  "@prepPlusPricePerDay": {
+    "placeholders": { "price": { "type": "String" } }
+  },
+  "prepPlusComboIncludesAccess": "Acceso total al banco de preguntas",
+  "prepPlusSelectDuration": "Duración del acceso",
+  "prepPlusDuration30": "30 días",
+  "prepPlusDuration60": "60 días",
+  "prepPlusDuration90": "90 días",
+  "prepPlusDuration6Months": "6 meses",
+  "prepPlusDurationDays": "{days} días",
+  "@prepPlusDurationDays": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "prepPlusOfferPrice": "{price} {currency}",
+  "@prepPlusOfferPrice": {
+    "placeholders": {
+      "price": { "type": "double", "format": "decimalPattern" },
+      "currency": { "type": "String" }
+    }
+  },
+  "prepPlusPracticeAction": "Practicar",
+  "prepPlusBuyAction": "Comprar acceso",
+  "prepPlusGetFreeAccessAction": "Obtener acceso gratis",
+  "prepPlusRenewAction": "Renovar acceso",
+  "prepPlusAccessUntil": "Vence el {date}",
+  "@prepPlusAccessUntil": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "prepPlusExpiresOn": "Vence el {date}",
+  "@prepPlusExpiresOn": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "prepPlusExpiredOn": "Expiró el {date}",
+  "@prepPlusExpiredOn": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "prepPlusNotAvailableForPurchase": "No disponible para compra en este momento.",
+  "prepPlusViewHistory": "Ver mi historial",
+  "prepPlusAccessGranted": "Acceso concedido. ¡Ya puedes practicar!",
+  "prepPlusConfirmPayPalPayment": "Confirmar pago PayPal",
+  "prepPlusStoreProductMissing": "Pago en tienda no configurado para esta oferta. Usa la versión web con PayPal.",
   "profileTitle": "Perfil",
   "selectAvatarTitle": "Tu avatar",
   "profileChangeAvatarAction": "Cambiar avatar",
@@ -88,6 +246,8 @@
   "confirmPasswordLabel": "Confirmar contraseña",
   "passwordsDoNotMatch": "Las contraseñas no coinciden",
   "passwordChangedMessage": "Contraseña actualizada",
+  "currentPasswordIncorrectError": "La contraseña actual no es correcta.",
+  "passwordChangeUnavailableError": "Esta cuenta no tiene contraseña local. Usa el inicio de sesión con Google o Apple.",
   "myQuizzesAction": "Mis cuestionarios",
   "quizzesTitle": "Cuestionarios",
   "quizzesEmpty": "Aún no tienes cuestionarios",
@@ -166,6 +326,20 @@
   "addQuestionTitle": "Nueva pregunta",
   "questionTypeLabel": "Tipo de pregunta",
   "questionTextLabel": "Enunciado",
+  "questionJustificationLabel": "Justificación (respuesta correcta)",
+  "questionJustificationHint": "Explica en un solo texto por qué la(s) respuesta(s) correcta(s) lo son.",
+  "questionJustificationReviewHint": "Visible al revisar los intentos del cuestionario (no durante la práctica).",
+  "explanationVisibilityAfterQuiz": "Al terminar el cuestionario",
+  "explanationVisibilityAfterAnswer": "Tras cada respuesta",
+  "explanationVisibilityNever": "No mostrar en práctica",
+  "practiceReviewJustificationTitle": "Justificación",
+  "practiceReviewJustificationTapToExpand": "Toca para ver la explicación",
+  "practiceReviewSourcePage": "Página {page}",
+  "@practiceReviewSourcePage": {
+    "placeholders": { "page": { "type": "int" } }
+  },
+  "aiGenerationIncludeExplanationsLabel": "Incluir justificaciones",
+  "aiGenerationIncludeExplanationsHint": "La IA generará texto explicativo y número de página del material cuando aplique.",
   "questionPointsLabel": "Puntos",
   "questionPointsHint": "Puntaje si se responde bien (solo esta pregunta)",
   "questionPointsValue": "{points} pts",
@@ -197,6 +371,7 @@
   "practiceOptionsTitle": "Parámetros de práctica",
   "practiceRandomizeQuestionsLabel": "Orden aleatorio de preguntas",
   "practiceRandomizeQuestionsHint": "Las preguntas se muestran en un orden distinto en cada práctica",
+  "quizRandomizeQuestionsHint": "Aplica a las asignaciones de tus estudiantes y cuando practican este cuestionario",
   "practiceShowTimerLabel": "Mostrar tiempo transcurrido",
   "practiceShowTimerHint": "Muestra un reloj mientras respondes el cuestionario",
   "practiceElapsedLabel": "Tiempo: {elapsed}",
@@ -341,6 +516,22 @@
       "errors": { "type": "int" }
     }
   },
+  "importSummaryLoading": "Cargando preguntas…",
+  "importSummaryReady": "{count, plural, =1{1 pregunta lista para revisar} other{{count} preguntas listas para revisar}}",
+  "@importSummaryReady": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "importSummaryWithErrors": "{valid} válidas de {total} · {errors} con error",
+  "@importSummaryWithErrors": {
+    "placeholders": {
+      "valid": { "type": "int" },
+      "total": { "type": "int" },
+      "errors": { "type": "int" }
+    }
+  },
+  "importSummaryEmpty": "No se detectaron preguntas en esta importación",
   "importErrorLine": "Fila {row}: {message}",
   "@importErrorLine": {
     "placeholders": {
@@ -626,6 +817,15 @@
     }
   },
   "attachImageAction": "Adjuntar imagen",
+  "imagePickPermissionDenied": "Permite el acceso a fotos en Ajustes para adjuntar imágenes.",
+  "imagePickFailed": "No se pudo abrir la galería. Inténtalo de nuevo.",
+  "imageTooLargeForUpload": "La imagen es demasiado grande (máx. 5 MB). Elige otra o una foto más pequeña.",
+  "imageAttachedSuccess": "Imagen adjuntada correctamente.",
+  "imageUploadInvalidResponse": "El servidor respondió de forma inesperada. Reinicia la API y vuelve a intentarlo.",
+  "imageUploadInvalidMultipart": "No se pudo enviar la imagen al servidor. Reinicia la app y la API e inténtalo de nuevo.",
+  "imageUploadFileRequired": "No se recibió ningún archivo de imagen. Vuelve a seleccionar la foto.",
+  "imageUploadUnsupportedType": "Formato de imagen no admitido. Usa JPG, PNG, WebP o GIF.",
+  "imagePreviewLoadFailed": "Imagen guardada, pero no se pudo mostrar la vista previa. Comprueba la conexión con el servidor.",
   "removeImageAction": "Quitar imagen",
   "viewFullImageAction": "Ver imagen completa",
   "closeAction": "Cerrar",
@@ -634,9 +834,26 @@
   "upgradePlanTitle": "Mejorar plan",
   "upgradePlanSubtitle": "Compara los planes y elige el que más te conviene.",
   "upgradePlanAlreadyHighest": "Ya tienes el plan más alto disponible. No hay más mejoras por ahora.",
-  "upgradeProHighlightQuizzes": "Cuestionarios ilimitados (tu plan actual: máx. 5)",
-  "upgradeProHighlightQuestions": "Sin límite de preguntas por cuestionario (tu plan actual: 65)",
+  "upgradeProHighlightQuizzesLimit": "Cuestionarios ilimitados (tu plan actual: máx. {max})",
+  "@upgradeProHighlightQuizzesLimit": {
+    "placeholders": {
+      "max": { "type": "int" }
+    }
+  },
+  "upgradeProHighlightQuestionsLimit": "Sin límite de preguntas por cuestionario (tu plan actual: {max})",
+  "@upgradeProHighlightQuestionsLimit": {
+    "placeholders": {
+      "max": { "type": "int" }
+    }
+  },
   "upgradeProHighlightAiCredits": "150 créditos IA al mes (tu plan actual: 20)",
+  "upgradePlanHighlightAiCredits": "{credits} créditos IA al mes (tu plan actual: {currentCredits})",
+  "@upgradePlanHighlightAiCredits": {
+    "placeholders": {
+      "credits": { "type": "int" },
+      "currentCredits": { "type": "int" }
+    }
+  },
   "upgradeProHighlightShared": "Compartidos ilimitados al canjear o invitar",
   "upgradeProHighlightDirectInvite": "Invita a personas concretas por correo",
   "upgradeTeacherHighlightIncludesPro": "Todo lo incluido en Pro",
@@ -649,6 +866,8 @@
   "buyWithPayPalAction": "Pagar con PayPal",
   "paypalWebHint": "En la web, PayPal es el método de pago recomendado.",
   "paypalAwaitingCapture": "Completa el pago en PayPal y confirma la captura.",
+  "paypalAwaitingSubscriptionActivation": "Aprueba la suscripción en PayPal y vuelve a la app para activarla.",
+  "subscriptionAutoRenewDisclaimer": "Renovación automática cada periodo hasta que la canceles. Puedes desactivarla en cualquier momento.",
   "upgradeSuccess": "Plan activado: {plan}",
   "@upgradeSuccess": {
     "placeholders": { "plan": { "type": "String" } }
@@ -830,6 +1049,30 @@
   "aiGenerationFromQuizAction": "Generar con IA desde material",
   "importAiGeneratedBadge": "Generada por IA",
   "errorAiCreditsInsufficient": "No tienes créditos IA suficientes para esta generación.",
+  "errorAiCreditPacksNotAvailable": "Los paquetes de créditos IA están disponibles en los planes Pro y Teacher.",
+  "aiCreditPacksTitle": "Comprar créditos IA",
+  "aiCreditPacksSubtitle": "Recarga créditos para seguir generando con IA. Los paquetes comprados no expiran; el cupo mensual del plan sí se reinicia cada mes.",
+  "aiCreditPacksCurrentBalance": "Saldo actual: {credits} créditos",
+  "@aiCreditPacksCurrentBalance": {
+    "placeholders": { "credits": { "type": "int" } }
+  },
+  "aiCreditPacksCreditsLabel": "{credits} créditos IA",
+  "@aiCreditPacksCreditsLabel": {
+    "placeholders": { "credits": { "type": "int" } }
+  },
+  "aiCreditPacksBuyForPrice": "Comprar · {price}",
+  "@aiCreditPacksBuyForPrice": {
+    "placeholders": { "price": { "type": "String" } }
+  },
+  "aiCreditPacksEmpty": "No hay paquetes disponibles. Reinicia la API o contacta soporte si el problema continúa.",
+  "aiCreditPacksBuyAction": "Comprar créditos",
+  "aiCreditPacksPurchaseSuccess": "Se añadieron {credits} créditos IA a tu cuenta.",
+  "@aiCreditPacksPurchaseSuccess": {
+    "placeholders": { "credits": { "type": "int" } }
+  },
+  "aiCreditsInsufficientDialogMessage": "Puedes comprar un paquete de créditos para seguir generando con IA.",
+  "aiCreditsInsufficientFreePlanMessage": "Mejora a Pro o Teacher para comprar paquetes de créditos IA.",
+  "homeBuyAiCreditsAction": "Comprar créditos IA",
   "errorMaterialNeedsOcr": "Hay poco texto extraíble. Usa PDF o Word con texto seleccionable, o revisa y pega el contenido.",
   "errorMaterialNotSelectableText": "Este archivo parece escaneado o sin texto seleccionable.",
   "errorMaterialNotSelectableTextGuidance": "Recomendaciones:\n• Abre el archivo y comprueba que puedes seleccionar y copiar párrafos (no solo hacer zoom).\n• Si es un escaneo: en Word, Archivo → Abrir el PDF y deja que reconozca el texto; revisa y guarda como DOCX.\n• Alternativa: OCR externo (Adobe, Google Drive), pega el texto en Word y súbelo como DOCX.\n• Exporta desde Word o Google Docs; evita PDFs hechos solo con fotos o «imprimir a imagen».\n• Vuelve a subir DOCX o PDF exportado desde Word con texto seleccionable.",
@@ -852,6 +1095,7 @@
   "errorAiGeminiQuotaExhausted": "Se agotaron los créditos de Gemini. Añade saldo en Google AI Studio (ai.google.dev) y vuelve a intentarlo.",
   "errorAiGeminiModelUnavailable": "El modelo de Gemini configurado ya no está disponible. Actualiza Ai:GeminiModel a gemini-2.5-flash y reinicia la API.",
   "errorAiGeminiOverloaded": "Gemini tiene mucha demanda ahora mismo. Espera unos minutos y vuelve a intentar la generación.",
+  "errorAiGeminiApiKeyInvalid": "La API key de Gemini no es válida (expirada, revocada o filtrada). Crea una clave nueva en Google AI Studio, actualízala en appsettings.Development.local.json y reinicia la API.",
   "aiActivityTitle": "Actividad IA",
   "aiActivityAction": "Actividad IA",
   "aiActivityEmpty": "No hay generaciones recientes. Al generar un cuestionario aparecerán aquí, aunque cierres la app.",
@@ -904,6 +1148,10 @@
   "guestCodeRequired": "Introduce un código",
   "guestCodePasteTooltip": "Pegar",
   "guestEphemeralNotice": "Esta sesión es temporal. Al salir se borra todo.",
+  "guestAnonymousLimitTitle": "¡Buen trabajo practicando!",
+  "guestAnonymousLimitMessage": "Has alcanzado el límite de prácticas anónimas. Crea una cuenta gratis en 10 segundos para seguir jugando, guardar tu progreso y crear tus propios cuestionarios.",
+  "guestAnonymousLimitLater": "Más tarde",
+  "guestAnonymousLimitSignUp": "Crear cuenta",
   "guestPracticeWithCodeAction": "Practicar con código",
   "guestShellFreeBadge": "Gratis",
   "guestShellHeroHint": "Practica ahora. Regístrate gratis para guardar tu progreso y desbloquear más.",
@@ -924,7 +1172,19 @@
   "guestRegisterCtaTitle": "¿Quieres guardar tus resultados?",
   "guestRegisterBenefit1": "Historial permanente de todos tus intentos",
   "guestRegisterBenefit2": "Crea tus propios cuestionarios con IA",
-  "guestRegisterBenefit3": "Plan Free: 5 cuestionarios y 20 créditos IA, gratis",
+  "guestRegisterBenefit3": "Plan Free: 2 cuestionarios y 20 créditos IA, gratis",
+  "guestRegisterBenefit4": "Experiencia sin anuncios",
+  "guestRegisterBenefit5": "Comparte cuestionarios con códigos o invitaciones",
+  "guestRegisterBenefit6": "Analítica de práctica: descubre dónde fallas más",
+  "guestRegisterPromoSubtitle": "Crea una cuenta gratis en segundos y desbloquea todo esto.",
+  "guestRegisterPromoBenefitsTitle": "Con tu cuenta registrada",
+  "guestRegisterPromoCountdown": "Ver resultados en {seconds} s",
+  "@guestRegisterPromoCountdown": {
+    "placeholders": {
+      "seconds": { "type": "int" }
+    }
+  },
+  "guestRegisterPromoSkipTooltip": "Ver resultados ahora",
   "guestExitPracticeTitle": "¿Salir de la práctica?",
   "guestExitPracticeMessage": "El progreso de esta sesión no se perderá: podrás reanudarla al volver.",
   "guestExitPracticeConfirm": "Salir",
@@ -941,7 +1201,7 @@
   "teacherDashboardEmptyInsights": "Sin análisis aún. Vuelve cuando tus estudiantes empiecen a practicar.",
   "teacherDashboardInventoryStudents": "Estudiantes",
   "teacherDashboardInventoryClasses": "Clases",
-  "teacherDashboardInventoryQuizzes": "Quizzes",
+  "teacherDashboardInventoryQuizzes": "Asignados",
   "teacherDashboardUrgentTitle": "Requiere atención",
   "teacherDashboardUrgentEmpty": "No hay tareas urgentes por ahora.",
   "teacherDashboardUrgentDueLabel": "Vence {date}",
@@ -978,6 +1238,7 @@
   "teacherAssignmentAnalyticsAction": "Ver analítica",
   "teacherAssignmentAnalyticsRosterTitle": "Alumnos",
   "teacherAssignmentAnalyticsHardQuestionsTitle": "Preguntas difíciles",
+  "teacherAssignmentAnalyticsDistractorTitle": "Selección por opción (esta tarea)",
   "teacherAssignmentAnalyticsDistributionTitle": "Distribución de notas",
   "teacherAssignmentAnalyticsNoAttempt": "Sin intento",
   "teacherAssignmentAnalyticsCompletionLabel": "Entregaron {completed} de {total}",
@@ -1022,11 +1283,11 @@
     }
   },
   "practiceResultRepracticeTitle": "Preguntas a repasar",
-  "practiceResultTrendUp": "+{points} pts vs intento anterior",
+  "practiceResultTrendUp": "{points} pts más que en tu intento anterior",
   "@practiceResultTrendUp": {
     "placeholders": { "points": { "type": "String" } }
   },
-  "practiceResultTrendDown": "{points} pts vs intento anterior",
+  "practiceResultTrendDown": "{points} pts menos que en tu intento anterior",
   "@practiceResultTrendDown": {
     "placeholders": { "points": { "type": "String" } }
   },
@@ -1058,6 +1319,25 @@
   "teacherClassArchiveConfirmTitle": "¿Archivar clase?",
   "teacherClassArchiveConfirmMessage": "Los estudiantes ya no verán las asignaciones de esta clase.",
   "teacherClassArchiveConfirmAction": "Archivar",
+  "teacherClassesArchivedSectionTitle": "Clases archivadas",
+  "teacherClassRestoreAction": "Restaurar clase",
+  "teacherClassRestoreConfirmTitle": "¿Restaurar clase?",
+  "teacherClassRestoreConfirmMessage": "La clase volverá a estar activa y los estudiantes verán de nuevo sus asignaciones abiertas.",
+  "teacherClassRestoreConfirmAction": "Restaurar",
+  "teacherClassArchivedBanner": "Esta clase está archivada. Restáurala para editarla o asignar tareas.",
+  "teacherClassRestoredMessage": "Clase restaurada",
+  "teacherClassDeletePermanentAction": "Eliminar",
+  "teacherClassDeletePermanentTitle": "¿Eliminar clase archivada?",
+  "teacherClassDeletePermanentMessage": "«{name}» dejará de mostrarse en tu lista. Los datos (miembros, asignaciones e historial) se conservan en el sistema. Solo aplica a clases ya archivadas.",
+  "@teacherClassDeletePermanentMessage": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "teacherClassDeletePermanentConfirm": "Eliminar",
+  "teacherClassDeletedMessage": "Clase eliminada de tu lista",
+  "teacherClassDeleteRequiresArchiveError": "Archiva la clase antes de eliminarla.",
+  "teacherClassNotArchivedError": "Esta clase no está archivada.",
   "teacherClassMembersTab": "Miembros",
   "teacherClassAssignmentsTab": "Asignaciones",
   "teacherClassAnalyticsTab": "Analítica",
@@ -1091,6 +1371,21 @@
   "teacherAssignmentShowAnswersAfterAttempt": "Tras cada intento",
   "teacherAssignmentShowAnswersAfterDue": "Tras la fecha límite",
   "teacherAssignmentShowAnswersTeacherOnly": "Solo el profesor",
+  "teacherAssignmentRandomizeQuestionsLabel": "Orden aleatorio de preguntas",
+  "teacherAssignmentRandomizeQuestionsHint": "Define cómo se muestran las preguntas en esta tarea de clase.",
+  "teacherAssignmentAllowStudentRandomizeLabel": "El alumno puede cambiar el orden",
+  "teacherAssignmentAllowStudentRandomizeHint": "Si está desactivado, todos los alumnos usan la opción de arriba.",
+  "teacherAssignmentForfeitExitLabel": "Salir sin terminar consume un intento",
+  "teacherAssignmentForfeitExitHint": "Solo aplica cuando hay un máximo de intentos definido. El alumno no podrá pausar y reanudar.",
+  "teacherAssignmentForfeitRequiresMaxAttempts": "Define al menos 1 intento máximo para activar esta regla.",
+  "practiceForfeitExitDialogTitle": "¿Salir de la práctica?",
+  "practiceForfeitExitDialogMessage": "Si sales ahora, se contará como un intento usado aunque no hayas finalizado el cuestionario.",
+  "practiceForfeitExitConfirm": "Salir y usar intento",
+  "practiceForfeitExitCancel": "Seguir practicando",
+  "studentAssignmentAttemptStatusForfeited": "Salida anticipada",
+  "studentAssignmentRandomizeLockedShuffled": "Orden aleatorio fijado por el profesor",
+  "studentAssignmentRandomizeLockedOrdered": "Orden del cuestionario fijado por el profesor",
+  "studentAssignmentPracticeOptionsTitle": "Opciones de práctica",
   "teacherAssignmentCreateAction": "Crear asignación",
   "teacherAssignmentEditTitle": "Editar asignación",
   "teacherAssignmentEditAction": "Editar",
@@ -1147,16 +1442,66 @@
   "teacherUpgradeCancelHint": "Cancela cuando quieras · Acceso inmediato al pagar",
   "teacherUpgradeSeeAllPlans": "Ver todos los planes",
   "teacherUpgradeAlreadyActive": "Ya tienes un plan Profesor activo.",
+  "teacherUpgradeNextRenewal": "Próxima renovación: {date}",
+  "@teacherUpgradeNextRenewal": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "teacherUpgradeAccessUntil": "Acceso hasta el {date} (sin renovación automática)",
+  "@teacherUpgradeAccessUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "teacherUpgradeCancelTitle": "¿Cancelar suscripción?",
-  "teacherUpgradeCancelMessage": "Perderás el acceso al módulo Profesor y tus clases serán archivadas. Puedes volver a suscribirte en cualquier momento.",
-  "teacherUpgradeCancelConfirm": "Cancelar plan",
+  "teacherUpgradeCancelMessage": "Se desactivará la renovación automática. Mantendrás el plan Profesor hasta el final del periodo pagado; después pasarás a Free.",
+  "teacherUpgradeCancelConfirm": "Desactivar renovación",
   "teacherUpgradeCancelSuccess": "Suscripción cancelada. ¡Hasta pronto!",
+  "teacherUpgradeCancelSuccessUntil": "Renovación automática desactivada. Acceso al plan Profesor hasta el {date}.",
+  "billingCancelStoreTitle": "Gestionar suscripción en la tienda",
+  "billingCancelStoreMessageGoogle": "Los cobros recurrentes de CraftQuest se gestionan en Google Play. Abre tus suscripciones en Play Store, cancela CraftQuest y conservarás el acceso hasta el final del periodo pagado.",
+  "billingCancelStoreMessageApple": "Los cobros recurrentes de CraftQuest se gestionan en el App Store. Abre tus suscripciones en Ajustes de Apple, cancela CraftQuest y conservarás el acceso hasta el final del periodo pagado.",
+  "billingCancelStoreOpenGooglePlay": "Abrir Google Play",
+  "billingCancelStoreOpenAppStore": "Abrir App Store",
+  "billingCancelStoreSyncTitle": "¿Actualizar estado en CraftQuest?",
+  "billingCancelStoreSyncMessage": "Si ya cancelaste en la tienda, puedes desactivar la renovación en CraftQuest para reflejar el fin de periodo en la app. El cobro real solo se detiene en la tienda.",
+  "billingCancelStoreSyncConfirm": "Desactivar renovación en la app",
+  "billingResumeAutoRenewTitle": "¿Reactivar renovación automática?",
+  "billingResumeAutoRenewMessage": "Se volverá a cobrar al final del periodo actual. Mantendrás el acceso hasta entonces.",
+  "billingResumeAutoRenewConfirm": "Reactivar renovación",
+  "billingResumeAutoRenewSuccess": "Renovación automática reactivada.",
+  "billingResumeAutoRenewSuccessUntil": "Próxima renovación el {date}.",
+  "billingResumeStoreTitle": "Reactivar suscripción en la tienda",
+  "billingResumeStoreMessageGoogle": "Para volver a cobrar de forma recurrente, reactiva CraftQuest en Google Play (Suscripciones). Después puedes sincronizar el estado en la app.",
+  "billingResumeStoreMessageApple": "Para volver a cobrar de forma recurrente, reactiva CraftQuest en el App Store (Suscripciones). Después puedes sincronizar el estado en la app.",
+  "billingResumeStoreSyncTitle": "¿Actualizar estado en CraftQuest?",
+  "billingResumeStoreSyncMessage": "Si ya reactivaste la suscripción en la tienda, confirma aquí para mostrar la próxima renovación en la app.",
+  "billingResumeStoreSyncConfirm": "Reactivar renovación en la app",
+  "billingResumeRequiresResubscribeTitle": "Volver a suscribirse con PayPal",
+  "billingResumeRequiresResubscribeMessage": "La renovación en PayPal ya se canceló. Para seguir con cobros automáticos, crea una nueva suscripción.",
+  "billingResumeRequiresResubscribeConfirm": "Suscribirse de nuevo",
+  "@billingResumeAutoRenewSuccessUntil": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "@teacherUpgradeCancelSuccessUntil": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
   "teacherUpgradeExpiryWarning": "Tu plan Profesor vence en menos de 7 días. Renuévalo para mantener el acceso.",
 
   "homeTeacherBannerTitle": "¿Eres docente?",
   "homeTeacherBannerBody": "Clases, asignaciones y analítica en tiempo real.",
   "homeTeacherBannerAction": "Ver plan Profesor",
-  "homeTeacherBannerDismissTooltip": "No mostrar más",
+  "homeTeacherBannerDismissTooltipWeekly": "Ocultar esta semana",
+  "homeTeacherBannerDismissTooltipMonthly": "Ocultar este mes",
 
   "studentAssignmentsTitle": "Mis asignaciones",
   "studentAssignmentsAction": "Asignaciones de clase",
@@ -1281,10 +1626,51 @@
   "studentAssignmentStatusBadgeAvailable": "Disponible",
   "studentAssignmentDetailTitle": "Detalle de asignación",
 
+  "subscriptionPlanActive": "Plan {planName} activo.",
+  "@subscriptionPlanActive": {
+    "placeholders": {
+      "planName": {
+        "type": "String"
+      }
+    }
+  },
+  "profileProPlanSectionTitle": "Plan Pro",
+  "profileProPlanManageTitle": "Gestionar plan Pro",
+  "profileProPlanActiveSubtitle": "Plan activo · toca para gestionar",
+  "profileProPlanInactiveSubtitle": "Quizzes ilimitados y más · Suscripción mensual o anual",
   "profileTeacherPlanSectionTitle": "Plan Profesor",
   "profileTeacherPlanManageTitle": "Gestionar plan Profesor",
   "profileTeacherPlanActiveSubtitle": "Plan activo · toca para gestionar",
   "profileTeacherPlanInactiveSubtitle": "Clases, asignaciones y analítica · Suscripción mensual",
+
+  "profilePaymentHistorySectionTitle": "Pagos",
+  "profilePaymentHistoryAction": "Historial de transacciones",
+  "profilePaymentHistorySubtitle": "Suscripciones, Preparación+ y otros pagos",
+  "paymentHistoryTitle": "Historial de pagos",
+  "paymentHistoryEmpty": "Aún no hay transacciones registradas en tu cuenta.",
+  "paymentHistoryAmount": "{amount} {currency}",
+  "@paymentHistoryAmount": {
+    "placeholders": {
+      "amount": { "type": "String" },
+      "currency": { "type": "String" }
+    }
+  },
+  "paymentPurchaseStatusValidated": "Completado",
+  "paymentPurchaseStatusPending": "Pendiente",
+  "paymentPurchaseStatusRejected": "Rechazado",
+  "paymentPurchaseStatusRefunded": "Reembolsado",
+  "paymentPurchaseStatusCancelled": "Cancelado",
+  "paymentProviderPayPal": "PayPal",
+  "paymentProviderGooglePlay": "Google Play",
+  "paymentProviderAppStore": "App Store",
+  "paymentProviderOther": "Otro",
+  "paymentProductTypeSubscription": "Suscripción",
+  "paymentProductTypePrepAccess": "Preparación+",
+  "paymentProductTypeAiCredits": "Créditos IA",
+  "paymentProductTypeShareCodes": "Códigos compartidos",
+  "paymentProductTypeCuratedPackage": "Paquete",
+  "paymentProductTypeTeacherSeats": "Plazas profesor",
+  "paymentProductTypeOther": "Otro",
 
   "teacherUpgradeKeepPlan": "No, mantener",
 
@@ -1309,5 +1695,171 @@
   "teacherOnboardingSkipAction": "Omitir por ahora",
   "teacherOnboardingStep3Title": "¡Todo listo!",
   "teacherOnboardingStep3Body": "Tu aula está configurada. Ahora puedes crear asignaciones, ver el progreso de tus estudiantes y analizar resultados en el Activity Pulse.",
-  "teacherOnboardingGoToDashboardAction": "Ir al Panel de Profesor"
+  "teacherOnboardingGoToDashboardAction": "Ir al Panel de Profesor",
+
+  "prepAdminProfileSectionTitle": "Administración",
+  "prepAdminProfileAction": "Preparación+ (catálogo)",
+  "prepAdminProfileSubtitle": "Categorías, ítems, precios y publicación",
+  "prepAdminHubTitle": "Admin Preparación+",
+  "prepAdminHubSubtitle": "Gestiona el catálogo B2C curado de la plataforma.",
+  "prepAdminCategoriesAction": "Categorías",
+  "prepAdminCategoriesSubtitle": "Países, regiones e Internacional",
+  "prepAdminCatalogAction": "Ítems del catálogo",
+  "prepAdminCatalogSubtitle": "Cuestionarios, ofertas y muestras",
+  "prepAdminCategoriesTitle": "Categorías Prep+",
+  "prepAdminAddRootCategory": "Categoría raíz",
+  "prepAdminAddSubcategory": "Subcategoría",
+  "prepAdminEditCategoryTitle": "Editar categoría",
+  "prepAdminDeleteCategoryTitle": "¿Eliminar categoría?",
+  "prepAdminDeleteCategoryMessage": "Se eliminará «{name}» y sus subcategorías si no tienen ítems.",
+  "@prepAdminDeleteCategoryMessage": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "prepAdminCategoryDeleted": "Categoría eliminada",
+  "prepAdminCategorySaved": "Categoría guardada",
+  "prepAdminActive": "Activa",
+  "prepAdminInactive": "Inactiva",
+  "prepAdminCategoryTypeLabel": "Tipo",
+  "prepAdminCategoryTypeGeographic": "Geográfica (país)",
+  "prepAdminCategoryTypeThematic": "Temática (Internacional)",
+  "prepAdminNameLabel": "Nombre",
+  "prepAdminSlugLabel": "Slug (URL)",
+  "prepAdminRequiredField": "Campo obligatorio",
+  "prepAdminDescriptionLabel": "Descripción",
+  "prepAdminCountryCodeLabel": "Código país (ISO)",
+  "prepAdminIconKeyLabel": "Icono (clave)",
+  "prepAdminSortOrderLabel": "Orden",
+  "prepAdminCatalogTitle": "Catálogo Prep+",
+  "prepAdminNewCatalogItem": "Nuevo ítem",
+  "prepAdminPublishedFilter": "Publicados",
+  "prepAdminDraftFilter": "Borradores",
+  "prepAdminCatalogEmpty": "No hay ítems en el catálogo.",
+  "prepAdminItemSummarySubtitle": "{category} · {questions} preg. · {offers} ofertas · {samples} muestras · {status}",
+  "@prepAdminItemSummarySubtitle": {
+    "placeholders": {
+      "category": { "type": "String" },
+      "questions": { "type": "int" },
+      "offers": { "type": "int" },
+      "samples": { "type": "int" },
+      "status": { "type": "String" }
+    }
+  },
+  "prepAdminEditItemTitle": "Editar ítem",
+  "prepAdminMetadataSection": "Metadatos",
+  "prepAdminOffersSection": "Matriz de precios",
+  "prepAdminSamplesSection": "Preguntas muestra",
+  "prepAdminPublishSection": "Publicación",
+  "prepAdminQuizIdLabel": "ID del cuestionario",
+  "prepAdminQuizIdHint": "GUID del quiz existente en la plataforma",
+  "prepAdminQuizIdRequired": "Indica el ID del cuestionario",
+  "prepAdminQuizSearchLabel": "Buscar cuestionario",
+  "prepAdminSelectQuizLabel": "Cuestionario",
+  "prepAdminSelectQuizHint": "Solo cuestionarios creados por administradores de contenido, aún no en el catálogo.",
+  "prepAdminSelectQuizError": "Selecciona un cuestionario.",
+  "prepAdminLinkableQuizzesEmpty": "No hay cuestionarios disponibles. Crea uno con una cuenta admin o quita los que ya están en el catálogo.",
+  "prepAdminLinkableQuizOption": "{title} · {count} preg. · {author}",
+  "@prepAdminLinkableQuizOption": {
+    "placeholders": {
+      "title": { "type": "String" },
+      "count": { "type": "int" },
+      "author": { "type": "String" }
+    }
+  },
+  "prepAdminSubcategoryLabel": "Subcategoría",
+  "prepAdminSelectCategoryError": "Selecciona una subcategoría",
+  "prepAdminTitleOverrideLabel": "Título en catálogo (opcional)",
+  "prepAdminTagsLabel": "Etiquetas",
+  "prepAdminTagsHint": "Separadas por comas",
+  "prepAdminListingStartLabel": "Inicio de venta",
+  "prepAdminListingEndLabel": "Fin de venta",
+  "prepAdminOptionalDate": "Sin definir",
+  "prepAdminCreateItemAction": "Crear ítem",
+  "prepAdminSaveMetadataAction": "Guardar metadatos",
+  "prepAdminSaveOffersAction": "Guardar precios",
+  "prepAdminPickSamplesAction": "Elegir 3 preguntas",
+  "prepAdminSamplesEmpty": "Aún no hay preguntas muestra.",
+  "prepAdminPublishAction": "Publicar en catálogo",
+  "prepAdminUnpublishAction": "Despublicar",
+  "prepAdminDeleteItemAction": "Eliminar ítem",
+  "prepAdminDeleteItemTitle": "¿Eliminar ítem del catálogo?",
+  "prepAdminDeleteItemMessage": "El ítem dejará de mostrarse. Los accesos ya comprados se conservan en historial.",
+  "prepAdminItemCreated": "Ítem creado",
+  "prepAdminMetadataSaved": "Metadatos guardados",
+  "prepAdminOffersRequired": "Activa al menos una oferta de acceso",
+  "prepAdminOffersSaved": "Precios guardados",
+  "prepAdminSamplesSaved": "Muestras guardadas",
+  "prepAdminPublished": "Publicado en catálogo",
+  "prepAdminUnpublished": "Despublicado",
+  "prepAdminItemDeleted": "Ítem eliminado",
+  "prepAdminLinkedQuiz": "Cuestionario: {title}",
+  "@prepAdminLinkedQuiz": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "prepAdminOffersChip": "{count} ofertas activas",
+  "@prepAdminOffersChip": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "prepAdminSamplesChip": "{count}/3 muestras",
+  "@prepAdminSamplesChip": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "prepAdminOfferFreeLabel": "Acceso gratis",
+  "prepAdminOfferPriceLabel": "Precio",
+  "prepAdminOfferCurrencyLabel": "Moneda",
+  "prepAdminStoreProductIdLabel": "ID producto tienda (IAP)",
+  "prepAdminSamplesLoadError": "No se pudieron cargar las preguntas",
+  "prepAdminSamplesCountError": "Selecciona exactamente 3 preguntas",
+  "prepAdminSamplesPickerTitle": "Preguntas muestra",
+  "prepAdminSamplesPickerSubtitle": "{selected} de {required} seleccionadas",
+  "@prepAdminSamplesPickerSubtitle": {
+    "placeholders": {
+      "selected": { "type": "int" },
+      "required": { "type": "int" }
+    }
+  },
+
+  "errorPrepCategoryNotFound": "Categoría no encontrada.",
+  "errorPrepCategoryHasSubcategories": "No se puede eliminar: tiene subcategorías activas.",
+  "errorPrepCategoryHasItems": "No se puede eliminar: tiene ítems en el catálogo.",
+  "errorPrepQuizNotFound": "Cuestionario no encontrado.",
+  "errorPrepQuizNotEligible": "Solo se pueden añadir cuestionarios creados por un administrador de contenido.",
+  "errorPrepQuizAlreadyInCatalog": "Este cuestionario ya está en Preparación+.",
+  "errorPrepCatalogItemNotFound": "Ítem de catálogo no encontrado.",
+  "errorPrepSampleCountRequired": "Se requieren exactamente {count} preguntas muestra.",
+  "@errorPrepSampleCountRequired": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "errorPrepSampleQuestionsNotInQuiz": "Las preguntas muestra deben pertenecer al cuestionario vinculado.",
+  "errorPrepInvalidCategoryType": "Tipo de categoría no válido.",
+  "errorPrepNameSlugRequired": "Nombre y slug son obligatorios.",
+  "errorPrepParentCategoryNotFound": "Categoría padre no encontrada.",
+  "errorPrepSubcategoryTypeMismatch": "El tipo de subcategoría debe coincidir con el padre.",
+  "errorPrepCategorySelfParent": "Una categoría no puede ser su propio padre.",
+  "errorPrepSlugDuplicate": "Ese slug ya existe en este nivel.",
+  "errorPrepCategoryInactive": "Categoría no encontrada o inactiva.",
+  "errorPrepItemRequiresSubcategory": "El ítem debe asignarse a una subcategoría, no a una raíz.",
+  "errorPrepInstitutionTagGeographicOnly": "La etiqueta de institución solo aplica en categorías geográficas.",
+  "errorPrepCategoryHierarchyBroken": "La jerarquía de categorías está incompleta.",
+  "errorPrepOffersRequired": "Se requiere al menos una oferta de acceso.",
+  "errorPrepInvalidDuration": "Duración no válida. Permitidas: 30, 60, 90 y 183 días.",
+  "errorPrepPriceNegative": "El precio no puede ser negativo.",
+  "errorPrepOfferDurationDuplicate": "Hay duraciones duplicadas en las ofertas.",
+  "errorPrepActiveOfferRequiredPublish": "Activa al menos una oferta antes de publicar.",
+  "errorPrepSamplesRequiredPublish": "Configura exactamente {count} preguntas muestra antes de publicar.",
+  "@errorPrepSamplesRequiredPublish": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "errorPrepQuizNoQuestions": "El cuestionario vinculado debe tener al menos una pregunta.",
+  "errorPrepListingEndBeforeStart": "La fecha de fin de venta debe ser posterior al inicio.",
+  "errorPrepPreviewNotAvailable": "La vista previa no está disponible para este ítem.",
+  "errorPrepItemNotAvailable": "Este ítem no está disponible para compra en este momento.",
+  "errorPrepOfferNotFound": "Oferta no encontrada.",
+  "errorPrepOfferIsFree": "Esta oferta es gratis. Usa el checkout sin pago.",
+  "errorPrepPayPalPurchaseNotFound": "Compra PayPal de Preparación+ no encontrada.",
+  "errorPrepMobilePlatformInvalid": "La plataforma debe ser google_play o app_store.",
+  "errorPrepStoreProductMismatch": "El producto de tienda no coincide con esta oferta.",
+  "errorPrepOfferNoLongerExists": "La oferta ya no existe.",
+  "errorPrepInvalidProductCode": "Código de producto de compra no válido.",
+  "errorPrepGooglePlayNotConfigured": "Google Play no está configurado en el servidor.",
+  "errorPrepAppStoreNotConfigured": "App Store no está configurado. Usa pagos mock en desarrollo."
 }

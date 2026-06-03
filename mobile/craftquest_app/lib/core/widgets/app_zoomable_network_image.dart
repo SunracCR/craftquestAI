@@ -1,5 +1,7 @@
+import 'package:craftquest_app/core/theme/app_media_display.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_image_viewer.dart';
+import 'package:craftquest_app/core/widgets/craft_quest_network_image.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
@@ -8,15 +10,17 @@ class AppZoomableNetworkImage extends StatelessWidget {
   const AppZoomableNetworkImage({
     super.key,
     required this.imageUrl,
-    this.height = 200,
+    this.height = AppMediaDisplay.questionImageHeight,
     this.borderRadius,
     this.fit = BoxFit.cover,
+    this.onNetworkError,
   });
 
   final String imageUrl;
   final double height;
   final BorderRadius? borderRadius;
   final BoxFit fit;
+  final VoidCallback? onNetworkError;
 
   @override
   Widget build(BuildContext context) {
@@ -28,10 +32,18 @@ class AppZoomableNetworkImage extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Image.network(
-            imageUrl,
+          CraftQuestNetworkImage(
+            imageUrl: imageUrl,
             fit: fit,
-            errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+            errorBuilder: (_, __, ___) {
+              final callback = onNetworkError;
+              if (callback != null) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  callback();
+                });
+              }
+              return const SizedBox.shrink();
+            },
           ),
           Positioned(
             top: AppSpacing.xs,

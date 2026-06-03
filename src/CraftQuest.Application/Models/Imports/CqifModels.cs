@@ -93,4 +93,31 @@ public sealed class CqifJustification
 
     [JsonPropertyName("visibility")]
     public string? Visibility { get; set; }
+
+    [JsonPropertyName("sources")]
+    public List<CqifJustificationSource> Sources { get; set; } = [];
+}
+
+public sealed class CqifJustificationSource
+{
+    [JsonPropertyName("title")]
+    public string? Title { get; set; }
+
+    [JsonPropertyName("url")]
+    public string? Url { get; set; }
+
+    [JsonPropertyName("provider")]
+    public string? Provider { get; set; }
+
+    [JsonPropertyName("snippet")]
+    public string? Snippet { get; set; }
+
+    [JsonPropertyName("pageNumber")]
+    public int? PageNumber { get; set; }
+
+    [JsonPropertyName("studyMaterialId")]
+    public Guid? StudyMaterialId { get; set; }
+
+    [JsonPropertyName("isPrimary")]
+    public bool? IsPrimary { get; set; }
 }

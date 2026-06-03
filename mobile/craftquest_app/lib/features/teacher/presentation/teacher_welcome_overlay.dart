@@ -1,4 +1,5 @@
 import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/utils/email_utils.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
@@ -120,12 +121,12 @@ class _TeacherWelcomeOverlayState extends State<TeacherWelcomeOverlay> {
       final cls = await _repo.createClass(name: name);
       _createdClassId = cls.classId;
       _next();
-    } catch (e) {
+    } on DioException catch (e) {
+      if (mounted) context.showDioErrorSnackBar(e);
+    } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(e.toString()),
-              backgroundColor: AppColors.error),
+        context.showErrorSnackBar(
+          DioErrorMapper.genericMessage(AppLocalizations.of(context)!),
         );
       }
     } finally {

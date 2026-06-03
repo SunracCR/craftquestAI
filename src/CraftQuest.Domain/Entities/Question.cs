@@ -10,7 +10,7 @@ public class Question
     public decimal Points { get; set; } = 1;
     public int SortOrder { get; set; }
     public string? Difficulty { get; set; }
-    public string ExplanationVisibility { get; set; } = "after_quiz";
+    public string ExplanationVisibility { get; set; } = "never";
     public bool RandomizeAnswerOptions { get; set; } = true;
     public string ScoringPolicy { get; set; } = "strict";
     public string ReviewStatus { get; set; } = "approved";

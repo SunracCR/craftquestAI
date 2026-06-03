@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "appTitle": "CraftQuest",
+  "appTitle": "CraftQuestAI",
   "homeWelcome": "Welcome to CraftQuest",
   "homeWelcomeUser": "Hello, {name}",
   "@homeWelcomeUser": {
@@ -31,6 +31,7 @@
   "noInternetBannerTitle": "No internet connection",
   "noInternetBannerMessage": "You can keep browsing, but data will not update until you are back online.",
   "noInternetSnackBarMessage": "You are offline. Check your connection and try again.",
+  "errorDevApiUnreachable": "Could not reach the API on your phone. With USB connected run: adb reverse tcp:7080 tcp:7080, then restart the app.",
   "genericRequestErrorMessage": "The request could not be completed. Please try again shortly.",
   "errorHttpMethodNotAllowed": "The server does not support this operation. Restart the API and try again.",
   "errorQuestionLimitReached": "You reached the limit of {max} questions per quiz on your {plan} plan.",
@@ -52,12 +53,51 @@
   "billingPlanPremiumName": "Premium",
   "billingPlanTeacherName": "Teacher",
   "loginTitle": "Sign in",
-  "loginSubtitle": "Access your CraftQuest account for free — sign in or create one in seconds",
+  "loginSubtitle": "Access your CraftQuestAI account for free — sign in or create one in seconds",
+  "parentalConsentTitle": "Parental approval required",
+  "parentalConsentBodyDefault": "Your account is supervised or you are a minor in a region with age rules (e.g. Texas). A parent or guardian must authorize CraftQuestAI in Google Play before you can continue.",
+  "parentalConsentBodyPending": "A parent or guardian still needs to approve pending changes in Google Play. Ask them to review the request in Family Link or the Play Store, then check again.",
+  "parentalConsentBodyDenied": "A parent or guardian did not approve access to CraftQuestAI. Open Google Play to review supervised account settings or contact whoever manages your account.",
+  "parentalConsentBodyUnknown": "Google Play could not confirm your age. Open the Play Store, sign in with the same account, and complete age verification; then tap Check again.",
+  "parentalConsentOpenPlayStore": "Open Google Play",
+  "parentalConsentRecheckAction": "Check again",
   "loginAction": "Sign in",
-  "loginRememberCredentials": "Remember email and password",
+  "loginRememberCredentials": "Remember email",
+  "loginInvalidCredentials": "Incorrect email or password. Check your details and try again.",
   "registerTitle": "Create account",
   "registerAction": "Sign up",
   "goToRegister": "Don't have an account? Sign up",
+  "forgotPasswordLink": "Forgot your password?",
+  "forgotPasswordTitle": "Reset password",
+  "forgotPasswordSubtitle": "We will email you a link if an account exists for that address.",
+  "forgotPasswordAction": "Send reset link",
+  "forgotPasswordSuccess": "If the email is registered, you will receive instructions shortly.",
+  "resetPasswordTitle": "New password",
+  "resetPasswordSubtitle": "Enter the code from your email and choose a new password.",
+  "resetPasswordTokenLabel": "Recovery code",
+  "resetPasswordAction": "Save password",
+  "resetPasswordSuccess": "Password updated. You can sign in now.",
+  "backToLogin": "Back to sign in",
+  "resetPasswordHaveCode": "I already have a recovery code",
+  "oauthDividerLabel": "or continue with",
+  "oauthSignInWithGoogle": "Sign in with Google",
+  "oauthSignInWithApple": "Sign in with Apple",
+  "oauthSignInGoogleShort": "Google",
+  "oauthSignInAppleShort": "Apple",
+  "oauthSignInFailed": "Social sign-in could not be completed.",
+  "oauthGoogleWebOriginHint": " In Google Cloud (Web client), add Authorized JavaScript origins: http://localhost:7357 and http://127.0.0.1:7357 (use the same port as flutter run --web-port).",
+  "oauthGooglePeopleApiHint": " Enable People API in Google Cloud (same project as your Client ID): https://console.cloud.google.com/apis/library/people.googleapis.com",
+  "oauthGoogleNotConfigured": "Google sign-in is not configured. Set ExternalAuth:Google:WebClientId on the API or GOOGLE_SERVER_CLIENT_ID when running the app.",
+  "oauthAppleNotConfigured": "Apple sign-in is not configured on the server (ExternalAuth:Apple:BundleId).",
+  "oauthAppleNotAvailable": "Sign in with Apple is not available on this device.",
+  "oauthAppleWebNotConfigured": "Apple on web requires Services ID and WebRedirectUri on the API (ExternalAuth:Apple). Register them in Apple Developer.",
+  "billingCycleMonthly": "Monthly",
+  "billingCycleAnnual": "Annual",
+  "billingCycleAnnualPriceSuffix": "/ year",
+  "billingAnnualNotAvailable": "Annual billing is not available for this plan",
+  "billingPlanInstitutionName": "Institution",
+  "upgradeInstitutionHighlight": "Licenses for schools, campuses, and teachers",
+  "institutionPlanContactHint": "Contact sales for a custom quote.",
   "emailLabel": "Email",
   "passwordLabel": "Password",
   "displayNameLabel": "Display name",
@@ -65,7 +105,125 @@
   "passwordMinLength": "Minimum 8 characters",
   "logoutAction": "Sign out",
   "navHomeLabel": "Home",
+  "navPrepPlusLabel": "Prep+",
   "navProfileLabel": "Profile",
+  "prepPlusScreenTitle": "Prep+",
+  "prepPlusScreenSubtitle": "Curated quizzes for your exam. Buy timed access.",
+  "homePrepPlusCardTitle": "Prep+",
+  "homePrepPlusCardSubtitle": "Browse by country or topic and buy only what you need.",
+  "prepPlusByCountrySection": "By country",
+  "prepPlusInternationalSection": "International",
+  "prepPlusInternationalSubtitle": "{count, plural, =0{No quizzes available} =1{1 quiz available} other{{count} quizzes available}}",
+  "@prepPlusInternationalSubtitle": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "prepPlusCategoryItemCount": "{count, plural, =0{No quizzes} =1{1 quiz} other{{count} quizzes}}",
+  "@prepPlusCategoryItemCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "prepPlusMyAccessesTitle": "My access",
+  "prepPlusMyAccessesActiveCount": "{count} active",
+  "@prepPlusMyAccessesActiveCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "prepPlusTabActive": "Active",
+  "prepPlusTabExpired": "Expired",
+  "prepPlusMyAccessesActiveEmpty": "You have no active access.",
+  "prepPlusMyAccessesExpiredEmpty": "You have no expired access.",
+  "prepPlusSearchHint": "Search quiz…",
+  "prepPlusCategoryEmpty": "No quizzes in this category.",
+  "prepPlusFiltersAction": "Filters",
+  "prepPlusFiltersTitle": "Filters",
+  "prepPlusFiltersApply": "Apply",
+  "prepPlusFilterPriceLabel": "Price",
+  "prepPlusFilterAccessLabel": "Your access",
+  "prepPlusFilterAll": "All",
+  "prepPlusFilterFree": "Free",
+  "prepPlusFilterPaid": "Paid",
+  "prepPlusFilterInstitutionLabel": "Institution or exam",
+  "prepPlusAccessNone": "Not purchased",
+  "prepPlusAccessActive": "Active",
+  "prepPlusAccessExpired": "Expired",
+  "prepPlusQuestionCount": "{count} questions",
+  "@prepPlusQuestionCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "prepPlusHasFreeOffer": "Free option available",
+  "prepPlusFromPrice": "From {price} {currency}",
+  "@prepPlusFromPrice": {
+    "placeholders": {
+      "price": { "type": "double", "format": "decimalPattern" },
+      "currency": { "type": "String" }
+    }
+  },
+  "prepPlusItemDetailTitle": "Details",
+  "prepPlusPreviewAction": "Try simulation (3 questions)",
+  "prepPlusPreviewSimulationCtaTitle": "Interactive simulation",
+  "prepPlusPreviewSimulationCtaSubtitle": "Answer like real practice — results are not saved.",
+  "prepPlusPreviewTitle": "Preview",
+  "prepPlusPreviewSubtitle": "Sample from «{title}»",
+  "@prepPlusPreviewSubtitle": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "prepPlusPreviewSimulationTitle": "Simulation",
+  "prepPlusPreviewSimulationBanner": "Demo mode",
+  "prepPlusPreviewSimulationSubtitle": "«{title}» — same experience as practice",
+  "@prepPlusPreviewSimulationSubtitle": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "prepPlusPreviewTryInteraction": "Tap an answer to see how the tool works.",
+  "prepPlusPreviewPrevious": "Previous",
+  "prepPlusPreviewNext": "Next",
+  "prepPlusPreviewFinishCta": "Close simulation",
+  "prepPlusPreviewQuestionLabel": "Question {number}",
+  "@prepPlusPreviewQuestionLabel": {
+    "placeholders": { "number": { "type": "int" } }
+  },
+  "prepPlusAccessCombosTitle": "Choose your access combo",
+  "prepPlusAccessCombosSubtitle": "Full quiz access for the selected period.",
+  "prepPlusBestValueBadge": "BEST VALUE",
+  "prepPlusPricePerDay": "{price} / day",
+  "@prepPlusPricePerDay": {
+    "placeholders": { "price": { "type": "String" } }
+  },
+  "prepPlusComboIncludesAccess": "Full question bank access",
+  "prepPlusSelectDuration": "Access duration",
+  "prepPlusDuration30": "30 days",
+  "prepPlusDuration60": "60 days",
+  "prepPlusDuration90": "90 days",
+  "prepPlusDuration6Months": "6 months",
+  "prepPlusDurationDays": "{days} days",
+  "@prepPlusDurationDays": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "prepPlusOfferPrice": "{price} {currency}",
+  "@prepPlusOfferPrice": {
+    "placeholders": {
+      "price": { "type": "double", "format": "decimalPattern" },
+      "currency": { "type": "String" }
+    }
+  },
+  "prepPlusPracticeAction": "Practice",
+  "prepPlusBuyAction": "Buy access",
+  "prepPlusGetFreeAccessAction": "Get free access",
+  "prepPlusRenewAction": "Renew access",
+  "prepPlusAccessUntil": "Expires {date}",
+  "@prepPlusAccessUntil": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "prepPlusExpiresOn": "Expires {date}",
+  "@prepPlusExpiresOn": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "prepPlusExpiredOn": "Expired {date}",
+  "@prepPlusExpiredOn": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "prepPlusNotAvailableForPurchase": "Not available for purchase right now.",
+  "prepPlusViewHistory": "View my history",
+  "prepPlusAccessGranted": "Access granted. You can practice now!",
+  "prepPlusConfirmPayPalPayment": "Confirm PayPal payment",
+  "prepPlusStoreProductMissing": "Store billing is not configured for this offer. Use the web app with PayPal.",
   "profileTitle": "Profile",
   "selectAvatarTitle": "Your avatar",
   "profileChangeAvatarAction": "Change avatar",
@@ -88,6 +246,8 @@
   "confirmPasswordLabel": "Confirm password",
   "passwordsDoNotMatch": "Passwords do not match",
   "passwordChangedMessage": "Password updated",
+  "currentPasswordIncorrectError": "The current password is not correct.",
+  "passwordChangeUnavailableError": "This account has no local password. Sign in with Google or Apple instead.",
   "myQuizzesAction": "My quizzes",
   "quizzesTitle": "Quizzes",
   "quizzesEmpty": "You have no quizzes yet",
@@ -166,6 +326,20 @@
   "addQuestionTitle": "New question",
   "questionTypeLabel": "Question type",
   "questionTextLabel": "Question text",
+  "questionJustificationLabel": "Justification (correct answer)",
+  "questionJustificationHint": "Explain in one text why the correct answer(s) are correct.",
+  "questionJustificationReviewHint": "Shown when reviewing quiz attempts (not during practice).",
+  "explanationVisibilityAfterQuiz": "After finishing the quiz",
+  "explanationVisibilityAfterAnswer": "After each answer",
+  "explanationVisibilityNever": "Do not show during practice",
+  "practiceReviewJustificationTitle": "Justification",
+  "practiceReviewJustificationTapToExpand": "Tap to view explanation",
+  "practiceReviewSourcePage": "Page {page}",
+  "@practiceReviewSourcePage": {
+    "placeholders": { "page": { "type": "int" } }
+  },
+  "aiGenerationIncludeExplanationsLabel": "Include justifications",
+  "aiGenerationIncludeExplanationsHint": "AI will generate explanatory text and source page numbers from the material when applicable.",
   "questionPointsLabel": "Points",
   "questionPointsHint": "Score when answered correctly (this question only)",
   "questionPointsValue": "{points} pts",
@@ -197,6 +371,7 @@
   "practiceOptionsTitle": "Practice settings",
   "practiceRandomizeQuestionsLabel": "Shuffle question order",
   "practiceRandomizeQuestionsHint": "Questions appear in a random order each time you practice",
+  "quizRandomizeQuestionsHint": "Applies to your students' assignments and when they practice this quiz",
   "practiceShowTimerLabel": "Show elapsed time",
   "practiceShowTimerHint": "Displays a running clock while you answer the quiz",
   "practiceElapsedLabel": "Time: {elapsed}",
@@ -341,6 +516,22 @@
       "errors": { "type": "int" }
     }
   },
+  "importSummaryLoading": "Loading questions…",
+  "importSummaryReady": "{count, plural, =1{1 question ready to review} other{{count} questions ready to review}}",
+  "@importSummaryReady": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "importSummaryWithErrors": "{valid} valid of {total} · {errors} with errors",
+  "@importSummaryWithErrors": {
+    "placeholders": {
+      "valid": { "type": "int" },
+      "total": { "type": "int" },
+      "errors": { "type": "int" }
+    }
+  },
+  "importSummaryEmpty": "No questions were detected in this import",
   "importErrorLine": "Row {row}: {message}",
   "@importErrorLine": {
     "placeholders": {
@@ -626,6 +817,15 @@
     }
   },
   "attachImageAction": "Attach image",
+  "imagePickPermissionDenied": "Allow photo access in Settings to attach images.",
+  "imagePickFailed": "Could not open the gallery. Try again.",
+  "imageTooLargeForUpload": "This image is too large (max 5 MB). Choose another or a smaller photo.",
+  "imageAttachedSuccess": "Image attached successfully.",
+  "imageUploadInvalidResponse": "The server returned an unexpected response. Restart the API and try again.",
+  "imageUploadInvalidMultipart": "The image could not be sent to the server. Restart the app and API and try again.",
+  "imageUploadFileRequired": "No image file was received. Please select the photo again.",
+  "imageUploadUnsupportedType": "Unsupported image format. Use JPG, PNG, WebP, or GIF.",
+  "imagePreviewLoadFailed": "Image was saved, but the preview could not load. Check your connection to the server.",
   "removeImageAction": "Remove image",
   "viewFullImageAction": "View full image",
   "closeAction": "Close",
@@ -634,9 +834,26 @@
   "upgradePlanTitle": "Upgrade plan",
   "upgradePlanSubtitle": "Compare plans and pick the one that fits you best.",
   "upgradePlanAlreadyHighest": "You already have the highest available plan. No further upgrades right now.",
-  "upgradeProHighlightQuizzes": "Unlimited quizzes (your current plan: max. 5)",
-  "upgradeProHighlightQuestions": "No question limit per quiz (your current plan: 65)",
+  "upgradeProHighlightQuizzesLimit": "Unlimited quizzes (your current plan: max. {max})",
+  "@upgradeProHighlightQuizzesLimit": {
+    "placeholders": {
+      "max": { "type": "int" }
+    }
+  },
+  "upgradeProHighlightQuestionsLimit": "No question limit per quiz (your current plan: {max})",
+  "@upgradeProHighlightQuestionsLimit": {
+    "placeholders": {
+      "max": { "type": "int" }
+    }
+  },
   "upgradeProHighlightAiCredits": "150 AI credits per month (your current plan: 20)",
+  "upgradePlanHighlightAiCredits": "{credits} AI credits per month (your current plan: {currentCredits})",
+  "@upgradePlanHighlightAiCredits": {
+    "placeholders": {
+      "credits": { "type": "int" },
+      "currentCredits": { "type": "int" }
+    }
+  },
   "upgradeProHighlightShared": "Unlimited shared quizzes when redeeming or inviting",
   "upgradeProHighlightDirectInvite": "Invite specific people by email",
   "upgradeTeacherHighlightIncludesPro": "Everything in Pro",
@@ -649,6 +866,8 @@
   "buyWithPayPalAction": "Pay with PayPal",
   "paypalWebHint": "On the web, PayPal is the recommended payment method.",
   "paypalAwaitingCapture": "Complete payment in PayPal, then capture the order.",
+  "paypalAwaitingSubscriptionActivation": "Approve the subscription in PayPal, then return to the app to activate it.",
+  "subscriptionAutoRenewDisclaimer": "Automatically renews each billing period until you cancel. You can turn off auto-renew anytime.",
   "upgradeSuccess": "Plan activated: {plan}",
   "@upgradeSuccess": {
     "placeholders": { "plan": { "type": "String" } }
@@ -831,6 +1050,30 @@
   "aiGenerationFromQuizAction": "Generate with AI from material",
   "importAiGeneratedBadge": "AI generated",
   "errorAiCreditsInsufficient": "Not enough AI credits for this generation.",
+  "errorAiCreditPacksNotAvailable": "AI credit packs are available on Pro and Teacher plans.",
+  "aiCreditPacksTitle": "Buy AI credits",
+  "aiCreditPacksSubtitle": "Top up credits to keep generating with AI. Purchased packs never expire; your plan's monthly quota still resets each month.",
+  "aiCreditPacksCurrentBalance": "Current balance: {credits} credits",
+  "@aiCreditPacksCurrentBalance": {
+    "placeholders": { "credits": { "type": "int" } }
+  },
+  "aiCreditPacksCreditsLabel": "{credits} AI credits",
+  "@aiCreditPacksCreditsLabel": {
+    "placeholders": { "credits": { "type": "int" } }
+  },
+  "aiCreditPacksBuyForPrice": "Buy · {price}",
+  "@aiCreditPacksBuyForPrice": {
+    "placeholders": { "price": { "type": "String" } }
+  },
+  "aiCreditPacksEmpty": "No packs are available. Restart the API or contact support if this persists.",
+  "aiCreditPacksBuyAction": "Buy credits",
+  "aiCreditPacksPurchaseSuccess": "Added {credits} AI credits to your account.",
+  "@aiCreditPacksPurchaseSuccess": {
+    "placeholders": { "credits": { "type": "int" } }
+  },
+  "aiCreditsInsufficientDialogMessage": "You can buy a credit pack to keep generating with AI.",
+  "aiCreditsInsufficientFreePlanMessage": "Upgrade to Pro or Teacher to buy AI credit packs.",
+  "homeBuyAiCreditsAction": "Buy AI credits",
   "errorMaterialNeedsOcr": "Not enough extractable text. Use PDF or Word with selectable text, or review and paste the content.",
   "errorMaterialNotSelectableText": "This file looks scanned or has no selectable text.",
   "errorMaterialNotSelectableTextGuidance": "Recommendations:\n• Open the file and check you can select and copy paragraphs (not just zoom).\n• If it is a scan: in Word, File → Open the PDF and let it recognize text; review and save as DOCX.\n• Alternative: external OCR (Adobe, Google Drive), paste text into Word, upload as DOCX.\n• Export from Word or Google Docs; avoid PDFs made only from photos or print-to-image.\n• Upload DOCX or a PDF exported from Word with selectable text.",
@@ -853,6 +1096,7 @@
   "errorAiGeminiQuotaExhausted": "Gemini credits are exhausted. Add billing credits in Google AI Studio (ai.google.dev) and try again.",
   "errorAiGeminiModelUnavailable": "The configured Gemini model is no longer available. Set Ai:GeminiModel to gemini-2.5-flash and restart the API.",
   "errorAiGeminiOverloaded": "Gemini is under heavy load right now. Wait a few minutes and try generating again.",
+  "errorAiGeminiApiKeyInvalid": "The Gemini API key is invalid (expired, revoked, or leaked). Create a new key in Google AI Studio, update appsettings.Development.local.json, and restart the API.",
   "aiActivityTitle": "AI activity",
   "aiActivityAction": "AI activity",
   "aiActivityEmpty": "No recent generations. When you generate a quiz, jobs appear here even if you close the app.",
@@ -905,6 +1149,10 @@
   "guestCodeRequired": "Enter a code",
   "guestCodePasteTooltip": "Paste",
   "guestEphemeralNotice": "This is a temporary session. Everything is deleted when you leave.",
+  "guestAnonymousLimitTitle": "Great job practicing!",
+  "guestAnonymousLimitMessage": "You've reached the limit for anonymous practice. Create a free account in 10 seconds to keep playing, save your progress, and create your own quizzes.",
+  "guestAnonymousLimitLater": "Later",
+  "guestAnonymousLimitSignUp": "Create account",
   "guestPracticeWithCodeAction": "Practice with code",
   "guestShellFreeBadge": "Free",
   "guestShellHeroHint": "Practice now. Sign up free to save progress and unlock more.",
@@ -925,7 +1173,19 @@
   "guestRegisterCtaTitle": "Want to save your results?",
   "guestRegisterBenefit1": "Permanent history of all your attempts",
   "guestRegisterBenefit2": "Create your own quizzes with AI",
-  "guestRegisterBenefit3": "Free plan: 5 quizzes and 20 AI credits, no cost",
+  "guestRegisterBenefit3": "Free plan: 2 quizzes and 20 AI credits, no cost",
+  "guestRegisterBenefit4": "Ad-free experience",
+  "guestRegisterBenefit5": "Share quizzes with codes or direct invites",
+  "guestRegisterBenefit6": "Practice analytics: see where you struggle most",
+  "guestRegisterPromoSubtitle": "Create a free account in seconds and unlock all of this.",
+  "guestRegisterPromoBenefitsTitle": "With your registered account",
+  "guestRegisterPromoCountdown": "Viewing results in {seconds}s",
+  "@guestRegisterPromoCountdown": {
+    "placeholders": {
+      "seconds": { "type": "int" }
+    }
+  },
+  "guestRegisterPromoSkipTooltip": "View results now",
   "guestExitPracticeTitle": "Exit practice?",
   "guestExitPracticeMessage": "Your progress is saved and you can resume it when you come back.",
   "guestExitPracticeConfirm": "Exit",
@@ -942,7 +1202,7 @@
   "teacherDashboardEmptyInsights": "No insights yet. Come back when your students start practicing.",
   "teacherDashboardInventoryStudents": "Students",
   "teacherDashboardInventoryClasses": "Classes",
-  "teacherDashboardInventoryQuizzes": "Quizzes",
+  "teacherDashboardInventoryQuizzes": "Assigned",
   "teacherDashboardUrgentTitle": "Needs attention",
   "teacherDashboardUrgentEmpty": "No urgent tasks right now.",
   "teacherDashboardUrgentDueLabel": "Due {date}",
@@ -959,6 +1219,7 @@
   "teacherAssignmentAnalyticsAction": "View analytics",
   "teacherAssignmentAnalyticsRosterTitle": "Students",
   "teacherAssignmentAnalyticsHardQuestionsTitle": "Hard questions",
+  "teacherAssignmentAnalyticsDistractorTitle": "Option selection (this assignment)",
   "teacherAssignmentAnalyticsDistributionTitle": "Score distribution",
   "teacherAssignmentAnalyticsNoAttempt": "No attempt",
   "teacherAssignmentAnalyticsCompletionLabel": "Submitted {completed} of {total}",
@@ -982,9 +1243,9 @@
   "studentAssignmentProgressAttemptLabel": "Attempt {number}: {percent}%",
   "@studentAssignmentProgressAttemptLabel": { "placeholders": { "number": { "type": "int" }, "percent": { "type": "String" } } },
   "practiceResultRepracticeTitle": "Questions to review",
-  "practiceResultTrendUp": "+{points} pts vs previous attempt",
+  "practiceResultTrendUp": "{points} pts more than your previous attempt",
   "@practiceResultTrendUp": { "placeholders": { "points": { "type": "String" } } },
-  "practiceResultTrendDown": "{points} pts vs previous attempt",
+  "practiceResultTrendDown": "{points} pts less than your previous attempt",
   "@practiceResultTrendDown": { "placeholders": { "points": { "type": "String" } } },
   "practiceResultReviewQuestionAction": "View in review",
   "analyticsPersonalOnlyLabel": "Your attempts only",
@@ -1007,6 +1268,25 @@
   "teacherClassArchiveConfirmTitle": "Archive class?",
   "teacherClassArchiveConfirmMessage": "Students will no longer be able to see assignments from this class.",
   "teacherClassArchiveConfirmAction": "Archive",
+  "teacherClassesArchivedSectionTitle": "Archived classes",
+  "teacherClassRestoreAction": "Restore class",
+  "teacherClassRestoreConfirmTitle": "Restore class?",
+  "teacherClassRestoreConfirmMessage": "The class will become active again and students will see their open assignments.",
+  "teacherClassRestoreConfirmAction": "Restore",
+  "teacherClassArchivedBanner": "This class is archived. Restore it to edit or create assignments.",
+  "teacherClassRestoredMessage": "Class restored",
+  "teacherClassDeletePermanentAction": "Delete",
+  "teacherClassDeletePermanentTitle": "Delete archived class?",
+  "teacherClassDeletePermanentMessage": "«{name}» will be hidden from your list. Members, assignments, and practice history remain in the system. Only applies to classes you already archived.",
+  "@teacherClassDeletePermanentMessage": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "teacherClassDeletePermanentConfirm": "Delete",
+  "teacherClassDeletedMessage": "Class removed from your list",
+  "teacherClassDeleteRequiresArchiveError": "Archive the class before deleting it.",
+  "teacherClassNotArchivedError": "This class is not archived.",
   "teacherClassMembersTab": "Members",
   "teacherClassAssignmentsTab": "Assignments",
   "teacherClassAnalyticsTab": "Analytics",
@@ -1040,6 +1320,21 @@
   "teacherAssignmentShowAnswersAfterAttempt": "After each attempt",
   "teacherAssignmentShowAnswersAfterDue": "After due date",
   "teacherAssignmentShowAnswersTeacherOnly": "Teacher only",
+  "teacherAssignmentRandomizeQuestionsLabel": "Shuffle question order",
+  "teacherAssignmentRandomizeQuestionsHint": "How questions are ordered for this class assignment.",
+  "teacherAssignmentAllowStudentRandomizeLabel": "Students can change question order",
+  "teacherAssignmentAllowStudentRandomizeHint": "When off, every student uses the setting above.",
+  "teacherAssignmentForfeitExitLabel": "Leaving early uses an attempt",
+  "teacherAssignmentForfeitExitHint": "Only applies when a maximum attempt limit is set. Students cannot pause and resume.",
+  "teacherAssignmentForfeitRequiresMaxAttempts": "Set at least 1 maximum attempt to enable this rule.",
+  "practiceForfeitExitDialogTitle": "Leave practice?",
+  "practiceForfeitExitDialogMessage": "If you leave now, it will count as a used attempt even if you do not finish the quiz.",
+  "practiceForfeitExitConfirm": "Leave and use attempt",
+  "practiceForfeitExitCancel": "Keep practicing",
+  "studentAssignmentAttemptStatusForfeited": "Left early",
+  "studentAssignmentRandomizeLockedShuffled": "Shuffled order set by teacher",
+  "studentAssignmentRandomizeLockedOrdered": "Quiz order set by teacher",
+  "studentAssignmentPracticeOptionsTitle": "Practice options",
   "teacherAssignmentCreateAction": "Create assignment",
   "teacherAssignmentEditTitle": "Edit assignment",
   "teacherAssignmentEditAction": "Edit",
@@ -1096,16 +1391,66 @@
   "teacherUpgradeCancelHint": "Cancel anytime · Instant access after payment",
   "teacherUpgradeSeeAllPlans": "See all plans",
   "teacherUpgradeAlreadyActive": "You already have an active Teacher plan.",
+  "teacherUpgradeNextRenewal": "Next renewal: {date}",
+  "@teacherUpgradeNextRenewal": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "teacherUpgradeAccessUntil": "Access until {date} (auto-renew off)",
+  "@teacherUpgradeAccessUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "teacherUpgradeCancelTitle": "Cancel subscription?",
-  "teacherUpgradeCancelMessage": "You will lose access to the Teacher module and all your classes will be archived. You can resubscribe at any time.",
-  "teacherUpgradeCancelConfirm": "Cancel plan",
+  "teacherUpgradeCancelMessage": "Auto-renew will be turned off. You keep Teacher access until the end of your paid period, then you move to Free.",
+  "teacherUpgradeCancelConfirm": "Turn off auto-renew",
   "teacherUpgradeCancelSuccess": "Subscription cancelled. See you soon!",
+  "teacherUpgradeCancelSuccessUntil": "Auto-renew is off. Teacher access until {date}.",
+  "billingCancelStoreTitle": "Manage subscription in the store",
+  "billingCancelStoreMessageGoogle": "CraftQuest recurring charges are managed in Google Play. Open your subscriptions in the Play Store, cancel CraftQuest, and you will keep access until the end of the paid period.",
+  "billingCancelStoreMessageApple": "CraftQuest recurring charges are managed in the App Store. Open your subscriptions in Apple Settings, cancel CraftQuest, and you will keep access until the end of the paid period.",
+  "billingCancelStoreOpenGooglePlay": "Open Google Play",
+  "billingCancelStoreOpenAppStore": "Open App Store",
+  "billingCancelStoreSyncTitle": "Update status in CraftQuest?",
+  "billingCancelStoreSyncMessage": "If you already cancelled in the store, you can turn off renewal in CraftQuest to reflect the end of your period in the app. Billing only stops in the store.",
+  "billingCancelStoreSyncConfirm": "Turn off renewal in app",
+  "billingResumeAutoRenewTitle": "Re-enable auto-renew?",
+  "billingResumeAutoRenewMessage": "You will be charged again at the end of your current paid period. You keep access until then.",
+  "billingResumeAutoRenewConfirm": "Re-enable auto-renew",
+  "billingResumeAutoRenewSuccess": "Auto-renew is back on.",
+  "billingResumeAutoRenewSuccessUntil": "Next renewal on {date}.",
+  "billingResumeStoreTitle": "Re-enable subscription in the store",
+  "billingResumeStoreMessageGoogle": "To turn recurring billing back on, re-enable CraftQuest in Google Play (Subscriptions). Then you can sync status in the app.",
+  "billingResumeStoreMessageApple": "To turn recurring billing back on, re-enable CraftQuest in the App Store (Subscriptions). Then you can sync status in the app.",
+  "billingResumeStoreSyncTitle": "Update status in CraftQuest?",
+  "billingResumeStoreSyncMessage": "If you already re-enabled the subscription in the store, confirm here to show the next renewal date in the app.",
+  "billingResumeStoreSyncConfirm": "Re-enable renewal in app",
+  "billingResumeRequiresResubscribeTitle": "Subscribe again with PayPal",
+  "billingResumeRequiresResubscribeMessage": "PayPal auto-renew was already cancelled. To keep automatic billing, start a new subscription.",
+  "billingResumeRequiresResubscribeConfirm": "Subscribe again",
+  "@billingResumeAutoRenewSuccessUntil": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "@teacherUpgradeCancelSuccessUntil": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
   "teacherUpgradeExpiryWarning": "Your Teacher plan expires in less than 7 days. Renew to keep access.",
 
   "homeTeacherBannerTitle": "Are you a teacher?",
   "homeTeacherBannerBody": "Classes, assignments and real-time analytics.",
   "homeTeacherBannerAction": "View Teacher plan",
-  "homeTeacherBannerDismissTooltip": "Don't show again",
+  "homeTeacherBannerDismissTooltipWeekly": "Hide for this week",
+  "homeTeacherBannerDismissTooltipMonthly": "Hide for this month",
 
   "studentAssignmentsTitle": "My assignments",
   "studentAssignmentsAction": "Class assignments",
@@ -1230,10 +1575,51 @@
   "studentAssignmentStatusBadgeAvailable": "Available",
   "studentAssignmentDetailTitle": "Assignment details",
 
+  "subscriptionPlanActive": "{planName} plan active.",
+  "@subscriptionPlanActive": {
+    "placeholders": {
+      "planName": {
+        "type": "String"
+      }
+    }
+  },
+  "profileProPlanSectionTitle": "Pro plan",
+  "profileProPlanManageTitle": "Manage Pro plan",
+  "profileProPlanActiveSubtitle": "Active plan · tap to manage",
+  "profileProPlanInactiveSubtitle": "Unlimited quizzes and more · Monthly or annual subscription",
   "profileTeacherPlanSectionTitle": "Teacher plan",
   "profileTeacherPlanManageTitle": "Manage Teacher plan",
   "profileTeacherPlanActiveSubtitle": "Active plan · tap to manage",
   "profileTeacherPlanInactiveSubtitle": "Classes, assignments and analytics · Monthly subscription",
+
+  "profilePaymentHistorySectionTitle": "Payments",
+  "profilePaymentHistoryAction": "Transaction history",
+  "profilePaymentHistorySubtitle": "Subscriptions, Prep+, and other payments",
+  "paymentHistoryTitle": "Payment history",
+  "paymentHistoryEmpty": "No transactions have been recorded on your account yet.",
+  "paymentHistoryAmount": "{amount} {currency}",
+  "@paymentHistoryAmount": {
+    "placeholders": {
+      "amount": { "type": "String" },
+      "currency": { "type": "String" }
+    }
+  },
+  "paymentPurchaseStatusValidated": "Completed",
+  "paymentPurchaseStatusPending": "Pending",
+  "paymentPurchaseStatusRejected": "Rejected",
+  "paymentPurchaseStatusRefunded": "Refunded",
+  "paymentPurchaseStatusCancelled": "Cancelled",
+  "paymentProviderPayPal": "PayPal",
+  "paymentProviderGooglePlay": "Google Play",
+  "paymentProviderAppStore": "App Store",
+  "paymentProviderOther": "Other",
+  "paymentProductTypeSubscription": "Subscription",
+  "paymentProductTypePrepAccess": "Prep+",
+  "paymentProductTypeAiCredits": "AI credits",
+  "paymentProductTypeShareCodes": "Share codes",
+  "paymentProductTypeCuratedPackage": "Package",
+  "paymentProductTypeTeacherSeats": "Teacher seats",
+  "paymentProductTypeOther": "Other",
 
   "teacherUpgradeKeepPlan": "No, keep it",
 
@@ -1258,5 +1644,171 @@
   "teacherOnboardingSkipAction": "Skip for now",
   "teacherOnboardingStep3Title": "All set!",
   "teacherOnboardingStep3Body": "Your classroom is ready. You can now create assignments, track student progress, and analyze results in Activity Pulse.",
-  "teacherOnboardingGoToDashboardAction": "Go to Teacher Dashboard"
+  "teacherOnboardingGoToDashboardAction": "Go to Teacher Dashboard",
+
+  "prepAdminProfileSectionTitle": "Administration",
+  "prepAdminProfileAction": "Prep+ (catalog)",
+  "prepAdminProfileSubtitle": "Categories, items, pricing, and publishing",
+  "prepAdminHubTitle": "Prep+ admin",
+  "prepAdminHubSubtitle": "Manage the platform's curated B2C catalog.",
+  "prepAdminCategoriesAction": "Categories",
+  "prepAdminCategoriesSubtitle": "Countries, regions, and International",
+  "prepAdminCatalogAction": "Catalog items",
+  "prepAdminCatalogSubtitle": "Quizzes, offers, and samples",
+  "prepAdminCategoriesTitle": "Prep+ categories",
+  "prepAdminAddRootCategory": "Root category",
+  "prepAdminAddSubcategory": "Subcategory",
+  "prepAdminEditCategoryTitle": "Edit category",
+  "prepAdminDeleteCategoryTitle": "Delete category?",
+  "prepAdminDeleteCategoryMessage": "«{name}» and its subcategories will be removed if they have no items.",
+  "@prepAdminDeleteCategoryMessage": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "prepAdminCategoryDeleted": "Category deleted",
+  "prepAdminCategorySaved": "Category saved",
+  "prepAdminActive": "Active",
+  "prepAdminInactive": "Inactive",
+  "prepAdminCategoryTypeLabel": "Type",
+  "prepAdminCategoryTypeGeographic": "Geographic (country)",
+  "prepAdminCategoryTypeThematic": "Thematic (International)",
+  "prepAdminNameLabel": "Name",
+  "prepAdminSlugLabel": "Slug (URL)",
+  "prepAdminRequiredField": "Required field",
+  "prepAdminDescriptionLabel": "Description",
+  "prepAdminCountryCodeLabel": "Country code (ISO)",
+  "prepAdminIconKeyLabel": "Icon key",
+  "prepAdminSortOrderLabel": "Sort order",
+  "prepAdminCatalogTitle": "Prep+ catalog",
+  "prepAdminNewCatalogItem": "New item",
+  "prepAdminPublishedFilter": "Published",
+  "prepAdminDraftFilter": "Drafts",
+  "prepAdminCatalogEmpty": "No catalog items yet.",
+  "prepAdminItemSummarySubtitle": "{category} · {questions} Q · {offers} offers · {samples} samples · {status}",
+  "@prepAdminItemSummarySubtitle": {
+    "placeholders": {
+      "category": { "type": "String" },
+      "questions": { "type": "int" },
+      "offers": { "type": "int" },
+      "samples": { "type": "int" },
+      "status": { "type": "String" }
+    }
+  },
+  "prepAdminEditItemTitle": "Edit item",
+  "prepAdminMetadataSection": "Metadata",
+  "prepAdminOffersSection": "Pricing matrix",
+  "prepAdminSamplesSection": "Sample questions",
+  "prepAdminPublishSection": "Publishing",
+  "prepAdminQuizIdLabel": "Quiz ID",
+  "prepAdminQuizIdHint": "GUID of an existing platform quiz",
+  "prepAdminQuizIdRequired": "Enter the quiz ID",
+  "prepAdminQuizSearchLabel": "Search quiz",
+  "prepAdminSelectQuizLabel": "Quiz",
+  "prepAdminSelectQuizHint": "Only quizzes created by content admins, not yet in the catalog.",
+  "prepAdminSelectQuizError": "Select a quiz.",
+  "prepAdminLinkableQuizzesEmpty": "No quizzes available. Create one with an admin account or remove items already in the catalog.",
+  "prepAdminLinkableQuizOption": "{title} · {count} Q · {author}",
+  "@prepAdminLinkableQuizOption": {
+    "placeholders": {
+      "title": { "type": "String" },
+      "count": { "type": "int" },
+      "author": { "type": "String" }
+    }
+  },
+  "prepAdminSubcategoryLabel": "Subcategory",
+  "prepAdminSelectCategoryError": "Select a subcategory",
+  "prepAdminTitleOverrideLabel": "Catalog title (optional)",
+  "prepAdminTagsLabel": "Tags",
+  "prepAdminTagsHint": "Comma-separated",
+  "prepAdminListingStartLabel": "Sale starts",
+  "prepAdminListingEndLabel": "Sale ends",
+  "prepAdminOptionalDate": "Not set",
+  "prepAdminCreateItemAction": "Create item",
+  "prepAdminSaveMetadataAction": "Save metadata",
+  "prepAdminSaveOffersAction": "Save pricing",
+  "prepAdminPickSamplesAction": "Pick 3 questions",
+  "prepAdminSamplesEmpty": "No sample questions yet.",
+  "prepAdminPublishAction": "Publish to catalog",
+  "prepAdminUnpublishAction": "Unpublish",
+  "prepAdminDeleteItemAction": "Delete item",
+  "prepAdminDeleteItemTitle": "Delete catalog item?",
+  "prepAdminDeleteItemMessage": "The item will be hidden. Purchased access remains in user history.",
+  "prepAdminItemCreated": "Item created",
+  "prepAdminMetadataSaved": "Metadata saved",
+  "prepAdminOffersRequired": "Enable at least one access offer",
+  "prepAdminOffersSaved": "Pricing saved",
+  "prepAdminSamplesSaved": "Samples saved",
+  "prepAdminPublished": "Published to catalog",
+  "prepAdminUnpublished": "Unpublished",
+  "prepAdminItemDeleted": "Item deleted",
+  "prepAdminLinkedQuiz": "Quiz: {title}",
+  "@prepAdminLinkedQuiz": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "prepAdminOffersChip": "{count} active offers",
+  "@prepAdminOffersChip": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "prepAdminSamplesChip": "{count}/3 samples",
+  "@prepAdminSamplesChip": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "prepAdminOfferFreeLabel": "Free access",
+  "prepAdminOfferPriceLabel": "Price",
+  "prepAdminOfferCurrencyLabel": "Currency",
+  "prepAdminStoreProductIdLabel": "Store product ID (IAP)",
+  "prepAdminSamplesLoadError": "Could not load questions",
+  "prepAdminSamplesCountError": "Select exactly 3 questions",
+  "prepAdminSamplesPickerTitle": "Sample questions",
+  "prepAdminSamplesPickerSubtitle": "{selected} of {required} selected",
+  "@prepAdminSamplesPickerSubtitle": {
+    "placeholders": {
+      "selected": { "type": "int" },
+      "required": { "type": "int" }
+    }
+  },
+
+  "errorPrepCategoryNotFound": "Category not found.",
+  "errorPrepCategoryHasSubcategories": "Cannot delete: it has active subcategories.",
+  "errorPrepCategoryHasItems": "Cannot delete: it has catalog items.",
+  "errorPrepQuizNotFound": "Quiz not found.",
+  "errorPrepQuizNotEligible": "Only quizzes created by a content or super admin can be added.",
+  "errorPrepQuizAlreadyInCatalog": "This quiz is already in Prep+.",
+  "errorPrepCatalogItemNotFound": "Catalog item not found.",
+  "errorPrepSampleCountRequired": "Exactly {count} sample questions are required.",
+  "@errorPrepSampleCountRequired": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "errorPrepSampleQuestionsNotInQuiz": "All sample questions must belong to the linked quiz.",
+  "errorPrepInvalidCategoryType": "Invalid category type.",
+  "errorPrepNameSlugRequired": "Name and slug are required.",
+  "errorPrepParentCategoryNotFound": "Parent category not found.",
+  "errorPrepSubcategoryTypeMismatch": "Subcategory type must match the parent.",
+  "errorPrepCategorySelfParent": "A category cannot be its own parent.",
+  "errorPrepSlugDuplicate": "That slug already exists at this level.",
+  "errorPrepCategoryInactive": "Category not found or inactive.",
+  "errorPrepItemRequiresSubcategory": "Assign the item to a subcategory, not a root category.",
+  "errorPrepInstitutionTagGeographicOnly": "Institution tag is only allowed for geographic categories.",
+  "errorPrepCategoryHierarchyBroken": "Category hierarchy is incomplete.",
+  "errorPrepOffersRequired": "At least one access offer is required.",
+  "errorPrepInvalidDuration": "Invalid duration. Allowed: 30, 60, 90, and 183 days.",
+  "errorPrepPriceNegative": "Price cannot be negative.",
+  "errorPrepOfferDurationDuplicate": "Duplicate durations in offers.",
+  "errorPrepActiveOfferRequiredPublish": "Enable at least one offer before publishing.",
+  "errorPrepSamplesRequiredPublish": "Configure exactly {count} sample questions before publishing.",
+  "@errorPrepSamplesRequiredPublish": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "errorPrepQuizNoQuestions": "The linked quiz must have at least one question.",
+  "errorPrepListingEndBeforeStart": "Sale end date must be after the start date.",
+  "errorPrepPreviewNotAvailable": "Preview is not available for this item.",
+  "errorPrepItemNotAvailable": "This item is not available for purchase right now.",
+  "errorPrepOfferNotFound": "Offer not found.",
+  "errorPrepOfferIsFree": "This offer is free. Use checkout without payment.",
+  "errorPrepPayPalPurchaseNotFound": "Prep+ PayPal purchase not found.",
+  "errorPrepMobilePlatformInvalid": "Platform must be google_play or app_store.",
+  "errorPrepStoreProductMismatch": "Store product does not match this offer.",
+  "errorPrepOfferNoLongerExists": "Offer no longer exists.",
+  "errorPrepInvalidProductCode": "Invalid purchase product code.",
+  "errorPrepGooglePlayNotConfigured": "Google Play is not configured on the server.",
+  "errorPrepAppStoreNotConfigured": "App Store is not configured. Use mock payments in development."
 }

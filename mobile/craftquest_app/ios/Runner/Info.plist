@@ -45,5 +45,9 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>CraftQuest needs access to your photos to attach images to questions and answer options.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>CraftQuest can save images to your photo library when you export content.</string>
 </dict>
 </plist>

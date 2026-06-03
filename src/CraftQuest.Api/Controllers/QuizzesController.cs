@@ -117,14 +117,4 @@ public class QuizzesController(IQuizService quizService) : ApiControllerBase
         return Ok(questions);
     }
 
-    [HttpGet("{quizId:guid}/questions/student-view")]
-    [AllowAnonymous]
-    [ProducesResponseType(typeof(IReadOnlyList<QuestionStudentDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetQuestionsStudentView(
-        Guid quizId,
-        CancellationToken cancellationToken)
-    {
-        var questions = await quizService.GetQuestionsForStudentAsync(quizId, cancellationToken);
-        return Ok(questions);
-    }
 }

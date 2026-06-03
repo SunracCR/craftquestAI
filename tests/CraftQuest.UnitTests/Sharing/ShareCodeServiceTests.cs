@@ -435,6 +435,7 @@ public class ShareCodeServiceTests
 
         public Task<IReadOnlyList<CraftQuest.Application.Models.Teacher.TeacherClassSummaryDto>> ListTeacherClassesAsync(
             Guid teacherUserId,
+            string? status = "active",
             CancellationToken cancellationToken = default) =>
             throw new NotImplementedException();
 
@@ -452,6 +453,18 @@ public class ShareCodeServiceTests
             throw new NotImplementedException();
 
         public Task ArchiveAsync(
+            Guid teacherUserId,
+            Guid classId,
+            CancellationToken cancellationToken = default) =>
+            throw new NotImplementedException();
+
+        public Task RestoreAsync(
+            Guid teacherUserId,
+            Guid classId,
+            CancellationToken cancellationToken = default) =>
+            throw new NotImplementedException();
+
+        public Task DeleteAsync(
             Guid teacherUserId,
             Guid classId,
             CancellationToken cancellationToken = default) =>

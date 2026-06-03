@@ -106,6 +106,34 @@ class TeacherStudentModel {
   final String? displayName;
 }
 
+class TeacherJustificationSourceReviewModel {
+  const TeacherJustificationSourceReviewModel({
+    this.title,
+    this.sourceUrl,
+    this.snippet,
+    this.pageNumber,
+    this.isPrimary = false,
+  });
+
+  factory TeacherJustificationSourceReviewModel.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    return TeacherJustificationSourceReviewModel(
+      title: json['title'] as String?,
+      sourceUrl: json['sourceUrl'] as String?,
+      snippet: json['snippet'] as String?,
+      pageNumber: json['pageNumber'] as int?,
+      isPrimary: json['isPrimary'] as bool? ?? false,
+    );
+  }
+
+  final String? title;
+  final String? sourceUrl;
+  final String? snippet;
+  final int? pageNumber;
+  final bool isPrimary;
+}
+
 class TeacherQuestionReviewModel {
   const TeacherQuestionReviewModel({
     required this.practiceQuestionSnapshotId,
@@ -118,6 +146,8 @@ class TeacherQuestionReviewModel {
     required this.answerStatus,
     required this.answersAsDisplayedToStudent,
     this.questionMediaUrl,
+    this.justificationText,
+    this.justificationSources = const [],
   });
 
   factory TeacherQuestionReviewModel.fromJson(Map<String, dynamic> json) {
@@ -131,6 +161,15 @@ class TeacherQuestionReviewModel {
       pointsPossible: (json['pointsPossible'] as num).toDouble(),
       answerStatus: json['answerStatus'] as String,
       questionMediaUrl: json['questionMediaUrl'] as String?,
+      justificationText: json['justificationText'] as String?,
+      justificationSources: (json['justificationSources'] as List<dynamic>?)
+              ?.map(
+                (e) => TeacherJustificationSourceReviewModel.fromJson(
+                  e as Map<String, dynamic>,
+                ),
+              )
+              .toList() ??
+          const [],
       answersAsDisplayedToStudent:
           (json['answersAsDisplayedToStudent'] as List<dynamic>)
               .map(
@@ -151,6 +190,8 @@ class TeacherQuestionReviewModel {
   final double pointsPossible;
   final String answerStatus;
   final String? questionMediaUrl;
+  final String? justificationText;
+  final List<TeacherJustificationSourceReviewModel> justificationSources;
   final List<TeacherAnswerReviewModel> answersAsDisplayedToStudent;
 }
 

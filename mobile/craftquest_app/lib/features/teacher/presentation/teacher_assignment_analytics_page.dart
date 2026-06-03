@@ -6,8 +6,10 @@ import 'package:craftquest_app/core/widgets/app_page_header.dart';
 import 'package:craftquest_app/core/widgets/app_section_card.dart';
 import 'package:craftquest_app/core/widgets/member_avatar.dart';
 import 'package:craftquest_app/core/widgets/app_section_title.dart';
+import 'package:craftquest_app/core/widgets/app_padded_scroll.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
+import 'package:craftquest_app/features/analytics/presentation/question_distractor_card.dart';
 import 'package:craftquest_app/features/teacher/data/models/teacher_assignment_models.dart';
 import 'package:craftquest_app/features/teacher/data/teacher_assignment_repository.dart';
 import 'package:craftquest_app/features/teacher/presentation/teacher_session_review_page.dart';
@@ -20,10 +22,12 @@ class TeacherAssignmentAnalyticsPage extends StatefulWidget {
     super.key,
     required this.assignmentId,
     required this.quizTitle,
+    this.showAppBar = true,
   });
 
   final String assignmentId;
   final String quizTitle;
+  final bool showAppBar;
 
   @override
   State<TeacherAssignmentAnalyticsPage> createState() =>
@@ -52,9 +56,7 @@ class _TeacherAssignmentAnalyticsPageState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return EdgeAwareScaffold(
-      appBar: craftQuestAppBar(title: l10n.teacherAssignmentAnalyticsTitle),
-      body: FutureBuilder<AssignmentAnalyticsModel>(
+    final content = FutureBuilder<AssignmentAnalyticsModel>(
         future: _future,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -74,11 +76,11 @@ class _TeacherAssignmentAnalyticsPageState
           }
 
           final data = snapshot.data!;
-          return RefreshIndicator(
-            onRefresh: _reload,
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
+          return AppPaddedScrollBody(
+            child: RefreshIndicator(
+              onRefresh: _reload,
+              child: ListView(
+                children: [
                 AppPageHeader(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(
@@ -128,13 +130,9 @@ class _TeacherAssignmentAnalyticsPageState
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
                       AppSectionTitle(
                         title: l10n.teacherAssignmentAnalyticsRosterTitle,
                       ),
@@ -155,8 +153,9 @@ class _TeacherAssignmentAnalyticsPageState
                             .teacherAssignmentAnalyticsDistributionTitle,
                       ),
                       const SizedBox(height: AppSpacing.sm),
-                      ...data.scoreDistribution.map(
-                        (b) => _DistributionBar(bucket: b, l10n: l10n),
+                      _ScoreDistributionCard(
+                        buckets: data.scoreDistribution,
+                        l10n: l10n,
                       ),
                       const SizedBox(height: AppSpacing.lg),
                       AppSectionTitle(
@@ -205,15 +204,48 @@ class _TeacherAssignmentAnalyticsPageState
                             ),
                           ),
                         ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: AppSpacing.lg),
+                      AppSectionTitle(
+                        title: l10n
+                            .teacherAssignmentAnalyticsDistractorTitle,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      if (data.distractorQuestions.isEmpty)
+                        Text(
+                          l10n.teacherDashboardEmptyInsights,
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 13,
+                          ),
+                        )
+                      else
+                        ...data.distractorQuestions.map(
+                          (q) => Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: AppSectionCard(
+                              child: QuestionDistractorCard(
+                                question: q,
+                                l10n: l10n,
+                              ),
+                            ),
+                          ),
+                        ),
                     ],
-                  ),
                 ),
               ],
+              ),
             ),
           );
         },
-      ),
+    );
+
+    if (!widget.showAppBar) {
+      return content;
+    }
+
+    return EdgeAwareScaffold(
+      appBar: craftQuestAppBar(title: l10n.teacherAssignmentAnalyticsTitle),
+      body: content,
     );
   }
 }
@@ -336,61 +368,97 @@ class _StudentProgressCard extends StatelessWidget {
   }
 }
 
-class _DistributionBar extends StatelessWidget {
-  const _DistributionBar({
-    required this.bucket,
+class _ScoreDistributionCard extends StatelessWidget {
+  const _ScoreDistributionCard({
+    required this.buckets,
     required this.l10n,
   });
 
-  final ScoreDistributionBucketModel bucket;
+  final List<ScoreDistributionBucketModel> buckets;
   final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
-    final max = 20.0;
-    final value = bucket.studentCount / max;
+    final maxCount = buckets
+        .map((b) => b.studentCount)
+        .fold<int>(0, (a, b) => a > b ? a : b);
+
+    return AppSectionCard(
+      child: Column(
+        children: [
+          for (var i = 0; i < buckets.length; i++) ...[
+            if (i > 0) const SizedBox(height: AppSpacing.sm),
+            _DistributionBar(
+              bucket: buckets[i],
+              l10n: l10n,
+              maxCount: maxCount,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _DistributionBar extends StatelessWidget {
+  const _DistributionBar({
+    required this.bucket,
+    required this.l10n,
+    required this.maxCount,
+  });
+
+  final ScoreDistributionBucketModel bucket;
+  final AppLocalizations l10n;
+  final int maxCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final value = maxCount == 0 ? 0.0 : bucket.studentCount / maxCount;
     final color = bucket.minPercent >= 61
         ? AppColors.accentMint
         : bucket.minPercent >= 41
             ? AppColors.accentGold
             : AppColors.error;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 56,
-            child: Text(
-              l10n.scoreDistributionRange(bucket.minPercent, bucket.maxPercent),
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 11,
-              ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        SizedBox(
+          width: 72,
+          child: Text(
+            l10n.scoreDistributionRange(bucket.minPercent, bucket.maxPercent),
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12,
             ),
           ),
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: value.clamp(0.0, 1.0),
-                minHeight: 8,
-                backgroundColor: AppColors.background,
-                color: color,
-              ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: value.clamp(0.0, 1.0),
+              minHeight: 10,
+              backgroundColor: AppColors.background,
+              color: color,
             ),
           ),
-          const SizedBox(width: 8),
-          Text(
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        SizedBox(
+          width: 28,
+          child: Text(
             '${bucket.studentCount}',
+            textAlign: TextAlign.right,
             style: const TextStyle(
               color: AppColors.textPrimary,
               fontWeight: FontWeight.w700,
               fontSize: 13,
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

@@ -48,10 +48,11 @@ Future<void> openGuestPracticeSession(
 
   if (!context.mounted) return;
 
+  final guestCubit = context.read<GuestSessionCubit>();
   await Navigator.of(context).push(
     MaterialPageRoute<void>(
       builder: (_) => BlocProvider.value(
-        value: context.read<GuestSessionCubit>(),
+        value: guestCubit,
         child: GuestPracticeSessionPage(
           visitId: visitId,
           token: token,

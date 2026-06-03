@@ -1,4 +1,5 @@
 import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/utils/assignment_dates.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_bottom_bar.dart';
@@ -10,7 +11,6 @@ import 'package:craftquest_app/features/auth/presentation/auth_bloc.dart';
 import 'package:craftquest_app/features/auth/presentation/register_page.dart';
 import 'package:craftquest_app/features/guest/data/guest_models.dart';
 import 'package:craftquest_app/features/guest/data/guest_repository.dart';
-import 'package:craftquest_app/features/guest/presentation/bloc/guest_session_cubit.dart';
 import 'package:craftquest_app/features/guest/presentation/guest_practice_navigation.dart';
 import 'package:craftquest_app/features/guest/presentation/guest_session_navigation.dart';
 import 'package:craftquest_app/features/teacher/presentation/teacher_session_review_page.dart';
@@ -121,10 +121,11 @@ class _GuestShellPageState extends State<GuestShellPage>
   }
 
   void _goRegister(BuildContext context) {
+    final authBloc = context.read<AuthBloc>();
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => BlocProvider.value(
-          value: context.read<AuthBloc>(),
+          value: authBloc,
           child: const RegisterPage(),
         ),
       ),
@@ -477,6 +478,9 @@ class _GuestRegisterCtaCard extends StatelessWidget {
           _BenefitRow(text: l10n.guestRegisterBenefit1),
           _BenefitRow(text: l10n.guestRegisterBenefit2),
           _BenefitRow(text: l10n.guestRegisterBenefit3),
+          _BenefitRow(text: l10n.guestRegisterBenefit4),
+          _BenefitRow(text: l10n.guestRegisterBenefit5),
+          _BenefitRow(text: l10n.guestRegisterBenefit6),
           const SizedBox(height: AppSpacing.md),
           AppSecondaryButton(
             label: l10n.guestRegisterAction,
@@ -854,7 +858,7 @@ class _GuestAttemptTile extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         attempt.finishedAt != null
-                            ? _formatDate(attempt.finishedAt!)
+                            ? _formatDate(context, attempt.finishedAt!)
                             : l10n.practiceStatusInProgress,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: AppColors.textSecondary,
@@ -876,13 +880,8 @@ class _GuestAttemptTile extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime dt) {
-    return '${dt.day.toString().padLeft(2, '0')}/'
-        '${dt.month.toString().padLeft(2, '0')}/'
-        '${dt.year} '
-        '${dt.hour.toString().padLeft(2, '0')}:'
-        '${dt.minute.toString().padLeft(2, '0')}';
-  }
+  String _formatDate(BuildContext context, DateTime dt) =>
+      AssignmentDates.formatDateTime(context, dt);
 }
 
 class _GuestEphemeralFooter extends StatelessWidget {

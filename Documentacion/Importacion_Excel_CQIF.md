@@ -19,6 +19,7 @@
 | Respuesta correcta | Sí | `B` o `A\|C` (múltiple) |
 | Puntos | No | `1` |
 | Sección | No | Geografía |
+| Justificación | No | Texto explicativo de la respuesta correcta (opcional) |
 
 ## Tipos admitidos
 

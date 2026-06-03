@@ -1,5 +1,8 @@
--- Free plan: raise per-quiz question limit to 65.
+-- Obsoleto: usar UpdateFreePlanLimits.sql (2 cuestionarios, 50 preguntas).
+-- Mantenido por referencia en checklist histórico.
 UPDATE billing.Plans
-SET MaxQuestionsPerQuiz = 65
+SET
+    MaxQuizzes = 2,
+    MaxQuestionsPerQuiz = 50
 WHERE Code = 'free';
 GO

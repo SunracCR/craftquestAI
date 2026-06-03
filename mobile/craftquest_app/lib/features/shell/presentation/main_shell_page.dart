@@ -2,6 +2,7 @@ import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/widgets/user_avatar.dart';
 import 'package:craftquest_app/features/auth/data/models/auth_models.dart';
 import 'package:craftquest_app/features/home/presentation/home_page.dart';
+import 'package:craftquest_app/features/prep_plus/presentation/prep_plus_hub_page.dart';
 import 'package:craftquest_app/features/profile/presentation/profile_page.dart';
 import 'package:craftquest_app/features/teacher/presentation/teacher_hub_page.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
@@ -19,24 +20,36 @@ class MainShellPage extends StatefulWidget {
 class _MainShellPageState extends State<MainShellPage> {
   int _index = 0;
 
+  static const int _prepTabIndex = 1;
+
   bool get _isTeacher => widget.user.roles.contains('teacher');
 
   @override
   void didUpdateWidget(covariant MainShellPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Si el usuario perdió el rol teacher y estaba en el tab Teacher, volvemos a Home.
     final wasTeacher = oldWidget.user.roles.contains('teacher');
-    if (wasTeacher && !_isTeacher && _index == 1) {
-      setState(() => _index = 0);
+    if (wasTeacher && !_isTeacher) {
+      if (_index == 2) {
+        setState(() => _index = 0);
+      } else if (_index > 2) {
+        setState(() => _index = _index - 1);
+      }
     }
   }
+
+  void _goToPrepTab() => setState(() => _index = _prepTabIndex);
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
     final pages = <Widget>[
-      HomePage(user: widget.user),
+      HomePage(
+        key: ValueKey(widget.user.userId),
+        user: widget.user,
+        onOpenPrepPlus: _goToPrepTab,
+      ),
+      const PrepPlusHubPage(),
       if (_isTeacher) const TeacherHubPage(),
       ProfilePage(user: widget.user),
     ];
@@ -46,6 +59,11 @@ class _MainShellPageState extends State<MainShellPage> {
         icon: const Icon(Icons.home_outlined),
         selectedIcon: const Icon(Icons.home_rounded),
         label: l10n.navHomeLabel,
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.menu_book_outlined),
+        selectedIcon: const Icon(Icons.menu_book_rounded),
+        label: l10n.navPrepPlusLabel,
       ),
       if (_isTeacher)
         NavigationDestination(
@@ -81,8 +99,9 @@ class _MainShellPageState extends State<MainShellPage> {
       ),
     ];
 
-    // Clamp index in case the teacher tab was added/removed
     final safeIndex = _index.clamp(0, pages.length - 1);
+    final isTeacherTab = _isTeacher && safeIndex == 2;
+    final isPrepTab = safeIndex == _prepTabIndex;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -94,9 +113,11 @@ class _MainShellPageState extends State<MainShellPage> {
         data: NavigationBarThemeData(
           height: 72,
           backgroundColor: AppColors.surface,
-          indicatorColor: _isTeacher && safeIndex == 1
+          indicatorColor: isTeacherTab
               ? AppColors.teacherAccent.withOpacity(0.28)
-              : AppColors.accentMint.withOpacity(0.28),
+              : isPrepTab
+                  ? AppColors.accentGold.withOpacity(0.28)
+                  : AppColors.accentMint.withOpacity(0.28),
           iconTheme: WidgetStateProperty.resolveWith((states) {
             final selected = states.contains(WidgetState.selected);
             return IconThemeData(

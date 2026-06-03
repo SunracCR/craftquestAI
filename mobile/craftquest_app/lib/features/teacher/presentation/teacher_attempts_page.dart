@@ -6,6 +6,7 @@ import 'package:craftquest_app/core/widgets/app_list_entry_card.dart';
 import 'package:craftquest_app/core/widgets/app_page_header.dart';
 import 'package:craftquest_app/core/widgets/app_section_card.dart';
 import 'package:craftquest_app/core/widgets/member_avatar.dart';
+import 'package:craftquest_app/core/widgets/app_padded_scroll.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/features/teacher/data/models/teacher_review_models.dart';
@@ -353,10 +354,11 @@ class _TeacherAttemptsPageState extends State<TeacherAttemptsPage> {
                                   );
                                 }
 
-                                return RefreshIndicator(
+                                return AppPaddedScrollBody(
+                                  includeTop: false,
+                                  child: RefreshIndicator(
                                   onRefresh: _load,
                                   child: ListView(
-                                    padding: AppSpacing.listBottom,
                                     children: [
                                       _buildFilterBar(context, l10n, groups),
                                       for (var i = 0;
@@ -374,6 +376,7 @@ class _TeacherAttemptsPageState extends State<TeacherAttemptsPage> {
                                       ],
                                     ],
                                   ),
+                                ),
                                 );
                               },
                             ),

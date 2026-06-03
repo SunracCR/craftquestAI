@@ -10,11 +10,19 @@ import 'package:craftquest_app/core/widgets/user_avatar.dart';
 import 'package:craftquest_app/features/auth/data/auth_repository.dart';
 import 'package:craftquest_app/features/auth/data/models/auth_models.dart';
 import 'package:craftquest_app/features/auth/presentation/auth_bloc.dart';
+import 'package:craftquest_app/core/utils/billing_display.dart';
+import 'package:craftquest_app/features/billing/data/billing_repository.dart';
+import 'package:craftquest_app/features/billing/data/models/billing_models.dart';
 import 'package:craftquest_app/features/billing/presentation/teacher_upgrade_page.dart';
+import 'package:craftquest_app/core/utils/billing_plan_access.dart';
+import 'package:craftquest_app/features/billing/presentation/ai_credit_packs_page.dart';
+import 'package:craftquest_app/features/billing/presentation/upgrade_plan_page.dart';
 import 'package:craftquest_app/features/profile/domain/avatar_catalog.dart';
 import 'package:craftquest_app/features/profile/presentation/change_password_page.dart';
+import 'package:craftquest_app/features/profile/presentation/payment_history_page.dart';
 import 'package:craftquest_app/features/profile/presentation/widgets/avatar_picker_sheet.dart';
 import 'package:craftquest_app/features/profile/presentation/widgets/edit_display_name_dialog.dart';
+import 'package:craftquest_app/features/prep_plus/presentation/admin/prep_plus_admin_hub_page.dart';
 import 'package:craftquest_app/features/profile/presentation/widgets/profile_language_selector.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
@@ -32,15 +40,47 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final _repository = getIt<AuthRepository>();
+  final _billingRepository = getIt<BillingRepository>();
   final _localeController = getIt<LocaleController>();
   late String _avatarId;
   bool _savingAvatar = false;
   bool _savingName = false;
+  UserBillingModel? _billing;
+
+  bool get _hasProPlan =>
+      _billing?.plan.code.toLowerCase() == 'pro' ||
+      _billing?.plan.code.toLowerCase() == 'premium';
+
+  bool get _isTeacher => widget.user.roles.contains('teacher');
 
   @override
   void initState() {
     super.initState();
     _avatarId = widget.user.avatarId ?? AvatarOption.defaultId;
+    _loadBilling();
+  }
+
+  Future<void> _loadBilling() async {
+    try {
+      final billing = await _billingRepository.getMyBilling();
+      if (!mounted) return;
+      setState(() => _billing = billing);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _billing = null);
+    }
+  }
+
+  String _proPlanSubtitle(AppLocalizations l10n) {
+    if (!_hasProPlan || _billing == null) {
+      return l10n.profileProPlanInactiveSubtitle;
+    }
+    return BillingDisplay.subscriptionStatusLine(
+          context,
+          l10n,
+          subscription: _billing!.subscription,
+        ) ??
+        l10n.profileProPlanActiveSubtitle;
   }
 
   @override
@@ -107,6 +147,10 @@ class _ProfilePageState extends State<ProfilePage> {
       widget.user.displayName?.trim().isNotEmpty == true
           ? widget.user.displayName!.trim()
           : widget.user.email;
+
+  bool get _canManagePrepPlus =>
+      widget.user.roles.contains('content_admin') ||
+      widget.user.roles.contains('super_admin');
 
   Future<void> _editDisplayName() async {
     if (_savingName) return;
@@ -284,6 +328,131 @@ class _ProfilePageState extends State<ProfilePage> {
             currentLanguageCode: currentLanguage,
             onLanguageSelected: _changeLanguage,
           ),
+          if (_canManagePrepPlus) ...[
+            const SizedBox(height: AppSpacing.lg),
+            AppSectionTitle(title: l10n.prepAdminProfileSectionTitle),
+            const SizedBox(height: AppSpacing.xs),
+            AppSectionCard(
+              padding: EdgeInsets.zero,
+              child: ListTile(
+                leading: const Icon(
+                  Icons.admin_panel_settings_outlined,
+                  color: AppColors.accentGold,
+                ),
+                title: Text(l10n.prepAdminProfileAction),
+                subtitle: Text(l10n.prepAdminProfileSubtitle),
+                trailing: const Icon(Icons.chevron_right_rounded,
+                    color: AppColors.textSecondary),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const PrepPlusAdminHubPage(),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+          if (!_isTeacher) ...[
+            const SizedBox(height: AppSpacing.lg),
+            AppSectionTitle(title: l10n.profileProPlanSectionTitle),
+            const SizedBox(height: AppSpacing.xs),
+            AppSectionCard(
+              padding: EdgeInsets.zero,
+              child: ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentGold.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.workspace_premium_rounded,
+                    color: AppColors.accentGold,
+                    size: 20,
+                  ),
+                ),
+                title: Text(
+                  _hasProPlan
+                      ? l10n.profileProPlanManageTitle
+                      : l10n.upgradePlanAction,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+                subtitle: Text(
+                  _proPlanSubtitle(l10n),
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 11,
+                  ),
+                ),
+                trailing: const Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.textSecondary,
+                ),
+                onTap: () async {
+                  await Navigator.of(context).push<bool>(
+                    MaterialPageRoute<bool>(
+                      builder: (_) => const UpgradePlanPage(),
+                    ),
+                  );
+                  await _loadBilling();
+                },
+              ),
+            ),
+          ],
+          if (BillingPlanAccess.canBuyAiCreditPacks(_billing?.plan.code)) ...[
+            const SizedBox(height: AppSpacing.sm),
+            AppSectionCard(
+              padding: EdgeInsets.zero,
+              child: ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentViolet.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.auto_awesome_outlined,
+                    color: AppColors.accentViolet,
+                    size: 20,
+                  ),
+                ),
+                title: Text(
+                  l10n.aiCreditPacksTitle,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+                subtitle: Text(
+                  l10n.aiCreditPacksSubtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 11,
+                  ),
+                ),
+                trailing: const Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.textSecondary,
+                ),
+                onTap: () async {
+                  await Navigator.of(context).push<bool>(
+                    MaterialPageRoute<bool>(
+                      builder: (_) => const AiCreditPacksPage(),
+                    ),
+                  );
+                  await _loadBilling();
+                },
+              ),
+            ),
+          ],
           const SizedBox(height: AppSpacing.lg),
           AppSectionTitle(title: l10n.profileTeacherPlanSectionTitle),
           const SizedBox(height: AppSpacing.xs),
@@ -300,7 +469,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     color: AppColors.teacherAccent, size: 20),
               ),
               title: Text(
-                widget.user.roles.contains('teacher')
+                _isTeacher
                     ? l10n.profileTeacherPlanManageTitle
                     : l10n.teacherUpgradeCta,
                 style: const TextStyle(
@@ -310,7 +479,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
               subtitle: Text(
-                widget.user.roles.contains('teacher')
+                _isTeacher
                     ? l10n.profileTeacherPlanActiveSubtitle
                     : l10n.profileTeacherPlanInactiveSubtitle,
                 style: const TextStyle(
@@ -322,6 +491,32 @@ class _ProfilePageState extends State<ProfilePage> {
                 await Navigator.of(context).push<bool>(
                   MaterialPageRoute<bool>(
                     builder: (_) => TeacherUpgradePage(user: widget.user),
+                  ),
+                );
+                await _loadBilling();
+              },
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          AppSectionTitle(title: l10n.profilePaymentHistorySectionTitle),
+          const SizedBox(height: AppSpacing.xs),
+          AppSectionCard(
+            padding: EdgeInsets.zero,
+            child: ListTile(
+              leading: const Icon(
+                Icons.receipt_long_outlined,
+                color: AppColors.accentCool,
+              ),
+              title: Text(l10n.profilePaymentHistoryAction),
+              subtitle: Text(l10n.profilePaymentHistorySubtitle),
+              trailing: const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textSecondary,
+              ),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const PaymentHistoryPage(),
                   ),
                 );
               },
@@ -336,7 +531,7 @@ class _ProfilePageState extends State<ProfilePage> {
               children: [
                 ListTile(
                   leading: const Icon(Icons.lock_outline_rounded),
-                  title: Text(l10n.changePasswordAction),
+                  title: Text(l10n.changePasswordTitle),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () {
                     Navigator.of(context).push(

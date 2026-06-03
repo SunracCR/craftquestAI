@@ -1,3 +1,4 @@
+using CraftQuest.Application.Analytics;
 using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Exceptions;
 using CraftQuest.Application.Models.Analytics;
@@ -91,6 +92,8 @@ public class AnalyticsService(CraftQuestDbContext dbContext) : IAnalyticsService
     public async Task<QuizAnalyticsDto> GetQuizAnalyticsAsync(
         Guid teacherUserId,
         Guid quizId,
+        Guid? classId = null,
+        Guid? assignmentId = null,
         CancellationToken cancellationToken = default)
     {
         var quiz = await dbContext.Quizzes
@@ -103,10 +106,31 @@ public class AnalyticsService(CraftQuestDbContext dbContext) : IAnalyticsService
             throw new AppException("You do not have permission to view analytics for this quiz.", 403);
         }
 
-        var totalSessions = await dbContext.PracticeSessions
-            .CountAsync(
-                s => s.QuizId == quizId && s.Status == "finished",
-                cancellationToken);
+        if (classId.HasValue)
+        {
+            var ownsClass = await dbContext.TeacherClasses
+                .AnyAsync(
+                    c => c.ClassId == classId.Value && c.TeacherUserId == teacherUserId,
+                    cancellationToken);
+            if (!ownsClass)
+            {
+                throw new AppException("Class not found.", 404);
+            }
+        }
+
+        if (assignmentId.HasValue)
+        {
+            var assignment = await dbContext.Assignments
+                .AsNoTracking()
+                .Include(a => a.Class)
+                .FirstOrDefaultAsync(a => a.AssignmentId == assignmentId.Value, cancellationToken)
+                ?? throw new AppException("Assignment not found.", 404);
+
+            if (assignment.Class.TeacherUserId != teacherUserId || assignment.QuizId != quizId)
+            {
+                throw new AppException("Assignment not found.", 404);
+            }
+        }
 
         var questions = await dbContext.Questions
             .AsNoTracking()
@@ -115,6 +139,47 @@ public class AnalyticsService(CraftQuestDbContext dbContext) : IAnalyticsService
             .Include(q => q.AnswerOptions.Where(o => o.IsActive))
             .Include(q => q.CorrectAnswerOptions)
             .ToListAsync(cancellationToken);
+
+        if (classId.HasValue || assignmentId.HasValue)
+        {
+            var sessionsQuery = dbContext.PracticeSessions
+                .AsNoTracking()
+                .Where(s => s.QuizId == quizId && s.Status == "finished");
+
+            if (assignmentId.HasValue)
+            {
+                sessionsQuery = sessionsQuery.Where(s => s.AssignmentId == assignmentId.Value);
+            }
+            else if (classId.HasValue)
+            {
+                var assignmentIds = await dbContext.Assignments
+                    .AsNoTracking()
+                    .Where(a => a.ClassId == classId.Value)
+                    .Select(a => a.AssignmentId)
+                    .ToListAsync(cancellationToken);
+
+                sessionsQuery = sessionsQuery.Where(s =>
+                    s.ClassId == classId.Value
+                    || (s.AssignmentId.HasValue && assignmentIds.Contains(s.AssignmentId.Value)));
+            }
+
+            var scopedSessions = await sessionsQuery
+                .Include(s => s.QuestionSnapshots)
+                .ThenInclude(q => q.AnswerOptionSnapshots)
+                .ToListAsync(cancellationToken);
+
+            return new QuizAnalyticsDto
+            {
+                QuizId = quizId,
+                TotalPracticeSessions = scopedSessions.Count,
+                Questions = DistractorAnalyticsAggregator.BuildFromSessions(questions, scopedSessions),
+            };
+        }
+
+        var totalSessions = await dbContext.PracticeSessions
+            .CountAsync(
+                s => s.QuizId == quizId && s.Status == "finished",
+                cancellationToken);
 
         var questionIds = questions.Select(q => q.QuestionId).ToList();
         var questionStats = await dbContext.QuestionStats

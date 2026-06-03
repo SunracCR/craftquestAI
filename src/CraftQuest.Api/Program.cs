@@ -33,8 +33,11 @@ builder.Services.AddCraftQuestAuth(builder.Configuration);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddHealthChecks()
-    .AddDbContextCheck<CraftQuestDbContext>("database");
+var healthChecks = builder.Services.AddHealthChecks();
+if (!builder.Environment.IsEnvironment("Testing"))
+{
+    healthChecks.AddDbContextCheck<CraftQuestDbContext>("database");
+}
 
 var corsSection = builder.Configuration.GetSection(CorsOptions.SectionName);
 builder.Services.Configure<CorsOptions>(corsSection);
@@ -43,7 +46,8 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("Default", policy =>
     {
-        if (builder.Environment.IsDevelopment())
+        if (builder.Environment.IsDevelopment()
+            || builder.Environment.IsEnvironment("Testing"))
         {
             policy.AllowAnyHeader()
                 .AllowAnyMethod()

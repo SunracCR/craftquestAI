@@ -10,10 +10,13 @@ import 'package:craftquest_app/core/widgets/app_section_card.dart';
 import 'package:craftquest_app/core/widgets/app_section_title.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/core/utils/billing_display.dart';
+import 'package:craftquest_app/core/utils/home_teacher_banner_prefs.dart';
 import 'package:craftquest_app/features/auth/data/models/auth_models.dart';
 import 'package:craftquest_app/features/billing/data/billing_repository.dart';
 import 'package:craftquest_app/features/billing/data/models/billing_models.dart';
 import 'package:craftquest_app/features/billing/presentation/teacher_upgrade_page.dart';
+import 'package:craftquest_app/core/utils/billing_plan_access.dart';
+import 'package:craftquest_app/features/billing/presentation/ai_credit_packs_page.dart';
 import 'package:craftquest_app/features/billing/presentation/upgrade_plan_page.dart';
 import 'package:craftquest_app/features/ai_generation/presentation/ai_generation_hub_page.dart';
 import 'package:craftquest_app/features/quizzes/presentation/quiz_list_page.dart';
@@ -22,11 +25,11 @@ import 'package:craftquest_app/features/sharing/presentation/redeem_code_page.da
 import 'package:craftquest_app/features/student/presentation/student_assignments_page.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 class HomePage extends StatefulWidget {
-  const HomePage({super.key, required this.user});
+  const HomePage({super.key, required this.user, this.onOpenPrepPlus});
 
   final UserProfileModel user;
+  final VoidCallback? onOpenPrepPlus;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -34,30 +37,56 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   UserBillingModel? _billing;
-  bool _teacherBannerDismissed = false;
+  bool _teacherBannerHidden = true;
 
   bool get _showTeacherBanner =>
-      !_teacherBannerDismissed &&
+      !_teacherBannerHidden &&
       !widget.user.roles.contains('teacher') &&
       (_billing == null || _billing!.plan.code != 'teacher');
+
+  String? get _planCode => _billing?.plan.code;
+
+  bool get _isProPlan =>
+      _planCode != null && _planCode!.toLowerCase() == 'pro';
 
   @override
   void initState() {
     super.initState();
-    _load();
-    _loadBannerPref();
+    _initHome();
   }
 
-  Future<void> _loadBannerPref() async {
-    final prefs = await SharedPreferences.getInstance();
-    final dismissed = prefs.getBool('teacher_banner_dismissed') ?? false;
-    if (dismissed && mounted) setState(() => _teacherBannerDismissed = true);
+  Future<void> _initHome() async {
+    await _load();
+    await _refreshBannerVisibility(markShownIfVisible: true);
+  }
+
+  Future<void> _refreshBannerVisibility({bool markShownIfVisible = false}) async {
+    final hiddenByPrefs = await HomeTeacherBannerPrefs.isHidden(
+      userId: widget.user.userId,
+      planCode: _planCode,
+    );
+    if (!mounted) return;
+
+    final eligible = !widget.user.roles.contains('teacher') &&
+        (_billing == null || _billing!.plan.code != 'teacher');
+    final willShow = !hiddenByPrefs && eligible;
+
+    if (willShow && markShownIfVisible) {
+      await HomeTeacherBannerPrefs.markSuppressedForCurrentPeriod(
+        userId: widget.user.userId,
+        planCode: _planCode,
+      );
+    }
+
+    setState(() => _teacherBannerHidden = !willShow);
   }
 
   Future<void> _dismissBanner() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('teacher_banner_dismissed', true);
-    if (mounted) setState(() => _teacherBannerDismissed = true);
+    await HomeTeacherBannerPrefs.dismiss(
+      userId: widget.user.userId,
+      planCode: _planCode,
+    );
+    if (mounted) setState(() => _teacherBannerHidden = true);
   }
 
   Future<void> _load() async {
@@ -84,11 +113,21 @@ class _HomePageState extends State<HomePage> {
     final rolesLabel =
         UserRoleLabels.formatRoles(widget.user.roles, l10n);
     final isTeacher = widget.user.roles.contains('teacher');
+    final subscriptionRenewalLine = _billing == null
+        ? null
+        : BillingDisplay.subscriptionStatusLine(
+            context,
+            l10n,
+            subscription: _billing!.subscription,
+          );
 
     return EdgeAwareScaffold(
       appBar: craftQuestAppBar(title: l10n.appTitle),
       body: RefreshIndicator(
-        onRefresh: _load,
+        onRefresh: () async {
+          await _load();
+          await _refreshBannerVisibility(markShownIfVisible: true);
+        },
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
@@ -146,11 +185,12 @@ class _HomePageState extends State<HomePage> {
                   user: widget.user,
                   onUpgraded: () async {
                     await _load();
-                    if (mounted) {
-                      setState(() => _teacherBannerDismissed = false);
-                    }
+                    await _refreshBannerVisibility(markShownIfVisible: true);
                   },
                   onDismiss: _dismissBanner,
+                  dismissTooltip: _isProPlan
+                      ? l10n.homeTeacherBannerDismissTooltipMonthly
+                      : l10n.homeTeacherBannerDismissTooltipWeekly,
                 ),
               ),
             Padding(
@@ -176,6 +216,23 @@ class _HomePageState extends State<HomePage> {
                           ),
                         );
                       },
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  AppSectionTitle(title: l10n.homePrepPlusCardTitle),
+                  const SizedBox(height: AppSpacing.xs),
+                  AppSectionCard(
+                    variant: AppCardVariant.highlight,
+                    padding: EdgeInsets.zero,
+                    child: ListTile(
+                      leading: Icon(
+                        Icons.menu_book_rounded,
+                        color: AppColors.accentGold,
+                      ),
+                      title: Text(l10n.homePrepPlusCardTitle),
+                      subtitle: Text(l10n.homePrepPlusCardSubtitle),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: widget.onOpenPrepPlus,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.lg),
@@ -326,6 +383,19 @@ class _HomePageState extends State<HomePage> {
                                       value: '${_billing!.credits.aiCredits}',
                                       color: AppColors.accentViolet,
                                     ),
+                                    if (subscriptionRenewalLine != null) ...[
+                                      const SizedBox(height: AppSpacing.sm),
+                                      Text(
+                                        subscriptionRenewalLine,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: AppColors.textSecondary,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                      ),
+                                    ],
                                     const SizedBox(height: AppSpacing.md),
                                     AppGradientPrimaryButton(
                                       label: l10n.upgradePlanAction,
@@ -344,6 +414,30 @@ class _HomePageState extends State<HomePage> {
                                         }
                                       },
                                     ),
+                                    if (BillingPlanAccess.canBuyAiCreditPacks(
+                                      _billing?.plan.code,
+                                    )) ...[
+                                      const SizedBox(height: AppSpacing.sm),
+                                      OutlinedButton.icon(
+                                        onPressed: () async {
+                                          final bought =
+                                              await Navigator.of(context)
+                                                  .push<bool>(
+                                            MaterialPageRoute<bool>(
+                                              builder: (_) =>
+                                                  const AiCreditPacksPage(),
+                                            ),
+                                          );
+                                          if (bought == true) {
+                                            await _load();
+                                          }
+                                        },
+                                        icon: const Icon(
+                                          Icons.auto_awesome_outlined,
+                                        ),
+                                        label: Text(l10n.homeBuyAiCreditsAction),
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),
@@ -376,11 +470,13 @@ class _TeacherProminentBanner extends StatelessWidget {
     required this.user,
     required this.onUpgraded,
     required this.onDismiss,
+    required this.dismissTooltip,
   });
 
   final UserProfileModel user;
   final Future<void> Function() onUpgraded;
   final VoidCallback onDismiss;
+  final String dismissTooltip;
 
   @override
   Widget build(BuildContext context) {
@@ -494,7 +590,7 @@ class _TeacherProminentBanner extends StatelessWidget {
             child: IconButton(
               icon: const Icon(Icons.close_rounded,
                   size: 16, color: AppColors.textSecondary),
-              tooltip: l10n.homeTeacherBannerDismissTooltip,
+              tooltip: dismissTooltip,
               constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
               padding: EdgeInsets.zero,
               onPressed: onDismiss,

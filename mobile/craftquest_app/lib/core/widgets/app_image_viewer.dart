@@ -1,3 +1,4 @@
+import 'package:craftquest_app/core/widgets/craft_quest_network_image.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
@@ -22,15 +23,9 @@ class AppImageViewer {
                 child: InteractiveViewer(
                   minScale: 0.5,
                   maxScale: 4,
-                  child: Image.network(
-                    imageUrl,
+                  child: CraftQuestNetworkImage(
+                    imageUrl: imageUrl,
                     fit: BoxFit.contain,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return const Center(
-                        child: CircularProgressIndicator(color: Colors.white),
-                      );
-                    },
                     errorBuilder: (_, __, ___) => Center(
                       child: Text(
                         l10n.imageLoadError,

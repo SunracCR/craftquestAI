@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:craftquest_app/core/billing/payment_platform.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
@@ -9,7 +10,11 @@ import 'package:craftquest_app/core/widgets/app_page_header.dart';
 import 'package:craftquest_app/core/widgets/app_section_card.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
+import 'package:craftquest_app/features/billing/presentation/billing_cycle_selector.dart';
+import 'package:craftquest_app/features/billing/presentation/current_plan_subscription_banner.dart';
 import 'package:craftquest_app/features/billing/presentation/plan_upgrade_highlights.dart';
+import 'package:craftquest_app/features/billing/presentation/subscription_cancel_flow.dart';
+import 'package:craftquest_app/features/billing/presentation/subscription_resume_flow.dart';
 import 'package:craftquest_app/features/billing/data/billing_repository.dart';
 import 'package:craftquest_app/features/billing/data/models/billing_models.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
@@ -31,8 +36,12 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
 
   List<UpgradeablePlanModel> _plans = [];
   List<ProductDetails> _storeProducts = [];
+  UserBillingModel? _billing;
+  BillingCycle _billingCycle = BillingCycle.monthly;
   bool _loading = true;
   bool _purchasing = false;
+  bool _cancelling = false;
+  bool _resuming = false;
   String? _error;
   StreamSubscription<List<PurchaseDetails>>? _purchaseSub;
   bool _storeAvailable = false;
@@ -65,6 +74,12 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
     });
     try {
       final plans = await _repository.getUpgradeablePlans();
+      UserBillingModel? billing;
+      try {
+        billing = await _repository.getMyBilling();
+      } catch (_) {
+        billing = null;
+      }
       _storeAvailable =
           _supportsStorePurchase && await InAppPurchase.instance.isAvailable();
 
@@ -72,11 +87,15 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
       if (_storeAvailable) {
         final ids = <String>{};
         for (final plan in plans) {
-          if (plan.googlePlayProductId != null) {
-            ids.add(plan.googlePlayProductId!);
-          }
-          if (plan.appStoreProductId != null) {
-            ids.add(plan.appStoreProductId!);
+          for (final id in [
+            plan.googlePlayProductId,
+            plan.googlePlayAnnualProductId,
+            plan.appStoreProductId,
+            plan.appStoreAnnualProductId,
+          ]) {
+            if (id != null && id.isNotEmpty) {
+              ids.add(id);
+            }
           }
         }
         if (ids.isNotEmpty) {
@@ -89,6 +108,7 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
       setState(() {
         _plans = plans;
         _storeProducts = storeProducts;
+        _billing = billing;
         _loading = false;
       });
     } on DioException catch (e) {
@@ -108,9 +128,10 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
 
   Future<void> _buyWithStore(UpgradeablePlanModel plan) async {
     final l10n = AppLocalizations.of(context)!;
-    final productId = defaultTargetPlatform == TargetPlatform.iOS
-        ? plan.appStoreProductId
-        : plan.googlePlayProductId;
+    final productId = plan.storeProductId(
+      isIos: defaultTargetPlatform == TargetPlatform.iOS,
+      billingCycle: _billingCycle.apiValue,
+    );
 
     if (productId == null || productId.isEmpty) {
       context.showErrorSnackBar(l10n.storeProductNotConfigured);
@@ -138,25 +159,32 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
     final l10n = AppLocalizations.of(context)!;
     setState(() => _purchasing = true);
     try {
-      final order = await _repository.createPayPalOrder(plan.code);
-      if (order.mockMode) {
-        final captured = await _repository.capturePayPalOrder(order.orderId);
+      final subscription = await _repository.createPayPalSubscription(
+        plan.code,
+        billingCycle: _billingCycle.apiValue,
+      );
+      if (subscription.mockMode) {
+        final activated = await _repository.activatePayPalSubscription(
+          subscription.subscriptionId,
+          billingCycle: _billingCycle.apiValue,
+        );
         if (!mounted) return;
         context.showSuccessSnackBar(
           l10n.upgradeSuccess(
-            BillingDisplay.localizedPlanName(l10n, code: captured.planCode),
+            BillingDisplay.localizedPlanName(l10n, code: activated.planCode),
           ),
         );
         Navigator.of(context).pop(true);
         return;
       }
 
-      if (order.approvalUrl != null && order.approvalUrl!.isNotEmpty) {
-        final uri = Uri.parse(order.approvalUrl!);
+      if (subscription.approvalUrl != null &&
+          subscription.approvalUrl!.isNotEmpty) {
+        final uri = Uri.parse(subscription.approvalUrl!);
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
           if (!mounted) return;
-          context.showSuccessSnackBar(l10n.paypalAwaitingCapture);
+          context.showSuccessSnackBar(l10n.paypalAwaitingSubscriptionActivation);
         }
       }
     } on DioException catch (e) {
@@ -165,6 +193,66 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
     } finally {
       if (mounted) setState(() => _purchasing = false);
     }
+  }
+
+  bool get _showCurrentPlanBanner {
+    final billing = _billing;
+    if (billing == null) {
+      return false;
+    }
+    final code = billing.plan.code.toLowerCase();
+    return code == 'pro' || code == 'premium';
+  }
+
+  Future<void> _cancelSubscription() async {
+    final subscription = _billing?.subscription;
+    if (subscription == null) {
+      return;
+    }
+    await SubscriptionCancelFlow.showCancelDialog(
+      context: context,
+      providerCode: subscription.providerCode,
+      onCompleted: () async {
+        setState(() => _cancelling = true);
+        try {
+          await _load();
+        } finally {
+          if (mounted) setState(() => _cancelling = false);
+        }
+      },
+    );
+  }
+
+  Future<void> _resumeSubscription() async {
+    final subscription = _billing?.subscription;
+    if (subscription == null) {
+      return;
+    }
+    await SubscriptionResumeFlow.showResumeDialog(
+      context: context,
+      providerCode: subscription.providerCode,
+      onCompleted: () async {
+        setState(() => _resuming = true);
+        try {
+          await _load();
+        } finally {
+          if (mounted) setState(() => _resuming = false);
+        }
+      },
+      onRequiresResubscribe: () async {
+        final code = _billing?.plan.code ?? 'pro';
+        final plan = _plans
+            .where((p) => p.code.toLowerCase() == code.toLowerCase())
+            .firstOrNull;
+        if (plan != null) {
+          if (_supportsStorePurchase && _storeAvailable) {
+            await _buyWithStore(plan);
+          } else if (PaymentPlatform.supportsPayPalCheckout) {
+            await _buyWithPayPal(plan);
+          }
+        }
+      },
+    );
   }
 
   Future<void> _onPurchaseUpdate(List<PurchaseDetails> purchases) async {
@@ -182,6 +270,7 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
             productId: purchase.productID,
             purchaseToken: token.isNotEmpty ? token : purchase.purchaseID ?? '',
             transactionId: purchase.purchaseID,
+            billingCycle: _billingCycle.apiValue,
           );
           if (purchase.pendingCompletePurchase) {
             await InAppPurchase.instance.completePurchase(purchase);
@@ -230,11 +319,34 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
                     AppPageHeader(
                       child: Padding(
                         padding: const EdgeInsets.all(16),
-                        child: Text(
-                          l10n.upgradePlanSubtitle,
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                color: AppColors.textSecondary,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              l10n.upgradePlanSubtitle,
+                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                            ),
+                            if (_plans.any((p) => !p.isInstitutionPlan)) ...[
+                              const SizedBox(height: 16),
+                              Text(
+                                l10n.subscriptionAutoRenewDisclaimer,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(color: AppColors.textSecondary),
                               ),
+                              const SizedBox(height: 12),
+                              BillingCycleSelector(
+                                value: _billingCycle,
+                                enabled: !_purchasing,
+                                onChanged: (cycle) {
+                                  setState(() => _billingCycle = cycle);
+                                },
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                     ),
@@ -242,6 +354,21 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Column(
                         children: [
+                          if (_showCurrentPlanBanner && _billing != null) ...[
+                            CurrentPlanSubscriptionBanner(
+                              planName: BillingDisplay.localizedPlanName(
+                                l10n,
+                                code: _billing!.plan.code,
+                                name: _billing!.plan.name,
+                              ),
+                              subscription: _billing!.subscription,
+                              onCancelPressed: _cancelSubscription,
+                              cancelling: _cancelling,
+                              onResumePressed: _resumeSubscription,
+                              resuming: _resuming,
+                            ),
+                            const SizedBox(height: 16),
+                          ],
                           ..._plans.asMap().entries.map(
                                 (e) => _planCard(e.value, l10n, e.key),
                               ),
@@ -262,17 +389,28 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
   }
 
   Widget _planCard(UpgradeablePlanModel plan, AppLocalizations l10n, int index) {
-    final price = BillingDisplay.formatMonthlyPriceWithPeriod(
+    final price = BillingDisplay.formatPlanPrice(
       context,
       l10n,
-      plan.monthlyPrice,
+      monthlyPrice: plan.monthlyPrice,
+      annualPrice: plan.annualPrice,
+      cycle: _billingCycle,
     );
     final planName = BillingDisplay.localizedPlanName(
       l10n,
       code: plan.code,
       name: plan.name,
     );
-    final highlights = PlanUpgradeHighlights.forPlanCode(l10n, plan.code);
+    final highlights = PlanUpgradeHighlights.forPlan(
+      l10n,
+      plan,
+      currentEntitlements: _billing?.entitlements ??
+          const PlanEntitlementsModel(
+            monthlyAiCredits: 0,
+            monthlyShareCodes: 0,
+            currentRedeemedSharedQuizzes: 0,
+          ),
+    );
 
     final accent = switch (index % 3) {
       0 => AppColors.accent,
@@ -341,23 +479,32 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
               ),
             ],
             const SizedBox(height: 16),
-            if (!kIsWeb && _storeAvailable)
-              FilledButton(
-                onPressed: _purchasing ? null : () => _buyWithStore(plan),
-                child: _purchasing
-                    ? const AppButtonLoader()
-                    : Text(l10n.buyWithStoreAction),
-              ),
-            if (kIsWeb || kDebugMode) ...[
-              const SizedBox(height: 8),
-              OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: accent,
-                  side: BorderSide(color: accent.withValues(alpha: 0.6)),
+            if (plan.isInstitutionPlan)
+              Text(
+                l10n.institutionPlanContactHint,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+              )
+            else ...[
+              if (!kIsWeb && _storeAvailable)
+                FilledButton(
+                  onPressed: _purchasing ? null : () => _buyWithStore(plan),
+                  child: _purchasing
+                      ? const AppButtonLoader()
+                      : Text(l10n.buyWithStoreAction),
                 ),
-                onPressed: _purchasing ? null : () => _buyWithPayPal(plan),
-                child: Text(l10n.buyWithPayPalAction),
-              ),
+              if (PaymentPlatform.supportsPayPalCheckout) ...[
+                const SizedBox(height: 8),
+                OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: accent,
+                    side: BorderSide(color: accent.withValues(alpha: 0.6)),
+                  ),
+                  onPressed: _purchasing ? null : () => _buyWithPayPal(plan),
+                  child: Text(l10n.buyWithPayPalAction),
+                ),
+              ],
             ],
           ],
                   ),

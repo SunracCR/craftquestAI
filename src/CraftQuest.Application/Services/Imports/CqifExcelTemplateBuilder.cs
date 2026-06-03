@@ -15,6 +15,10 @@ public static class CqifExcelTemplateBuilder
     ];
 
     private const int TypeColumnIndex = 2;
+    private const int CorrectColumnIndex = 7;
+    private const int PointsColumnIndex = 8;
+    private const int SectionColumnIndex = 9;
+    private const int JustificationColumnIndex = 10;
     private const int FirstDataRow = 2;
     private const int LastDataRow = 500;
 
@@ -57,11 +61,16 @@ public static class CqifExcelTemplateBuilder
                 }
             }
 
-            sheet.Cell(rowIndex, 7).Value = example.Correct;
-            sheet.Cell(rowIndex, 8).Value = example.Points;
+            sheet.Cell(rowIndex, CorrectColumnIndex).Value = example.Correct;
+            sheet.Cell(rowIndex, PointsColumnIndex).Value = example.Points;
             if (!string.IsNullOrWhiteSpace(example.Section))
             {
-                sheet.Cell(rowIndex, 9).Value = example.Section;
+                sheet.Cell(rowIndex, SectionColumnIndex).Value = example.Section;
+            }
+
+            if (!string.IsNullOrWhiteSpace(example.Justification))
+            {
+                sheet.Cell(rowIndex, JustificationColumnIndex).Value = example.Justification;
             }
 
             rowIndex++;

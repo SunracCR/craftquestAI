@@ -356,7 +356,20 @@ public class ShareCodeService(
             return true;
         }
 
-        if (quiz.Visibility is "public" or "curated")
+        if (quiz.Visibility == "public")
+        {
+            return true;
+        }
+
+        var now = DateTime.UtcNow;
+
+        if (await dbContext.QuizAccesses.AnyAsync(
+                a => a.UserId == userId
+                    && a.QuizId == quizId
+                    && a.AssignmentId == null
+                    && a.ClassId == null
+                    && a.AccessType == "redeemed",
+                cancellationToken))
         {
             return true;
         }
@@ -364,8 +377,9 @@ public class ShareCodeService(
         if (await dbContext.QuizAccesses.AnyAsync(
                 a => a.UserId == userId
                     && a.QuizId == quizId
-                    && a.AssignmentId == null
-                    && a.AccessType == "redeemed",
+                    && a.AccessType == "purchase"
+                    && a.ExpiresAt != null
+                    && a.ExpiresAt > now,
                 cancellationToken))
         {
             return true;

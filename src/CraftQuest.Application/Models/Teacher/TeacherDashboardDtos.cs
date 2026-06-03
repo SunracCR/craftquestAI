@@ -4,7 +4,8 @@ public sealed class TeacherDashboardDto
 {
     public required int TotalStudents { get; init; }
     public required int ActiveClasses { get; init; }
-    public required int PublishedQuizzes { get; init; }
+    /// <summary>Distinct quizzes linked to active, non-archived assignments in the teacher's classes.</summary>
+    public required int AssignedQuizzes { get; init; }
     public required int SessionsThisWeek { get; init; }
     public required int UniqueActiveStudentsThisWeek { get; init; }
     public required IReadOnlyList<ActivityFeedItemDto> RecentActivity { get; init; }

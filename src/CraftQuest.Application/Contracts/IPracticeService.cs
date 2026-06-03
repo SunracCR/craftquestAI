@@ -48,6 +48,11 @@ public interface IPracticeService
         Guid sessionId,
         CancellationToken cancellationToken = default);
 
+    Task ForfeitSessionAsync(
+        Guid studentUserId,
+        Guid sessionId,
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<MyPracticeAttemptSummaryDto>> ListMyQuizAttemptsAsync(
         Guid userId,
         Guid quizId,

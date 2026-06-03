@@ -5,6 +5,8 @@ import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_bottom_bar.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/core/widgets/app_buttons.dart';
+import 'package:craftquest_app/core/widgets/app_section_card.dart';
+import 'package:craftquest_app/core/theme/app_media_display.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/core/widgets/option_image_picker.dart';
 import 'package:craftquest_app/features/quizzes/data/models/quiz_models.dart';
@@ -37,6 +39,7 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
   final _optionB = TextEditingController();
   final _optionC = TextEditingController();
   final _optionD = TextEditingController();
+  final _justificationController = TextEditingController();
 
   List<QuestionTypeModel>? _types;
   String _selectedType = 'single_choice';
@@ -107,6 +110,16 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
         }
       }
     }
+    final justification = question.justification;
+    if (justification != null) {
+      _justificationController.text = justification.text?.trim() ?? '';
+    }
+  }
+
+  Map<String, dynamic>? _justificationPayload() {
+    final text = _justificationController.text.trim();
+    if (text.isEmpty) return null;
+    return {'text': text};
   }
 
   Future<void> _loadTypes() async {
@@ -162,6 +175,7 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
   void dispose() {
     _textController.dispose();
     _pointsController.dispose();
+    _justificationController.dispose();
     _optionA.dispose();
     _optionB.dispose();
     _optionC.dispose();
@@ -200,18 +214,22 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
     }
 
     void addOption(String key, TextEditingController controller, int order) {
-      if (controller.text.trim().isNotEmpty) {
-        final option = <String, dynamic>{
-          'clientKey': key,
-          'text': controller.text.trim(),
-          'defaultSortOrder': order,
-        };
-        final mediaId = _optionMediaIds[key];
-        if (mediaId != null && mediaId.isNotEmpty) {
-          option['mediaAssetId'] = mediaId;
-        }
-        options.add(option);
+      final text = controller.text.trim();
+      final mediaId = _optionMediaIds[key];
+      final hasMedia = mediaId != null && mediaId.isNotEmpty;
+      if (text.isEmpty && !hasMedia) {
+        return;
       }
+
+      final option = <String, dynamic>{
+        'clientKey': key,
+        'text': text.isNotEmpty ? text : ' ',
+        'defaultSortOrder': order,
+      };
+      if (hasMedia) {
+        option['mediaAssetId'] = mediaId;
+      }
+      options.add(option);
     }
 
     if (_isTrueFalse) {
@@ -237,8 +255,13 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
       final answerOptions = options.where(
         (o) => o['clientKey'] != kQuestionImageOptionKey,
       );
-      final hasImage = answerOptions.any((o) => o['mediaAssetId'] != null);
-      if (!hasImage) {
+      final optionsWithImage = answerOptions
+          .where((o) {
+            final id = o['mediaAssetId'];
+            return id is String && id.isNotEmpty;
+          })
+          .length;
+      if (optionsWithImage < 2) {
         context.showErrorSnackBar(l10n.requireOptionImage);
         return;
       }
@@ -267,6 +290,7 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
           points: points,
           answerOptions: options,
           correctAnswerKeys: correctKeys,
+          justification: _justificationPayload(),
         );
       } else {
         await _repository.createQuestion(
@@ -276,6 +300,7 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
           points: points,
           answerOptions: options,
           correctAnswerKeys: correctKeys,
+          justification: _justificationPayload(),
         );
       }
       if (!mounted) return;
@@ -432,6 +457,51 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
     return null;
   }
 
+  Widget _sectionHeader({
+    required IconData icon,
+    required String title,
+    required Color accent,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: accent),
+        const SizedBox(width: AppSpacing.sm),
+        Text(
+          title,
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: accent,
+                fontWeight: FontWeight.w600,
+              ),
+        ),
+      ],
+    );
+  }
+
+  Widget _accentSectionCard({
+    required Color accent,
+    required Widget child,
+  }) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppColors.radiusSm),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            accent.withValues(alpha: 0.14),
+            AppColors.surfaceHighlight.withValues(alpha: 0.9),
+          ],
+        ),
+        border: Border.all(color: accent.withValues(alpha: 0.45)),
+      ),
+      child: AppSectionCard(
+        variant: AppCardVariant.highlight,
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: child,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -452,61 +522,138 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
       body: ListView(
         padding: AppSpacing.pageVertical,
         children: [
-          if (_types != null)
-            DropdownButtonFormField<String>(
-              initialValue: _selectedType,
-              decoration: InputDecoration(labelText: l10n.questionTypeLabel),
-              items: _types!
-                  .map(
-                    (t) => DropdownMenuItem(
-                      value: t.code,
-                      child: Text(t.code.displayLabel(l10n)),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (v) {
-                if (v != null && v != _selectedType) {
-                  setState(() {
-                    _selectedType = v;
-                    _questionMediaId = null;
-                    _resetCorrectSelection();
-                  });
-                }
-              },
-            ),
-          _typeHint(l10n),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _pointsController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(
-              labelText: l10n.questionPointsLabel,
-              hintText: l10n.questionPointsHint,
+          _accentSectionCard(
+            accent: AppColors.accent,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _sectionHeader(
+                  icon: Icons.quiz_outlined,
+                  title: l10n.questionTextLabel,
+                  accent: AppColors.accent,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                if (_types != null)
+                  DropdownButtonFormField<String>(
+                    initialValue: _selectedType,
+                    decoration: InputDecoration(labelText: l10n.questionTypeLabel),
+                    items: _types!
+                        .map(
+                          (t) => DropdownMenuItem(
+                            value: t.code,
+                            child: Text(t.code.displayLabel(l10n)),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (v) {
+                      if (v != null && v != _selectedType) {
+                        setState(() {
+                          _selectedType = v;
+                          _questionMediaId = null;
+                          _resetCorrectSelection();
+                        });
+                      }
+                    },
+                  ),
+                _typeHint(l10n),
+                const SizedBox(height: AppSpacing.md),
+                TextField(
+                  controller: _pointsController,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  decoration: InputDecoration(
+                    labelText: l10n.questionPointsLabel,
+                    hintText: l10n.questionPointsHint,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextField(
+                  controller: _textController,
+                  maxLines: 3,
+                  decoration: InputDecoration(labelText: l10n.questionTextLabel),
+                ),
+                if (_showQuestionImage) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  OptionImagePicker(
+                    label: l10n.questionImageLabel,
+                    mediaAssetId: _questionMediaId,
+                    previewHeight: AppMediaDisplay.questionImageHeight,
+                    onChanged: (id) => setState(() => _questionMediaId = id),
+                  ),
+                ],
+              ],
             ),
           ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _textController,
-            maxLines: 3,
-            decoration: InputDecoration(labelText: l10n.questionTextLabel),
-          ),
-          if (_showQuestionImage) ...[
-            const SizedBox(height: 16),
-            OptionImagePicker(
-              label: l10n.questionImageLabel,
-              mediaAssetId: _questionMediaId,
-              onChanged: (id) => setState(() => _questionMediaId = id),
+          const SizedBox(height: AppSpacing.md),
+          _accentSectionCard(
+            accent: AppColors.accentMint,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _sectionHeader(
+                  icon: Icons.menu_book_outlined,
+                  title: l10n.questionJustificationLabel,
+                  accent: AppColors.accentMint,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  l10n.questionJustificationReviewHint,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                        height: 1.35,
+                      ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextField(
+                  controller: _justificationController,
+                  maxLines: 4,
+                  decoration: InputDecoration(
+                    hintText: l10n.questionJustificationHint,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
           if (!_isTrueFalse) ...[
-            const SizedBox(height: 16),
-            _optionField('A', _optionA, l10n),
-            _optionField('B', _optionB, l10n),
-            _optionField('C', _optionC, l10n),
-            _optionField('D', _optionD, l10n),
+            const SizedBox(height: AppSpacing.md),
+            _accentSectionCard(
+              accent: AppColors.accentCool,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _sectionHeader(
+                    icon: Icons.format_list_bulleted_rounded,
+                    title: l10n.correctAnswersLabel,
+                    accent: AppColors.accentCool,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  _optionField('A', _optionA, l10n),
+                  _optionField('B', _optionB, l10n),
+                  _optionField('C', _optionC, l10n),
+                  _optionField('D', _optionD, l10n),
+                  const SizedBox(height: AppSpacing.sm),
+                  _buildCorrectSelection(l10n),
+                ],
+              ),
+            ),
+          ] else ...[
+            const SizedBox(height: AppSpacing.md),
+            _accentSectionCard(
+              accent: AppColors.accentCool,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _sectionHeader(
+                    icon: Icons.check_circle_outline,
+                    title: l10n.correctAnswerKeyLabel,
+                    accent: AppColors.accentCool,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  _buildCorrectSelection(l10n),
+                ],
+              ),
+            ),
           ],
-          const SizedBox(height: 8),
-          _buildCorrectSelection(l10n),
         ],
       ),
     );
@@ -528,10 +675,10 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
             OptionImagePicker(
               label: l10n.answerOptionLabel(key),
               mediaAssetId: _optionMediaIds[key],
-              onChanged: (id) {
+              onChanged: (id) => setState(() {
                 _optionMediaIds[key] = id;
                 _onOptionContentChanged(key);
-              },
+              }),
             ),
           ],
         ],

@@ -6,6 +6,7 @@ import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/features/auth/presentation/auth_bloc.dart';
 import 'package:craftquest_app/features/auth/presentation/register_page.dart';
 import 'package:craftquest_app/features/guest/presentation/guest_session_navigation.dart';
+import 'package:craftquest_app/features/guest/presentation/widgets/guest_register_benefits_promo_page.dart';
 import 'package:craftquest_app/features/practice/data/models/practice_models.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_score_summary_card.dart';
 import 'package:craftquest_app/features/teacher/presentation/teacher_session_review_page.dart';
@@ -89,8 +90,14 @@ class GuestResultPage extends StatelessWidget {
     );
   }
 
-  void _viewResults(BuildContext context) {
-    Navigator.of(context).push(
+  Future<void> _viewResults(BuildContext context) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => const GuestRegisterBenefitsPromoPage(),
+      ),
+    );
+    if (!context.mounted) return;
+    await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         builder: (_) => TeacherSessionReviewPage(
           sessionId: result.practiceSessionId,
@@ -104,10 +111,11 @@ class GuestResultPage extends StatelessWidget {
   }
 
   void _goRegister(BuildContext context) {
+    final authBloc = context.read<AuthBloc>();
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => BlocProvider.value(
-          value: context.read<AuthBloc>(),
+          value: authBloc,
           child: const RegisterPage(),
         ),
       ),

@@ -9,6 +9,7 @@ public class CraftQuestDbContext(DbContextOptions<CraftQuestDbContext> options) 
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<UserRole> UserRoles => Set<UserRole>();
     public DbSet<AuthProvider> AuthProviders => Set<AuthProvider>();
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<QuestionType> QuestionTypes => Set<QuestionType>();
     public DbSet<Plan> Plans => Set<Plan>();
     public DbSet<Quiz> Quizzes => Set<Quiz>();
@@ -16,6 +17,7 @@ public class CraftQuestDbContext(DbContextOptions<CraftQuestDbContext> options) 
     public DbSet<QuestionAnswerOption> QuestionAnswerOptions => Set<QuestionAnswerOption>();
     public DbSet<QuestionCorrectAnswerOption> QuestionCorrectAnswerOptions => Set<QuestionCorrectAnswerOption>();
     public DbSet<QuestionJustification> QuestionJustifications => Set<QuestionJustification>();
+    public DbSet<QuestionJustificationSource> QuestionJustificationSources => Set<QuestionJustificationSource>();
     public DbSet<UserQuizPracticePreference> UserQuizPracticePreferences =>
         Set<UserQuizPracticePreference>();
     public DbSet<PracticeSession> PracticeSessions => Set<PracticeSession>();
@@ -25,6 +27,7 @@ public class CraftQuestDbContext(DbContextOptions<CraftQuestDbContext> options) 
     public DbSet<QuestionImportRow> QuestionImportRows => Set<QuestionImportRow>();
     public DbSet<QuestionImportError> QuestionImportErrors => Set<QuestionImportError>();
     public DbSet<UserSubscription> UserSubscriptions => Set<UserSubscription>();
+    public DbSet<ProviderWebhookEvent> ProviderWebhookEvents => Set<ProviderWebhookEvent>();
     public DbSet<Purchase> Purchases => Set<Purchase>();
     public DbSet<CreditLedgerEntry> CreditLedgerEntries => Set<CreditLedgerEntry>();
     public DbSet<ShareCode> ShareCodes => Set<ShareCode>();
@@ -40,6 +43,10 @@ public class CraftQuestDbContext(DbContextOptions<CraftQuestDbContext> options) 
     public DbSet<TeacherClass> TeacherClasses => Set<TeacherClass>();
     public DbSet<ClassMember> ClassMembers => Set<ClassMember>();
     public DbSet<Assignment> Assignments => Set<Assignment>();
+    public DbSet<PrepCategory> PrepCategories => Set<PrepCategory>();
+    public DbSet<PrepCatalogItem> PrepCatalogItems => Set<PrepCatalogItem>();
+    public DbSet<PrepAccessOffer> PrepAccessOffers => Set<PrepAccessOffer>();
+    public DbSet<PrepSampleQuestion> PrepSampleQuestions => Set<PrepSampleQuestion>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

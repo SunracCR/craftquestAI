@@ -115,6 +115,9 @@ class AssignmentSummaryModel {
     this.startsAt,
     this.dueAt,
     this.maxAttempts,
+    this.randomizeQuestions = false,
+    this.allowStudentRandomizeQuestions = false,
+    this.forfeitExitCountsAsAttempt = false,
     required this.completedCount,
     required this.totalMembers,
     required this.createdAt,
@@ -137,6 +140,11 @@ class AssignmentSummaryModel {
           ? AssignmentDates.parseFromApi(json['dueAt'] as String)
           : null,
       maxAttempts: json['maxAttempts'] as int?,
+      randomizeQuestions: json['randomizeQuestions'] as bool? ?? false,
+      allowStudentRandomizeQuestions:
+          json['allowStudentRandomizeQuestions'] as bool? ?? false,
+      forfeitExitCountsAsAttempt:
+          json['forfeitExitCountsAsAttempt'] as bool? ?? false,
       completedCount: json['completedCount'] as int? ?? 0,
       totalMembers: json['totalMembers'] as int? ?? 0,
       createdAt: DateTime.parse(json['createdAt'] as String),
@@ -153,6 +161,9 @@ class AssignmentSummaryModel {
   final DateTime? startsAt;
   final DateTime? dueAt;
   final int? maxAttempts;
+  final bool randomizeQuestions;
+  final bool allowStudentRandomizeQuestions;
+  final bool forfeitExitCountsAsAttempt;
   final int completedCount;
   final int totalMembers;
   final DateTime createdAt;

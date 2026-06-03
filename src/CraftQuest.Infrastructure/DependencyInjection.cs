@@ -1,5 +1,6 @@
 using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Options;
+using CraftQuest.Infrastructure.Email;
 using CraftQuest.Infrastructure.Media;
 using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.HostedServices;
@@ -7,7 +8,6 @@ using CraftQuest.Infrastructure.Services;
 using CraftQuest.Infrastructure.Services.Ai;
 using CraftQuest.Infrastructure.StudyMaterials;
 using CraftQuest.Infrastructure.Security;
-using CraftQuest.Infrastructure.Services;
 using CraftQuest.Infrastructure.Services.Payments;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -21,17 +21,33 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("DefaultConnection")
-            ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
+        if (configuration.GetValue<bool>("Testing:UseInMemoryDatabase"))
+        {
+            services.AddDbContext<CraftQuestDbContext>(options =>
+                options.UseInMemoryDatabase("CraftQuestIntegrationTests"));
+        }
+        else
+        {
+            var connectionString = configuration.GetConnectionString("DefaultConnection")
+                ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
 
-        services.AddDbContext<CraftQuestDbContext>(options =>
-            options.UseSqlServer(connectionString, sql =>
-                sql.MigrationsHistoryTable("__EFMigrationsHistory", "core")));
+            services.AddDbContext<CraftQuestDbContext>(options =>
+                options.UseSqlServer(connectionString, sql =>
+                    sql.MigrationsHistoryTable("__EFMigrationsHistory", "core")));
+        }
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
+        services.Configure<PasswordResetOptions>(configuration.GetSection(PasswordResetOptions.SectionName));
+        services.Configure<ExternalAuthOptions>(configuration.GetSection(ExternalAuthOptions.SectionName));
+        services.AddMemoryCache();
+        services.AddHttpClient(nameof(AppleIdTokenValidator));
+        services.AddScoped<IGoogleIdTokenValidator, GoogleIdTokenValidator>();
+        services.AddScoped<IAppleIdTokenValidator, AppleIdTokenValidator>();
+        services.AddSingleton<IEmailSender, LoggingEmailSender>();
         services.Configure<AiOptions>(configuration.GetSection(AiOptions.SectionName));
         services.Configure<AiGenerationOptions>(configuration.GetSection(AiGenerationOptions.SectionName));
         services.Configure<MediaOptions>(configuration.GetSection(MediaOptions.SectionName));
+        services.Configure<PaymentOptions>(configuration.GetSection(PaymentOptions.SectionName));
         services.AddHttpClient("Gemini", client =>
         {
             client.Timeout = TimeSpan.FromMinutes(8);
@@ -65,11 +81,25 @@ public static class DependencyInjection
         services.AddScoped<IAiService, AiService>();
         services.AddScoped<IGuestService, GuestService>();
         services.AddHostedService<GuestCleanupHostedService>();
+        services.AddHostedService<SubscriptionRenewalHostedService>();
         services.AddScoped<IAnalyticsService, AnalyticsService>();
         services.AddSingleton<LocalMediaStorageProvider>();
         services.AddSingleton<AzureBlobMediaStorageProvider>();
         services.AddScoped<IMediaService, MediaService>();
+        services.AddScoped<IMediaAccessService, MediaAccessService>();
+        services.AddHttpClient(nameof(AppleAppStoreSubscriptionVerifier));
+        services.AddSingleton<GooglePlaySubscriptionVerifier>();
+        services.AddSingleton<AppleAppStoreSubscriptionVerifier>();
+        services.AddScoped<IMobileStoreSubscriptionVerifier, MobileStoreSubscriptionVerifier>();
+        services.AddScoped<AppleAppStoreJwsVerifier>();
+        services.AddScoped<GooglePubSubJwtValidator>();
+        services.AddScoped<PaymentWebhookSecurityService>();
+        services.AddScoped<MobileStoreWebhookProcessor>();
         services.AddScoped<IPaymentService, PaymentService>();
+        services.AddScoped<IPrepPlusAdminService, PrepPlusAdminService>();
+        services.AddScoped<IPrepPlusAccessService, PrepPlusAccessService>();
+        services.AddScoped<IPrepPlusCatalogService, PrepPlusCatalogService>();
+        services.AddScoped<IPrepPlusPaymentService, PrepPlusPaymentService>();
         services.AddHttpClient<PayPalApiClient>((sp, client) =>
         {
             var paymentOptions = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<PaymentOptions>>().Value;

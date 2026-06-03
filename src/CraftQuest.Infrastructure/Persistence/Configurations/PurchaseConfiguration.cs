@@ -16,6 +16,7 @@ public class PurchaseConfiguration : IEntityTypeConfiguration<Purchase>
         builder.Property(x => x.ProviderTransactionId).HasMaxLength(300);
         builder.Property(x => x.CurrencyCode).HasMaxLength(10);
         builder.Property(x => x.Status).HasMaxLength(30);
+        builder.Property(x => x.BillingCycle).HasMaxLength(20);
         builder.Property(x => x.Amount).HasPrecision(12, 2);
     }
 }

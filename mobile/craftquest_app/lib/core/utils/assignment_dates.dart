@@ -40,6 +40,14 @@ abstract final class AssignmentDates {
     return DateFormat.yMMMd(locale).format(DateTime(d.year, d.month, d.day));
   }
 
+  /// Fecha y hora localizadas (p. ej. intentos de invitado).
+  static String formatDateTime(BuildContext context, DateTime dateTime) {
+    final locale = Localizations.localeOf(context).toString();
+    return DateFormat.yMMMd(locale)
+        .add_jm()
+        .format(dateTime.toLocal());
+  }
+
   /// La asignación aún no abrió (hoy local es anterior al día de inicio).
   static bool isNotYetOpen(DateTime? startsAt) {
     if (startsAt == null) return false;

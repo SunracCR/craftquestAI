@@ -5,6 +5,8 @@ import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_buttons.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/features/auth/presentation/auth_bloc.dart';
+import 'package:craftquest_app/features/auth/presentation/forgot_password_page.dart';
+import 'package:craftquest_app/features/auth/presentation/widgets/oauth_sign_in_buttons.dart';
 import 'package:craftquest_app/features/auth/presentation/register_page.dart';
 import 'package:craftquest_app/features/auth/presentation/widgets/auth_premium_background.dart';
 import 'package:craftquest_app/features/auth/presentation/widgets/auth_premium_header.dart';
@@ -46,12 +48,11 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _restoreSavedCredentials() async {
     try {
-      final saved = await _credentialsStorage.read();
+      final savedEmail = await _credentialsStorage.readEmail();
       if (!mounted) return;
 
-      if (saved != null) {
-        _emailController.text = saved.email;
-        _passwordController.text = saved.password;
+      if (savedEmail != null) {
+        _emailController.text = savedEmail;
         _rememberLogin = true;
       }
     } finally {
@@ -97,10 +98,15 @@ class _LoginPageState extends State<LoginPage> {
   }) {
     return InputDecoration(
       labelText: label,
+      isDense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       prefixIcon: Icon(icon, size: 22, color: AppColors.textSecondary),
       suffixIcon: suffix,
     );
   }
+
+  static const double _loginLogoSize = 152;
+  static const double _loginMaxWidth = 420;
 
   @override
   Widget build(BuildContext context) {
@@ -108,6 +114,7 @@ class _LoginPageState extends State<LoginPage> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
+      resizeToAvoidBottomInset: true,
       body: AuthPremiumBackground(
         child: SafeArea(
           child: BlocBuilder<AuthBloc, AuthState>(
@@ -120,29 +127,31 @@ class _LoginPageState extends State<LoginPage> {
                 );
               }
 
-              return Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.md,
-                    AppSpacing.lg,
-                    AppSpacing.md,
-                    AppSpacing.lg,
-                  ),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 420),
-                    child: Column(
-                      children: [
-                        Form(
-                      key: _formKey,
-                      child: AuthPremiumCard(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            AuthPremiumHeader(
-                              title: l10n.loginTitle,
-                              subtitle: l10n.loginSubtitle,
-                            ),
-                            const SizedBox(height: 28),
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  final viewInsets = MediaQuery.viewInsetsOf(context);
+                  final keyboardOpen = viewInsets.bottom > 0;
+                  final horizontalPadding = AppSpacing.md;
+                  final maxFormWidth = _loginMaxWidth.clamp(
+                    0.0,
+                    constraints.maxWidth - horizontalPadding * 2,
+                  );
+
+                  final form = Form(
+                    key: _formKey,
+                    child: AuthPremiumCard(
+                      dense: true,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          AuthPremiumHeader(
+                            dense: true,
+                            logoSize: _loginLogoSize,
+                            title: l10n.loginTitle,
+                            subtitle: l10n.loginSubtitle,
+                          ),
+                          const SizedBox(height: AppSpacing.md),
                             AutofillGroup(
                               child: Column(
                                 children: [
@@ -164,7 +173,7 @@ class _LoginPageState extends State<LoginPage> {
                                       return null;
                                     },
                                   ),
-                                  const SizedBox(height: AppSpacing.md),
+                                  const SizedBox(height: AppSpacing.sm),
                                   TextFormField(
                                     controller: _passwordController,
                                     obscureText: _obscurePassword,
@@ -203,7 +212,33 @@ class _LoginPageState extends State<LoginPage> {
                                 ],
                               ),
                             ),
-                            const SizedBox(height: AppSpacing.sm),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                onPressed: isLoading
+                                    ? null
+                                    : () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute<void>(
+                                            builder: (_) =>
+                                                const ForgotPasswordPage(),
+                                          ),
+                                        );
+                                      },
+                                child: Text(
+                                  l10n.forgotPasswordLink,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .labelMedium
+                                      ?.copyWith(color: AppColors.accent),
+                                ),
+                              ),
+                            ),
                             _RememberCredentialsTile(
                               value: _rememberLogin,
                               label: l10n.loginRememberCredentials,
@@ -212,27 +247,39 @@ class _LoginPageState extends State<LoginPage> {
                                 setState(() => _rememberLogin = value);
                               },
                             ),
-                            const SizedBox(height: AppSpacing.lg),
+                            const SizedBox(height: AppSpacing.md),
                             AppGradientPrimaryButton(
                               label: l10n.loginAction,
                               icon: Icons.login_rounded,
                               isLoading: isLoading,
                               onPressed: _submit,
                             ),
-                            const SizedBox(height: AppSpacing.lg),
+                            const SizedBox(height: AppSpacing.md),
+                            OAuthSignInButtons(enabled: !isLoading),
+                            const SizedBox(height: AppSpacing.sm),
                             Divider(
+                              height: 1,
                               color: AppColors.textSecondary.withValues(alpha: 0.2),
                             ),
-                            const SizedBox(height: AppSpacing.md),
+                            const SizedBox(height: AppSpacing.xs),
                             Center(
                               child: TextButton(
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: AppSpacing.xs,
+                                  ),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
                                 onPressed: isLoading
                                     ? null
                                     : () {
+                                        final authBloc =
+                                            context.read<AuthBloc>();
                                         Navigator.of(context).push(
                                           MaterialPageRoute<void>(
                                             builder: (_) => BlocProvider.value(
-                                              value: context.read<AuthBloc>(),
+                                              value: authBloc,
                                               child: const RegisterPage(),
                                             ),
                                           ),
@@ -250,16 +297,53 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                               ),
                             ),
-                          ],
+                            const SizedBox(height: AppSpacing.sm),
+                            const GuestPracticePromoCard(compact: true),
+                        ],
+                      ),
+                    ),
+                  );
+
+                  final sizedForm = SizedBox(
+                    width: maxFormWidth,
+                    child: form,
+                  );
+
+                  if (keyboardOpen) {
+                    return SingleChildScrollView(
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      padding: EdgeInsets.fromLTRB(
+                        horizontalPadding,
+                        AppSpacing.xs,
+                        horizontalPadding,
+                        AppSpacing.xs + viewInsets.bottom,
+                      ),
+                      child: Center(child: sizedForm),
+                    );
+                  }
+
+                  final verticalPadding = AppSpacing.sm;
+                  final maxBodyHeight =
+                      constraints.maxHeight - verticalPadding * 2;
+                  return Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: horizontalPadding,
+                      vertical: verticalPadding,
+                    ),
+                    child: Center(
+                      child: SizedBox(
+                        width: maxFormWidth,
+                        height: maxBodyHeight,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.center,
+                          child: sizedForm,
                         ),
                       ),
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        const GuestPracticePromoCard(),
-                      ],
                     ),
-                  ),
-                ),
+                  );
+                },
               );
             },
           ),

@@ -1,4 +1,5 @@
 import 'package:craftquest_app/core/utils/assignment_dates.dart';
+import 'package:craftquest_app/features/analytics/data/models/analytics_models.dart';
 
 class AssignmentDetailModel {
   const AssignmentDetailModel({
@@ -13,6 +14,9 @@ class AssignmentDetailModel {
     this.startsAt,
     this.dueAt,
     this.maxAttempts,
+    this.randomizeQuestions = false,
+    this.allowStudentRandomizeQuestions = false,
+    this.forfeitExitCountsAsAttempt = false,
     required this.completedCount,
     required this.totalMembers,
     required this.createdAt,
@@ -37,6 +41,11 @@ class AssignmentDetailModel {
           ? AssignmentDates.parseFromApi(json['dueAt'] as String)
           : null,
       maxAttempts: json['maxAttempts'] as int?,
+      randomizeQuestions: json['randomizeQuestions'] as bool? ?? false,
+      allowStudentRandomizeQuestions:
+          json['allowStudentRandomizeQuestions'] as bool? ?? false,
+      forfeitExitCountsAsAttempt:
+          json['forfeitExitCountsAsAttempt'] as bool? ?? false,
       completedCount: json['completedCount'] as int? ?? 0,
       totalMembers: json['totalMembers'] as int? ?? 0,
       createdAt: DateTime.parse(json['createdAt'] as String),
@@ -57,6 +66,9 @@ class AssignmentDetailModel {
   final DateTime? startsAt;
   final DateTime? dueAt;
   final int? maxAttempts;
+  final bool randomizeQuestions;
+  final bool allowStudentRandomizeQuestions;
+  final bool forfeitExitCountsAsAttempt;
   final int completedCount;
   final int totalMembers;
   final DateTime createdAt;
@@ -170,6 +182,7 @@ class AssignmentAnalyticsModel {
     required this.totalSessions,
     required this.students,
     required this.hardQuestions,
+    required this.distractorQuestions,
     required this.scoreDistribution,
   });
 
@@ -194,6 +207,13 @@ class AssignmentAnalyticsModel {
           .map((e) => AssignmentQuestionDifficultyModel.fromJson(
               e as Map<String, dynamic>))
           .toList(),
+      distractorQuestions: (json['distractorQuestions'] as List<dynamic>? ?? [])
+          .map(
+            (e) => QuestionAnalyticsModel.fromJson(
+              e as Map<String, dynamic>,
+            ),
+          )
+          .toList(),
       scoreDistribution: (json['scoreDistribution'] as List<dynamic>? ?? [])
           .map((e) => ScoreDistributionBucketModel.fromJson(
               e as Map<String, dynamic>))
@@ -213,6 +233,7 @@ class AssignmentAnalyticsModel {
   final int totalSessions;
   final List<AssignmentStudentProgressModel> students;
   final List<AssignmentQuestionDifficultyModel> hardQuestions;
+  final List<QuestionAnalyticsModel> distractorQuestions;
   final List<ScoreDistributionBucketModel> scoreDistribution;
 }
 

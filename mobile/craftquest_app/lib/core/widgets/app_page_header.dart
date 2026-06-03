@@ -9,19 +9,22 @@ class AppPageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.accent.withValues(alpha: 0.14),
-            AppColors.accentCool.withValues(alpha: 0.1),
-            Colors.transparent,
-          ],
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppColors.radiusSm),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppColors.accent.withValues(alpha: 0.14),
+              AppColors.accentCool.withValues(alpha: 0.1),
+              Colors.transparent,
+            ],
+          ),
         ),
+        child: child,
       ),
-      child: child,
     );
   }
 }

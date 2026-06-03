@@ -220,7 +220,7 @@ class QuizGenerationParameters {
     this.topicFocus,
     this.pedagogicalGoal = 'assessment',
     this.strictSourceOnly = true,
-    this.includeExplanations = false,
+    this.includeExplanations = true,
     this.preset,
     this.pageFrom = 0,
     this.pageTo = 0,

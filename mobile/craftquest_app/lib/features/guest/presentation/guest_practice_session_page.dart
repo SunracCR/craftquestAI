@@ -4,6 +4,7 @@ import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/api_client.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
+import 'package:craftquest_app/core/theme/app_media_display.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_answer_tile.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
@@ -327,11 +328,12 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
         sessionId: session.practiceSessionId,
       );
       if (!mounted) return;
+      final guestCubit = context.read<GuestSessionCubit>();
       final elapsed = _showTimer ? _totalElapsed : null;
       await Navigator.of(context).pushReplacement(
         MaterialPageRoute<void>(
           builder: (_) => BlocProvider.value(
-            value: context.read<GuestSessionCubit>(),
+            value: guestCubit,
             child: GuestResultPage(
               result: result,
               quizTitle: widget.quizTitle,
@@ -511,7 +513,7 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
                                     AppZoomableNetworkImage(
                                       imageUrl: _resolveMediaUrl(
                                           question.questionMediaUrl)!,
-                                      height: 200,
+                                      height: AppMediaDisplay.questionImageHeight,
                                       borderRadius: BorderRadius.circular(
                                           AppColors.radiusSm),
                                     ),

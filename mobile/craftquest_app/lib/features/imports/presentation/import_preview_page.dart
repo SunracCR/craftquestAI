@@ -78,6 +78,14 @@ class _ImportPreviewPageState extends State<ImportPreviewPage> {
       if (!mounted) return;
       setState(() {
         _preview = preview;
+        _status = ImportStatusModel(
+          importId: preview.importId,
+          status: preview.status,
+          totalQuestionsDetected: preview.totalQuestionsDetected,
+          validQuestions: preview.validQuestions,
+          questionsWithWarnings: preview.questionsWithWarnings,
+          questionsWithErrors: preview.questionsWithErrors,
+        );
         _loading = false;
       });
     } on DioException catch (e) {
@@ -93,6 +101,40 @@ class _ImportPreviewPageState extends State<ImportPreviewPage> {
         _loading = false;
       });
     }
+  }
+
+  String _summaryText(AppLocalizations l10n) {
+    if (_loading) {
+      return l10n.importSummaryLoading;
+    }
+
+    final preview = _preview;
+    if (preview != null) {
+      if (preview.totalQuestionsDetected == 0) {
+        return l10n.importSummaryEmpty;
+      }
+      if (preview.questionsWithErrors == 0) {
+        return l10n.importSummaryReady(preview.validQuestions);
+      }
+      return l10n.importSummaryWithErrors(
+        preview.validQuestions,
+        preview.totalQuestionsDetected,
+        preview.questionsWithErrors,
+      );
+    }
+
+    final status = _status ?? widget.initialStatus;
+    if (status.totalQuestionsDetected == 0 && status.validQuestions == 0) {
+      return l10n.importSummaryEmpty;
+    }
+    if (status.questionsWithErrors == 0) {
+      return l10n.importSummaryReady(status.validQuestions);
+    }
+    return l10n.importSummaryWithErrors(
+      status.validQuestions,
+      status.totalQuestionsDetected,
+      status.questionsWithErrors,
+    );
   }
 
   Future<void> _confirm() async {
@@ -131,15 +173,17 @@ class _ImportPreviewPageState extends State<ImportPreviewPage> {
     final status = _status ?? widget.initialStatus;
     final importableCount =
         _preview?.importableQuestionCount ?? _preview?.questions.length;
-    final canConfirm = _loading
-        ? status.validQuestions > 0
-        : (importableCount ?? status.validQuestions) > 0;
+    final errorCount =
+        _preview?.questionsWithErrors ?? status.questionsWithErrors;
+    final validCount = _preview?.validQuestions ?? status.validQuestions;
+    final canConfirm = !_loading &&
+        (importableCount ?? validCount) > 0;
 
     return EdgeAwareScaffold(
       appBar: craftQuestAppBar(title: l10n.importPreviewTitle),
       bottomBar: AppBottomActionBar(
         children: [
-          if (!widget.fromAiGeneration && status.questionsWithErrors > 0)
+          if (!widget.fromAiGeneration && errorCount > 0)
             AppSecondaryButton(
               label: l10n.aiImproveImportAction,
               isLoading: _aiNormalizing,
@@ -152,15 +196,13 @@ class _ImportPreviewPageState extends State<ImportPreviewPage> {
           ),
         ],
       ),
-      body: _loading
-          ? const AppLoadingView()
-          : _error != null
-              ? AppErrorView(
-                  message: _error!,
-                  retryLabel: l10n.retry,
-                  onRetry: _load,
-                )
-              : Column(
+      body: _error != null && _preview == null
+          ? AppErrorView(
+              message: _error!,
+              retryLabel: l10n.retry,
+              onRetry: _load,
+            )
+          : Column(
                   children: [
                     Padding(
                       padding: const EdgeInsets.all(16),
@@ -172,13 +214,7 @@ class _ImportPreviewPageState extends State<ImportPreviewPage> {
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                           const SizedBox(height: 8),
-                          AppMetaText(
-                            text: l10n.importSummaryLabel(
-                              status.validQuestions,
-                              status.totalQuestionsDetected,
-                              status.questionsWithErrors,
-                            ),
-                          ),
+                          AppMetaText(text: _summaryText(l10n)),
                           if (_preview != null &&
                               !canConfirm &&
                               _preview!.questions.isNotEmpty &&
@@ -291,7 +327,9 @@ class _ImportPreviewPageState extends State<ImportPreviewPage> {
                         ),
                       ),
                     Expanded(
-                      child: ListView.separated(
+                      child: _loading
+                          ? const AppLoadingView()
+                          : ListView.separated(
                         padding: const EdgeInsets.fromLTRB(
                           AppSpacing.md,
                           AppSpacing.xs,

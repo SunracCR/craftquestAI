@@ -1,3 +1,6 @@
+import 'package:craftquest_app/core/theme/app_colors.dart';
+import 'package:craftquest_app/features/auth/presentation/auth_bloc.dart';
+import 'package:craftquest_app/features/auth/presentation/register_page.dart';
 import 'package:craftquest_app/features/guest/presentation/bloc/guest_session_cubit.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -32,4 +35,43 @@ Future<bool> confirmLeaveGuestSession(
     ),
   );
   return confirmed == true;
+}
+
+/// Diálogo cuando el usuario agotó los canjes de código anónimos en el dispositivo.
+Future<void> showAnonymousPracticeLimitDialog(
+  BuildContext context,
+  AppLocalizations l10n,
+) async {
+  await showDialog<void>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Text(l10n.guestAnonymousLimitTitle),
+      content: Text(l10n.guestAnonymousLimitMessage),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext),
+          child: Text(l10n.guestAnonymousLimitLater),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.accent,
+            foregroundColor: AppColors.background,
+          ),
+          onPressed: () {
+            Navigator.pop(dialogContext);
+            final authBloc = context.read<AuthBloc>();
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => BlocProvider.value(
+                  value: authBloc,
+                  child: const RegisterPage(),
+                ),
+              ),
+            );
+          },
+          child: Text(l10n.guestAnonymousLimitSignUp),
+        ),
+      ],
+    ),
+  );
 }

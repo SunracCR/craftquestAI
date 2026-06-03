@@ -1,5 +1,7 @@
 using CraftQuest.Application.Models.Imports;
 using CraftQuest.Application.Models.Quizzes;
+using CraftQuest.Application.Services;
+using CraftQuest.Application.Services.Quizzes;
 
 namespace CraftQuest.Application.Services.Imports;
 
@@ -38,16 +40,12 @@ public static class CqifImportMapper
             Text = question.Text,
             Points = question.Points ?? defaultPoints,
             RandomizeAnswerOptions = question.RandomizeAnswerOptions ?? true,
-            ScoringPolicy = question.ScoringPolicy ?? "strict",
+            ScoringPolicy = AnswerGradingService.ResolveScoringPolicyForQuestionType(
+                question.Type,
+                question.ScoringPolicy),
             AnswerOptions = options,
             CorrectAnswerKeys = question.CorrectAnswerKeys.ToList(),
-            Justification = question.Justification?.Text is { Length: > 0 } text
-                ? new QuestionJustificationInput
-                {
-                    Text = text,
-                    Visibility = question.Justification.Visibility ?? "after_quiz",
-                }
-                : null,
+            Justification = QuestionJustificationMapper.FromCqif(question.Justification),
         };
     }
 }

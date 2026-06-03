@@ -13,6 +13,9 @@ public class UserSubscriptionConfiguration : IEntityTypeConfiguration<UserSubscr
         builder.Property(x => x.Status).HasMaxLength(30).IsRequired();
         builder.Property(x => x.ProviderCode).HasMaxLength(50);
         builder.Property(x => x.ProviderSubscriptionId).HasMaxLength(300);
+        builder.Property(x => x.BillingCycle).HasMaxLength(20).IsRequired();
+        builder.Property(x => x.AutoRenewEnabled).HasDefaultValue(true);
+        builder.Property(x => x.CancelAtPeriodEnd).HasDefaultValue(false);
 
         builder.HasOne(x => x.Plan)
             .WithMany()

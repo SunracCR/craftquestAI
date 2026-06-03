@@ -6,6 +6,10 @@ SET QUOTED_IDENTIFIER ON;
 GO
 
 UPDATE billing.Plans
+SET MonthlyAiCredits = 20
+WHERE Code = N'free';
+
+UPDATE billing.Plans
 SET MonthlyAiCredits = 150
 WHERE Code = N'pro';
 

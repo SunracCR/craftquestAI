@@ -8,11 +8,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Acceso destacado al flujo guest («Practicar con código»).
 class GuestPracticePromoCard extends StatelessWidget {
-  const GuestPracticePromoCard({super.key});
+  const GuestPracticePromoCard({this.compact = false, super.key});
+
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final verticalPadding =
+        compact ? AppSpacing.sm : AppSpacing.md;
 
     return Material(
       color: Colors.transparent,
@@ -54,9 +58,9 @@ class GuestPracticePromoCard extends StatelessWidget {
             ],
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(
+            padding: EdgeInsets.symmetric(
               horizontal: AppSpacing.md,
-              vertical: AppSpacing.md,
+              vertical: verticalPadding,
             ),
             child: Row(
               children: [
@@ -68,45 +72,54 @@ class GuestPracticePromoCard extends StatelessWidget {
                       end: Alignment.bottomRight,
                       colors: [AppColors.accent, AppColors.accentGold],
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.accent.withValues(alpha: 0.4),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+                    boxShadow: compact
+                        ? null
+                        : [
+                            BoxShadow(
+                              color: AppColors.accent.withValues(alpha: 0.4),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                   ),
-                  child: const Padding(
-                    padding: EdgeInsets.all(10),
+                  child: Padding(
+                    padding: EdgeInsets.all(compact ? 8 : 10),
                     child: Icon(
                       Icons.play_arrow_rounded,
                       color: AppColors.background,
-                      size: 26,
+                      size: compact ? 22 : 26,
                     ),
                   ),
                 ),
-                const SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         l10n.guestPracticeWithCodeAction,
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        style: (compact
+                                ? Theme.of(context).textTheme.labelLarge
+                                : Theme.of(context).textTheme.titleSmall)
+                            ?.copyWith(
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.w700,
                             ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        l10n.guestCodeSubtitle,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppColors.textSecondary,
-                              height: 1.35,
-                            ),
-                      ),
+                      if (!compact) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          l10n.guestCodeSubtitle,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: AppColors.textSecondary,
+                                    height: 1.35,
+                                  ),
+                        ),
+                      ],
                     ],
                   ),
                 ),

@@ -111,6 +111,16 @@ public class PracticeController(IPracticeService practiceService) : ApiControlle
         return NoContent();
     }
 
+    [HttpPost("{sessionId:guid}/forfeit")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Forfeit(
+        Guid sessionId,
+        CancellationToken cancellationToken)
+    {
+        await practiceService.ForfeitSessionAsync(GetUserId(), sessionId, cancellationToken);
+        return NoContent();
+    }
+
     [HttpGet("by-quiz/{quizId:guid}/my-attempts")]
     [ProducesResponseType(typeof(IReadOnlyList<MyPracticeAttemptSummaryDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> ListMyQuizAttempts(

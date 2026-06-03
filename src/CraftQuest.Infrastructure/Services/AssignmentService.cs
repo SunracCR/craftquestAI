@@ -1,5 +1,7 @@
+using CraftQuest.Application.Analytics;
 using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Exceptions;
+using CraftQuest.Application.Models.Analytics;
 using CraftQuest.Application.Models.Teacher;
 using CraftQuest.Application.Services;
 using CraftQuest.Domain.Entities;
@@ -34,6 +36,9 @@ public class AssignmentService(
         if (!validModes.Contains(mode))
             throw new AppException("Invalid ShowCorrectAnswersMode value.", 400);
 
+        var forfeitOnCreate = request.ForfeitExitCountsAsAttempt && request.MaxAttempts is >= 1;
+        ValidateForfeitExitPolicy(request.MaxAttempts, forfeitOnCreate);
+
         var entity = new Assignment
         {
             AssignmentId = Guid.NewGuid(),
@@ -45,6 +50,9 @@ public class AssignmentService(
             StartsAt = AssignmentDateHelper.NormalizeToUtcDate(request.StartsAt),
             DueAt = AssignmentDateHelper.NormalizeToUtcDate(request.DueAt),
             MaxAttempts = request.MaxAttempts,
+            RandomizeQuestions = request.RandomizeQuestions,
+            AllowStudentRandomizeQuestions = request.AllowStudentRandomizeQuestions,
+            ForfeitExitCountsAsAttempt = forfeitOnCreate,
             ShowCorrectAnswersMode = mode,
             Status = "active",
             CreatedAt = DateTime.UtcNow,
@@ -68,6 +76,9 @@ public class AssignmentService(
             StartsAt = entity.StartsAt,
             DueAt = entity.DueAt,
             MaxAttempts = entity.MaxAttempts,
+            RandomizeQuestions = entity.RandomizeQuestions,
+            AllowStudentRandomizeQuestions = entity.AllowStudentRandomizeQuestions,
+            ForfeitExitCountsAsAttempt = entity.ForfeitExitCountsAsAttempt,
             CompletedCount = 0,
             TotalMembers = memberCount,
             CreatedAt = entity.CreatedAt,
@@ -113,6 +124,9 @@ public class AssignmentService(
                 StartsAt = a.StartsAt,
                 DueAt = a.DueAt,
                 MaxAttempts = a.MaxAttempts,
+                RandomizeQuestions = a.RandomizeQuestions,
+                AllowStudentRandomizeQuestions = a.AllowStudentRandomizeQuestions,
+                ForfeitExitCountsAsAttempt = a.ForfeitExitCountsAsAttempt,
                 CompletedCount = completed,
                 TotalMembers = memberCount,
                 CreatedAt = a.CreatedAt,
@@ -174,6 +188,9 @@ public class AssignmentService(
             StartsAt = assignment.StartsAt,
             DueAt = assignment.DueAt,
             MaxAttempts = assignment.MaxAttempts,
+            RandomizeQuestions = assignment.RandomizeQuestions,
+            AllowStudentRandomizeQuestions = assignment.AllowStudentRandomizeQuestions,
+            ForfeitExitCountsAsAttempt = assignment.ForfeitExitCountsAsAttempt,
             CompletedCount = attempts.Select(a => a.StudentUserId).Distinct().Count(),
             TotalMembers = memberCount,
             CreatedAt = assignment.CreatedAt,
@@ -206,6 +223,7 @@ public class AssignmentService(
             .AsNoTracking()
             .Where(ps => ps.AssignmentId == assignmentId && ps.Status == "finished")
             .Include(ps => ps.QuestionSnapshots)
+            .ThenInclude(q => q.AnswerOptionSnapshots)
             .OrderByDescending(ps => ps.FinishedAt)
             .ToListAsync(cancellationToken);
 
@@ -237,6 +255,11 @@ public class AssignmentService(
             : 0m;
 
         var hardQuestions = await BuildHardQuestionsAsync(assignment.QuizId, sessions, cancellationToken);
+        var distractorQuestions = await BuildAssignmentDistractorQuestionsAsync(
+            assignment.QuizId,
+            sessions,
+            hardQuestions.Select(h => h.QuestionId).ToHashSet(),
+            cancellationToken);
         var distribution = BuildScoreDistribution(students);
 
         return new AssignmentAnalyticsDto
@@ -253,6 +276,7 @@ public class AssignmentService(
             TotalSessions = sessions.Count,
             Students = students,
             HardQuestions = hardQuestions,
+            DistractorQuestions = distractorQuestions,
             ScoreDistribution = distribution,
         };
     }
@@ -379,12 +403,16 @@ public class AssignmentService(
             throw new AppException("Max attempts must be at least 1.", 400);
         }
 
+        var forfeitExitCountsAsAttempt = request.ForfeitExitCountsAsAttempt
+            && request.MaxAttempts is >= 1;
+        ValidateForfeitExitPolicy(request.MaxAttempts, forfeitExitCountsAsAttempt);
+
         if (request.MaxAttempts.HasValue)
         {
             var attemptCounts = await dbContext.PracticeSessions
                 .AsNoTracking()
                 .Where(ps => ps.AssignmentId == assignmentId
-                    && ps.Status == "finished"
+                    && (ps.Status == "finished" || ps.Status == "forfeited")
                     && ps.StudentUserId != null)
                 .GroupBy(ps => ps.StudentUserId)
                 .Select(g => g.Count())
@@ -408,11 +436,30 @@ public class AssignmentService(
         assignment.StartsAt = AssignmentDateHelper.NormalizeToUtcDate(request.StartsAt);
         assignment.DueAt = AssignmentDateHelper.NormalizeToUtcDate(request.DueAt);
         assignment.MaxAttempts = request.MaxAttempts;
+        assignment.RandomizeQuestions = request.RandomizeQuestions;
+        assignment.AllowStudentRandomizeQuestions = request.AllowStudentRandomizeQuestions;
+        assignment.ForfeitExitCountsAsAttempt = forfeitExitCountsAsAttempt;
         assignment.ShowCorrectAnswersMode = mode;
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return await GetDetailAsync(teacherUserId, assignmentId, cancellationToken);
+    }
+
+    private static void ValidateForfeitExitPolicy(int? maxAttempts, bool forfeitExitCountsAsAttempt)
+    {
+        if (!forfeitExitCountsAsAttempt)
+        {
+            return;
+        }
+
+        if (!maxAttempts.HasValue || maxAttempts < 1)
+        {
+            throw new AppException(
+                "Forfeit on exit requires a maximum attempt limit of at least 1.",
+                400,
+                errorCode: "ASSIGNMENT_FORFEIT_REQUIRES_MAX_ATTEMPTS");
+        }
     }
 
     private async Task<Assignment> LoadOwnedAssignmentAsync(
@@ -582,6 +629,32 @@ public class AssignmentService(
             .OrderByDescending(q => q.ErrorRate)
             .ThenBy(q => q.DisplayOrder)
             .Take(5)
+            .ToList();
+    }
+
+    private async Task<IReadOnlyList<QuestionAnalyticsDto>> BuildAssignmentDistractorQuestionsAsync(
+        Guid quizId,
+        IReadOnlyList<PracticeSession> sessions,
+        IReadOnlySet<Guid> hardQuestionIds,
+        CancellationToken cancellationToken)
+    {
+        if (sessions.Count == 0 || hardQuestionIds.Count == 0)
+        {
+            return Array.Empty<QuestionAnalyticsDto>();
+        }
+
+        var questions = await dbContext.Questions
+            .AsNoTracking()
+            .Where(q => q.QuizId == quizId && q.DeletedAt == null && hardQuestionIds.Contains(q.QuestionId))
+            .OrderBy(q => q.SortOrder)
+            .Include(q => q.AnswerOptions.Where(o => o.IsActive))
+            .Include(q => q.CorrectAnswerOptions)
+            .ToListAsync(cancellationToken);
+
+        return DistractorAnalyticsAggregator.BuildFromSessions(questions, sessions)
+            .Where(q => q.AttemptsCount > 0)
+            .OrderByDescending(q => q.IncorrectCount)
+            .ThenBy(q => q.QuestionText)
             .ToList();
     }
 }

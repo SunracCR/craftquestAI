@@ -8,7 +8,9 @@ namespace CraftQuest.Api.Controllers;
 [ApiController]
 [Route("api/billing")]
 [Authorize]
-public class BillingController(IBillingService billingService) : ApiControllerBase
+public class BillingController(
+    IBillingService billingService,
+    IPaymentService paymentService) : ApiControllerBase
 {
     [HttpGet("me")]
     [ProducesResponseType(typeof(UserBillingDto), StatusCodes.Status200OK)]
@@ -18,12 +20,50 @@ public class BillingController(IBillingService billingService) : ApiControllerBa
         return Ok(billing);
     }
 
+    [HttpGet("purchases")]
+    [ProducesResponseType(typeof(IReadOnlyList<PurchaseHistoryItemDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMyPurchases(CancellationToken cancellationToken)
+    {
+        var purchases = await billingService.GetMyPurchasesAsync(GetUserId(), cancellationToken);
+        return Ok(purchases);
+    }
+
     [HttpPost("cancel")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(CancelAutoRenewResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> CancelSubscription(CancellationToken cancellationToken)
     {
-        await billingService.CancelSubscriptionAsync(GetUserId(), cancellationToken);
-        return NoContent();
+        var result = await billingService.CancelAutoRenewAsync(GetUserId(), cancellationToken);
+        await paymentService.RevokeProviderAutoRenewAsync(GetUserId(), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost("cancel-auto-renew")]
+    [ProducesResponseType(typeof(CancelAutoRenewResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> CancelAutoRenew(CancellationToken cancellationToken)
+    {
+        var result = await billingService.CancelAutoRenewAsync(GetUserId(), cancellationToken);
+        await paymentService.RevokeProviderAutoRenewAsync(GetUserId(), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost("resume-auto-renew")]
+    [ProducesResponseType(typeof(ReactivateAutoRenewResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ResumeAutoRenew(CancellationToken cancellationToken)
+    {
+        var restore = await paymentService.TryRestoreProviderAutoRenewAsync(GetUserId(), cancellationToken);
+        if (restore.RequiresResubscribe)
+        {
+            return Ok(new ReactivateAutoRenewResponse
+            {
+                AutoRenewEnabled = false,
+                ProviderCode = restore.ProviderCode,
+                RequiresResubscribe = true,
+                ManageInStore = false,
+            });
+        }
+
+        var result = await billingService.ReactivateAutoRenewAsync(GetUserId(), cancellationToken);
+        return Ok(result);
     }
 
     [HttpGet("expiring")]

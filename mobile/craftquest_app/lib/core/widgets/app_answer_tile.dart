@@ -1,4 +1,5 @@
 import 'package:craftquest_app/core/theme/app_colors.dart';
+import 'package:craftquest_app/core/theme/app_media_display.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_zoomable_network_image.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +14,7 @@ class AppAnswerTile extends StatelessWidget {
     this.enabled = true,
     this.leading,
     this.mediaImageUrl,
-    this.mediaHeight = 120,
+    this.mediaHeight = AppMediaDisplay.optionImageHeight,
   });
 
   final String label;

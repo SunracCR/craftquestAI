@@ -5,6 +5,7 @@ class QuizModel {
     this.description,
     required this.publicationStatus,
     required this.questionCount,
+    this.randomizeQuestions = false,
     this.pendingReviewImportId,
     this.pendingReviewValidQuestions,
     this.isOwned = true,
@@ -17,6 +18,7 @@ class QuizModel {
       description: json['description'] as String?,
       publicationStatus: json['publicationStatus'] as String,
       questionCount: json['questionCount'] as int? ?? 0,
+      randomizeQuestions: json['randomizeQuestions'] as bool? ?? false,
       pendingReviewImportId: json['pendingReviewImportId'] as String?,
       pendingReviewValidQuestions: json['pendingReviewValidQuestions'] as int?,
       isOwned: json['isOwned'] as bool? ?? true,
@@ -28,6 +30,7 @@ class QuizModel {
   final String? description;
   final String publicationStatus;
   final int questionCount;
+  final bool randomizeQuestions;
   final String? pendingReviewImportId;
   final int? pendingReviewValidQuestions;
   final bool isOwned;
@@ -82,6 +85,62 @@ class AnswerOptionModel {
   final String? mediaAssetId;
 }
 
+class QuestionJustificationSourceModel {
+  const QuestionJustificationSourceModel({
+    this.title,
+    this.sourceUrl,
+    this.snippet,
+    this.pageNumber,
+    this.isPrimary = false,
+  });
+
+  factory QuestionJustificationSourceModel.fromJson(Map<String, dynamic> json) {
+    return QuestionJustificationSourceModel(
+      title: json['title'] as String?,
+      sourceUrl: json['sourceUrl'] as String?,
+      snippet: json['snippet'] as String?,
+      pageNumber: json['pageNumber'] as int?,
+      isPrimary: json['isPrimary'] as bool? ?? false,
+    );
+  }
+
+  final String? title;
+  final String? sourceUrl;
+  final String? snippet;
+  final int? pageNumber;
+  final bool isPrimary;
+}
+
+class QuestionJustificationModel {
+  const QuestionJustificationModel({
+    this.text,
+    this.visibility = 'never',
+    this.generatedByAi = false,
+    this.sources = const [],
+  });
+
+  factory QuestionJustificationModel.fromJson(Map<String, dynamic> json) {
+    return QuestionJustificationModel(
+      text: json['text'] as String?,
+      visibility: json['visibility'] as String? ?? 'never',
+      generatedByAi: json['generatedByAi'] as bool? ?? false,
+      sources: (json['sources'] as List<dynamic>?)
+              ?.map(
+                (e) => QuestionJustificationSourceModel.fromJson(
+                  e as Map<String, dynamic>,
+                ),
+              )
+              .toList() ??
+          const [],
+    );
+  }
+
+  final String? text;
+  final String visibility;
+  final bool generatedByAi;
+  final List<QuestionJustificationSourceModel> sources;
+}
+
 class QuestionModel {
   const QuestionModel({
     required this.questionId,
@@ -90,6 +149,8 @@ class QuestionModel {
     this.points = 1,
     required this.answerOptions,
     required this.correctAnswerOptionIds,
+    this.explanationVisibility = 'never',
+    this.justification,
   });
 
   factory QuestionModel.fromJson(Map<String, dynamic> json) {
@@ -98,6 +159,13 @@ class QuestionModel {
       questionType: json['questionType'] as String,
       text: json['text'] as String,
       points: (json['points'] as num?)?.toDouble() ?? 1,
+      explanationVisibility:
+          json['explanationVisibility'] as String? ?? 'never',
+      justification: json['justification'] == null
+          ? null
+          : QuestionJustificationModel.fromJson(
+              json['justification'] as Map<String, dynamic>,
+            ),
       answerOptions: (json['answerOptions'] as List<dynamic>)
           .map((e) => AnswerOptionModel.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -110,6 +178,8 @@ class QuestionModel {
   final String questionType;
   final String text;
   final double points;
+  final String explanationVisibility;
+  final QuestionJustificationModel? justification;
   final List<AnswerOptionModel> answerOptions;
   final List<String> correctAnswerOptionIds;
 }

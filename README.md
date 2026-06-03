@@ -34,8 +34,7 @@ dotnet run --launch-profile https
 - HTTP legado (redirige a HTTPS): http://localhost:5080
 - Auth: `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/refresh`, `GET /api/auth/me`
 - Quizzes: `GET /api/question-types`, `POST/GET/PATCH /api/quizzes`, `POST/GET /api/quizzes/{id}/questions`
-- Vista estudiante (sin correctas): `GET /api/quizzes/{id}/questions/student-view`
-- Media: `POST /api/media/upload`, `GET /api/media/{id}/file`
+- Media: `POST /api/media/upload`, `GET /api/media/{id}/file` (JWT o `X-Guest-Token` + `X-Guest-Visit-Id`)
 - Billing / pagos: `GET /api/billing/me`, `GET /api/billing/plans`, PayPal e IAP (ver guía anterior)
 
 ## Flutter

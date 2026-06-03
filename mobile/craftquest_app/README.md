@@ -23,7 +23,7 @@ Configuracion:
 - Configuración API y tiendas: [Documentacion/CraftQuest_Configuracion_Media_Pagos_v4.md](../../Documentacion/CraftQuest_Configuracion_Media_Pagos_v4.md)
 
 ```powershell
-flutter run --dart-define=API_BASE_URL=https://10.0.2.2:7080
+flutter run --dart-define=API_BASE_URL=https://10.0.2.2:7080 --dart-define=GOOGLE_SERVER_CLIENT_ID=<tu-web-client-id>.apps.googleusercontent.com
 ```
 
 Por defecto (Chrome/desktop) usa `https://localhost:7080` si no pasas `API_BASE_URL`.

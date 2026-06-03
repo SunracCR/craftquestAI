@@ -192,7 +192,7 @@ flutter run --dart-define=API_BASE_URL=https://10.0.2.2:7080
 
 | Código | Nombre | Precio mensual (USD) | Notas |
 |--------|--------|----------------------|--------|
-| `free` | Free | — | Límites: 5 quizzes, 65 preguntas/quiz, 2 códigos/mes |
+| `free` | Free | — | Límites: 2 cuestionarios, 50 preguntas/quiz, 2 códigos/mes |
 | `pro` | Pro | 4.99 | Comprable |
 | `teacher` | Teacher | 9.99 | Comprable |
 | `institution` | Institution | — | Contacto comercial (no IAP en MVP) |
@@ -289,7 +289,7 @@ Deben coincidir con los productos creados en cada consola (suscripción o compra
 
 ### Google Play
 
-1. Play Console → app `com.craftquest.app` (o el package configurado en `Payments:Mobile:GooglePlayPackageName`).
+1. Play Console → app `com.craftquestai.craftquestai_app` (o el package configurado en `Payments:Mobile:GooglePlayPackageName`).
 2. Monetización → Productos → crear suscripciones con los IDs anteriores.
 3. Cuentas de prueba en **License testing**.
 4. Configurar API de verificación (producción): Service Account con acceso a Google Play Developer API; integrar en `PaymentService.ValidateStoreReceiptAsync` (pendiente de credenciales reales).
@@ -360,7 +360,7 @@ Referencia rápida (convención ASP.NET: `__` en variables de entorno).
 | `Payments__PayPal__ReturnUrl` | `https://app.craftquestai.com/billing/paypal/return` | URL pública de retorno PayPal |
 | `Payments__PayPal__CancelUrl` | `https://app.craftquestai.com/billing/paypal/cancel` | URL pública de cancelación PayPal |
 | `Cors__AllowedOrigins__0` | `https://app.craftquestai.com` | Origen Flutter web (Production) |
-| `Payments__Mobile__GooglePlayPackageName` | `com.craftquest.app` | |
+| `Payments__Mobile__GooglePlayPackageName` | `com.craftquestai.craftquestai_app` | |
 | `Payments__Mobile__AppleSharedSecret` | — | App Store |
 
 Archivos:

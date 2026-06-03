@@ -130,6 +130,8 @@ public class StudyMaterialService(
         var storage = ResolveStorageProvider();
         foreach (var material in expired)
         {
+            await DetachAiJobsFromStudyMaterialAsync(material.StudyMaterialId, cancellationToken);
+
             if (!string.IsNullOrWhiteSpace(material.BlobPath))
             {
                 await storage.DeleteIfExistsAsync(material.BlobPath, cancellationToken);
@@ -320,11 +322,7 @@ public class StudyMaterialService(
         var material = await LoadOwnedMaterialAsync(userId, studyMaterialId, cancellationToken, track: true);
 
         // Jobs keep history; quiz and import batch stay intact.
-        await dbContext.AiJobs
-            .Where(j => j.StudyMaterialId == studyMaterialId)
-            .ExecuteUpdateAsync(
-                s => s.SetProperty(j => j.StudyMaterialId, (Guid?)null),
-                cancellationToken);
+        await DetachAiJobsFromStudyMaterialAsync(studyMaterialId, cancellationToken);
 
         var storage = ResolveStorageProvider();
 
@@ -650,6 +648,18 @@ public class StudyMaterialService(
         return extractors.FirstOrDefault(e => e.FileType == fileType)
             ?? throw new AppException($"No extractor for file type '{fileType}'.", 501);
     }
+
+    /// <summary>
+    /// Desvincula trabajos de IA antes de borrar el material (la FK en SQL no tiene SET NULL).
+    /// </summary>
+    private Task DetachAiJobsFromStudyMaterialAsync(
+        Guid studyMaterialId,
+        CancellationToken cancellationToken) =>
+        dbContext.AiJobs
+            .Where(j => j.StudyMaterialId == studyMaterialId)
+            .ExecuteUpdateAsync(
+                s => s.SetProperty(j => j.StudyMaterialId, (Guid?)null),
+                cancellationToken);
 
     private IMediaStorageProvider ResolveStorageProvider()
     {

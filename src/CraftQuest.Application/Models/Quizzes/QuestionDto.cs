@@ -9,4 +9,6 @@ public sealed class QuestionDto
     public bool RandomizeAnswerOptions { get; init; }
     public required IReadOnlyList<AnswerOptionDto> AnswerOptions { get; init; }
     public required IReadOnlyList<Guid> CorrectAnswerOptionIds { get; init; }
+    public QuestionJustificationDto? Justification { get; init; }
+    public string ExplanationVisibility { get; init; } = "never";
 }

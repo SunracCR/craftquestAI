@@ -1,17 +1,19 @@
 import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_list_entry_card.dart';
 import 'package:craftquest_app/core/widgets/member_avatar.dart';
 import 'package:craftquest_app/core/widgets/app_section_card.dart';
+import 'package:craftquest_app/core/widgets/app_padded_scroll.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/features/teacher/data/models/teacher_assignment_models.dart';
 import 'package:craftquest_app/features/teacher/data/teacher_assignment_repository.dart';
 import 'package:craftquest_app/features/teacher/presentation/teacher_attempt_format.dart';
-import 'package:craftquest_app/features/teacher/presentation/teacher_assignment_analytics_page.dart';
 import 'package:craftquest_app/features/teacher/presentation/teacher_create_assignment_page.dart';
 import 'package:craftquest_app/features/teacher/presentation/teacher_session_review_page.dart';
 import 'package:craftquest_app/features/teacher/presentation/widgets/teacher_completion_bar.dart';
+import 'package:craftquest_app/features/teacher/presentation/widgets/teacher_detail_sliver_header.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
@@ -114,7 +116,7 @@ class _TeacherAssignmentDetailPageState
             return Scaffold(
               backgroundColor: AppColors.background,
               body: AppErrorView(
-                  message: snap.error.toString(),
+                  message: DioErrorMapper.mapAny(snap.error!, l10n),
                   onRetry: _load,
                   retryLabel: l10n.retry),
             );
@@ -123,47 +125,36 @@ class _TeacherAssignmentDetailPageState
 
           return NestedScrollView(
             headerSliverBuilder: (_, __) => [
-              SliverAppBar(
-                expandedHeight: 130,
-                pinned: true,
-                backgroundColor: AppColors.surface,
-                foregroundColor: AppColors.textPrimary,
+              TeacherDetailTabbedAppBar(
+                title: detail.title,
                 actions: [
-                  IconButton(
-                    tooltip: l10n.teacherAssignmentAnalyticsAction,
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => TeacherAssignmentAnalyticsPage(
-                            assignmentId: widget.assignmentId,
-                            quizTitle: detail.quizTitle,
-                          ),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.insights_outlined),
-                  ),
-                  if (detail.status == 'active')
-                    IconButton(
-                      tooltip: l10n.teacherAssignmentEditAction,
-                      onPressed: () => _edit(detail),
-                      icon: const Icon(Icons.edit_outlined),
-                    ),
-                  if (detail.status == 'active')
-                    TextButton(
-                      onPressed: () => _close(l10n),
-                      child: Text(l10n.teacherAssignmentCloseAction,
-                          style: const TextStyle(color: AppColors.error)),
-                    ),
                   PopupMenuButton<String>(
                     color: AppColors.surface,
                     onSelected: (v) async {
-                      if (v == 'archive') {
+                      if (v == 'edit') {
+                        await _edit(detail);
+                      } else if (v == 'close') {
+                        await _close(l10n);
+                      } else if (v == 'archive') {
                         await _repo.archiveAssignment(widget.assignmentId);
-                        if (mounted) Navigator.pop(context, true);
+                        if (!mounted) return;
+                        Navigator.pop(this.context, true);
                       }
                     },
                     itemBuilder: (_) => [
+                      if (detail.status == 'active')
+                        PopupMenuItem(
+                          value: 'edit',
+                          child: Text(l10n.teacherAssignmentEditAction,
+                              style:
+                                  const TextStyle(color: AppColors.textPrimary)),
+                        ),
+                      if (detail.status == 'active')
+                        PopupMenuItem(
+                          value: 'close',
+                          child: Text(l10n.teacherAssignmentCloseAction,
+                              style: const TextStyle(color: AppColors.error)),
+                        ),
                       PopupMenuItem(
                         value: 'archive',
                         child: Text(l10n.teacherAssignmentArchiveAction,
@@ -173,17 +164,6 @@ class _TeacherAssignmentDetailPageState
                     ],
                   ),
                 ],
-                flexibleSpace: FlexibleSpaceBar(
-                  titlePadding:
-                      const EdgeInsets.only(left: 16, bottom: 60),
-                  title: Text(
-                    detail.title,
-                    style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 16),
-                  ),
-                ),
                 bottom: TabBar(
                   controller: _tabController,
                   indicatorColor: AppColors.teacherAccent,
@@ -200,6 +180,10 @@ class _TeacherAssignmentDetailPageState
               controller: _tabController,
               children: [
                 _CompletionTab(
+                  detail: detail,
+                  onEdit: detail.status == 'active' ? () => _edit(detail) : null,
+                  onClose:
+                      detail.status == 'active' ? () => _close(l10n) : null,
                   future: _completionFuture,
                   onRetry: _load,
                   onStudentTap: _openStudentAttempts,
@@ -222,11 +206,17 @@ class _TeacherAssignmentDetailPageState
 
 class _CompletionTab extends StatelessWidget {
   const _CompletionTab({
+    required this.detail,
+    required this.onEdit,
+    required this.onClose,
     required this.future,
     required this.onRetry,
     required this.onStudentTap,
   });
 
+  final AssignmentDetailModel detail;
+  final VoidCallback? onEdit;
+  final VoidCallback? onClose;
   final Future<AssignmentCompletionModel> future;
   final VoidCallback onRetry;
   final ValueChanged<String?> onStudentTap;
@@ -243,15 +233,75 @@ class _CompletionTab extends StatelessWidget {
         }
         if (snap.hasError) {
           return AppErrorView(
-              message: snap.error.toString(),
+              message: DioErrorMapper.mapAny(snap.error!, l10n),
               onRetry: onRetry,
               retryLabel: l10n.retry);
         }
 
         final data = snap.data!;
-        return ListView(
-          padding: const EdgeInsets.all(16),
+        final totalAttempts = data.members.fold<int>(
+          0,
+          (sum, m) => sum + m.attemptCount,
+        );
+        final pending = (data.totalMembers - data.completedCount).clamp(0, 9999);
+        final bestScores = data.members
+            .where((m) => m.bestScorePercent != null)
+            .map((m) => m.bestScorePercent!)
+            .toList();
+        final averageBest = bestScores.isEmpty
+            ? null
+            : bestScores.reduce((a, b) => a + b) / bestScores.length;
+
+        return AppPaddedScrollBody(
+          includeTop: false,
+          child: ListView(
           children: [
+            _AssignmentHeaderCard(
+              title: detail.title,
+              status: detail.status,
+              quizTitle: detail.quizTitle,
+            ),
+            if (onEdit != null || onClose != null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              _AssignmentActionBar(
+                onEdit: onEdit,
+                onClose: onClose,
+              ),
+            ],
+            const SizedBox(height: AppSpacing.sm),
+            _KpiStrip(
+              cards: [
+                _KpiCardData(
+                  label: l10n.teacherAssignmentCompletionTitle,
+                  value: '${data.completedCount}/${data.totalMembers}',
+                  hint: '',
+                  icon: Icons.task_alt_rounded,
+                  color: AppColors.teacherAccent,
+                ),
+                _KpiCardData(
+                  label: l10n.teacherClassAnalyticsAverageLabel,
+                  value: averageBest != null ? '${averageBest.round()}%' : '—',
+                  hint: '',
+                  icon: Icons.trending_up_rounded,
+                  color: AppColors.accentMint,
+                ),
+                _KpiCardData(
+                  label: l10n.teacherAssignmentAttemptsTitle,
+                  value: '$totalAttempts',
+                  hint: '',
+                  icon: Icons.history_rounded,
+                  color: AppColors.accentCool,
+                ),
+                _KpiCardData(
+                  label: l10n.teacherAssignmentPendingLabel,
+                  value: '$pending',
+                  hint: '',
+                  icon: Icons.schedule_rounded,
+                  color: AppColors.accentGold,
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
             TeacherCompletionBar(
               completedCount: data.completedCount,
               totalMembers: data.totalMembers,
@@ -324,12 +374,15 @@ class _CompletionTab extends StatelessWidget {
                                         color: AppColors.textPrimary,
                                         fontWeight: FontWeight.w600,
                                         fontSize: 13)),
-                                if (m.attemptCount > 0)
-                                  Text(
-                                      '${m.attemptCount} ${l10n.teacherAssignmentAttemptsLabel}',
-                                      style: const TextStyle(
-                                          color: AppColors.textSecondary,
-                                          fontSize: 11)),
+                                const SizedBox(height: 2),
+                                Text(
+                                  m.attemptCount > 0
+                                      ? '${m.attemptCount} ${l10n.teacherAssignmentAttemptsLabel}'
+                                      : l10n.teacherAssignmentPendingLabel,
+                                  style: const TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 11),
+                                ),
                               ],
                             ),
                           ),
@@ -362,23 +415,237 @@ class _CompletionTab extends StatelessWidget {
               );
             }),
           ],
+          ),
         );
       },
     );
   }
 }
 
+class _AssignmentHeaderCard extends StatelessWidget {
+  const _AssignmentHeaderCard({
+    required this.title,
+    required this.status,
+    required this.quizTitle,
+  });
+
+  final String title;
+  final String status;
+  final String quizTitle;
+
+  Color _statusColor() {
+    switch (status) {
+      case 'active':
+        return AppColors.accentMint;
+      case 'closed':
+        return AppColors.accentGold;
+      default:
+        return AppColors.textSecondary;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final statusLabel = status.toUpperCase();
+    final statusColor = _statusColor();
+
+    return AppSectionCard(
+      child: Row(
+        children: [
+          Container(
+            width: 6,
+            height: 48,
+            decoration: BoxDecoration(
+              color: statusColor,
+              borderRadius: BorderRadius.circular(999),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  quizTitle,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: statusColor.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              statusLabel,
+              style: TextStyle(
+                color: statusColor,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _KpiCardData {
+  const _KpiCardData({
+    required this.label,
+    required this.value,
+    required this.hint,
+    required this.icon,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final String hint;
+  final IconData icon;
+  final Color color;
+}
+
+class _KpiStrip extends StatelessWidget {
+  const _KpiStrip({required this.cards});
+
+  final List<_KpiCardData> cards;
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: cards.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: AppSpacing.sm,
+        mainAxisSpacing: AppSpacing.sm,
+        mainAxisExtent: 92,
+      ),
+      itemBuilder: (context, index) {
+        final card = cards[index];
+        return AppSectionCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(card.icon, size: 16, color: card.color),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      card.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                card.value,
+                style: TextStyle(
+                  color: card.color,
+                  fontSize: 30,
+                  fontWeight: FontWeight.w800,
+                  height: 1,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _AssignmentActionBar extends StatelessWidget {
+  const _AssignmentActionBar({
+    required this.onEdit,
+    required this.onClose,
+  });
+
+  final VoidCallback? onEdit;
+  final VoidCallback? onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return Row(
+      children: [
+        if (onEdit != null)
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: onEdit,
+              icon: const Icon(Icons.edit_outlined, size: 18),
+              label: Text(l10n.teacherAssignmentEditAction),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.textPrimary,
+                side: BorderSide(
+                  color: AppColors.textSecondary.withValues(alpha: 0.25),
+                ),
+                minimumSize: const Size.fromHeight(42),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppColors.radiusSm),
+                ),
+              ),
+            ),
+          ),
+        if (onEdit != null && onClose != null)
+          const SizedBox(width: AppSpacing.sm),
+        if (onClose != null)
+          Expanded(
+            child: FilledButton.icon(
+              onPressed: onClose,
+              icon: const Icon(Icons.lock_outline_rounded, size: 18),
+              label: Text(l10n.teacherAssignmentCloseAction),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.error.withValues(alpha: 0.92),
+                foregroundColor: AppColors.background,
+                minimumSize: const Size.fromHeight(42),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppColors.radiusSm),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+
 class _AssignmentAttemptGroup {
   _AssignmentAttemptGroup({
     required this.userId,
     required this.displayName,
-    this.avatarId,
     required this.attempts,
   });
 
   final String userId;
   final String displayName;
-  final String? avatarId;
   final List<AssignmentAttemptModel> attempts;
 
   DateTime get latestDate => attempts.first.finishedAt;
@@ -564,7 +831,7 @@ class _AttemptsTabState extends State<_AttemptsTab> {
           });
         },
         leading: MemberAvatar(
-          avatarId: group.avatarId,
+          avatarId: null,
           displayName: group.displayName,
           size: 36,
         ),
@@ -620,32 +887,30 @@ class _AttemptsTabState extends State<_AttemptsTab> {
     }
 
     if (visibleGroups.length == 1 && visibleGroups.first.attempts.length == 1) {
-      return ListView(
-        padding: AppSpacing.listBottom,
+      return AppPaddedScrollBody(
+        includeTop: false,
+        child: ListView(
         children: [
           _buildFilterBar(l10n, groups),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: _buildAttemptCard(l10n, visibleGroups.first.attempts.first),
-          ),
+          _buildAttemptCard(l10n, visibleGroups.first.attempts.first),
         ],
+        ),
       );
     }
 
-    return ListView(
-      padding: AppSpacing.listBottom,
+    return AppPaddedScrollBody(
+      includeTop: false,
+      child: ListView(
       children: [
         _buildFilterBar(l10n, groups),
         for (var i = 0; i < visibleGroups.length; i++) ...[
           if (i > 0) const SizedBox(height: AppSpacing.sm),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: visibleGroups[i].attempts.length == 1
-                ? _buildAttemptCard(l10n, visibleGroups[i].attempts.first)
-                : _buildStudentAccordion(l10n, visibleGroups[i]),
-          ),
+          visibleGroups[i].attempts.length == 1
+              ? _buildAttemptCard(l10n, visibleGroups[i].attempts.first)
+              : _buildStudentAccordion(l10n, visibleGroups[i]),
         ],
       ],
+      ),
     );
   }
 }

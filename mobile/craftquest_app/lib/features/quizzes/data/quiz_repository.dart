@@ -53,6 +53,7 @@ class QuizRepository {
     double points = 1,
     required List<Map<String, dynamic>> answerOptions,
     required List<String> correctAnswerKeys,
+    Map<String, dynamic>? justification,
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/api/quizzes/$quizId/questions',
@@ -62,6 +63,7 @@ class QuizRepository {
         'points': points,
         'answerOptions': answerOptions,
         'correctAnswerKeys': correctAnswerKeys,
+        if (justification != null) 'justification': justification,
       },
     );
     return QuestionModel.fromJson(response.data!);
@@ -75,6 +77,7 @@ class QuizRepository {
     double points = 1,
     required List<Map<String, dynamic>> answerOptions,
     required List<String> correctAnswerKeys,
+    Map<String, dynamic>? justification,
   }) async {
     final response = await _apiClient.dio.put<Map<String, dynamic>>(
       '/api/quizzes/$quizId/questions/$questionId',
@@ -84,6 +87,7 @@ class QuizRepository {
         'points': points,
         'answerOptions': answerOptions,
         'correctAnswerKeys': correctAnswerKeys,
+        if (justification != null) 'justification': justification,
       },
     );
     return QuestionModel.fromJson(response.data!);
@@ -111,12 +115,15 @@ class QuizRepository {
     required String quizId,
     String? title,
     String? description,
+    bool? randomizeQuestions,
   }) async {
     final response = await _apiClient.dio.patch<Map<String, dynamic>>(
       '/api/quizzes/$quizId',
       data: {
         if (title != null) 'title': title,
         if (description != null) 'description': description,
+        if (randomizeQuestions != null)
+          'randomizeQuestions': randomizeQuestions,
       },
     );
     return QuizModel.fromJson(response.data!);

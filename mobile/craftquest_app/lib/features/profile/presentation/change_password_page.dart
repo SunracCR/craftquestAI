@@ -1,4 +1,5 @@
 import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_bottom_bar.dart';
 import 'package:craftquest_app/core/widgets/app_buttons.dart';
@@ -36,6 +37,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   }
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _loading = true);
@@ -45,13 +47,14 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         newPassword: _newController.text,
       );
       if (!mounted) return;
-      context.showSuccessSnackBar(
-        AppLocalizations.of(context)!.passwordChangedMessage,
-      );
+      context.showSuccessSnackBar(l10n.passwordChangedMessage);
       Navigator.of(context).pop();
     } on DioException catch (e) {
       if (!mounted) return;
-      context.showDioErrorSnackBar(e);
+      context.showErrorSnackBar(_repository.mapError(e));
+    } catch (_) {
+      if (!mounted) return;
+      context.showErrorSnackBar(DioErrorMapper.genericMessage(l10n));
     } finally {
       if (mounted) setState(() => _loading = false);
     }

@@ -6,16 +6,18 @@ import 'package:craftquest_app/features/practice/presentation/practice_session_p
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_resume_dialog.dart';
 import 'package:flutter/material.dart';
 
-Future<void> openPracticeSession(
+Future<bool?> openPracticeSession(
   BuildContext context, {
   required String quizId,
   required String quizTitle,
   String? resumeSessionId,
   String? classId,
   String? assignmentId,
+  bool assignmentRandomizeQuestions = false,
+  bool allowStudentRandomizeQuestions = false,
+  bool forfeitExitCountsAsAttempt = false,
 }) async {
   final practiceRepository = getIt<PracticeRepository>();
-  final preferencesRepository = getIt<PracticePreferencesRepository>();
 
   String? sessionToResume = resumeSessionId;
   var options = PracticeLaunchOptions.defaults;
@@ -26,7 +28,7 @@ Future<void> openPracticeSession(
         quizId,
         assignmentId: assignmentId,
       );
-      if (!context.mounted) return;
+      if (!context.mounted) return null;
 
       if (active != null) {
         final choice = await showPracticeResumeDialog(
@@ -34,7 +36,7 @@ Future<void> openPracticeSession(
           summary: active,
         );
         if (!context.mounted || choice == null || choice == PracticeResumeChoice.cancel) {
-          return;
+          return null;
         }
         if (choice == PracticeResumeChoice.resume) {
           sessionToResume = active.practiceSessionId;
@@ -48,19 +50,28 @@ Future<void> openPracticeSession(
   }
 
   if (sessionToResume == null) {
-    try {
-      options = await preferencesRepository.loadLaunchOptions(quizId);
-    } catch (_) {
-      // Keep defaults if preferences cannot be loaded.
+    if (assignmentId != null) {
+      // Tareas de clase: orden según la asignación (no preferencias de código compartido).
+      options = PracticeLaunchOptions(
+        randomizeQuestions: assignmentRandomizeQuestions,
+        showTimer: PracticeLaunchOptions.defaults.showTimer,
+      );
+    } else {
+      final preferencesRepository = getIt<PracticePreferencesRepository>();
+      try {
+        options = await preferencesRepository.loadLaunchOptions(quizId);
+      } catch (_) {
+        // Keep defaults if preferences cannot be loaded.
+      }
     }
   }
 
   if (!context.mounted) {
-    return;
+    return null;
   }
 
-  await Navigator.of(context).push(
-    MaterialPageRoute<void>(
+  return Navigator.of(context).push<bool>(
+    MaterialPageRoute<bool>(
       builder: (_) => PracticeSessionPage(
         quizId: quizId,
         quizTitle: quizTitle,
@@ -68,6 +79,8 @@ Future<void> openPracticeSession(
         resumeSessionId: sessionToResume,
         classId: classId,
         assignmentId: assignmentId,
+        allowAssignmentRandomizeOverride: allowStudentRandomizeQuestions,
+        forfeitExitCountsAsAttempt: forfeitExitCountsAsAttempt,
       ),
     ),
   );

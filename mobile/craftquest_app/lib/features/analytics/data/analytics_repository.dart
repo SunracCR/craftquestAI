@@ -6,9 +6,17 @@ class AnalyticsRepository {
 
   final ApiClient _apiClient;
 
-  Future<QuizAnalyticsModel> getQuizAnalytics(String quizId) async {
+  Future<QuizAnalyticsModel> getQuizAnalytics(
+    String quizId, {
+    String? classId,
+    String? assignmentId,
+  }) async {
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
       '/api/teacher/quizzes/$quizId/analytics',
+      queryParameters: {
+        if (classId != null) 'classId': classId,
+        if (assignmentId != null) 'assignmentId': assignmentId,
+      },
     );
     return QuizAnalyticsModel.fromJson(response.data!);
   }

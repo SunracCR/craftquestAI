@@ -16,6 +16,14 @@ abstract final class ApiErrorMapper {
     'AI_CREDITS_INSUFFICIENT',
   };
 
+  static bool isAiCreditsInsufficient(DioException error) {
+    final data = error.response?.data;
+    if (data is! Map<String, dynamic>) {
+      return false;
+    }
+    return _errorCodeFrom(data) == 'AI_CREDITS_INSUFFICIENT';
+  }
+
   static String? tryGetAiJobId(DioException error) {
     final data = error.response?.data;
     if (data is! Map<String, dynamic>) {
@@ -127,6 +135,16 @@ abstract final class ApiErrorMapper {
         || lower.contains('"code": 503')
         || lower.contains('"status": "unavailable"')) {
       return l10n.errorAiGeminiOverloaded;
+    }
+
+    if (lower.contains('api_key_invalid')
+        || lower.contains('api key expired')
+        || lower.contains('api key was reported as leaked')
+        || lower.contains('permission_denied')
+        || lower.contains('"code": 403')
+        || (lower.contains('"code": 400') &&
+            (lower.contains('api key') || lower.contains('api_key')))) {
+      return l10n.errorAiGeminiApiKeyInvalid;
     }
 
     if (message.startsWith('Gemini quiz generation failed:')
@@ -294,6 +312,8 @@ abstract final class ApiErrorMapper {
         );
       case 'AI_CREDITS_INSUFFICIENT':
         return l10n.errorAiCreditsInsufficient;
+      case 'AI_CREDIT_PACKS_NOT_AVAILABLE':
+        return l10n.errorAiCreditPacksNotAvailable;
       case 'MATERIAL_NEEDS_OCR':
         return l10n.errorMaterialNeedsOcr;
       case 'MATERIAL_NOT_SELECTABLE_TEXT':
@@ -352,6 +372,10 @@ abstract final class ApiErrorMapper {
         return l10n.errorDirectInviteNotAllowed;
       case 'ACTIVE_PRACTICE_SESSION':
         return l10n.errorActivePracticeSession;
+      case 'CURRENT_PASSWORD_INCORRECT':
+        return l10n.currentPasswordIncorrectError;
+      case 'PASSWORD_CHANGE_UNAVAILABLE':
+        return l10n.passwordChangeUnavailableError;
       case 'INVALID_EMAIL':
         return l10n.teacherClassInvalidEmailError;
       case 'INVALID_DISPLAY_NAME':
@@ -360,6 +384,10 @@ abstract final class ApiErrorMapper {
         return l10n.teacherClassMemberNotFoundError;
       case 'CLASS_MEMBER_ALREADY_EXISTS':
         return l10n.teacherClassMemberAlreadyExistsError;
+      case 'CLASS_MUST_BE_ARCHIVED':
+        return l10n.teacherClassDeleteRequiresArchiveError;
+      case 'CLASS_NOT_ARCHIVED':
+        return l10n.teacherClassNotArchivedError;
       case 'ASSIGNMENT_NOT_YET_OPEN':
         return l10n.studentAssignmentNotYetOpenError;
       case 'ASSIGNMENT_NOT_OPEN':
@@ -374,6 +402,86 @@ abstract final class ApiErrorMapper {
         return l10n.teacherAssignmentMaxAttemptsBelowExistingError;
       case 'ASSIGNMENT_INVALID_DATE_RANGE':
         return l10n.teacherAssignmentInvalidDateRangeError;
+      case 'PREP_CATEGORY_NOT_FOUND':
+        return l10n.errorPrepCategoryNotFound;
+      case 'PREP_CATEGORY_HAS_SUBCATEGORIES':
+        return l10n.errorPrepCategoryHasSubcategories;
+      case 'PREP_CATEGORY_HAS_ITEMS':
+        return l10n.errorPrepCategoryHasItems;
+      case 'PREP_QUIZ_NOT_FOUND':
+        return l10n.errorPrepQuizNotFound;
+      case 'PREP_QUIZ_NOT_ELIGIBLE':
+        return l10n.errorPrepQuizNotEligible;
+      case 'PREP_QUIZ_ALREADY_IN_CATALOG':
+        return l10n.errorPrepQuizAlreadyInCatalog;
+      case 'PREP_CATALOG_ITEM_NOT_FOUND':
+        return l10n.errorPrepCatalogItemNotFound;
+      case 'PREP_SAMPLE_COUNT_REQUIRED':
+        return l10n.errorPrepSampleCountRequired(
+          _asInt(data['requiredCount']) ?? 3,
+        );
+      case 'PREP_SAMPLE_QUESTIONS_NOT_IN_QUIZ':
+        return l10n.errorPrepSampleQuestionsNotInQuiz;
+      case 'PREP_INVALID_CATEGORY_TYPE':
+        return l10n.errorPrepInvalidCategoryType;
+      case 'PREP_NAME_SLUG_REQUIRED':
+        return l10n.errorPrepNameSlugRequired;
+      case 'PREP_PARENT_CATEGORY_NOT_FOUND':
+        return l10n.errorPrepParentCategoryNotFound;
+      case 'PREP_SUBCATEGORY_TYPE_MISMATCH':
+        return l10n.errorPrepSubcategoryTypeMismatch;
+      case 'PREP_CATEGORY_SELF_PARENT':
+        return l10n.errorPrepCategorySelfParent;
+      case 'PREP_SLUG_DUPLICATE':
+        return l10n.errorPrepSlugDuplicate;
+      case 'PREP_CATEGORY_INACTIVE':
+        return l10n.errorPrepCategoryInactive;
+      case 'PREP_ITEM_REQUIRES_SUBCATEGORY':
+        return l10n.errorPrepItemRequiresSubcategory;
+      case 'PREP_INSTITUTION_TAG_GEOGRAPHIC_ONLY':
+        return l10n.errorPrepInstitutionTagGeographicOnly;
+      case 'PREP_CATEGORY_HIERARCHY_BROKEN':
+        return l10n.errorPrepCategoryHierarchyBroken;
+      case 'PREP_OFFERS_REQUIRED':
+        return l10n.errorPrepOffersRequired;
+      case 'PREP_INVALID_DURATION':
+        return l10n.errorPrepInvalidDuration;
+      case 'PREP_PRICE_NEGATIVE':
+        return l10n.errorPrepPriceNegative;
+      case 'PREP_OFFER_DURATION_DUPLICATE':
+        return l10n.errorPrepOfferDurationDuplicate;
+      case 'PREP_ACTIVE_OFFER_REQUIRED_PUBLISH':
+        return l10n.errorPrepActiveOfferRequiredPublish;
+      case 'PREP_SAMPLES_REQUIRED_PUBLISH':
+        return l10n.errorPrepSamplesRequiredPublish(
+          _asInt(data['requiredCount']) ?? 3,
+        );
+      case 'PREP_QUIZ_NO_QUESTIONS':
+        return l10n.errorPrepQuizNoQuestions;
+      case 'PREP_LISTING_END_BEFORE_START':
+        return l10n.errorPrepListingEndBeforeStart;
+      case 'PREP_PREVIEW_NOT_AVAILABLE':
+        return l10n.errorPrepPreviewNotAvailable;
+      case 'PREP_ITEM_NOT_AVAILABLE':
+        return l10n.errorPrepItemNotAvailable;
+      case 'PREP_OFFER_NOT_FOUND':
+        return l10n.errorPrepOfferNotFound;
+      case 'PREP_OFFER_IS_FREE':
+        return l10n.errorPrepOfferIsFree;
+      case 'PREP_PAYPAL_PURCHASE_NOT_FOUND':
+        return l10n.errorPrepPayPalPurchaseNotFound;
+      case 'PREP_MOBILE_PLATFORM_INVALID':
+        return l10n.errorPrepMobilePlatformInvalid;
+      case 'PREP_STORE_PRODUCT_MISMATCH':
+        return l10n.errorPrepStoreProductMismatch;
+      case 'PREP_OFFER_NO_LONGER_EXISTS':
+        return l10n.errorPrepOfferNoLongerExists;
+      case 'PREP_INVALID_PRODUCT_CODE':
+        return l10n.errorPrepInvalidProductCode;
+      case 'PREP_GOOGLE_PLAY_NOT_CONFIGURED':
+        return l10n.errorPrepGooglePlayNotConfigured;
+      case 'PREP_APP_STORE_NOT_CONFIGURED':
+        return l10n.errorPrepAppStoreNotConfigured;
       default:
         return _mapLegacyEnglishTitle(data['title'] as String?, l10n);
     }
@@ -385,6 +493,12 @@ abstract final class ApiErrorMapper {
     }
 
     switch (title.trim()) {
+      case 'Current password is incorrect.':
+        return l10n.currentPasswordIncorrectError;
+      case 'Password change is not available for this account.':
+        return l10n.passwordChangeUnavailableError;
+      case 'Invalid email or password.':
+        return l10n.loginInvalidCredentials;
       case 'Invalid email address.':
         return l10n.teacherClassInvalidEmailError;
       case 'Invalid display name.':
@@ -393,6 +507,10 @@ abstract final class ApiErrorMapper {
         return l10n.teacherClassMemberNotFoundError;
       case 'This user is already a member of the class.':
         return l10n.teacherClassMemberAlreadyExistsError;
+      case 'Only archived classes can be deleted. Archive the class first.':
+        return l10n.teacherClassDeleteRequiresArchiveError;
+      case 'Class is not archived.':
+        return l10n.teacherClassNotArchivedError;
       case 'This assignment has not opened yet.':
         return l10n.studentAssignmentNotYetOpenError;
       case 'This assignment is past its due date.':
@@ -405,6 +523,52 @@ abstract final class ApiErrorMapper {
         return l10n.teacherAssignmentMaxAttemptsBelowExistingError;
       case 'Due date cannot be before the start date.':
         return l10n.teacherAssignmentInvalidDateRangeError;
+      case 'Category not found.':
+        return l10n.errorPrepCategoryNotFound;
+      case 'Catalog item not found.':
+        return l10n.errorPrepCatalogItemNotFound;
+      case 'Quiz not found.':
+        return l10n.errorPrepQuizNotFound;
+      case 'This quiz is already in the Preparación+ catalog.':
+        return l10n.errorPrepQuizAlreadyInCatalog;
+      case 'Offer not found.':
+        return l10n.errorPrepOfferNotFound;
+      case 'This item is not available for purchase.':
+        return l10n.errorPrepItemNotAvailable;
+      case 'Preview is not available for this item.':
+        return l10n.errorPrepPreviewNotAvailable;
+      case 'This offer is free. Use checkout without payment.':
+        return l10n.errorPrepOfferIsFree;
+      case 'An unexpected error occurred.':
+        return l10n.genericRequestErrorMessage;
+      case 'Image file is required.':
+        return l10n.imageUploadFileRequired;
+      case 'Unsupported image file type.':
+        return l10n.imageUploadUnsupportedType;
+      case 'File is empty.':
+        return l10n.imageUploadFileRequired;
+    }
+
+    final prepSampleRequired = RegExp(
+      r'^Exactly (\d+) sample questions are required\.$',
+      caseSensitive: false,
+    ).firstMatch(title);
+    if (prepSampleRequired != null) {
+      final count = int.tryParse(prepSampleRequired.group(1)!);
+      if (count != null) {
+        return l10n.errorPrepSampleCountRequired(count);
+      }
+    }
+
+    final prepSamplesPublish = RegExp(
+      r'^Configure exactly (\d+) sample questions before publishing\.$',
+      caseSensitive: false,
+    ).firstMatch(title);
+    if (prepSamplesPublish != null) {
+      final count = int.tryParse(prepSamplesPublish.group(1)!);
+      if (count != null) {
+        return l10n.errorPrepSamplesRequiredPublish(count);
+      }
     }
 
     final questionLimit = RegExp(
@@ -441,6 +605,14 @@ abstract final class ApiErrorMapper {
   }
 
   static String? _mapMaterialEnglishMessage(String title, AppLocalizations l10n) {
+    final fileSizeLimit = RegExp(
+      r'File exceeds maximum size of (\d+) bytes',
+      caseSensitive: false,
+    ).firstMatch(title);
+    if (fileSizeLimit != null) {
+      return l10n.imageTooLargeForUpload;
+    }
+
     final pageLimit = RegExp(
       r'Document exceeds maximum of (\d+) pages',
       caseSensitive: false,

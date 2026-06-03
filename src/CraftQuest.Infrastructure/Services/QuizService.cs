@@ -1,8 +1,11 @@
 using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Exceptions;
 using CraftQuest.Application.Models.Quizzes;
+using CraftQuest.Application.Services;
+using CraftQuest.Application.Services.Quizzes;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
+using CraftQuest.Infrastructure.Services.Quizzes;
 using Microsoft.EntityFrameworkCore;
 
 namespace CraftQuest.Infrastructure.Services;
@@ -275,8 +278,10 @@ public class QuizService(
             Points = request.Points,
             SortOrder = sortOrder + 1,
             RandomizeAnswerOptions = request.RandomizeAnswerOptions,
-            ScoringPolicy = request.ScoringPolicy,
-            ExplanationVisibility = request.Justification?.Visibility ?? "after_quiz",
+            ScoringPolicy = AnswerGradingService.ResolveScoringPolicyForQuestionType(
+                questionType.Code,
+                request.ScoringPolicy),
+            ExplanationVisibility = "never",
             IsGeneratedByAi = request.IsGeneratedByAi,
             CreatedByUserId = userId,
             CreatedAt = DateTime.UtcNow,
@@ -289,21 +294,22 @@ public class QuizService(
             }).ToList(),
         };
 
-        if (request.Justification?.Text is not null)
-        {
-            question.Justification = new QuestionJustification
-            {
-                QuestionJustificationId = Guid.NewGuid(),
-                QuestionId = questionId,
-                JustificationText = request.Justification.Text.Trim(),
-                Status = "approved",
-                CreatedAt = DateTime.UtcNow,
-            };
-        }
-
         dbContext.Questions.Add(question);
+        await QuestionJustificationWriter.ApplyAsync(
+            dbContext,
+            question,
+            request.Justification,
+            request.IsGeneratedByAi,
+            cancellationToken);
+
         quiz.UpdatedAt = DateTime.UtcNow;
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        await dbContext.Entry(question)
+            .Reference(q => q.Justification)
+            .Query()
+            .Include(j => j!.Sources)
+            .LoadAsync(cancellationToken);
 
         return MapQuestion(question, questionType.Code, includeCorrectIds: true);
     }
@@ -320,6 +326,8 @@ public class QuizService(
         var question = await dbContext.Questions
             .Include(q => q.AnswerOptions)
             .Include(q => q.CorrectAnswerOptions)
+            .Include(q => q.Justification!)
+                .ThenInclude(j => j.Sources)
             .FirstOrDefaultAsync(
                 q => q.QuestionId == questionId && q.QuizId == quizId && q.DeletedAt == null,
                 cancellationToken)
@@ -396,8 +404,10 @@ public class QuizService(
         question.QuestionText = request.Text.Trim();
         question.Points = request.Points;
         question.RandomizeAnswerOptions = request.RandomizeAnswerOptions;
-        question.ScoringPolicy = request.ScoringPolicy;
-        question.ExplanationVisibility = request.Justification?.Visibility ?? question.ExplanationVisibility;
+        question.ScoringPolicy = AnswerGradingService.ResolveScoringPolicyForQuestionType(
+            questionType.Code,
+            request.ScoringPolicy);
+        question.ExplanationVisibility = "never";
         question.UpdatedAt = DateTime.UtcNow;
 
         foreach (var id in correctIds)
@@ -410,27 +420,22 @@ public class QuizService(
             });
         }
 
-        if (request.Justification?.Text is not null)
-        {
-            if (question.Justification is null)
-            {
-                question.Justification = new QuestionJustification
-                {
-                    QuestionJustificationId = Guid.NewGuid(),
-                    QuestionId = questionId,
-                    Status = "approved",
-                    CreatedAt = DateTime.UtcNow,
-                };
-                dbContext.QuestionJustifications.Add(question.Justification);
-            }
-
-            question.Justification.JustificationText = request.Justification.Text.Trim();
-        }
+        await QuestionJustificationWriter.ApplyAsync(
+            dbContext,
+            question,
+            request.Justification,
+            generatedByAi: false,
+            cancellationToken);
 
         quiz.UpdatedAt = DateTime.UtcNow;
         await dbContext.SaveChangesAsync(cancellationToken);
 
         question.QuestionType = questionType;
+        await dbContext.Entry(question)
+            .Reference(q => q.Justification)
+            .Query()
+            .Include(j => j!.Sources)
+            .LoadAsync(cancellationToken);
 
         return MapQuestion(question, questionType.Code, includeCorrectIds: true);
     }
@@ -469,46 +474,14 @@ public class QuizService(
             .Include(q => q.QuestionType)
             .Include(q => q.AnswerOptions.Where(o => o.IsActive))
             .Include(q => q.CorrectAnswerOptions)
+            .Include(q => q.Justification!)
+                .ThenInclude(j => j.Sources)
             .Where(q => q.QuizId == quizId && q.DeletedAt == null)
             .OrderBy(q => q.SortOrder)
             .ToListAsync(cancellationToken);
 
         return questions
             .Select(q => MapQuestion(q, q.QuestionType.Code, includeCorrectIds: true))
-            .ToList();
-    }
-
-    public async Task<IReadOnlyList<QuestionStudentDto>> GetQuestionsForStudentAsync(
-        Guid quizId,
-        CancellationToken cancellationToken = default)
-    {
-        var quiz = await dbContext.Quizzes
-            .AsNoTracking()
-            .FirstOrDefaultAsync(q => q.QuizId == quizId && q.DeletedAt == null, cancellationToken)
-            ?? throw new AppException("Quiz not found.", 404);
-
-        if (quiz.PublicationStatus != "published")
-        {
-            throw new AppException("Quiz is not published.", 403);
-        }
-
-        var questions = await dbContext.Questions
-            .AsNoTracking()
-            .Include(q => q.QuestionType)
-            .Include(q => q.AnswerOptions.Where(o => o.IsActive))
-            .Where(q => q.QuizId == quizId && q.DeletedAt == null)
-            .OrderBy(q => q.SortOrder)
-            .ToListAsync(cancellationToken);
-
-        return questions
-            .Select(q => new QuestionStudentDto
-            {
-                QuestionId = q.QuestionId,
-                QuestionType = q.QuestionType.Code,
-                Text = q.QuestionText,
-                RandomizeAnswerOptions = q.RandomizeAnswerOptions,
-                AnswerOptions = MapAnswerOptions(q.AnswerOptions),
-            })
             .ToList();
     }
 
@@ -654,6 +627,7 @@ public class QuizService(
         PublicationStatus = quiz.PublicationStatus,
         Visibility = quiz.Visibility,
         QuestionCount = questionCount,
+        RandomizeQuestions = quiz.RandomizeQuestions,
         PendingReviewImportId = pendingReviewImportId,
         PendingReviewValidQuestions = pendingReviewValidQuestions,
         IsOwned = isOwned,
@@ -666,10 +640,12 @@ public class QuizService(
         Text = question.QuestionText,
         Points = question.Points,
         RandomizeAnswerOptions = question.RandomizeAnswerOptions,
+        ExplanationVisibility = question.ExplanationVisibility,
         AnswerOptions = MapAnswerOptions(question.AnswerOptions.Where(o => o.IsActive)),
         CorrectAnswerOptionIds = includeCorrectIds
             ? question.CorrectAnswerOptions.Select(c => c.AnswerOptionId).ToList()
             : [],
+        Justification = QuestionJustificationMapper.MapDto(question),
     };
 
     private static IReadOnlyList<AnswerOptionDto> MapAnswerOptions(IEnumerable<QuestionAnswerOption> options) =>

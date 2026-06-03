@@ -12,5 +12,7 @@ public interface IAnalyticsService
     Task<QuizAnalyticsDto> GetQuizAnalyticsAsync(
         Guid teacherUserId,
         Guid quizId,
+        Guid? classId = null,
+        Guid? assignmentId = null,
         CancellationToken cancellationToken = default);
 }

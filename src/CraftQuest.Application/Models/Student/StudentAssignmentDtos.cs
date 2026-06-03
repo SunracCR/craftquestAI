@@ -13,6 +13,9 @@ public sealed class StudentAssignmentDto
     public required DateTime? StartsAt { get; init; }
     public required DateTime? DueAt { get; init; }
     public required int? MaxAttempts { get; init; }
+    public required bool RandomizeQuestions { get; init; }
+    public required bool AllowStudentRandomizeQuestions { get; init; }
+    public required bool ForfeitExitCountsAsAttempt { get; init; }
     public required int MyAttemptCount { get; init; }
     public required string TeacherDisplayName { get; init; }
     public required DateTime CreatedAt { get; init; }

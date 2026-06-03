@@ -8,6 +8,7 @@ public sealed class QuizDto
     public required string PublicationStatus { get; init; }
     public required string Visibility { get; init; }
     public int QuestionCount { get; init; }
+    public bool RandomizeQuestions { get; init; }
     /// <summary>AI-generated import batch awaiting confirmation into this quiz.</summary>
     public Guid? PendingReviewImportId { get; init; }
     public int? PendingReviewValidQuestions { get; init; }

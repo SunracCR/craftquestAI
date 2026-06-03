@@ -1,9 +1,11 @@
 import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/network/api_client.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/utils/assignment_dates.dart';
 import 'package:craftquest_app/core/widgets/app_notice_banner.dart';
 import 'package:craftquest_app/core/widgets/app_section_card.dart';
+import 'package:craftquest_app/core/widgets/app_padded_scroll.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/features/billing/data/billing_repository.dart';
 import 'package:craftquest_app/features/teacher/data/models/teacher_dashboard_models.dart';
@@ -34,7 +36,7 @@ class _TeacherDashboardPageState extends State<TeacherDashboardPage> {
   @override
   void initState() {
     super.initState();
-    _future = _repo.getDashboard();
+    _future = _loadDashboard();
     _checkExpiring();
   }
 
@@ -47,10 +49,22 @@ class _TeacherDashboardPageState extends State<TeacherDashboardPage> {
 
   void _refresh() {
     setState(() {
-      _future = _repo.getDashboard();
+      _future = _loadDashboard();
       _isExpiring = false;
     });
     _checkExpiring();
+  }
+
+  Future<TeacherDashboardModel> _loadDashboard() async {
+    try {
+      return await _repo.getDashboard();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 403 &&
+          await getIt<ApiClient>().refreshTokens()) {
+        return _repo.getDashboard();
+      }
+      rethrow;
+    }
   }
 
   @override
@@ -77,11 +91,11 @@ class _TeacherDashboardPageState extends State<TeacherDashboardPage> {
         }
 
         final data = snapshot.data!;
-        return RefreshIndicator(
+        return AppPaddedScrollBody(
+          child: RefreshIndicator(
           color: AppColors.teacherAccent,
           onRefresh: () async => _refresh(),
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
             children: [
               if (_isExpiring)
                 Padding(
@@ -158,6 +172,7 @@ class _TeacherDashboardPageState extends State<TeacherDashboardPage> {
                 ),
             ],
           ),
+        ),
         );
       },
     );
@@ -193,7 +208,7 @@ class _InventoryRow extends StatelessWidget {
         Expanded(
           child: _MiniStat(
             label: l10n.teacherDashboardInventoryQuizzes,
-            value: '${data.publishedQuizzes}',
+            value: '${data.assignedQuizzes}',
             color: AppColors.accentGold,
           ),
         ),

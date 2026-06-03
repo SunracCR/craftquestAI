@@ -103,7 +103,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In es, this message translates to:
-  /// **'CraftQuest'**
+  /// **'CraftQuestAI'**
   String get appTitle;
 
   /// No description provided for @homeWelcome.
@@ -202,6 +202,12 @@ abstract class AppLocalizations {
   /// **'Sin conexión. Revisa tu internet e inténtalo de nuevo.'**
   String get noInternetSnackBarMessage;
 
+  /// No description provided for @errorDevApiUnreachable.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo conectar con la API en el teléfono. Con el USB conectado ejecuta: adb reverse tcp:7080 tcp:7080 y reinicia la app.'**
+  String get errorDevApiUnreachable;
+
   /// No description provided for @genericRequestErrorMessage.
   ///
   /// In es, this message translates to:
@@ -259,8 +265,50 @@ abstract class AppLocalizations {
   /// No description provided for @loginSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Accede gratis a tu cuenta CraftQuest — entra o regístrate en segundos'**
+  /// **'Accede gratis a tu cuenta CraftQuestAI — entra o regístrate en segundos'**
   String get loginSubtitle;
+
+  /// No description provided for @parentalConsentTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Se requiere aprobación parental'**
+  String get parentalConsentTitle;
+
+  /// No description provided for @parentalConsentBodyDefault.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu cuenta está supervisada o eres menor en una región con normas de edad (p. ej. Texas). Un padre o tutor debe autorizar el uso de CraftQuestAI en Google Play antes de continuar.'**
+  String get parentalConsentBodyDefault;
+
+  /// No description provided for @parentalConsentBodyPending.
+  ///
+  /// In es, this message translates to:
+  /// **'Hay cambios pendientes de aprobación por tu padre o tutor en Google Play. Pídele que revise la solicitud en Family Link o en la Play Store y vuelve a comprobar el estado.'**
+  String get parentalConsentBodyPending;
+
+  /// No description provided for @parentalConsentBodyDenied.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu padre o tutor no aprobó el acceso a CraftQuestAI. Abre Google Play para revisar la configuración de la cuenta supervisada o contacta a quien administra tu cuenta.'**
+  String get parentalConsentBodyDenied;
+
+  /// No description provided for @parentalConsentBodyUnknown.
+  ///
+  /// In es, this message translates to:
+  /// **'Google Play no pudo confirmar tu edad. Abre la Play Store, inicia sesión con la misma cuenta y completa la verificación de edad; después pulsa «Comprobar de nuevo».'**
+  String get parentalConsentBodyUnknown;
+
+  /// No description provided for @parentalConsentOpenPlayStore.
+  ///
+  /// In es, this message translates to:
+  /// **'Abrir Google Play'**
+  String get parentalConsentOpenPlayStore;
+
+  /// No description provided for @parentalConsentRecheckAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Comprobar de nuevo'**
+  String get parentalConsentRecheckAction;
 
   /// No description provided for @loginAction.
   ///
@@ -271,8 +319,14 @@ abstract class AppLocalizations {
   /// No description provided for @loginRememberCredentials.
   ///
   /// In es, this message translates to:
-  /// **'Recordar usuario y contraseña'**
+  /// **'Recordar correo electrónico'**
   String get loginRememberCredentials;
+
+  /// No description provided for @loginInvalidCredentials.
+  ///
+  /// In es, this message translates to:
+  /// **'Correo o contraseña incorrectos. Comprueba los datos e inténtalo de nuevo.'**
+  String get loginInvalidCredentials;
 
   /// No description provided for @registerTitle.
   ///
@@ -291,6 +345,192 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'¿No tienes cuenta? Regístrate'**
   String get goToRegister;
+
+  /// No description provided for @forgotPasswordLink.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Olvidaste tu contraseña?'**
+  String get forgotPasswordLink;
+
+  /// No description provided for @forgotPasswordTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Recuperar contraseña'**
+  String get forgotPasswordTitle;
+
+  /// No description provided for @forgotPasswordSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Te enviaremos un enlace a tu correo si la cuenta existe.'**
+  String get forgotPasswordSubtitle;
+
+  /// No description provided for @forgotPasswordAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar enlace'**
+  String get forgotPasswordAction;
+
+  /// No description provided for @forgotPasswordSuccess.
+  ///
+  /// In es, this message translates to:
+  /// **'Si el correo está registrado, recibirás instrucciones en breve.'**
+  String get forgotPasswordSuccess;
+
+  /// No description provided for @resetPasswordTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Nueva contraseña'**
+  String get resetPasswordTitle;
+
+  /// No description provided for @resetPasswordSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Introduce el código del correo y tu nueva contraseña.'**
+  String get resetPasswordSubtitle;
+
+  /// No description provided for @resetPasswordTokenLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Código de recuperación'**
+  String get resetPasswordTokenLabel;
+
+  /// No description provided for @resetPasswordAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar contraseña'**
+  String get resetPasswordAction;
+
+  /// No description provided for @resetPasswordSuccess.
+  ///
+  /// In es, this message translates to:
+  /// **'Contraseña actualizada. Ya puedes iniciar sesión.'**
+  String get resetPasswordSuccess;
+
+  /// No description provided for @backToLogin.
+  ///
+  /// In es, this message translates to:
+  /// **'Volver al inicio de sesión'**
+  String get backToLogin;
+
+  /// No description provided for @resetPasswordHaveCode.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya tengo el código de recuperación'**
+  String get resetPasswordHaveCode;
+
+  /// No description provided for @oauthDividerLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'o continúa con'**
+  String get oauthDividerLabel;
+
+  /// No description provided for @oauthSignInWithGoogle.
+  ///
+  /// In es, this message translates to:
+  /// **'Iniciar sesión con Google'**
+  String get oauthSignInWithGoogle;
+
+  /// No description provided for @oauthSignInWithApple.
+  ///
+  /// In es, this message translates to:
+  /// **'Iniciar sesión con Apple'**
+  String get oauthSignInWithApple;
+
+  /// No description provided for @oauthSignInGoogleShort.
+  ///
+  /// In es, this message translates to:
+  /// **'Google'**
+  String get oauthSignInGoogleShort;
+
+  /// No description provided for @oauthSignInAppleShort.
+  ///
+  /// In es, this message translates to:
+  /// **'Apple'**
+  String get oauthSignInAppleShort;
+
+  /// No description provided for @oauthSignInFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo completar el inicio de sesión social.'**
+  String get oauthSignInFailed;
+
+  /// No description provided for @oauthGoogleWebOriginHint.
+  ///
+  /// In es, this message translates to:
+  /// **' En Google Cloud (cliente Web), añade orígenes JavaScript autorizados: http://localhost:7357 y http://127.0.0.1:7357 (mismo puerto que flutter run --web-port).'**
+  String get oauthGoogleWebOriginHint;
+
+  /// No description provided for @oauthGooglePeopleApiHint.
+  ///
+  /// In es, this message translates to:
+  /// **' Habilita People API en Google Cloud (mismo proyecto que tu Client ID): https://console.cloud.google.com/apis/library/people.googleapis.com'**
+  String get oauthGooglePeopleApiHint;
+
+  /// No description provided for @oauthGoogleNotConfigured.
+  ///
+  /// In es, this message translates to:
+  /// **'Google no está configurado. Añade ExternalAuth:Google:WebClientId en la API o GOOGLE_SERVER_CLIENT_ID al ejecutar la app.'**
+  String get oauthGoogleNotConfigured;
+
+  /// No description provided for @oauthAppleNotConfigured.
+  ///
+  /// In es, this message translates to:
+  /// **'Apple no está configurado en el servidor (ExternalAuth:Apple:BundleId).'**
+  String get oauthAppleNotConfigured;
+
+  /// No description provided for @oauthAppleNotAvailable.
+  ///
+  /// In es, this message translates to:
+  /// **'Iniciar sesión con Apple no está disponible en este dispositivo.'**
+  String get oauthAppleNotAvailable;
+
+  /// No description provided for @oauthAppleWebNotConfigured.
+  ///
+  /// In es, this message translates to:
+  /// **'Apple en web requiere Services ID y WebRedirectUri en la API (ExternalAuth:Apple). Regístralos en Apple Developer.'**
+  String get oauthAppleWebNotConfigured;
+
+  /// No description provided for @billingCycleMonthly.
+  ///
+  /// In es, this message translates to:
+  /// **'Mensual'**
+  String get billingCycleMonthly;
+
+  /// No description provided for @billingCycleAnnual.
+  ///
+  /// In es, this message translates to:
+  /// **'Anual'**
+  String get billingCycleAnnual;
+
+  /// No description provided for @billingCycleAnnualPriceSuffix.
+  ///
+  /// In es, this message translates to:
+  /// **'/ año'**
+  String get billingCycleAnnualPriceSuffix;
+
+  /// No description provided for @billingAnnualNotAvailable.
+  ///
+  /// In es, this message translates to:
+  /// **'Anual no disponible para este plan'**
+  String get billingAnnualNotAvailable;
+
+  /// No description provided for @billingPlanInstitutionName.
+  ///
+  /// In es, this message translates to:
+  /// **'Institución'**
+  String get billingPlanInstitutionName;
+
+  /// No description provided for @upgradeInstitutionHighlight.
+  ///
+  /// In es, this message translates to:
+  /// **'Licencias para centros educativos, sedes y docentes'**
+  String get upgradeInstitutionHighlight;
+
+  /// No description provided for @institutionPlanContactHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Contacta con ventas para un presupuesto a medida.'**
+  String get institutionPlanContactHint;
 
   /// No description provided for @emailLabel.
   ///
@@ -334,11 +574,431 @@ abstract class AppLocalizations {
   /// **'Inicio'**
   String get navHomeLabel;
 
+  /// No description provided for @navPrepPlusLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Preparación+'**
+  String get navPrepPlusLabel;
+
   /// No description provided for @navProfileLabel.
   ///
   /// In es, this message translates to:
   /// **'Perfil'**
   String get navProfileLabel;
+
+  /// No description provided for @prepPlusScreenTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Preparación+'**
+  String get prepPlusScreenTitle;
+
+  /// No description provided for @prepPlusScreenSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuestionarios curados para tu examen. Compra acceso por tiempo.'**
+  String get prepPlusScreenSubtitle;
+
+  /// No description provided for @homePrepPlusCardTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Preparación+'**
+  String get homePrepPlusCardTitle;
+
+  /// No description provided for @homePrepPlusCardSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Explora por país o tema y compra solo lo que necesitas.'**
+  String get homePrepPlusCardSubtitle;
+
+  /// No description provided for @prepPlusByCountrySection.
+  ///
+  /// In es, this message translates to:
+  /// **'Por país'**
+  String get prepPlusByCountrySection;
+
+  /// No description provided for @prepPlusInternationalSection.
+  ///
+  /// In es, this message translates to:
+  /// **'Internacional'**
+  String get prepPlusInternationalSection;
+
+  /// No description provided for @prepPlusInternationalSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =0{Sin cuestionarios disponibles} =1{1 cuestionario disponible} other{{count} cuestionarios disponibles}}'**
+  String prepPlusInternationalSubtitle(int count);
+
+  /// No description provided for @prepPlusCategoryItemCount.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =0{Sin cuestionarios} =1{1 cuestionario} other{{count} cuestionarios}}'**
+  String prepPlusCategoryItemCount(int count);
+
+  /// No description provided for @prepPlusMyAccessesTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Mis accesos'**
+  String get prepPlusMyAccessesTitle;
+
+  /// No description provided for @prepPlusMyAccessesActiveCount.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} activos'**
+  String prepPlusMyAccessesActiveCount(int count);
+
+  /// No description provided for @prepPlusTabActive.
+  ///
+  /// In es, this message translates to:
+  /// **'Activos'**
+  String get prepPlusTabActive;
+
+  /// No description provided for @prepPlusTabExpired.
+  ///
+  /// In es, this message translates to:
+  /// **'Expirados'**
+  String get prepPlusTabExpired;
+
+  /// No description provided for @prepPlusMyAccessesActiveEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'No tienes accesos activos.'**
+  String get prepPlusMyAccessesActiveEmpty;
+
+  /// No description provided for @prepPlusMyAccessesExpiredEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'No tienes accesos expirados.'**
+  String get prepPlusMyAccessesExpiredEmpty;
+
+  /// No description provided for @prepPlusSearchHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Buscar cuestionario…'**
+  String get prepPlusSearchHint;
+
+  /// No description provided for @prepPlusCategoryEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay cuestionarios en esta categoría.'**
+  String get prepPlusCategoryEmpty;
+
+  /// No description provided for @prepPlusFiltersAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Filtros'**
+  String get prepPlusFiltersAction;
+
+  /// No description provided for @prepPlusFiltersTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Filtros'**
+  String get prepPlusFiltersTitle;
+
+  /// No description provided for @prepPlusFiltersApply.
+  ///
+  /// In es, this message translates to:
+  /// **'Aplicar'**
+  String get prepPlusFiltersApply;
+
+  /// No description provided for @prepPlusFilterPriceLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Precio'**
+  String get prepPlusFilterPriceLabel;
+
+  /// No description provided for @prepPlusFilterAccessLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu acceso'**
+  String get prepPlusFilterAccessLabel;
+
+  /// No description provided for @prepPlusFilterAll.
+  ///
+  /// In es, this message translates to:
+  /// **'Todos'**
+  String get prepPlusFilterAll;
+
+  /// No description provided for @prepPlusFilterFree.
+  ///
+  /// In es, this message translates to:
+  /// **'Gratis'**
+  String get prepPlusFilterFree;
+
+  /// No description provided for @prepPlusFilterPaid.
+  ///
+  /// In es, this message translates to:
+  /// **'De pago'**
+  String get prepPlusFilterPaid;
+
+  /// No description provided for @prepPlusFilterInstitutionLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Institución o examen'**
+  String get prepPlusFilterInstitutionLabel;
+
+  /// No description provided for @prepPlusAccessNone.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin comprar'**
+  String get prepPlusAccessNone;
+
+  /// No description provided for @prepPlusAccessActive.
+  ///
+  /// In es, this message translates to:
+  /// **'Activo'**
+  String get prepPlusAccessActive;
+
+  /// No description provided for @prepPlusAccessExpired.
+  ///
+  /// In es, this message translates to:
+  /// **'Expirado'**
+  String get prepPlusAccessExpired;
+
+  /// No description provided for @prepPlusQuestionCount.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} preguntas'**
+  String prepPlusQuestionCount(int count);
+
+  /// No description provided for @prepPlusHasFreeOffer.
+  ///
+  /// In es, this message translates to:
+  /// **'Incluye opción gratis'**
+  String get prepPlusHasFreeOffer;
+
+  /// No description provided for @prepPlusFromPrice.
+  ///
+  /// In es, this message translates to:
+  /// **'Desde {price} {currency}'**
+  String prepPlusFromPrice(double price, String currency);
+
+  /// No description provided for @prepPlusItemDetailTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Detalle'**
+  String get prepPlusItemDetailTitle;
+
+  /// No description provided for @prepPlusPreviewAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Probar simulación (3 preguntas)'**
+  String get prepPlusPreviewAction;
+
+  /// No description provided for @prepPlusPreviewSimulationCtaTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Simulación interactiva'**
+  String get prepPlusPreviewSimulationCtaTitle;
+
+  /// No description provided for @prepPlusPreviewSimulationCtaSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Responde como en la práctica real — sin guardar resultados.'**
+  String get prepPlusPreviewSimulationCtaSubtitle;
+
+  /// No description provided for @prepPlusPreviewTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Vista previa'**
+  String get prepPlusPreviewTitle;
+
+  /// No description provided for @prepPlusPreviewSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Muestra de «{title}»'**
+  String prepPlusPreviewSubtitle(String title);
+
+  /// No description provided for @prepPlusPreviewSimulationTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Simulación'**
+  String get prepPlusPreviewSimulationTitle;
+
+  /// No description provided for @prepPlusPreviewSimulationBanner.
+  ///
+  /// In es, this message translates to:
+  /// **'Modo demostración'**
+  String get prepPlusPreviewSimulationBanner;
+
+  /// No description provided for @prepPlusPreviewSimulationSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'«{title}» — experiencia igual a practicar'**
+  String prepPlusPreviewSimulationSubtitle(String title);
+
+  /// No description provided for @prepPlusPreviewTryInteraction.
+  ///
+  /// In es, this message translates to:
+  /// **'Toca una respuesta para ver cómo funciona la herramienta.'**
+  String get prepPlusPreviewTryInteraction;
+
+  /// No description provided for @prepPlusPreviewPrevious.
+  ///
+  /// In es, this message translates to:
+  /// **'Anterior'**
+  String get prepPlusPreviewPrevious;
+
+  /// No description provided for @prepPlusPreviewNext.
+  ///
+  /// In es, this message translates to:
+  /// **'Siguiente'**
+  String get prepPlusPreviewNext;
+
+  /// No description provided for @prepPlusPreviewFinishCta.
+  ///
+  /// In es, this message translates to:
+  /// **'Cerrar simulación'**
+  String get prepPlusPreviewFinishCta;
+
+  /// No description provided for @prepPlusPreviewQuestionLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Pregunta {number}'**
+  String prepPlusPreviewQuestionLabel(int number);
+
+  /// No description provided for @prepPlusAccessCombosTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige tu combo de acceso'**
+  String get prepPlusAccessCombosTitle;
+
+  /// No description provided for @prepPlusAccessCombosSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Incluye el cuestionario completo durante el periodo seleccionado.'**
+  String get prepPlusAccessCombosSubtitle;
+
+  /// No description provided for @prepPlusBestValueBadge.
+  ///
+  /// In es, this message translates to:
+  /// **'MEJOR VALOR'**
+  String get prepPlusBestValueBadge;
+
+  /// No description provided for @prepPlusPricePerDay.
+  ///
+  /// In es, this message translates to:
+  /// **'{price} / día'**
+  String prepPlusPricePerDay(String price);
+
+  /// No description provided for @prepPlusComboIncludesAccess.
+  ///
+  /// In es, this message translates to:
+  /// **'Acceso total al banco de preguntas'**
+  String get prepPlusComboIncludesAccess;
+
+  /// No description provided for @prepPlusSelectDuration.
+  ///
+  /// In es, this message translates to:
+  /// **'Duración del acceso'**
+  String get prepPlusSelectDuration;
+
+  /// No description provided for @prepPlusDuration30.
+  ///
+  /// In es, this message translates to:
+  /// **'30 días'**
+  String get prepPlusDuration30;
+
+  /// No description provided for @prepPlusDuration60.
+  ///
+  /// In es, this message translates to:
+  /// **'60 días'**
+  String get prepPlusDuration60;
+
+  /// No description provided for @prepPlusDuration90.
+  ///
+  /// In es, this message translates to:
+  /// **'90 días'**
+  String get prepPlusDuration90;
+
+  /// No description provided for @prepPlusDuration6Months.
+  ///
+  /// In es, this message translates to:
+  /// **'6 meses'**
+  String get prepPlusDuration6Months;
+
+  /// No description provided for @prepPlusDurationDays.
+  ///
+  /// In es, this message translates to:
+  /// **'{days} días'**
+  String prepPlusDurationDays(int days);
+
+  /// No description provided for @prepPlusOfferPrice.
+  ///
+  /// In es, this message translates to:
+  /// **'{price} {currency}'**
+  String prepPlusOfferPrice(double price, String currency);
+
+  /// No description provided for @prepPlusPracticeAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Practicar'**
+  String get prepPlusPracticeAction;
+
+  /// No description provided for @prepPlusBuyAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Comprar acceso'**
+  String get prepPlusBuyAction;
+
+  /// No description provided for @prepPlusGetFreeAccessAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Obtener acceso gratis'**
+  String get prepPlusGetFreeAccessAction;
+
+  /// No description provided for @prepPlusRenewAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Renovar acceso'**
+  String get prepPlusRenewAction;
+
+  /// No description provided for @prepPlusAccessUntil.
+  ///
+  /// In es, this message translates to:
+  /// **'Vence el {date}'**
+  String prepPlusAccessUntil(String date);
+
+  /// No description provided for @prepPlusExpiresOn.
+  ///
+  /// In es, this message translates to:
+  /// **'Vence el {date}'**
+  String prepPlusExpiresOn(String date);
+
+  /// No description provided for @prepPlusExpiredOn.
+  ///
+  /// In es, this message translates to:
+  /// **'Expiró el {date}'**
+  String prepPlusExpiredOn(String date);
+
+  /// No description provided for @prepPlusNotAvailableForPurchase.
+  ///
+  /// In es, this message translates to:
+  /// **'No disponible para compra en este momento.'**
+  String get prepPlusNotAvailableForPurchase;
+
+  /// No description provided for @prepPlusViewHistory.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver mi historial'**
+  String get prepPlusViewHistory;
+
+  /// No description provided for @prepPlusAccessGranted.
+  ///
+  /// In es, this message translates to:
+  /// **'Acceso concedido. ¡Ya puedes practicar!'**
+  String get prepPlusAccessGranted;
+
+  /// No description provided for @prepPlusConfirmPayPalPayment.
+  ///
+  /// In es, this message translates to:
+  /// **'Confirmar pago PayPal'**
+  String get prepPlusConfirmPayPalPayment;
+
+  /// No description provided for @prepPlusStoreProductMissing.
+  ///
+  /// In es, this message translates to:
+  /// **'Pago en tienda no configurado para esta oferta. Usa la versión web con PayPal.'**
+  String get prepPlusStoreProductMissing;
 
   /// No description provided for @profileTitle.
   ///
@@ -471,6 +1131,18 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Contraseña actualizada'**
   String get passwordChangedMessage;
+
+  /// No description provided for @currentPasswordIncorrectError.
+  ///
+  /// In es, this message translates to:
+  /// **'La contraseña actual no es correcta.'**
+  String get currentPasswordIncorrectError;
+
+  /// No description provided for @passwordChangeUnavailableError.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta cuenta no tiene contraseña local. Usa el inicio de sesión con Google o Apple.'**
+  String get passwordChangeUnavailableError;
 
   /// No description provided for @myQuizzesAction.
   ///
@@ -778,6 +1450,72 @@ abstract class AppLocalizations {
   /// **'Enunciado'**
   String get questionTextLabel;
 
+  /// No description provided for @questionJustificationLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Justificación (respuesta correcta)'**
+  String get questionJustificationLabel;
+
+  /// No description provided for @questionJustificationHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Explica en un solo texto por qué la(s) respuesta(s) correcta(s) lo son.'**
+  String get questionJustificationHint;
+
+  /// No description provided for @questionJustificationReviewHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Visible al revisar los intentos del cuestionario (no durante la práctica).'**
+  String get questionJustificationReviewHint;
+
+  /// No description provided for @explanationVisibilityAfterQuiz.
+  ///
+  /// In es, this message translates to:
+  /// **'Al terminar el cuestionario'**
+  String get explanationVisibilityAfterQuiz;
+
+  /// No description provided for @explanationVisibilityAfterAnswer.
+  ///
+  /// In es, this message translates to:
+  /// **'Tras cada respuesta'**
+  String get explanationVisibilityAfterAnswer;
+
+  /// No description provided for @explanationVisibilityNever.
+  ///
+  /// In es, this message translates to:
+  /// **'No mostrar en práctica'**
+  String get explanationVisibilityNever;
+
+  /// No description provided for @practiceReviewJustificationTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Justificación'**
+  String get practiceReviewJustificationTitle;
+
+  /// No description provided for @practiceReviewJustificationTapToExpand.
+  ///
+  /// In es, this message translates to:
+  /// **'Toca para ver la explicación'**
+  String get practiceReviewJustificationTapToExpand;
+
+  /// No description provided for @practiceReviewSourcePage.
+  ///
+  /// In es, this message translates to:
+  /// **'Página {page}'**
+  String practiceReviewSourcePage(int page);
+
+  /// No description provided for @aiGenerationIncludeExplanationsLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Incluir justificaciones'**
+  String get aiGenerationIncludeExplanationsLabel;
+
+  /// No description provided for @aiGenerationIncludeExplanationsHint.
+  ///
+  /// In es, this message translates to:
+  /// **'La IA generará texto explicativo y número de página del material cuando aplique.'**
+  String get aiGenerationIncludeExplanationsHint;
+
   /// No description provided for @questionPointsLabel.
   ///
   /// In es, this message translates to:
@@ -909,6 +1647,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Las preguntas se muestran en un orden distinto en cada práctica'**
   String get practiceRandomizeQuestionsHint;
+
+  /// No description provided for @quizRandomizeQuestionsHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Aplica a las asignaciones de tus estudiantes y cuando practican este cuestionario'**
+  String get quizRandomizeQuestionsHint;
 
   /// No description provided for @practiceShowTimerLabel.
   ///
@@ -1407,6 +2151,30 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'{valid} válidas de {total} ({errors} con error)'**
   String importSummaryLabel(int valid, int total, int errors);
+
+  /// No description provided for @importSummaryLoading.
+  ///
+  /// In es, this message translates to:
+  /// **'Cargando preguntas…'**
+  String get importSummaryLoading;
+
+  /// No description provided for @importSummaryReady.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 pregunta lista para revisar} other{{count} preguntas listas para revisar}}'**
+  String importSummaryReady(int count);
+
+  /// No description provided for @importSummaryWithErrors.
+  ///
+  /// In es, this message translates to:
+  /// **'{valid} válidas de {total} · {errors} con error'**
+  String importSummaryWithErrors(int valid, int total, int errors);
+
+  /// No description provided for @importSummaryEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'No se detectaron preguntas en esta importación'**
+  String get importSummaryEmpty;
 
   /// No description provided for @importErrorLine.
   ///
@@ -2058,6 +2826,60 @@ abstract class AppLocalizations {
   /// **'Adjuntar imagen'**
   String get attachImageAction;
 
+  /// No description provided for @imagePickPermissionDenied.
+  ///
+  /// In es, this message translates to:
+  /// **'Permite el acceso a fotos en Ajustes para adjuntar imágenes.'**
+  String get imagePickPermissionDenied;
+
+  /// No description provided for @imagePickFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo abrir la galería. Inténtalo de nuevo.'**
+  String get imagePickFailed;
+
+  /// No description provided for @imageTooLargeForUpload.
+  ///
+  /// In es, this message translates to:
+  /// **'La imagen es demasiado grande (máx. 5 MB). Elige otra o una foto más pequeña.'**
+  String get imageTooLargeForUpload;
+
+  /// No description provided for @imageAttachedSuccess.
+  ///
+  /// In es, this message translates to:
+  /// **'Imagen adjuntada correctamente.'**
+  String get imageAttachedSuccess;
+
+  /// No description provided for @imageUploadInvalidResponse.
+  ///
+  /// In es, this message translates to:
+  /// **'El servidor respondió de forma inesperada. Reinicia la API y vuelve a intentarlo.'**
+  String get imageUploadInvalidResponse;
+
+  /// No description provided for @imageUploadInvalidMultipart.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo enviar la imagen al servidor. Reinicia la app y la API e inténtalo de nuevo.'**
+  String get imageUploadInvalidMultipart;
+
+  /// No description provided for @imageUploadFileRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'No se recibió ningún archivo de imagen. Vuelve a seleccionar la foto.'**
+  String get imageUploadFileRequired;
+
+  /// No description provided for @imageUploadUnsupportedType.
+  ///
+  /// In es, this message translates to:
+  /// **'Formato de imagen no admitido. Usa JPG, PNG, WebP o GIF.'**
+  String get imageUploadUnsupportedType;
+
+  /// No description provided for @imagePreviewLoadFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'Imagen guardada, pero no se pudo mostrar la vista previa. Comprueba la conexión con el servidor.'**
+  String get imagePreviewLoadFailed;
+
   /// No description provided for @removeImageAction.
   ///
   /// In es, this message translates to:
@@ -2106,23 +2928,29 @@ abstract class AppLocalizations {
   /// **'Ya tienes el plan más alto disponible. No hay más mejoras por ahora.'**
   String get upgradePlanAlreadyHighest;
 
-  /// No description provided for @upgradeProHighlightQuizzes.
+  /// No description provided for @upgradeProHighlightQuizzesLimit.
   ///
   /// In es, this message translates to:
-  /// **'Cuestionarios ilimitados (tu plan actual: máx. 5)'**
-  String get upgradeProHighlightQuizzes;
+  /// **'Cuestionarios ilimitados (tu plan actual: máx. {max})'**
+  String upgradeProHighlightQuizzesLimit(int max);
 
-  /// No description provided for @upgradeProHighlightQuestions.
+  /// No description provided for @upgradeProHighlightQuestionsLimit.
   ///
   /// In es, this message translates to:
-  /// **'Sin límite de preguntas por cuestionario (tu plan actual: 65)'**
-  String get upgradeProHighlightQuestions;
+  /// **'Sin límite de preguntas por cuestionario (tu plan actual: {max})'**
+  String upgradeProHighlightQuestionsLimit(int max);
 
   /// No description provided for @upgradeProHighlightAiCredits.
   ///
   /// In es, this message translates to:
   /// **'150 créditos IA al mes (tu plan actual: 20)'**
   String get upgradeProHighlightAiCredits;
+
+  /// No description provided for @upgradePlanHighlightAiCredits.
+  ///
+  /// In es, this message translates to:
+  /// **'{credits} créditos IA al mes (tu plan actual: {currentCredits})'**
+  String upgradePlanHighlightAiCredits(int credits, int currentCredits);
 
   /// No description provided for @upgradeProHighlightShared.
   ///
@@ -2195,6 +3023,18 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Completa el pago en PayPal y confirma la captura.'**
   String get paypalAwaitingCapture;
+
+  /// No description provided for @paypalAwaitingSubscriptionActivation.
+  ///
+  /// In es, this message translates to:
+  /// **'Aprueba la suscripción en PayPal y vuelve a la app para activarla.'**
+  String get paypalAwaitingSubscriptionActivation;
+
+  /// No description provided for @subscriptionAutoRenewDisclaimer.
+  ///
+  /// In es, this message translates to:
+  /// **'Renovación automática cada periodo hasta que la canceles. Puedes desactivarla en cualquier momento.'**
+  String get subscriptionAutoRenewDisclaimer;
 
   /// No description provided for @upgradeSuccess.
   ///
@@ -2781,6 +3621,78 @@ abstract class AppLocalizations {
   /// **'No tienes créditos IA suficientes para esta generación.'**
   String get errorAiCreditsInsufficient;
 
+  /// No description provided for @errorAiCreditPacksNotAvailable.
+  ///
+  /// In es, this message translates to:
+  /// **'Los paquetes de créditos IA están disponibles en los planes Pro y Teacher.'**
+  String get errorAiCreditPacksNotAvailable;
+
+  /// No description provided for @aiCreditPacksTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Comprar créditos IA'**
+  String get aiCreditPacksTitle;
+
+  /// No description provided for @aiCreditPacksSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Recarga créditos para seguir generando con IA. Los paquetes comprados no expiran; el cupo mensual del plan sí se reinicia cada mes.'**
+  String get aiCreditPacksSubtitle;
+
+  /// No description provided for @aiCreditPacksCurrentBalance.
+  ///
+  /// In es, this message translates to:
+  /// **'Saldo actual: {credits} créditos'**
+  String aiCreditPacksCurrentBalance(int credits);
+
+  /// No description provided for @aiCreditPacksCreditsLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'{credits} créditos IA'**
+  String aiCreditPacksCreditsLabel(int credits);
+
+  /// No description provided for @aiCreditPacksBuyForPrice.
+  ///
+  /// In es, this message translates to:
+  /// **'Comprar · {price}'**
+  String aiCreditPacksBuyForPrice(String price);
+
+  /// No description provided for @aiCreditPacksEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay paquetes disponibles. Reinicia la API o contacta soporte si el problema continúa.'**
+  String get aiCreditPacksEmpty;
+
+  /// No description provided for @aiCreditPacksBuyAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Comprar créditos'**
+  String get aiCreditPacksBuyAction;
+
+  /// No description provided for @aiCreditPacksPurchaseSuccess.
+  ///
+  /// In es, this message translates to:
+  /// **'Se añadieron {credits} créditos IA a tu cuenta.'**
+  String aiCreditPacksPurchaseSuccess(int credits);
+
+  /// No description provided for @aiCreditsInsufficientDialogMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Puedes comprar un paquete de créditos para seguir generando con IA.'**
+  String get aiCreditsInsufficientDialogMessage;
+
+  /// No description provided for @aiCreditsInsufficientFreePlanMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Mejora a Pro o Teacher para comprar paquetes de créditos IA.'**
+  String get aiCreditsInsufficientFreePlanMessage;
+
+  /// No description provided for @homeBuyAiCreditsAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Comprar créditos IA'**
+  String get homeBuyAiCreditsAction;
+
   /// No description provided for @errorMaterialNeedsOcr.
   ///
   /// In es, this message translates to:
@@ -2876,6 +3788,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Gemini tiene mucha demanda ahora mismo. Espera unos minutos y vuelve a intentar la generación.'**
   String get errorAiGeminiOverloaded;
+
+  /// No description provided for @errorAiGeminiApiKeyInvalid.
+  ///
+  /// In es, this message translates to:
+  /// **'La API key de Gemini no es válida (expirada, revocada o filtrada). Crea una clave nueva en Google AI Studio, actualízala en appsettings.Development.local.json y reinicia la API.'**
+  String get errorAiGeminiApiKeyInvalid;
 
   /// No description provided for @aiActivityTitle.
   ///
@@ -3105,6 +4023,30 @@ abstract class AppLocalizations {
   /// **'Esta sesión es temporal. Al salir se borra todo.'**
   String get guestEphemeralNotice;
 
+  /// No description provided for @guestAnonymousLimitTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Buen trabajo practicando!'**
+  String get guestAnonymousLimitTitle;
+
+  /// No description provided for @guestAnonymousLimitMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Has alcanzado el límite de prácticas anónimas. Crea una cuenta gratis en 10 segundos para seguir jugando, guardar tu progreso y crear tus propios cuestionarios.'**
+  String get guestAnonymousLimitMessage;
+
+  /// No description provided for @guestAnonymousLimitLater.
+  ///
+  /// In es, this message translates to:
+  /// **'Más tarde'**
+  String get guestAnonymousLimitLater;
+
+  /// No description provided for @guestAnonymousLimitSignUp.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear cuenta'**
+  String get guestAnonymousLimitSignUp;
+
   /// No description provided for @guestPracticeWithCodeAction.
   ///
   /// In es, this message translates to:
@@ -3228,8 +4170,50 @@ abstract class AppLocalizations {
   /// No description provided for @guestRegisterBenefit3.
   ///
   /// In es, this message translates to:
-  /// **'Plan Free: 5 cuestionarios y 20 créditos IA, gratis'**
+  /// **'Plan Free: 2 cuestionarios y 20 créditos IA, gratis'**
   String get guestRegisterBenefit3;
+
+  /// No description provided for @guestRegisterBenefit4.
+  ///
+  /// In es, this message translates to:
+  /// **'Experiencia sin anuncios'**
+  String get guestRegisterBenefit4;
+
+  /// No description provided for @guestRegisterBenefit5.
+  ///
+  /// In es, this message translates to:
+  /// **'Comparte cuestionarios con códigos o invitaciones'**
+  String get guestRegisterBenefit5;
+
+  /// No description provided for @guestRegisterBenefit6.
+  ///
+  /// In es, this message translates to:
+  /// **'Analítica de práctica: descubre dónde fallas más'**
+  String get guestRegisterBenefit6;
+
+  /// No description provided for @guestRegisterPromoSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Crea una cuenta gratis en segundos y desbloquea todo esto.'**
+  String get guestRegisterPromoSubtitle;
+
+  /// No description provided for @guestRegisterPromoBenefitsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Con tu cuenta registrada'**
+  String get guestRegisterPromoBenefitsTitle;
+
+  /// No description provided for @guestRegisterPromoCountdown.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver resultados en {seconds} s'**
+  String guestRegisterPromoCountdown(int seconds);
+
+  /// No description provided for @guestRegisterPromoSkipTooltip.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver resultados ahora'**
+  String get guestRegisterPromoSkipTooltip;
 
   /// No description provided for @guestExitPracticeTitle.
   ///
@@ -3324,7 +4308,7 @@ abstract class AppLocalizations {
   /// No description provided for @teacherDashboardInventoryQuizzes.
   ///
   /// In es, this message translates to:
-  /// **'Quizzes'**
+  /// **'Asignados'**
   String get teacherDashboardInventoryQuizzes;
 
   /// No description provided for @teacherDashboardUrgentTitle.
@@ -3396,6 +4380,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Preguntas difíciles'**
   String get teacherAssignmentAnalyticsHardQuestionsTitle;
+
+  /// No description provided for @teacherAssignmentAnalyticsDistractorTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Selección por opción (esta tarea)'**
+  String get teacherAssignmentAnalyticsDistractorTitle;
 
   /// No description provided for @teacherAssignmentAnalyticsDistributionTitle.
   ///
@@ -3502,13 +4492,13 @@ abstract class AppLocalizations {
   /// No description provided for @practiceResultTrendUp.
   ///
   /// In es, this message translates to:
-  /// **'+{points} pts vs intento anterior'**
+  /// **'{points} pts más que en tu intento anterior'**
   String practiceResultTrendUp(String points);
 
   /// No description provided for @practiceResultTrendDown.
   ///
   /// In es, this message translates to:
-  /// **'{points} pts vs intento anterior'**
+  /// **'{points} pts menos que en tu intento anterior'**
   String practiceResultTrendDown(String points);
 
   /// No description provided for @practiceResultReviewQuestionAction.
@@ -3618,6 +4608,90 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Archivar'**
   String get teacherClassArchiveConfirmAction;
+
+  /// No description provided for @teacherClassesArchivedSectionTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Clases archivadas'**
+  String get teacherClassesArchivedSectionTitle;
+
+  /// No description provided for @teacherClassRestoreAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Restaurar clase'**
+  String get teacherClassRestoreAction;
+
+  /// No description provided for @teacherClassRestoreConfirmTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Restaurar clase?'**
+  String get teacherClassRestoreConfirmTitle;
+
+  /// No description provided for @teacherClassRestoreConfirmMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'La clase volverá a estar activa y los estudiantes verán de nuevo sus asignaciones abiertas.'**
+  String get teacherClassRestoreConfirmMessage;
+
+  /// No description provided for @teacherClassRestoreConfirmAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Restaurar'**
+  String get teacherClassRestoreConfirmAction;
+
+  /// No description provided for @teacherClassArchivedBanner.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta clase está archivada. Restáurala para editarla o asignar tareas.'**
+  String get teacherClassArchivedBanner;
+
+  /// No description provided for @teacherClassRestoredMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Clase restaurada'**
+  String get teacherClassRestoredMessage;
+
+  /// No description provided for @teacherClassDeletePermanentAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar'**
+  String get teacherClassDeletePermanentAction;
+
+  /// No description provided for @teacherClassDeletePermanentTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Eliminar clase archivada?'**
+  String get teacherClassDeletePermanentTitle;
+
+  /// No description provided for @teacherClassDeletePermanentMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'«{name}» dejará de mostrarse en tu lista. Los datos (miembros, asignaciones e historial) se conservan en el sistema. Solo aplica a clases ya archivadas.'**
+  String teacherClassDeletePermanentMessage(String name);
+
+  /// No description provided for @teacherClassDeletePermanentConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar'**
+  String get teacherClassDeletePermanentConfirm;
+
+  /// No description provided for @teacherClassDeletedMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Clase eliminada de tu lista'**
+  String get teacherClassDeletedMessage;
+
+  /// No description provided for @teacherClassDeleteRequiresArchiveError.
+  ///
+  /// In es, this message translates to:
+  /// **'Archiva la clase antes de eliminarla.'**
+  String get teacherClassDeleteRequiresArchiveError;
+
+  /// No description provided for @teacherClassNotArchivedError.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta clase no está archivada.'**
+  String get teacherClassNotArchivedError;
 
   /// No description provided for @teacherClassMembersTab.
   ///
@@ -3810,6 +4884,96 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Solo el profesor'**
   String get teacherAssignmentShowAnswersTeacherOnly;
+
+  /// No description provided for @teacherAssignmentRandomizeQuestionsLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Orden aleatorio de preguntas'**
+  String get teacherAssignmentRandomizeQuestionsLabel;
+
+  /// No description provided for @teacherAssignmentRandomizeQuestionsHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Define cómo se muestran las preguntas en esta tarea de clase.'**
+  String get teacherAssignmentRandomizeQuestionsHint;
+
+  /// No description provided for @teacherAssignmentAllowStudentRandomizeLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'El alumno puede cambiar el orden'**
+  String get teacherAssignmentAllowStudentRandomizeLabel;
+
+  /// No description provided for @teacherAssignmentAllowStudentRandomizeHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Si está desactivado, todos los alumnos usan la opción de arriba.'**
+  String get teacherAssignmentAllowStudentRandomizeHint;
+
+  /// No description provided for @teacherAssignmentForfeitExitLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Salir sin terminar consume un intento'**
+  String get teacherAssignmentForfeitExitLabel;
+
+  /// No description provided for @teacherAssignmentForfeitExitHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Solo aplica cuando hay un máximo de intentos definido. El alumno no podrá pausar y reanudar.'**
+  String get teacherAssignmentForfeitExitHint;
+
+  /// No description provided for @teacherAssignmentForfeitRequiresMaxAttempts.
+  ///
+  /// In es, this message translates to:
+  /// **'Define al menos 1 intento máximo para activar esta regla.'**
+  String get teacherAssignmentForfeitRequiresMaxAttempts;
+
+  /// No description provided for @practiceForfeitExitDialogTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Salir de la práctica?'**
+  String get practiceForfeitExitDialogTitle;
+
+  /// No description provided for @practiceForfeitExitDialogMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Si sales ahora, se contará como un intento usado aunque no hayas finalizado el cuestionario.'**
+  String get practiceForfeitExitDialogMessage;
+
+  /// No description provided for @practiceForfeitExitConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'Salir y usar intento'**
+  String get practiceForfeitExitConfirm;
+
+  /// No description provided for @practiceForfeitExitCancel.
+  ///
+  /// In es, this message translates to:
+  /// **'Seguir practicando'**
+  String get practiceForfeitExitCancel;
+
+  /// No description provided for @studentAssignmentAttemptStatusForfeited.
+  ///
+  /// In es, this message translates to:
+  /// **'Salida anticipada'**
+  String get studentAssignmentAttemptStatusForfeited;
+
+  /// No description provided for @studentAssignmentRandomizeLockedShuffled.
+  ///
+  /// In es, this message translates to:
+  /// **'Orden aleatorio fijado por el profesor'**
+  String get studentAssignmentRandomizeLockedShuffled;
+
+  /// No description provided for @studentAssignmentRandomizeLockedOrdered.
+  ///
+  /// In es, this message translates to:
+  /// **'Orden del cuestionario fijado por el profesor'**
+  String get studentAssignmentRandomizeLockedOrdered;
+
+  /// No description provided for @studentAssignmentPracticeOptionsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Opciones de práctica'**
+  String get studentAssignmentPracticeOptionsTitle;
 
   /// No description provided for @teacherAssignmentCreateAction.
   ///
@@ -4135,6 +5299,18 @@ abstract class AppLocalizations {
   /// **'Ya tienes un plan Profesor activo.'**
   String get teacherUpgradeAlreadyActive;
 
+  /// No description provided for @teacherUpgradeNextRenewal.
+  ///
+  /// In es, this message translates to:
+  /// **'Próxima renovación: {date}'**
+  String teacherUpgradeNextRenewal(String date);
+
+  /// No description provided for @teacherUpgradeAccessUntil.
+  ///
+  /// In es, this message translates to:
+  /// **'Acceso hasta el {date} (sin renovación automática)'**
+  String teacherUpgradeAccessUntil(String date);
+
   /// No description provided for @teacherUpgradeCancelTitle.
   ///
   /// In es, this message translates to:
@@ -4144,13 +5320,13 @@ abstract class AppLocalizations {
   /// No description provided for @teacherUpgradeCancelMessage.
   ///
   /// In es, this message translates to:
-  /// **'Perderás el acceso al módulo Profesor y tus clases serán archivadas. Puedes volver a suscribirte en cualquier momento.'**
+  /// **'Se desactivará la renovación automática. Mantendrás el plan Profesor hasta el final del periodo pagado; después pasarás a Free.'**
   String get teacherUpgradeCancelMessage;
 
   /// No description provided for @teacherUpgradeCancelConfirm.
   ///
   /// In es, this message translates to:
-  /// **'Cancelar plan'**
+  /// **'Desactivar renovación'**
   String get teacherUpgradeCancelConfirm;
 
   /// No description provided for @teacherUpgradeCancelSuccess.
@@ -4158,6 +5334,144 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Suscripción cancelada. ¡Hasta pronto!'**
   String get teacherUpgradeCancelSuccess;
+
+  /// No description provided for @teacherUpgradeCancelSuccessUntil.
+  ///
+  /// In es, this message translates to:
+  /// **'Renovación automática desactivada. Acceso al plan Profesor hasta el {date}.'**
+  String teacherUpgradeCancelSuccessUntil(String date);
+
+  /// No description provided for @billingCancelStoreTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Gestionar suscripción en la tienda'**
+  String get billingCancelStoreTitle;
+
+  /// No description provided for @billingCancelStoreMessageGoogle.
+  ///
+  /// In es, this message translates to:
+  /// **'Los cobros recurrentes de CraftQuest se gestionan en Google Play. Abre tus suscripciones en Play Store, cancela CraftQuest y conservarás el acceso hasta el final del periodo pagado.'**
+  String get billingCancelStoreMessageGoogle;
+
+  /// No description provided for @billingCancelStoreMessageApple.
+  ///
+  /// In es, this message translates to:
+  /// **'Los cobros recurrentes de CraftQuest se gestionan en el App Store. Abre tus suscripciones en Ajustes de Apple, cancela CraftQuest y conservarás el acceso hasta el final del periodo pagado.'**
+  String get billingCancelStoreMessageApple;
+
+  /// No description provided for @billingCancelStoreOpenGooglePlay.
+  ///
+  /// In es, this message translates to:
+  /// **'Abrir Google Play'**
+  String get billingCancelStoreOpenGooglePlay;
+
+  /// No description provided for @billingCancelStoreOpenAppStore.
+  ///
+  /// In es, this message translates to:
+  /// **'Abrir App Store'**
+  String get billingCancelStoreOpenAppStore;
+
+  /// No description provided for @billingCancelStoreSyncTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Actualizar estado en CraftQuest?'**
+  String get billingCancelStoreSyncTitle;
+
+  /// No description provided for @billingCancelStoreSyncMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Si ya cancelaste en la tienda, puedes desactivar la renovación en CraftQuest para reflejar el fin de periodo en la app. El cobro real solo se detiene en la tienda.'**
+  String get billingCancelStoreSyncMessage;
+
+  /// No description provided for @billingCancelStoreSyncConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'Desactivar renovación en la app'**
+  String get billingCancelStoreSyncConfirm;
+
+  /// No description provided for @billingResumeAutoRenewTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Reactivar renovación automática?'**
+  String get billingResumeAutoRenewTitle;
+
+  /// No description provided for @billingResumeAutoRenewMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Se volverá a cobrar al final del periodo actual. Mantendrás el acceso hasta entonces.'**
+  String get billingResumeAutoRenewMessage;
+
+  /// No description provided for @billingResumeAutoRenewConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'Reactivar renovación'**
+  String get billingResumeAutoRenewConfirm;
+
+  /// No description provided for @billingResumeAutoRenewSuccess.
+  ///
+  /// In es, this message translates to:
+  /// **'Renovación automática reactivada.'**
+  String get billingResumeAutoRenewSuccess;
+
+  /// No description provided for @billingResumeAutoRenewSuccessUntil.
+  ///
+  /// In es, this message translates to:
+  /// **'Próxima renovación el {date}.'**
+  String billingResumeAutoRenewSuccessUntil(String date);
+
+  /// No description provided for @billingResumeStoreTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Reactivar suscripción en la tienda'**
+  String get billingResumeStoreTitle;
+
+  /// No description provided for @billingResumeStoreMessageGoogle.
+  ///
+  /// In es, this message translates to:
+  /// **'Para volver a cobrar de forma recurrente, reactiva CraftQuest en Google Play (Suscripciones). Después puedes sincronizar el estado en la app.'**
+  String get billingResumeStoreMessageGoogle;
+
+  /// No description provided for @billingResumeStoreMessageApple.
+  ///
+  /// In es, this message translates to:
+  /// **'Para volver a cobrar de forma recurrente, reactiva CraftQuest en el App Store (Suscripciones). Después puedes sincronizar el estado en la app.'**
+  String get billingResumeStoreMessageApple;
+
+  /// No description provided for @billingResumeStoreSyncTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Actualizar estado en CraftQuest?'**
+  String get billingResumeStoreSyncTitle;
+
+  /// No description provided for @billingResumeStoreSyncMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Si ya reactivaste la suscripción en la tienda, confirma aquí para mostrar la próxima renovación en la app.'**
+  String get billingResumeStoreSyncMessage;
+
+  /// No description provided for @billingResumeStoreSyncConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'Reactivar renovación en la app'**
+  String get billingResumeStoreSyncConfirm;
+
+  /// No description provided for @billingResumeRequiresResubscribeTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Volver a suscribirse con PayPal'**
+  String get billingResumeRequiresResubscribeTitle;
+
+  /// No description provided for @billingResumeRequiresResubscribeMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'La renovación en PayPal ya se canceló. Para seguir con cobros automáticos, crea una nueva suscripción.'**
+  String get billingResumeRequiresResubscribeMessage;
+
+  /// No description provided for @billingResumeRequiresResubscribeConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'Suscribirse de nuevo'**
+  String get billingResumeRequiresResubscribeConfirm;
 
   /// No description provided for @teacherUpgradeExpiryWarning.
   ///
@@ -4183,11 +5497,17 @@ abstract class AppLocalizations {
   /// **'Ver plan Profesor'**
   String get homeTeacherBannerAction;
 
-  /// No description provided for @homeTeacherBannerDismissTooltip.
+  /// No description provided for @homeTeacherBannerDismissTooltipWeekly.
   ///
   /// In es, this message translates to:
-  /// **'No mostrar más'**
-  String get homeTeacherBannerDismissTooltip;
+  /// **'Ocultar esta semana'**
+  String get homeTeacherBannerDismissTooltipWeekly;
+
+  /// No description provided for @homeTeacherBannerDismissTooltipMonthly.
+  ///
+  /// In es, this message translates to:
+  /// **'Ocultar este mes'**
+  String get homeTeacherBannerDismissTooltipMonthly;
 
   /// No description provided for @studentAssignmentsTitle.
   ///
@@ -4436,6 +5756,36 @@ abstract class AppLocalizations {
   /// **'Detalle de asignación'**
   String get studentAssignmentDetailTitle;
 
+  /// No description provided for @subscriptionPlanActive.
+  ///
+  /// In es, this message translates to:
+  /// **'Plan {planName} activo.'**
+  String subscriptionPlanActive(String planName);
+
+  /// No description provided for @profileProPlanSectionTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Plan Pro'**
+  String get profileProPlanSectionTitle;
+
+  /// No description provided for @profileProPlanManageTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Gestionar plan Pro'**
+  String get profileProPlanManageTitle;
+
+  /// No description provided for @profileProPlanActiveSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Plan activo · toca para gestionar'**
+  String get profileProPlanActiveSubtitle;
+
+  /// No description provided for @profileProPlanInactiveSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Quizzes ilimitados y más · Suscripción mensual o anual'**
+  String get profileProPlanInactiveSubtitle;
+
   /// No description provided for @profileTeacherPlanSectionTitle.
   ///
   /// In es, this message translates to:
@@ -4459,6 +5809,138 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Clases, asignaciones y analítica · Suscripción mensual'**
   String get profileTeacherPlanInactiveSubtitle;
+
+  /// No description provided for @profilePaymentHistorySectionTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Pagos'**
+  String get profilePaymentHistorySectionTitle;
+
+  /// No description provided for @profilePaymentHistoryAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Historial de transacciones'**
+  String get profilePaymentHistoryAction;
+
+  /// No description provided for @profilePaymentHistorySubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Suscripciones, Preparación+ y otros pagos'**
+  String get profilePaymentHistorySubtitle;
+
+  /// No description provided for @paymentHistoryTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Historial de pagos'**
+  String get paymentHistoryTitle;
+
+  /// No description provided for @paymentHistoryEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no hay transacciones registradas en tu cuenta.'**
+  String get paymentHistoryEmpty;
+
+  /// No description provided for @paymentHistoryAmount.
+  ///
+  /// In es, this message translates to:
+  /// **'{amount} {currency}'**
+  String paymentHistoryAmount(String amount, String currency);
+
+  /// No description provided for @paymentPurchaseStatusValidated.
+  ///
+  /// In es, this message translates to:
+  /// **'Completado'**
+  String get paymentPurchaseStatusValidated;
+
+  /// No description provided for @paymentPurchaseStatusPending.
+  ///
+  /// In es, this message translates to:
+  /// **'Pendiente'**
+  String get paymentPurchaseStatusPending;
+
+  /// No description provided for @paymentPurchaseStatusRejected.
+  ///
+  /// In es, this message translates to:
+  /// **'Rechazado'**
+  String get paymentPurchaseStatusRejected;
+
+  /// No description provided for @paymentPurchaseStatusRefunded.
+  ///
+  /// In es, this message translates to:
+  /// **'Reembolsado'**
+  String get paymentPurchaseStatusRefunded;
+
+  /// No description provided for @paymentPurchaseStatusCancelled.
+  ///
+  /// In es, this message translates to:
+  /// **'Cancelado'**
+  String get paymentPurchaseStatusCancelled;
+
+  /// No description provided for @paymentProviderPayPal.
+  ///
+  /// In es, this message translates to:
+  /// **'PayPal'**
+  String get paymentProviderPayPal;
+
+  /// No description provided for @paymentProviderGooglePlay.
+  ///
+  /// In es, this message translates to:
+  /// **'Google Play'**
+  String get paymentProviderGooglePlay;
+
+  /// No description provided for @paymentProviderAppStore.
+  ///
+  /// In es, this message translates to:
+  /// **'App Store'**
+  String get paymentProviderAppStore;
+
+  /// No description provided for @paymentProviderOther.
+  ///
+  /// In es, this message translates to:
+  /// **'Otro'**
+  String get paymentProviderOther;
+
+  /// No description provided for @paymentProductTypeSubscription.
+  ///
+  /// In es, this message translates to:
+  /// **'Suscripción'**
+  String get paymentProductTypeSubscription;
+
+  /// No description provided for @paymentProductTypePrepAccess.
+  ///
+  /// In es, this message translates to:
+  /// **'Preparación+'**
+  String get paymentProductTypePrepAccess;
+
+  /// No description provided for @paymentProductTypeAiCredits.
+  ///
+  /// In es, this message translates to:
+  /// **'Créditos IA'**
+  String get paymentProductTypeAiCredits;
+
+  /// No description provided for @paymentProductTypeShareCodes.
+  ///
+  /// In es, this message translates to:
+  /// **'Códigos compartidos'**
+  String get paymentProductTypeShareCodes;
+
+  /// No description provided for @paymentProductTypeCuratedPackage.
+  ///
+  /// In es, this message translates to:
+  /// **'Paquete'**
+  String get paymentProductTypeCuratedPackage;
+
+  /// No description provided for @paymentProductTypeTeacherSeats.
+  ///
+  /// In es, this message translates to:
+  /// **'Plazas profesor'**
+  String get paymentProductTypeTeacherSeats;
+
+  /// No description provided for @paymentProductTypeOther.
+  ///
+  /// In es, this message translates to:
+  /// **'Otro'**
+  String get paymentProductTypeOther;
 
   /// No description provided for @teacherUpgradeKeepPlan.
   ///
@@ -4561,6 +6043,756 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Ir al Panel de Profesor'**
   String get teacherOnboardingGoToDashboardAction;
+
+  /// No description provided for @prepAdminProfileSectionTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Administración'**
+  String get prepAdminProfileSectionTitle;
+
+  /// No description provided for @prepAdminProfileAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Preparación+ (catálogo)'**
+  String get prepAdminProfileAction;
+
+  /// No description provided for @prepAdminProfileSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Categorías, ítems, precios y publicación'**
+  String get prepAdminProfileSubtitle;
+
+  /// No description provided for @prepAdminHubTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Admin Preparación+'**
+  String get prepAdminHubTitle;
+
+  /// No description provided for @prepAdminHubSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Gestiona el catálogo B2C curado de la plataforma.'**
+  String get prepAdminHubSubtitle;
+
+  /// No description provided for @prepAdminCategoriesAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Categorías'**
+  String get prepAdminCategoriesAction;
+
+  /// No description provided for @prepAdminCategoriesSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Países, regiones e Internacional'**
+  String get prepAdminCategoriesSubtitle;
+
+  /// No description provided for @prepAdminCatalogAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Ítems del catálogo'**
+  String get prepAdminCatalogAction;
+
+  /// No description provided for @prepAdminCatalogSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuestionarios, ofertas y muestras'**
+  String get prepAdminCatalogSubtitle;
+
+  /// No description provided for @prepAdminCategoriesTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Categorías Prep+'**
+  String get prepAdminCategoriesTitle;
+
+  /// No description provided for @prepAdminAddRootCategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Categoría raíz'**
+  String get prepAdminAddRootCategory;
+
+  /// No description provided for @prepAdminAddSubcategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Subcategoría'**
+  String get prepAdminAddSubcategory;
+
+  /// No description provided for @prepAdminEditCategoryTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar categoría'**
+  String get prepAdminEditCategoryTitle;
+
+  /// No description provided for @prepAdminDeleteCategoryTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Eliminar categoría?'**
+  String get prepAdminDeleteCategoryTitle;
+
+  /// No description provided for @prepAdminDeleteCategoryMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Se eliminará «{name}» y sus subcategorías si no tienen ítems.'**
+  String prepAdminDeleteCategoryMessage(String name);
+
+  /// No description provided for @prepAdminCategoryDeleted.
+  ///
+  /// In es, this message translates to:
+  /// **'Categoría eliminada'**
+  String get prepAdminCategoryDeleted;
+
+  /// No description provided for @prepAdminCategorySaved.
+  ///
+  /// In es, this message translates to:
+  /// **'Categoría guardada'**
+  String get prepAdminCategorySaved;
+
+  /// No description provided for @prepAdminActive.
+  ///
+  /// In es, this message translates to:
+  /// **'Activa'**
+  String get prepAdminActive;
+
+  /// No description provided for @prepAdminInactive.
+  ///
+  /// In es, this message translates to:
+  /// **'Inactiva'**
+  String get prepAdminInactive;
+
+  /// No description provided for @prepAdminCategoryTypeLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Tipo'**
+  String get prepAdminCategoryTypeLabel;
+
+  /// No description provided for @prepAdminCategoryTypeGeographic.
+  ///
+  /// In es, this message translates to:
+  /// **'Geográfica (país)'**
+  String get prepAdminCategoryTypeGeographic;
+
+  /// No description provided for @prepAdminCategoryTypeThematic.
+  ///
+  /// In es, this message translates to:
+  /// **'Temática (Internacional)'**
+  String get prepAdminCategoryTypeThematic;
+
+  /// No description provided for @prepAdminNameLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre'**
+  String get prepAdminNameLabel;
+
+  /// No description provided for @prepAdminSlugLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Slug (URL)'**
+  String get prepAdminSlugLabel;
+
+  /// No description provided for @prepAdminRequiredField.
+  ///
+  /// In es, this message translates to:
+  /// **'Campo obligatorio'**
+  String get prepAdminRequiredField;
+
+  /// No description provided for @prepAdminDescriptionLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Descripción'**
+  String get prepAdminDescriptionLabel;
+
+  /// No description provided for @prepAdminCountryCodeLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Código país (ISO)'**
+  String get prepAdminCountryCodeLabel;
+
+  /// No description provided for @prepAdminIconKeyLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Icono (clave)'**
+  String get prepAdminIconKeyLabel;
+
+  /// No description provided for @prepAdminSortOrderLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Orden'**
+  String get prepAdminSortOrderLabel;
+
+  /// No description provided for @prepAdminCatalogTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Catálogo Prep+'**
+  String get prepAdminCatalogTitle;
+
+  /// No description provided for @prepAdminNewCatalogItem.
+  ///
+  /// In es, this message translates to:
+  /// **'Nuevo ítem'**
+  String get prepAdminNewCatalogItem;
+
+  /// No description provided for @prepAdminPublishedFilter.
+  ///
+  /// In es, this message translates to:
+  /// **'Publicados'**
+  String get prepAdminPublishedFilter;
+
+  /// No description provided for @prepAdminDraftFilter.
+  ///
+  /// In es, this message translates to:
+  /// **'Borradores'**
+  String get prepAdminDraftFilter;
+
+  /// No description provided for @prepAdminCatalogEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay ítems en el catálogo.'**
+  String get prepAdminCatalogEmpty;
+
+  /// No description provided for @prepAdminItemSummarySubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'{category} · {questions} preg. · {offers} ofertas · {samples} muestras · {status}'**
+  String prepAdminItemSummarySubtitle(
+    String category,
+    int questions,
+    int offers,
+    int samples,
+    String status,
+  );
+
+  /// No description provided for @prepAdminEditItemTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar ítem'**
+  String get prepAdminEditItemTitle;
+
+  /// No description provided for @prepAdminMetadataSection.
+  ///
+  /// In es, this message translates to:
+  /// **'Metadatos'**
+  String get prepAdminMetadataSection;
+
+  /// No description provided for @prepAdminOffersSection.
+  ///
+  /// In es, this message translates to:
+  /// **'Matriz de precios'**
+  String get prepAdminOffersSection;
+
+  /// No description provided for @prepAdminSamplesSection.
+  ///
+  /// In es, this message translates to:
+  /// **'Preguntas muestra'**
+  String get prepAdminSamplesSection;
+
+  /// No description provided for @prepAdminPublishSection.
+  ///
+  /// In es, this message translates to:
+  /// **'Publicación'**
+  String get prepAdminPublishSection;
+
+  /// No description provided for @prepAdminQuizIdLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'ID del cuestionario'**
+  String get prepAdminQuizIdLabel;
+
+  /// No description provided for @prepAdminQuizIdHint.
+  ///
+  /// In es, this message translates to:
+  /// **'GUID del quiz existente en la plataforma'**
+  String get prepAdminQuizIdHint;
+
+  /// No description provided for @prepAdminQuizIdRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Indica el ID del cuestionario'**
+  String get prepAdminQuizIdRequired;
+
+  /// No description provided for @prepAdminQuizSearchLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Buscar cuestionario'**
+  String get prepAdminQuizSearchLabel;
+
+  /// No description provided for @prepAdminSelectQuizLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuestionario'**
+  String get prepAdminSelectQuizLabel;
+
+  /// No description provided for @prepAdminSelectQuizHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Solo cuestionarios creados por administradores de contenido, aún no en el catálogo.'**
+  String get prepAdminSelectQuizHint;
+
+  /// No description provided for @prepAdminSelectQuizError.
+  ///
+  /// In es, this message translates to:
+  /// **'Selecciona un cuestionario.'**
+  String get prepAdminSelectQuizError;
+
+  /// No description provided for @prepAdminLinkableQuizzesEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay cuestionarios disponibles. Crea uno con una cuenta admin o quita los que ya están en el catálogo.'**
+  String get prepAdminLinkableQuizzesEmpty;
+
+  /// No description provided for @prepAdminLinkableQuizOption.
+  ///
+  /// In es, this message translates to:
+  /// **'{title} · {count} preg. · {author}'**
+  String prepAdminLinkableQuizOption(String title, int count, String author);
+
+  /// No description provided for @prepAdminSubcategoryLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Subcategoría'**
+  String get prepAdminSubcategoryLabel;
+
+  /// No description provided for @prepAdminSelectCategoryError.
+  ///
+  /// In es, this message translates to:
+  /// **'Selecciona una subcategoría'**
+  String get prepAdminSelectCategoryError;
+
+  /// No description provided for @prepAdminTitleOverrideLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Título en catálogo (opcional)'**
+  String get prepAdminTitleOverrideLabel;
+
+  /// No description provided for @prepAdminTagsLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Etiquetas'**
+  String get prepAdminTagsLabel;
+
+  /// No description provided for @prepAdminTagsHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Separadas por comas'**
+  String get prepAdminTagsHint;
+
+  /// No description provided for @prepAdminListingStartLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Inicio de venta'**
+  String get prepAdminListingStartLabel;
+
+  /// No description provided for @prepAdminListingEndLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Fin de venta'**
+  String get prepAdminListingEndLabel;
+
+  /// No description provided for @prepAdminOptionalDate.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin definir'**
+  String get prepAdminOptionalDate;
+
+  /// No description provided for @prepAdminCreateItemAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear ítem'**
+  String get prepAdminCreateItemAction;
+
+  /// No description provided for @prepAdminSaveMetadataAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar metadatos'**
+  String get prepAdminSaveMetadataAction;
+
+  /// No description provided for @prepAdminSaveOffersAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar precios'**
+  String get prepAdminSaveOffersAction;
+
+  /// No description provided for @prepAdminPickSamplesAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Elegir 3 preguntas'**
+  String get prepAdminPickSamplesAction;
+
+  /// No description provided for @prepAdminSamplesEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no hay preguntas muestra.'**
+  String get prepAdminSamplesEmpty;
+
+  /// No description provided for @prepAdminPublishAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Publicar en catálogo'**
+  String get prepAdminPublishAction;
+
+  /// No description provided for @prepAdminUnpublishAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Despublicar'**
+  String get prepAdminUnpublishAction;
+
+  /// No description provided for @prepAdminDeleteItemAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar ítem'**
+  String get prepAdminDeleteItemAction;
+
+  /// No description provided for @prepAdminDeleteItemTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Eliminar ítem del catálogo?'**
+  String get prepAdminDeleteItemTitle;
+
+  /// No description provided for @prepAdminDeleteItemMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'El ítem dejará de mostrarse. Los accesos ya comprados se conservan en historial.'**
+  String get prepAdminDeleteItemMessage;
+
+  /// No description provided for @prepAdminItemCreated.
+  ///
+  /// In es, this message translates to:
+  /// **'Ítem creado'**
+  String get prepAdminItemCreated;
+
+  /// No description provided for @prepAdminMetadataSaved.
+  ///
+  /// In es, this message translates to:
+  /// **'Metadatos guardados'**
+  String get prepAdminMetadataSaved;
+
+  /// No description provided for @prepAdminOffersRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Activa al menos una oferta de acceso'**
+  String get prepAdminOffersRequired;
+
+  /// No description provided for @prepAdminOffersSaved.
+  ///
+  /// In es, this message translates to:
+  /// **'Precios guardados'**
+  String get prepAdminOffersSaved;
+
+  /// No description provided for @prepAdminSamplesSaved.
+  ///
+  /// In es, this message translates to:
+  /// **'Muestras guardadas'**
+  String get prepAdminSamplesSaved;
+
+  /// No description provided for @prepAdminPublished.
+  ///
+  /// In es, this message translates to:
+  /// **'Publicado en catálogo'**
+  String get prepAdminPublished;
+
+  /// No description provided for @prepAdminUnpublished.
+  ///
+  /// In es, this message translates to:
+  /// **'Despublicado'**
+  String get prepAdminUnpublished;
+
+  /// No description provided for @prepAdminItemDeleted.
+  ///
+  /// In es, this message translates to:
+  /// **'Ítem eliminado'**
+  String get prepAdminItemDeleted;
+
+  /// No description provided for @prepAdminLinkedQuiz.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuestionario: {title}'**
+  String prepAdminLinkedQuiz(String title);
+
+  /// No description provided for @prepAdminOffersChip.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} ofertas activas'**
+  String prepAdminOffersChip(int count);
+
+  /// No description provided for @prepAdminSamplesChip.
+  ///
+  /// In es, this message translates to:
+  /// **'{count}/3 muestras'**
+  String prepAdminSamplesChip(int count);
+
+  /// No description provided for @prepAdminOfferFreeLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Acceso gratis'**
+  String get prepAdminOfferFreeLabel;
+
+  /// No description provided for @prepAdminOfferPriceLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Precio'**
+  String get prepAdminOfferPriceLabel;
+
+  /// No description provided for @prepAdminOfferCurrencyLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Moneda'**
+  String get prepAdminOfferCurrencyLabel;
+
+  /// No description provided for @prepAdminStoreProductIdLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'ID producto tienda (IAP)'**
+  String get prepAdminStoreProductIdLabel;
+
+  /// No description provided for @prepAdminSamplesLoadError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudieron cargar las preguntas'**
+  String get prepAdminSamplesLoadError;
+
+  /// No description provided for @prepAdminSamplesCountError.
+  ///
+  /// In es, this message translates to:
+  /// **'Selecciona exactamente 3 preguntas'**
+  String get prepAdminSamplesCountError;
+
+  /// No description provided for @prepAdminSamplesPickerTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Preguntas muestra'**
+  String get prepAdminSamplesPickerTitle;
+
+  /// No description provided for @prepAdminSamplesPickerSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'{selected} de {required} seleccionadas'**
+  String prepAdminSamplesPickerSubtitle(int selected, int required);
+
+  /// No description provided for @errorPrepCategoryNotFound.
+  ///
+  /// In es, this message translates to:
+  /// **'Categoría no encontrada.'**
+  String get errorPrepCategoryNotFound;
+
+  /// No description provided for @errorPrepCategoryHasSubcategories.
+  ///
+  /// In es, this message translates to:
+  /// **'No se puede eliminar: tiene subcategorías activas.'**
+  String get errorPrepCategoryHasSubcategories;
+
+  /// No description provided for @errorPrepCategoryHasItems.
+  ///
+  /// In es, this message translates to:
+  /// **'No se puede eliminar: tiene ítems en el catálogo.'**
+  String get errorPrepCategoryHasItems;
+
+  /// No description provided for @errorPrepQuizNotFound.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuestionario no encontrado.'**
+  String get errorPrepQuizNotFound;
+
+  /// No description provided for @errorPrepQuizNotEligible.
+  ///
+  /// In es, this message translates to:
+  /// **'Solo se pueden añadir cuestionarios creados por un administrador de contenido.'**
+  String get errorPrepQuizNotEligible;
+
+  /// No description provided for @errorPrepQuizAlreadyInCatalog.
+  ///
+  /// In es, this message translates to:
+  /// **'Este cuestionario ya está en Preparación+.'**
+  String get errorPrepQuizAlreadyInCatalog;
+
+  /// No description provided for @errorPrepCatalogItemNotFound.
+  ///
+  /// In es, this message translates to:
+  /// **'Ítem de catálogo no encontrado.'**
+  String get errorPrepCatalogItemNotFound;
+
+  /// No description provided for @errorPrepSampleCountRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Se requieren exactamente {count} preguntas muestra.'**
+  String errorPrepSampleCountRequired(int count);
+
+  /// No description provided for @errorPrepSampleQuestionsNotInQuiz.
+  ///
+  /// In es, this message translates to:
+  /// **'Las preguntas muestra deben pertenecer al cuestionario vinculado.'**
+  String get errorPrepSampleQuestionsNotInQuiz;
+
+  /// No description provided for @errorPrepInvalidCategoryType.
+  ///
+  /// In es, this message translates to:
+  /// **'Tipo de categoría no válido.'**
+  String get errorPrepInvalidCategoryType;
+
+  /// No description provided for @errorPrepNameSlugRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre y slug son obligatorios.'**
+  String get errorPrepNameSlugRequired;
+
+  /// No description provided for @errorPrepParentCategoryNotFound.
+  ///
+  /// In es, this message translates to:
+  /// **'Categoría padre no encontrada.'**
+  String get errorPrepParentCategoryNotFound;
+
+  /// No description provided for @errorPrepSubcategoryTypeMismatch.
+  ///
+  /// In es, this message translates to:
+  /// **'El tipo de subcategoría debe coincidir con el padre.'**
+  String get errorPrepSubcategoryTypeMismatch;
+
+  /// No description provided for @errorPrepCategorySelfParent.
+  ///
+  /// In es, this message translates to:
+  /// **'Una categoría no puede ser su propio padre.'**
+  String get errorPrepCategorySelfParent;
+
+  /// No description provided for @errorPrepSlugDuplicate.
+  ///
+  /// In es, this message translates to:
+  /// **'Ese slug ya existe en este nivel.'**
+  String get errorPrepSlugDuplicate;
+
+  /// No description provided for @errorPrepCategoryInactive.
+  ///
+  /// In es, this message translates to:
+  /// **'Categoría no encontrada o inactiva.'**
+  String get errorPrepCategoryInactive;
+
+  /// No description provided for @errorPrepItemRequiresSubcategory.
+  ///
+  /// In es, this message translates to:
+  /// **'El ítem debe asignarse a una subcategoría, no a una raíz.'**
+  String get errorPrepItemRequiresSubcategory;
+
+  /// No description provided for @errorPrepInstitutionTagGeographicOnly.
+  ///
+  /// In es, this message translates to:
+  /// **'La etiqueta de institución solo aplica en categorías geográficas.'**
+  String get errorPrepInstitutionTagGeographicOnly;
+
+  /// No description provided for @errorPrepCategoryHierarchyBroken.
+  ///
+  /// In es, this message translates to:
+  /// **'La jerarquía de categorías está incompleta.'**
+  String get errorPrepCategoryHierarchyBroken;
+
+  /// No description provided for @errorPrepOffersRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Se requiere al menos una oferta de acceso.'**
+  String get errorPrepOffersRequired;
+
+  /// No description provided for @errorPrepInvalidDuration.
+  ///
+  /// In es, this message translates to:
+  /// **'Duración no válida. Permitidas: 30, 60, 90 y 183 días.'**
+  String get errorPrepInvalidDuration;
+
+  /// No description provided for @errorPrepPriceNegative.
+  ///
+  /// In es, this message translates to:
+  /// **'El precio no puede ser negativo.'**
+  String get errorPrepPriceNegative;
+
+  /// No description provided for @errorPrepOfferDurationDuplicate.
+  ///
+  /// In es, this message translates to:
+  /// **'Hay duraciones duplicadas en las ofertas.'**
+  String get errorPrepOfferDurationDuplicate;
+
+  /// No description provided for @errorPrepActiveOfferRequiredPublish.
+  ///
+  /// In es, this message translates to:
+  /// **'Activa al menos una oferta antes de publicar.'**
+  String get errorPrepActiveOfferRequiredPublish;
+
+  /// No description provided for @errorPrepSamplesRequiredPublish.
+  ///
+  /// In es, this message translates to:
+  /// **'Configura exactamente {count} preguntas muestra antes de publicar.'**
+  String errorPrepSamplesRequiredPublish(int count);
+
+  /// No description provided for @errorPrepQuizNoQuestions.
+  ///
+  /// In es, this message translates to:
+  /// **'El cuestionario vinculado debe tener al menos una pregunta.'**
+  String get errorPrepQuizNoQuestions;
+
+  /// No description provided for @errorPrepListingEndBeforeStart.
+  ///
+  /// In es, this message translates to:
+  /// **'La fecha de fin de venta debe ser posterior al inicio.'**
+  String get errorPrepListingEndBeforeStart;
+
+  /// No description provided for @errorPrepPreviewNotAvailable.
+  ///
+  /// In es, this message translates to:
+  /// **'La vista previa no está disponible para este ítem.'**
+  String get errorPrepPreviewNotAvailable;
+
+  /// No description provided for @errorPrepItemNotAvailable.
+  ///
+  /// In es, this message translates to:
+  /// **'Este ítem no está disponible para compra en este momento.'**
+  String get errorPrepItemNotAvailable;
+
+  /// No description provided for @errorPrepOfferNotFound.
+  ///
+  /// In es, this message translates to:
+  /// **'Oferta no encontrada.'**
+  String get errorPrepOfferNotFound;
+
+  /// No description provided for @errorPrepOfferIsFree.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta oferta es gratis. Usa el checkout sin pago.'**
+  String get errorPrepOfferIsFree;
+
+  /// No description provided for @errorPrepPayPalPurchaseNotFound.
+  ///
+  /// In es, this message translates to:
+  /// **'Compra PayPal de Preparación+ no encontrada.'**
+  String get errorPrepPayPalPurchaseNotFound;
+
+  /// No description provided for @errorPrepMobilePlatformInvalid.
+  ///
+  /// In es, this message translates to:
+  /// **'La plataforma debe ser google_play o app_store.'**
+  String get errorPrepMobilePlatformInvalid;
+
+  /// No description provided for @errorPrepStoreProductMismatch.
+  ///
+  /// In es, this message translates to:
+  /// **'El producto de tienda no coincide con esta oferta.'**
+  String get errorPrepStoreProductMismatch;
+
+  /// No description provided for @errorPrepOfferNoLongerExists.
+  ///
+  /// In es, this message translates to:
+  /// **'La oferta ya no existe.'**
+  String get errorPrepOfferNoLongerExists;
+
+  /// No description provided for @errorPrepInvalidProductCode.
+  ///
+  /// In es, this message translates to:
+  /// **'Código de producto de compra no válido.'**
+  String get errorPrepInvalidProductCode;
+
+  /// No description provided for @errorPrepGooglePlayNotConfigured.
+  ///
+  /// In es, this message translates to:
+  /// **'Google Play no está configurado en el servidor.'**
+  String get errorPrepGooglePlayNotConfigured;
+
+  /// No description provided for @errorPrepAppStoreNotConfigured.
+  ///
+  /// In es, this message translates to:
+  /// **'App Store no está configurado. Usa pagos mock en desarrollo.'**
+  String get errorPrepAppStoreNotConfigured;
 }
 
 class _AppLocalizationsDelegate

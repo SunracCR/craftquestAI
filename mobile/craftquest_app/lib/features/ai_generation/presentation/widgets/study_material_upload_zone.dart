@@ -223,24 +223,34 @@ class StudyMaterialUploadConstraintChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: AppSpacing.xs,
-      runSpacing: AppSpacing.xs,
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _FormatChip(icon: Icons.picture_as_pdf_outlined, label: 'PDF'),
-        const _FormatChip(
-          icon: Icons.description_outlined,
-          label: 'DOCX',
+        Wrap(
+          spacing: AppSpacing.xs,
+          runSpacing: AppSpacing.xs,
+          children: [
+            const _FormatChip(icon: Icons.picture_as_pdf_outlined, label: 'PDF'),
+            const _FormatChip(
+              icon: Icons.description_outlined,
+              label: 'DOCX',
+            ),
+            _FormatChip(
+              icon: Icons.sd_storage_outlined,
+              label: '${AiGenerationLimits.maxUploadMb} MB',
+            ),
+          ],
         ),
-        _FormatChip(
-          icon: Icons.sd_storage_outlined,
-          label: '${AiGenerationLimits.maxUploadMb} MB',
-        ),
-        _FormatChip(
-          icon: Icons.menu_book_outlined,
-          label: l10n.aiGenerationUploadLimitsHint(
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          l10n.aiGenerationUploadLimitsHint(
             AiGenerationLimits.maxPagesPerMaterial,
             AiGenerationLimits.maxPagesPerGeneration,
+          ),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: AppColors.textSecondary,
+            height: 1.4,
           ),
         ),
       ],
@@ -358,12 +368,16 @@ class _FormatChip extends StatelessWidget {
         children: [
           Icon(icon, size: 14, color: AppColors.accentCool),
           const SizedBox(width: 4),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
           ),
         ],
       ),

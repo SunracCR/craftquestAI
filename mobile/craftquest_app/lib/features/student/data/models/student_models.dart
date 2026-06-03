@@ -42,6 +42,9 @@ class StudentAssignmentModel {
     this.startsAt,
     this.dueAt,
     this.maxAttempts,
+    this.randomizeQuestions = false,
+    this.allowStudentRandomizeQuestions = false,
+    this.forfeitExitCountsAsAttempt = false,
   });
 
   factory StudentAssignmentModel.fromJson(Map<String, dynamic> json) {
@@ -61,6 +64,11 @@ class StudentAssignmentModel {
           ? AssignmentDates.parseFromApi(json['dueAt'] as String)
           : null,
       maxAttempts: json['maxAttempts'] as int?,
+      randomizeQuestions: json['randomizeQuestions'] as bool? ?? false,
+      allowStudentRandomizeQuestions:
+          json['allowStudentRandomizeQuestions'] as bool? ?? false,
+      forfeitExitCountsAsAttempt:
+          json['forfeitExitCountsAsAttempt'] as bool? ?? false,
       myAttemptCount: json['myAttemptCount'] as int? ?? 0,
       teacherDisplayName: json['teacherDisplayName'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
@@ -78,7 +86,16 @@ class StudentAssignmentModel {
   final DateTime? startsAt;
   final DateTime? dueAt;
   final int? maxAttempts;
+  final bool randomizeQuestions;
+  final bool allowStudentRandomizeQuestions;
+  final bool forfeitExitCountsAsAttempt;
   final int myAttemptCount;
+
+  /// Salir sin finalizar consume un intento (solo con límite de intentos activo).
+  bool get forfeitExitApplies =>
+      maxAttempts != null &&
+      maxAttempts! > 0 &&
+      forfeitExitCountsAsAttempt;
   final String teacherDisplayName;
   final DateTime createdAt;
 

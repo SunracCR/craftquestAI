@@ -425,7 +425,14 @@ public class GeminiQuizGenerationProvider(
             correctAnswerKeys as JSON array referencing those keys (never a single string).
             For true_false use keys "true" and "false".
             Assign unique externalId per question (e.g. "q-1", "q-2").
-            {(parameters.IncludeExplanations ? "Add justification.text when useful." : "Omit justifications.")}
+            {(parameters.IncludeExplanations
+                ? """
+                  Each question MUST include a justification object:
+                  - text: one paragraph explaining why the correct answer(s) are correct (cover all relevant options in this single text).
+                  - visibility: "never" (review only; not shown during practice)
+                  - sources: when SOURCE contains "--- Page N ---" markers, include at least one source per question with pageNumber (integer N) and snippet (short quote from that page). Use url "craftquest://source#page=N" when no external URL exists.
+                  """
+                : "Omit justification objects entirely.")}
 
             SOURCE:
             {sourceText}

@@ -2,19 +2,49 @@ using System.Security.Claims;
 using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Exceptions;
 using CraftQuest.Application.Models.Auth;
+using CraftQuest.Application.Options;
+using CraftQuest.Application.Services;
 using CraftQuest.Domain.Constants;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace CraftQuest.Infrastructure.Services;
 
 public class AuthService(
     CraftQuestDbContext dbContext,
     JwtTokenService jwtTokenService,
-    IBillingService billingService) : IAuthService
+    IBillingService billingService,
+    IEmailSender emailSender,
+    IGoogleIdTokenValidator googleIdTokenValidator,
+    IAppleIdTokenValidator appleIdTokenValidator,
+    IOptions<PasswordResetOptions> passwordResetOptions,
+    IOptions<ExternalAuthOptions> externalAuthOptions) : IAuthService
 {
+    private readonly PasswordResetOptions _resetOptions = passwordResetOptions.Value;
+    private readonly ExternalAuthOptions _externalAuth = externalAuthOptions.Value;
+
+    public OAuthPublicConfigDto GetOAuthPublicConfig()
+    {
+        var googleId = _externalAuth.Google.WebClientId?.Trim();
+        var appleBundle = _externalAuth.Apple.BundleId?.Trim();
+        var appleServicesId = _externalAuth.Apple.ServicesId?.Trim();
+        var appleWebRedirect = _externalAuth.Apple.WebRedirectUri?.Trim();
+
+        return new OAuthPublicConfigDto
+        {
+            GoogleWebClientId = string.IsNullOrEmpty(googleId) ? null : googleId,
+            IsGoogleConfigured = !string.IsNullOrEmpty(googleId),
+            IsAppleConfigured = !string.IsNullOrEmpty(appleBundle)
+                || !string.IsNullOrEmpty(appleServicesId),
+            AppleServicesId = string.IsNullOrEmpty(appleServicesId) ? null : appleServicesId,
+            AppleWebRedirectUri = string.IsNullOrEmpty(appleWebRedirect) ? null : appleWebRedirect,
+            IsAppleWebConfigured = !string.IsNullOrEmpty(appleServicesId)
+                && !string.IsNullOrEmpty(appleWebRedirect),
+        };
+    }
     public async Task<AuthResponseDto> RegisterAsync(
         RegisterRequest request,
         CancellationToken cancellationToken = default)
@@ -97,6 +127,32 @@ public class AuthService(
         }
 
         return BuildAuthResponse(user);
+    }
+
+    public async Task<AuthResponseDto> LoginWithGoogleAsync(
+        ExternalLoginRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var identity = await googleIdTokenValidator.ValidateAsync(request.IdToken, cancellationToken);
+        return await SignInWithExternalProviderAsync(
+            "google",
+            identity,
+            request.Email,
+            request.DisplayName,
+            cancellationToken);
+    }
+
+    public async Task<AuthResponseDto> LoginWithAppleAsync(
+        ExternalLoginRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var identity = await appleIdTokenValidator.ValidateAsync(request.IdToken, cancellationToken);
+        return await SignInWithExternalProviderAsync(
+            "apple",
+            identity,
+            request.Email,
+            request.DisplayName,
+            cancellationToken);
     }
 
     public async Task<AuthTokensDto> RefreshAsync(
@@ -204,17 +260,138 @@ public class AuthService(
 
         if (user.PasswordHash is null)
         {
-            throw new AuthException("Password change is not available for this account.", 400);
+            throw new AuthException(
+                "Password change is not available for this account.",
+                400,
+                "PASSWORD_CHANGE_UNAVAILABLE");
         }
 
         if (!PasswordHasher.VerifyPassword(request.CurrentPassword, user.PasswordHash))
         {
-            throw new AuthException("Current password is incorrect.", 401);
+            throw new AuthException(
+                "Current password is incorrect.",
+                400,
+                "CURRENT_PASSWORD_INCORRECT");
         }
 
         user.PasswordHash = PasswordHasher.HashPassword(request.NewPassword);
         user.UpdatedAt = DateTime.UtcNow;
         await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RequestPasswordResetAsync(
+        ForgotPasswordRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(_resetOptions.Pepper))
+        {
+            throw new AuthException("Password reset is not configured.", 503, "PASSWORD_RESET_DISABLED");
+        }
+
+        var normalizedEmail = request.Email.Trim().ToUpperInvariant();
+        var user = await dbContext.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                u => u.Email.ToUpper() == normalizedEmail
+                    && u.DeletedAt == null
+                    && u.Status == "active"
+                    && u.PasswordHash != null,
+                cancellationToken);
+
+        if (user is null)
+        {
+            return;
+        }
+
+        var rawToken = PasswordResetTokenHasher.GenerateToken();
+        var tokenHash = PasswordResetTokenHasher.Hash(rawToken, _resetOptions.Pepper);
+        var now = DateTime.UtcNow;
+
+        var activeTokens = await dbContext.PasswordResetTokens
+            .Where(t => t.UserId == user.UserId && t.UsedAt == null && t.ExpiresAt > now)
+            .ToListAsync(cancellationToken);
+
+        foreach (var existing in activeTokens)
+        {
+            existing.UsedAt = now;
+        }
+
+        dbContext.PasswordResetTokens.Add(new PasswordResetToken
+        {
+            PasswordResetTokenId = Guid.NewGuid(),
+            UserId = user.UserId,
+            TokenHash = tokenHash,
+            ExpiresAt = now.AddMinutes(_resetOptions.TokenLifetimeMinutes),
+            CreatedAt = now,
+        });
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        var resetUrl = BuildResetUrl(rawToken);
+        var language = user.PreferredLanguage ?? "es";
+        var (subject, body) = BuildResetEmailContent(language, resetUrl, _resetOptions.TokenLifetimeMinutes);
+
+        await emailSender.SendAsync(user.Email, subject, body, cancellationToken);
+    }
+
+    public async Task ResetPasswordAsync(
+        ResetPasswordRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(_resetOptions.Pepper))
+        {
+            throw new AuthException("Password reset is not configured.", 503, "PASSWORD_RESET_DISABLED");
+        }
+
+        if (request.NewPassword.Length < 8)
+        {
+            throw new AuthException("New password must be at least 8 characters.", 400);
+        }
+
+        var tokenHash = PasswordResetTokenHasher.Hash(request.Token.Trim(), _resetOptions.Pepper);
+        var now = DateTime.UtcNow;
+
+        var resetToken = await dbContext.PasswordResetTokens
+            .Include(t => t.User)
+            .FirstOrDefaultAsync(
+                t => t.TokenHash == tokenHash && t.UsedAt == null && t.ExpiresAt > now,
+                cancellationToken);
+
+        if (resetToken is null || resetToken.User.DeletedAt is not null || resetToken.User.Status != "active")
+        {
+            throw new AuthException("Invalid or expired reset token.", 400, "INVALID_RESET_TOKEN");
+        }
+
+        resetToken.User.PasswordHash = PasswordHasher.HashPassword(request.NewPassword);
+        resetToken.User.UpdatedAt = now;
+        resetToken.UsedAt = now;
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private string BuildResetUrl(string rawToken)
+    {
+        var baseUrl = _resetOptions.AppResetUrlBase.TrimEnd('/');
+        return $"{baseUrl}?token={Uri.EscapeDataString(rawToken)}";
+    }
+
+    private static (string Subject, string Body) BuildResetEmailContent(
+        string language,
+        string resetUrl,
+        int lifetimeMinutes)
+    {
+        return language switch
+        {
+            "en" => (
+                "Reset your CraftQuest password",
+                $"Use this link to choose a new password (valid for {lifetimeMinutes} minutes):\n\n{resetUrl}\n\nIf you did not request this, you can ignore this email."),
+            "pt" => (
+                "Redefinir sua senha CraftQuest",
+                $"Use este link para escolher uma nova senha (valido por {lifetimeMinutes} minutos):\n\n{resetUrl}\n\nSe voce nao solicitou isso, ignore este e-mail."),
+            _ => (
+                "Restablecer tu contraseña de CraftQuest",
+                $"Usa este enlace para elegir una nueva contraseña (válido {lifetimeMinutes} minutos):\n\n{resetUrl}\n\nSi no lo solicitaste, ignora este correo."),
+        };
     }
 
     private async Task<AuthTokensDto> RefreshTokensForUserAsync(
@@ -234,6 +411,176 @@ public class AuthService(
 
         var roles = user.UserRoles.Select(ur => ur.Role.Code).ToList();
         return jwtTokenService.CreateTokenPair(user.UserId, user.Email, roles);
+    }
+
+    private async Task<AuthResponseDto> SignInWithExternalProviderAsync(
+        string providerCode,
+        ExternalAuthUserInfo identity,
+        string? clientEmail,
+        string? clientDisplayName,
+        CancellationToken cancellationToken)
+    {
+        var subject = identity.Subject.Trim();
+        if (string.IsNullOrWhiteSpace(subject))
+        {
+            throw new AuthException("Invalid external identity.", 401);
+        }
+
+        var linked = await dbContext.AuthProviders
+            .Include(ap => ap.User)
+            .ThenInclude(u => u.UserRoles)
+            .ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(
+                ap => ap.ProviderCode == providerCode && ap.ProviderSubject == subject,
+                cancellationToken);
+
+        if (linked?.User is { DeletedAt: null, Status: "active" } activeUser)
+        {
+            return BuildAuthResponse(activeUser);
+        }
+
+        var email = ResolveExternalEmail(identity, clientEmail);
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            throw new AuthException(
+                "Email is required for the first sign-in with this provider.",
+                400,
+                "EXTERNAL_EMAIL_REQUIRED");
+        }
+
+        email = email.Trim();
+        var normalizedEmail = email.ToUpperInvariant();
+
+        var userByEmail = await dbContext.Users
+            .Include(u => u.UserRoles)
+            .ThenInclude(ur => ur.Role)
+            .Include(u => u.AuthProviders)
+            .FirstOrDefaultAsync(
+                u => u.Email.ToUpper() == normalizedEmail && u.DeletedAt == null,
+                cancellationToken);
+
+        if (userByEmail is not null)
+        {
+            if (userByEmail.Status != "active")
+            {
+                throw new AuthException("User account is not active.", 403);
+            }
+
+            await EnsureAuthProviderLinkAsync(
+                userByEmail,
+                providerCode,
+                subject,
+                cancellationToken);
+            return BuildAuthResponse(userByEmail);
+        }
+
+        var studentRole = await dbContext.Roles
+            .FirstOrDefaultAsync(r => r.Code == RoleCodes.Student, cancellationToken)
+            ?? throw new AuthException("Default student role is not configured.", 500);
+
+        var userId = Guid.NewGuid();
+        var displayName = ResolveExternalDisplayName(identity, clientDisplayName, email);
+
+        var newUser = new User
+        {
+            UserId = userId,
+            Email = email,
+            DisplayName = displayName,
+            AvatarId = "craft_01",
+            PasswordHash = null,
+            Status = "active",
+            CreatedAt = DateTime.UtcNow,
+        };
+
+        newUser.UserRoles.Add(new UserRole
+        {
+            UserId = userId,
+            RoleId = studentRole.RoleId,
+            CreatedAt = DateTime.UtcNow,
+            Role = studentRole,
+        });
+
+        newUser.AuthProviders.Add(new AuthProvider
+        {
+            AuthProviderId = Guid.NewGuid(),
+            UserId = userId,
+            ProviderCode = providerCode,
+            ProviderSubject = subject,
+            CreatedAt = DateTime.UtcNow,
+        });
+
+        dbContext.Users.Add(newUser);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await billingService.AssignFreePlanAsync(userId, cancellationToken);
+
+        return BuildAuthResponse(newUser);
+    }
+
+    private async Task EnsureAuthProviderLinkAsync(
+        User user,
+        string providerCode,
+        string subject,
+        CancellationToken cancellationToken)
+    {
+        var alreadyLinked = user.AuthProviders.Any(
+            ap => ap.ProviderCode == providerCode && ap.ProviderSubject == subject);
+
+        if (alreadyLinked)
+        {
+            return;
+        }
+
+        var subjectTaken = await dbContext.AuthProviders.AnyAsync(
+            ap => ap.ProviderCode == providerCode && ap.ProviderSubject == subject,
+            cancellationToken);
+
+        if (subjectTaken)
+        {
+            throw new AuthException(
+                "This external account is already linked to another user.",
+                409,
+                "EXTERNAL_ACCOUNT_LINKED");
+        }
+
+        dbContext.AuthProviders.Add(new AuthProvider
+        {
+            AuthProviderId = Guid.NewGuid(),
+            UserId = user.UserId,
+            ProviderCode = providerCode,
+            ProviderSubject = subject,
+            CreatedAt = DateTime.UtcNow,
+        });
+
+        user.UpdatedAt = DateTime.UtcNow;
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private static string? ResolveExternalEmail(ExternalAuthUserInfo identity, string? clientEmail)
+    {
+        if (!string.IsNullOrWhiteSpace(identity.Email))
+        {
+            return identity.Email;
+        }
+
+        return string.IsNullOrWhiteSpace(clientEmail) ? null : clientEmail;
+    }
+
+    private static string ResolveExternalDisplayName(
+        ExternalAuthUserInfo identity,
+        string? clientDisplayName,
+        string email)
+    {
+        if (!string.IsNullOrWhiteSpace(identity.DisplayName))
+        {
+            return identity.DisplayName.Trim();
+        }
+
+        if (!string.IsNullOrWhiteSpace(clientDisplayName))
+        {
+            return clientDisplayName.Trim();
+        }
+
+        return email.Split('@')[0];
     }
 
     private AuthResponseDto BuildAuthResponse(User user)

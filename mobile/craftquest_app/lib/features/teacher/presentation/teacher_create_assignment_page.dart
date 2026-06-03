@@ -7,6 +7,7 @@ import 'package:craftquest_app/core/widgets/app_bottom_bar.dart';
 import 'package:craftquest_app/core/widgets/app_buttons.dart';
 import 'package:craftquest_app/core/widgets/app_section_card.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
+import 'package:craftquest_app/core/widgets/app_padded_scroll.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/features/quizzes/data/models/quiz_models.dart';
 import 'package:craftquest_app/features/quizzes/data/quiz_repository.dart';
@@ -51,7 +52,17 @@ class _TeacherCreateAssignmentPageState
   DateTime? _startsAt;
   DateTime? _dueAt;
   String _showAnswersMode = 'after_due_date';
+  bool _randomizeQuestions = false;
+  bool _allowStudentRandomizeQuestions = false;
+  bool _forfeitExitCountsAsAttempt = false;
   bool _loading = false;
+
+  bool get _maxAttemptsApplies {
+    final text = _maxAttemptsCtrl.text.trim();
+    if (text.isEmpty) return false;
+    final value = int.tryParse(text);
+    return value != null && value > 0;
+  }
   AssignmentFormDraft? _draftSnapshot;
   List<QuizModel> _quizzes = [];
   bool _quizzesLoading = true;
@@ -79,6 +90,9 @@ class _TeacherCreateAssignmentPageState
       _startsAt = existing.startsAt;
       _dueAt = existing.dueAt;
       _showAnswersMode = _normalizeShowAnswersMode(existing.showCorrectAnswersMode);
+      _randomizeQuestions = existing.randomizeQuestions;
+      _allowStudentRandomizeQuestions = existing.allowStudentRandomizeQuestions;
+      _forfeitExitCountsAsAttempt = existing.forfeitExitCountsAsAttempt;
       _quizzesLoading = false;
     } else {
       _loadQuizzes();
@@ -271,7 +285,11 @@ class _TeacherCreateAssignmentPageState
     );
 
     if (picked != null && mounted) {
-      setState(() => _selectedQuizId = picked);
+      final quiz = _quizzes.firstWhere((q) => q.quizId == picked);
+      setState(() {
+        _selectedQuizId = picked;
+        _randomizeQuestions = quiz.randomizeQuestions;
+      });
     }
   }
 
@@ -354,6 +372,10 @@ class _TeacherCreateAssignmentPageState
           dueAt: _dueAt,
           maxAttempts: maxAttempts,
           showCorrectAnswersMode: _showAnswersMode,
+          randomizeQuestions: _randomizeQuestions,
+          allowStudentRandomizeQuestions: _allowStudentRandomizeQuestions,
+          forfeitExitCountsAsAttempt:
+              _maxAttemptsApplies && _forfeitExitCountsAsAttempt,
         );
       } else {
         await _assignRepo.createAssignment(
@@ -365,6 +387,10 @@ class _TeacherCreateAssignmentPageState
           dueAt: _dueAt,
           maxAttempts: maxAttempts,
           showCorrectAnswersMode: _showAnswersMode,
+          randomizeQuestions: _randomizeQuestions,
+          allowStudentRandomizeQuestions: _allowStudentRandomizeQuestions,
+          forfeitExitCountsAsAttempt:
+              _maxAttemptsApplies && _forfeitExitCountsAsAttempt,
         );
       }
 
@@ -402,13 +428,9 @@ class _TeacherCreateAssignmentPageState
       ),
       body: Form(
         key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.md,
-            AppSpacing.md,
-            AppSpacing.md,
-            AppSpacing.lg,
-          ),
+        child: AppPaddedScrollBody(
+          includeBottom: false,
+          child: ListView(
           children: [
             Text(
               l10n.teacherAssignmentFormSubtitle,
@@ -514,9 +536,93 @@ class _TeacherCreateAssignmentPageState
                           controller: _maxAttemptsCtrl,
                           style: const TextStyle(color: AppColors.textPrimary),
                           keyboardType: TextInputType.number,
+                          onChanged: (_) {
+                            if (!_maxAttemptsApplies && _forfeitExitCountsAsAttempt) {
+                              setState(() => _forfeitExitCountsAsAttempt = false);
+                            } else {
+                              setState(() {});
+                            }
+                          },
                           decoration: _inputDecoration(
                             l10n.teacherAssignmentMaxAttemptsHint,
                           ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(
+                            l10n.teacherAssignmentRandomizeQuestionsLabel,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                          subtitle: Text(
+                            l10n.teacherAssignmentRandomizeQuestionsHint,
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                              height: 1.35,
+                            ),
+                          ),
+                          value: _randomizeQuestions,
+                          onChanged: (v) =>
+                              setState(() => _randomizeQuestions = v),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(
+                            l10n.teacherAssignmentAllowStudentRandomizeLabel,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                          subtitle: Text(
+                            l10n.teacherAssignmentAllowStudentRandomizeHint,
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                              height: 1.35,
+                            ),
+                          ),
+                          value: _allowStudentRandomizeQuestions,
+                          onChanged: (v) => setState(
+                            () => _allowStudentRandomizeQuestions = v,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(
+                            l10n.teacherAssignmentForfeitExitLabel,
+                            style: TextStyle(
+                              color: _maxAttemptsApplies
+                                  ? AppColors.textPrimary
+                                  : AppColors.textSecondary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                          subtitle: Text(
+                            _maxAttemptsApplies
+                                ? l10n.teacherAssignmentForfeitExitHint
+                                : l10n.teacherAssignmentForfeitRequiresMaxAttempts,
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                              height: 1.35,
+                            ),
+                          ),
+                          value: _forfeitExitCountsAsAttempt && _maxAttemptsApplies,
+                          onChanged: _maxAttemptsApplies
+                              ? (v) => setState(
+                                    () => _forfeitExitCountsAsAttempt = v,
+                                  )
+                              : null,
                         ),
                         const SizedBox(height: AppSpacing.md),
                         _FieldLabel(l10n.teacherAssignmentShowAnswersLabel),
@@ -548,6 +654,7 @@ class _TeacherCreateAssignmentPageState
                 ],
               ),
           ],
+        ),
         ),
       ),
     );
@@ -1035,7 +1142,8 @@ class _DateTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasValue = value != null;
-    final display = hasValue ? _formatPickerDate(value!) : placeholder;
+    final display =
+        hasValue ? AssignmentDates.format(context, value!) : placeholder;
 
     return Material(
       color: AppColors.background,
@@ -1106,10 +1214,6 @@ class _DateTile extends StatelessWidget {
     );
   }
 
-  String _formatPickerDate(DateTime value) {
-    final d = AssignmentDates.calendarUtc(value);
-    return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
-  }
 }
 
 class _ShowAnswersOption {

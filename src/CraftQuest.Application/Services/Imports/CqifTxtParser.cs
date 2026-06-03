@@ -155,7 +155,6 @@ public static partial class CqifTxtParser
         fields.TryGetValue("difficulty", out var difficulty);
         fields.TryGetValue("scoring_policy", out var scoringPolicy);
         fields.TryGetValue("justification", out var justificationText);
-        fields.TryGetValue("explanation_visibility", out var visibility);
 
         decimal? points = null;
         if (fields.TryGetValue("points", out var pointsRaw) &&
@@ -196,7 +195,7 @@ public static partial class CqifTxtParser
                 : new CqifJustification
                 {
                     Text = justificationText,
-                    Visibility = visibility ?? "after_quiz",
+                    Visibility = "never",
                     Status = "needs_review",
                 },
         };

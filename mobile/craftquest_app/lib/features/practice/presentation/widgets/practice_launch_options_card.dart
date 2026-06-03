@@ -13,10 +13,16 @@ class PracticeLaunchOptionsCard extends StatelessWidget {
     required this.showTimer,
     required this.onRandomizeQuestionsChanged,
     required this.onShowTimerChanged,
+    this.randomizeQuestionsHint,
+    this.showTimerOption = true,
+    this.showRandomizeOption = true,
   });
 
   final bool randomizeQuestions;
   final bool showTimer;
+  final String? randomizeQuestionsHint;
+  final bool showTimerOption;
+  final bool showRandomizeOption;
   final ValueChanged<bool> onRandomizeQuestionsChanged;
   final ValueChanged<bool> onShowTimerChanged;
 
@@ -33,28 +39,33 @@ class PracticeLaunchOptionsCard extends StatelessWidget {
           padding: EdgeInsets.zero,
           child: Column(
             children: [
-              _OptionSwitchTile(
-                icon: Icons.shuffle_rounded,
-                iconColor: AppColors.accentViolet,
-                title: l10n.practiceRandomizeQuestionsLabel,
-                subtitle: l10n.practiceRandomizeQuestionsHint,
-                value: randomizeQuestions,
-                onChanged: onRandomizeQuestionsChanged,
-              ),
-              Divider(
-                height: 1,
-                indent: AppSpacing.md,
-                endIndent: AppSpacing.md,
-                color: AppColors.textSecondary.withValues(alpha: 0.12),
-              ),
-              _OptionSwitchTile(
-                icon: Icons.timer_outlined,
-                iconColor: AppColors.accentCool,
-                title: l10n.practiceShowTimerLabel,
-                subtitle: l10n.practiceShowTimerHint,
-                value: showTimer,
-                onChanged: onShowTimerChanged,
-              ),
+              if (showRandomizeOption) ...[
+                _OptionSwitchTile(
+                  icon: Icons.shuffle_rounded,
+                  iconColor: AppColors.accentViolet,
+                  title: l10n.practiceRandomizeQuestionsLabel,
+                  subtitle: randomizeQuestionsHint ??
+                      l10n.practiceRandomizeQuestionsHint,
+                  value: randomizeQuestions,
+                  onChanged: onRandomizeQuestionsChanged,
+                ),
+                if (showTimerOption)
+                  Divider(
+                    height: 1,
+                    indent: AppSpacing.md,
+                    endIndent: AppSpacing.md,
+                    color: AppColors.textSecondary.withValues(alpha: 0.12),
+                  ),
+              ],
+              if (showTimerOption)
+                _OptionSwitchTile(
+                  icon: Icons.timer_outlined,
+                  iconColor: AppColors.accentCool,
+                  title: l10n.practiceShowTimerLabel,
+                  subtitle: l10n.practiceShowTimerHint,
+                  value: showTimer,
+                  onChanged: onShowTimerChanged,
+                ),
             ],
           ),
         ),

@@ -59,6 +59,20 @@ public class CqifImportTests
     }
 
     [Fact]
+    public void ExcelTemplate_IncludesJustificationColumn()
+    {
+        var bytes = CqifExcelTemplateBuilder.Build("es");
+        using var stream = new MemoryStream(bytes);
+        var document = CqifExcelParser.Parse(stream);
+
+        var withJustification = document.Questions
+            .FirstOrDefault(q => q.Justification?.Text is { Length: > 0 });
+
+        Assert.NotNull(withJustification);
+        Assert.Contains("París", withJustification.Justification!.Text!, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Validator_AllowsValidSingleChoice()
     {
         var question = new Application.Models.Imports.CqifQuestion

@@ -11,5 +11,6 @@ public class QuestionJustificationConfiguration : IEntityTypeConfiguration<Quest
         builder.ToTable("QuestionJustifications", "quiz");
         builder.HasKey(x => x.QuestionJustificationId);
         builder.Property(x => x.Status).HasMaxLength(40).IsRequired();
+        builder.HasIndex(x => x.QuestionId).IsUnique();
     }
 }

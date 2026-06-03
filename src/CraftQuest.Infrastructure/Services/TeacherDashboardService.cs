@@ -26,9 +26,14 @@ public class TeacherDashboardService(CraftQuestDbContext dbContext) : ITeacherDa
             .Distinct()
             .CountAsync(cancellationToken);
 
-        var publishedQuizzes = await dbContext.Quizzes
-            .AsNoTracking()
-            .CountAsync(q => q.CreatedByUserId == teacherUserId && q.PublicationStatus == "published", cancellationToken);
+        var assignedQuizzes = classIds.Count == 0
+            ? 0
+            : await dbContext.Assignments
+                .AsNoTracking()
+                .Where(a => classIds.Contains(a.ClassId) && a.Status != "archived")
+                .Select(a => a.QuizId)
+                .Distinct()
+                .CountAsync(cancellationToken);
 
         var assignmentIds = await GetTeacherAssignmentIdsAsync(teacherUserId, cancellationToken);
         var weekAgo = DateTime.UtcNow.AddDays(-7);
@@ -62,7 +67,7 @@ public class TeacherDashboardService(CraftQuestDbContext dbContext) : ITeacherDa
         {
             TotalStudents = totalStudents,
             ActiveClasses = activeClasses,
-            PublishedQuizzes = publishedQuizzes,
+            AssignedQuizzes = assignedQuizzes,
             SessionsThisWeek = sessionsThisWeek,
             UniqueActiveStudentsThisWeek = uniqueActiveStudentsThisWeek,
             RecentActivity = recentActivity,

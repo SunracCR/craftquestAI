@@ -11,6 +11,12 @@ public class Assignment
     public DateTime? StartsAt { get; set; }
     public DateTime? DueAt { get; set; }
     public int? MaxAttempts { get; set; }
+    public bool RandomizeQuestions { get; set; }
+    public bool AllowStudentRandomizeQuestions { get; set; }
+    /// <summary>
+    /// When true and <see cref="MaxAttempts"/> is set, leaving mid-session counts as an attempt.
+    /// </summary>
+    public bool ForfeitExitCountsAsAttempt { get; set; }
     public string ShowCorrectAnswersMode { get; set; } = "after_due_date";
     public string Status { get; set; } = "active";
     public DateTime CreatedAt { get; set; }

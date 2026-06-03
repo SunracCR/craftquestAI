@@ -2,7 +2,7 @@ class TeacherDashboardModel {
   const TeacherDashboardModel({
     required this.totalStudents,
     required this.activeClasses,
-    required this.publishedQuizzes,
+    required this.assignedQuizzes,
     required this.sessionsThisWeek,
     required this.uniqueActiveStudentsThisWeek,
     required this.recentActivity,
@@ -14,7 +14,9 @@ class TeacherDashboardModel {
     return TeacherDashboardModel(
       totalStudents: json['totalStudents'] as int? ?? 0,
       activeClasses: json['activeClasses'] as int? ?? 0,
-      publishedQuizzes: json['publishedQuizzes'] as int? ?? 0,
+      assignedQuizzes: json['assignedQuizzes'] as int? ??
+          json['publishedQuizzes'] as int? ??
+          0,
       sessionsThisWeek: json['sessionsThisWeek'] as int? ?? 0,
       uniqueActiveStudentsThisWeek:
           json['uniqueActiveStudentsThisWeek'] as int? ?? 0,
@@ -34,7 +36,7 @@ class TeacherDashboardModel {
 
   final int totalStudents;
   final int activeClasses;
-  final int publishedQuizzes;
+  final int assignedQuizzes;
   final int sessionsThisWeek;
   final int uniqueActiveStudentsThisWeek;
   final List<ActivityFeedItemModel> recentActivity;

@@ -6,6 +6,7 @@ import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_page_header.dart';
 import 'package:craftquest_app/core/widgets/app_section_card.dart';
 import 'package:craftquest_app/core/widgets/app_section_title.dart';
+import 'package:craftquest_app/core/widgets/app_padded_scroll.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/features/analytics/data/analytics_repository.dart';
@@ -117,10 +118,10 @@ class _QuizAnalyticsPageState extends State<QuizAnalyticsPage> {
                 )
               : _analytics == null
                   ? const SizedBox.shrink()
-                  : RefreshIndicator(
+                  : AppPaddedScrollBody(
+                      child: RefreshIndicator(
                       onRefresh: _load,
                       child: ListView(
-                        padding: EdgeInsets.zero,
                         children: [
                           AppPageHeader(
                             child: Padding(
@@ -197,12 +198,9 @@ class _QuizAnalyticsPageState extends State<QuizAnalyticsPage> {
                               ),
                             ),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.md,
-                            ),
-                            child: Column(
-                              children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
                                 ...questions.map((q) {
                                   return Padding(
                                     padding: const EdgeInsets.only(bottom: 12),
@@ -338,10 +336,9 @@ class _QuizAnalyticsPageState extends State<QuizAnalyticsPage> {
                                 }),
                               ],
                             ),
-                          ),
-                          const SizedBox(height: 32),
                         ],
                       ),
+                    ),
                     ),
     );
   }

@@ -1,3 +1,5 @@
+using CraftQuest.Application.Models.Quizzes;
+
 namespace CraftQuest.Application.Models.Teacher;
 
 public sealed class TeacherAttemptSummaryDto
@@ -46,6 +48,8 @@ public sealed class TeacherPracticeQuestionReviewDto
     public required decimal PointsPossible { get; init; }
     public required string AnswerStatus { get; init; }
     public required IReadOnlyList<TeacherAnswerOptionReviewDto> AnswersAsDisplayedToStudent { get; init; }
+    public string? JustificationText { get; init; }
+    public IReadOnlyList<QuestionJustificationSourceReviewDto> JustificationSources { get; init; } = [];
 }
 
 public sealed class TeacherAnswerOptionReviewDto
