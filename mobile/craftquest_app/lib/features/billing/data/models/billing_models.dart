@@ -167,6 +167,7 @@ class PlanEntitlementsModel {
     this.maxRedeemedSharedQuizzes,
     required this.currentRedeemedSharedQuizzes,
     this.canInviteUsersDirectly = false,
+    this.quizModificationLocked = false,
   });
 
   factory PlanEntitlementsModel.fromJson(Map<String, dynamic> json) {
@@ -180,6 +181,8 @@ class PlanEntitlementsModel {
           json['currentRedeemedSharedQuizzes'] as int? ?? 0,
       canInviteUsersDirectly:
           json['canInviteUsersDirectly'] as bool? ?? false,
+      quizModificationLocked:
+          json['quizModificationLocked'] as bool? ?? false,
     );
   }
 
@@ -190,6 +193,7 @@ class PlanEntitlementsModel {
   final int? maxRedeemedSharedQuizzes;
   final int currentRedeemedSharedQuizzes;
   final bool canInviteUsersDirectly;
+  final bool quizModificationLocked;
 }
 
 class CreditBalancesModel {

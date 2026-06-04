@@ -34,6 +34,7 @@ public class QuestionImportService(
         CancellationToken cancellationToken = default)
     {
         await EnsureQuizOwnerAsync(userId, quizId, cancellationToken);
+        await billingService.EnsureCanModifyOwnedQuizzesAsync(userId, cancellationToken);
 
         var sourceType = request.SourceType.Trim().ToLowerInvariant();
         if (!SupportedSourceTypes.Contains(sourceType))
@@ -77,6 +78,7 @@ public class QuestionImportService(
         CancellationToken cancellationToken = default)
     {
         await EnsureQuizOwnerAsync(userId, quizId, cancellationToken);
+        await billingService.EnsureCanModifyOwnedQuizzesAsync(userId, cancellationToken);
 
         var normalizedType = sourceType.Trim().ToLowerInvariant();
         if (normalizedType != "xlsx")
@@ -311,6 +313,7 @@ public class QuestionImportService(
         }
 
         var quizId = batch.QuizId.Value;
+        await billingService.EnsureCanModifyOwnedQuizzesAsync(userId, cancellationToken);
         var batchId = batch.QuestionImportBatchId;
         var quizDefaultPoints = await dbContext.Quizzes
             .AsNoTracking()

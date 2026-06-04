@@ -48,6 +48,8 @@ public sealed class PlanEntitlementsDto
     public int? MaxRedeemedSharedQuizzes { get; init; }
     public required int CurrentRedeemedSharedQuizzes { get; init; }
     public bool CanInviteUsersDirectly { get; init; }
+    /// <summary>True cuando hay más cuestionarios propios que permite el plan; solo lectura/práctica.</summary>
+    public bool QuizModificationLocked { get; init; }
 }
 
 public sealed class CreditBalancesDto

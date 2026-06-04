@@ -32,6 +32,12 @@ public class BillingService(CraftQuestDbContext dbContext) : IBillingService
                 cancellationToken);
 
         var redeemedSharedCount = await CountRedeemedSharedQuizzesAsync(userId, cancellationToken);
+        var entitlements = await MapEntitlementsAsync(
+            userId,
+            plan,
+            redeemedSharedCount,
+            quizzesCreated,
+            cancellationToken);
 
         return new UserBillingDto
         {
@@ -42,11 +48,7 @@ public class BillingService(CraftQuestDbContext dbContext) : IBillingService
                 QuizzesCreated = quizzesCreated,
                 ShareCodesCreatedThisMonth = shareCodesThisMonth,
             },
-            Entitlements = await MapEntitlementsAsync(
-                userId,
-                plan,
-                redeemedSharedCount,
-                cancellationToken),
+            Entitlements = entitlements,
             Credits = new CreditBalancesDto
             {
                 AiCredits = await GetTotalAiCreditsBalanceAsync(userId, cancellationToken),
@@ -106,8 +108,7 @@ public class BillingService(CraftQuestDbContext dbContext) : IBillingService
             return;
         }
 
-        var count = await dbContext.Quizzes
-            .CountAsync(q => q.CreatedByUserId == userId && q.DeletedAt == null, cancellationToken);
+        var count = await CountOwnedQuizzesAsync(userId, cancellationToken);
 
         if (count >= maxQuizzes.Value)
         {
@@ -122,6 +123,36 @@ public class BillingService(CraftQuestDbContext dbContext) : IBillingService
                     ["planName"] = subscription.Plan.Name,
                 });
         }
+    }
+
+    public async Task EnsureCanModifyOwnedQuizzesAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var subscription = await GetActiveSubscriptionAsync(userId, cancellationToken);
+        var maxQuizzes = subscription.Plan.MaxQuizzes;
+        if (!maxQuizzes.HasValue)
+        {
+            return;
+        }
+
+        var count = await CountOwnedQuizzesAsync(userId, cancellationToken);
+        if (count <= maxQuizzes.Value)
+        {
+            return;
+        }
+
+        throw new AppException(
+            $"Quiz modification locked: {count} quizzes exceed plan limit ({maxQuizzes.Value}) for '{subscription.Plan.Code}'.",
+            403,
+            "QUIZ_OVER_PLAN_LIMIT",
+            new Dictionary<string, object?>
+            {
+                ["maxQuizzes"] = maxQuizzes.Value,
+                ["currentQuizzes"] = count,
+                ["planCode"] = subscription.Plan.Code,
+                ["planName"] = subscription.Plan.Name,
+            });
     }
 
     public async Task EnsureCanAddQuestionAsync(
@@ -1005,6 +1036,7 @@ public class BillingService(CraftQuestDbContext dbContext) : IBillingService
         Guid userId,
         Plan plan,
         int redeemedSharedCount,
+        int quizzesCreated,
         CancellationToken cancellationToken)
     {
         var baseEntitlements = MapEntitlements(plan, redeemedSharedCount);
@@ -1020,8 +1052,18 @@ public class BillingService(CraftQuestDbContext dbContext) : IBillingService
                 userId,
                 plan.Code,
                 cancellationToken),
+            QuizModificationLocked = IsQuizModificationLocked(plan, quizzesCreated),
         };
     }
+
+    private static bool IsQuizModificationLocked(Plan plan, int quizzesCreated) =>
+        plan.MaxQuizzes is int max && quizzesCreated > max;
+
+    private Task<int> CountOwnedQuizzesAsync(
+        Guid userId,
+        CancellationToken cancellationToken) =>
+        dbContext.Quizzes
+            .CountAsync(q => q.CreatedByUserId == userId && q.DeletedAt == null, cancellationToken);
 
     private async Task<bool> CanInviteUsersDirectlyAsync(
         Guid userId,

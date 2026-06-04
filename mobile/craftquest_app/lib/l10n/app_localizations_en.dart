@@ -88,6 +88,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String errorQuizOverPlanLimit(int max, int current, String plan) {
+    return 'Your $plan plan allows $max quizzes and you have $current. Delete quizzes or upgrade to edit them.';
+  }
+
+  @override
+  String quizOverPlanLimitBanner(int current, int max) {
+    return 'Read-only mode: you have $current quizzes but your plan allows $max. You can still practice; delete some or upgrade to edit.';
+  }
+
+  @override
   String get billingPlanFreeName => 'Free';
 
   @override

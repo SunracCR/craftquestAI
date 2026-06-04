@@ -151,6 +151,10 @@ public class QuizGenerationService(
         {
             await billingService.EnsureCanCreateQuizAsync(userId, cancellationToken);
         }
+        else
+        {
+            await billingService.EnsureCanModifyOwnedQuizzesAsync(userId, cancellationToken);
+        }
 
         material.SelectionPageFrom = pageFrom;
         material.SelectionPageTo = pageTo;

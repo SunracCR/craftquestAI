@@ -3,6 +3,7 @@ import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/utils/publication_status_labels.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
+import 'package:craftquest_app/core/widgets/app_notice_banner.dart';
 import 'package:craftquest_app/core/widgets/app_bottom_bar.dart';
 import 'package:craftquest_app/core/widgets/app_buttons.dart';
 import 'package:craftquest_app/core/widgets/app_section_card.dart';
@@ -10,7 +11,6 @@ import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/core/widgets/app_section_title.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
-import 'package:craftquest_app/features/quizzes/data/models/quiz_models.dart';
 import 'package:craftquest_app/features/quizzes/data/quiz_repository.dart';
 import 'package:craftquest_app/features/ai_generation/presentation/ai_generation_hub_page.dart';
 import 'package:craftquest_app/features/imports/data/models/import_models.dart';
@@ -76,6 +76,9 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
   bool _savingTitle = false;
   PracticeActiveSessionModel? _activePractice;
   bool _canInviteDirect = false;
+  bool _quizModificationLocked = false;
+  int? _maxQuizzes;
+  int _quizzesCreated = 0;
 
   @override
   void initState() {
@@ -89,7 +92,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
     _loadPracticePreferences();
     _loadActivePractice();
     if (widget.isOwner) {
-      _loadInviteEligibility();
+      _loadBillingEntitlements();
     }
   }
 
@@ -108,6 +111,10 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
   }
 
   Future<void> _commitTitleEdit() async {
+    if (_quizModificationLocked) {
+      setState(() => _isEditingTitle = false);
+      return;
+    }
     final trimmed = _titleController.text.trim();
     if (trimmed.isEmpty) {
       _titleController.text = _quizTitle;
@@ -145,7 +152,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
   }
 
   void _startEditingTitle() {
-    if (!widget.isOwner) return;
+    if (!widget.isOwner || _quizModificationLocked) return;
     setState(() => _isEditingTitle = true);
     _titleController.text = _quizTitle;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -180,7 +187,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
       );
     }
 
-    if (!widget.isOwner) {
+    if (!widget.isOwner || _quizModificationLocked) {
       return Text(
         _quizTitle,
         style: titleStyle,
@@ -282,6 +289,10 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
   }
 
   Future<void> _openPendingAiImport() async {
+    if (_quizModificationLocked) {
+      _showQuizModificationLockedMessage();
+      return;
+    }
     final importId = _pendingReviewImportId;
     if (importId == null) return;
 
@@ -417,15 +428,19 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
 
   bool get _canCreateShareCode => _publicationStatus == 'published';
 
-  Future<void> _loadInviteEligibility() async {
+  Future<void> _loadBillingEntitlements() async {
     try {
       final billing = await _billingRepository.getMyBilling();
       if (!mounted) return;
       setState(() {
         _canInviteDirect = billing.entitlements.canInviteUsersDirectly;
+        _quizModificationLocked =
+            billing.entitlements.quizModificationLocked;
+        _maxQuizzes = billing.entitlements.maxQuizzes;
+        _quizzesCreated = billing.usage.quizzesCreated;
       });
     } catch (_) {
-      // Non-blocking: invite button stays hidden.
+      // Non-blocking: defaults keep edit enabled until billing loads.
     }
   }
 
@@ -475,6 +490,10 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
   }
 
   Future<void> _importQuestions() async {
+    if (_quizModificationLocked) {
+      _showQuizModificationLockedMessage();
+      return;
+    }
     final l10n = AppLocalizations.of(context)!;
     final choice = await showModalBottomSheet<String>(
       context: context,
@@ -609,7 +628,20 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
     }
   }
 
+  void _showQuizModificationLockedMessage() {
+    final max = _maxQuizzes;
+    if (max == null || !mounted) return;
+    context.showInfoSnackBar(
+      AppLocalizations.of(context)!
+          .quizOverPlanLimitBanner(_quizzesCreated, max),
+    );
+  }
+
   Future<void> _publish() async {
+    if (_quizModificationLocked) {
+      _showQuizModificationLockedMessage();
+      return;
+    }
     final l10n = AppLocalizations.of(context)!;
     try {
       await _repository.publishQuiz(widget.quizId);
@@ -806,6 +838,19 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
+                            if (isOwner &&
+                                _quizModificationLocked &&
+                                _maxQuizzes != null) ...[
+                              AppNoticeBanner(
+                                message: l10n.quizOverPlanLimitBanner(
+                                  _quizzesCreated,
+                                  _maxQuizzes!,
+                                ),
+                                variant: AppNoticeVariant.warning,
+                                icon: Icons.lock_outline_rounded,
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                            ],
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -817,11 +862,17 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
                                     message: l10n.publishQuizAction,
                                     child: IconButton(
                                       onPressed: () {
-                                        if (_canPublish) _publish();
+                                        if (_canPublish &&
+                                            !_quizModificationLocked) {
+                                          _publish();
+                                        } else if (_quizModificationLocked) {
+                                          _showQuizModificationLockedMessage();
+                                        }
                                       },
                                       icon: Icon(
                                         Icons.publish_rounded,
-                                        color: _canPublish
+                                        color: _canPublish &&
+                                                !_quizModificationLocked
                                             ? AppColors.accentMint
                                             : Theme.of(context).disabledColor,
                                       ),
@@ -1048,6 +1099,8 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
                                           ? AppLocalizations.of(context)!
                                               .quizRandomizeQuestionsHint
                                           : null,
+                                      showRandomizeOption: !widget.isOwner ||
+                                          !_quizModificationLocked,
                                       showTimer: _showTimer,
                                       onRandomizeQuestionsChanged:
                                           _updateRandomizeQuestions,

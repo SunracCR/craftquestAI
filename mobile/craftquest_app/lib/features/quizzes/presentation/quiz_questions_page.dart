@@ -1,6 +1,7 @@
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
+import 'package:craftquest_app/core/widgets/app_notice_banner.dart';
 import 'package:craftquest_app/core/widgets/app_bottom_bar.dart';
 import 'package:craftquest_app/core/widgets/app_buttons.dart';
 import 'package:craftquest_app/core/widgets/app_page_header.dart';
@@ -11,6 +12,7 @@ import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/features/quizzes/data/models/quiz_models.dart';
 import 'package:craftquest_app/features/quizzes/data/quiz_repository.dart';
+import 'package:craftquest_app/features/billing/data/billing_repository.dart';
 import 'package:craftquest_app/features/quizzes/presentation/add_question_page.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
@@ -32,16 +34,45 @@ class QuizQuestionsPage extends StatefulWidget {
 
 class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
   final _repository = getIt<QuizRepository>();
+  final _billingRepository = getIt<BillingRepository>();
   List<QuestionModel>? _questions;
   bool _loading = true;
   String? _error;
   bool _dataChanged = false;
+  bool _quizModificationLocked = false;
+  int? _maxQuizzes;
+  int _quizzesCreated = 0;
   final Set<int> _expandedIndices = {};
 
   @override
   void initState() {
     super.initState();
     _load();
+    _loadBillingEntitlements();
+  }
+
+  Future<void> _loadBillingEntitlements() async {
+    try {
+      final billing = await _billingRepository.getMyBilling();
+      if (!mounted) return;
+      setState(() {
+        _quizModificationLocked =
+            billing.entitlements.quizModificationLocked;
+        _maxQuizzes = billing.entitlements.maxQuizzes;
+        _quizzesCreated = billing.usage.quizzesCreated;
+      });
+    } catch (_) {
+      // Non-blocking.
+    }
+  }
+
+  void _showQuizModificationLockedMessage() {
+    final max = _maxQuizzes;
+    if (max == null || !mounted) return;
+    context.showInfoSnackBar(
+      AppLocalizations.of(context)!
+          .quizOverPlanLimitBanner(_quizzesCreated, max),
+    );
   }
 
   Future<void> _load() async {
@@ -73,6 +104,10 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
   }
 
   Future<void> _addQuestion() async {
+    if (_quizModificationLocked) {
+      _showQuizModificationLockedMessage();
+      return;
+    }
     final l10n = AppLocalizations.of(context)!;
     final added = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
@@ -89,6 +124,10 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
   }
 
   Future<void> _editQuestion(QuestionModel question) async {
+    if (_quizModificationLocked) {
+      _showQuizModificationLockedMessage();
+      return;
+    }
     final l10n = AppLocalizations.of(context)!;
     final updated = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
@@ -166,7 +205,7 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
       },
       child: EdgeAwareScaffold(
         appBar: craftQuestAppBar(title: l10n.quizDetailQuestionsSection),
-        bottomBar: _loading
+        bottomBar: _loading || _quizModificationLocked
             ? null
             : AppBottomActionBar(
                 children: [
@@ -213,6 +252,18 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
                                   AppMetaText(
                                     text: l10n.quizQuestionsCount(questionCount),
                                   ),
+                                  if (_quizModificationLocked &&
+                                      _maxQuizzes != null) ...[
+                                    const SizedBox(height: AppSpacing.sm),
+                                    AppNoticeBanner(
+                                      message: l10n.quizOverPlanLimitBanner(
+                                        _quizzesCreated,
+                                        _maxQuizzes!,
+                                      ),
+                                      variant: AppNoticeVariant.warning,
+                                      icon: Icons.lock_outline_rounded,
+                                    ),
+                                  ],
                                 ],
                               ),
                             ),
@@ -246,9 +297,10 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
                                       expanded: _expandedIndices.contains(index),
                                       onExpansionChanged: (v) =>
                                           _toggleExpanded(index, v),
-                                      onEdit: () => _editQuestion(question),
-                                      onDelete: () =>
-                                          _confirmDelete(question),
+                                      onEdit: _quizModificationLocked
+                                          ? null
+                                          : () => _editQuestion(question),
+                                      onDelete: () => _confirmDelete(question),
                                     ),
                                   );
                                 },

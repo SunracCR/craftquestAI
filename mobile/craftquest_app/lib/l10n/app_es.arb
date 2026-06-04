@@ -48,6 +48,21 @@
       "plan": { "type": "String" }
     }
   },
+  "errorQuizOverPlanLimit": "Tu plan {plan} permite {max} cuestionarios y tienes {current}. Elimina cuestionarios o mejora tu plan para editarlos.",
+  "@errorQuizOverPlanLimit": {
+    "placeholders": {
+      "max": { "type": "int" },
+      "current": { "type": "int" },
+      "plan": { "type": "String" }
+    }
+  },
+  "quizOverPlanLimitBanner": "Modo solo lectura: tienes {current} cuestionarios pero tu plan permite {max}. Puedes practicarlos; elimina algunos o mejora tu plan para editarlos.",
+  "@quizOverPlanLimitBanner": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
   "billingPlanFreeName": "Gratis",
   "billingPlanProName": "Pro",
   "billingPlanPremiumName": "Premium",

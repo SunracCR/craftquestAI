@@ -9,6 +9,7 @@ abstract final class ApiErrorMapper {
   static const planLimitErrorCodes = {
     'QUESTION_LIMIT_REACHED',
     'QUIZ_LIMIT_REACHED',
+    'QUIZ_OVER_PLAN_LIMIT',
   };
 
   static const upgradePromptErrorCodes = {
@@ -304,6 +305,19 @@ abstract final class ApiErrorMapper {
         if (max == null) return null;
         return l10n.errorQuizLimitReached(
           max,
+          _planLabel(
+            planName: data['planName'] as String?,
+            planCode: data['planCode'] as String?,
+            l10n: l10n,
+          ),
+        );
+      case 'QUIZ_OVER_PLAN_LIMIT':
+        final max = _asInt(data['maxQuizzes']);
+        final current = _asInt(data['currentQuizzes']);
+        if (max == null || current == null) return null;
+        return l10n.errorQuizOverPlanLimit(
+          max,
+          current,
           _planLabel(
             planName: data['planName'] as String?,
             planCode: data['planCode'] as String?,

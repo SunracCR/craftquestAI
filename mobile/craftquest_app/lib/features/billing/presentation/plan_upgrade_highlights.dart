@@ -9,15 +9,15 @@ abstract final class PlanUpgradeHighlights {
   }) {
     return switch (plan.code.toLowerCase()) {
       'pro' => [
+          l10n.upgradePlanHighlightAiCredits(
+            plan.monthlyAiCredits,
+            currentEntitlements.monthlyAiCredits,
+          ),
           l10n.upgradeProHighlightQuizzesLimit(
             currentEntitlements.maxQuizzes ?? 0,
           ),
           l10n.upgradeProHighlightQuestionsLimit(
             currentEntitlements.maxQuestionsPerQuiz ?? 0,
-          ),
-          l10n.upgradePlanHighlightAiCredits(
-            plan.monthlyAiCredits,
-            currentEntitlements.monthlyAiCredits,
           ),
           l10n.upgradeProHighlightShared,
           l10n.upgradeProHighlightDirectInvite,

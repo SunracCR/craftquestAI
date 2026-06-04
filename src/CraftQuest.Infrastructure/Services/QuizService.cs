@@ -148,6 +148,7 @@ public class QuizService(
             ?? throw new AppException("Quiz not found.", 404);
 
         EnsureQuizOwner(quiz, userId);
+        await billingService.EnsureCanModifyOwnedQuizzesAsync(userId, cancellationToken);
 
         if (request.Title is not null)
         {
@@ -224,6 +225,7 @@ public class QuizService(
         CancellationToken cancellationToken = default)
     {
         var quiz = await GetOwnedQuizAsync(userId, quizId, cancellationToken);
+        await billingService.EnsureCanModifyOwnedQuizzesAsync(userId, cancellationToken);
         await billingService.EnsureCanAddQuestionAsync(userId, quizId, cancellationToken);
 
         var questionType = await dbContext.QuestionTypes
@@ -322,6 +324,7 @@ public class QuizService(
         CancellationToken cancellationToken = default)
     {
         var quiz = await GetOwnedQuizAsync(userId, quizId, cancellationToken);
+        await billingService.EnsureCanModifyOwnedQuizzesAsync(userId, cancellationToken);
 
         var question = await dbContext.Questions
             .Include(q => q.AnswerOptions)

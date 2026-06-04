@@ -232,6 +232,18 @@ abstract class AppLocalizations {
   /// **'Has alcanzado el límite de {max} cuestionarios en tu plan {plan}.'**
   String errorQuizLimitReached(int max, String plan);
 
+  /// No description provided for @errorQuizOverPlanLimit.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu plan {plan} permite {max} cuestionarios y tienes {current}. Elimina cuestionarios o mejora tu plan para editarlos.'**
+  String errorQuizOverPlanLimit(int max, int current, String plan);
+
+  /// No description provided for @quizOverPlanLimitBanner.
+  ///
+  /// In es, this message translates to:
+  /// **'Modo solo lectura: tienes {current} cuestionarios pero tu plan permite {max}. Puedes practicarlos; elimina algunos o mejora tu plan para editarlos.'**
+  String quizOverPlanLimitBanner(int current, int max);
+
   /// No description provided for @billingPlanFreeName.
   ///
   /// In es, this message translates to:

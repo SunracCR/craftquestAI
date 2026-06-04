@@ -16,6 +16,14 @@ public interface IBillingService
         Guid userId,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Bloquea edición de cuestionarios/preguntas e importaciones cuando el usuario
+    /// supera el cupo de cuestionarios propios de su plan (p. ej. Free con 3+ tras bajar de Pro).
+    /// </summary>
+    Task EnsureCanModifyOwnedQuizzesAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
     Task EnsureCanAddQuestionAsync(
         Guid userId,
         Guid quizId,

@@ -48,6 +48,21 @@
       "plan": { "type": "String" }
     }
   },
+  "errorQuizOverPlanLimit": "Your {plan} plan allows {max} quizzes and you have {current}. Delete quizzes or upgrade to edit them.",
+  "@errorQuizOverPlanLimit": {
+    "placeholders": {
+      "max": { "type": "int" },
+      "current": { "type": "int" },
+      "plan": { "type": "String" }
+    }
+  },
+  "quizOverPlanLimitBanner": "Read-only mode: you have {current} quizzes but your plan allows {max}. You can still practice; delete some or upgrade to edit.",
+  "@quizOverPlanLimitBanner": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
   "billingPlanFreeName": "Free",
   "billingPlanProName": "Pro",
   "billingPlanPremiumName": "Premium",

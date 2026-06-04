@@ -48,6 +48,21 @@
       "plan": { "type": "String" }
     }
   },
+  "errorQuizOverPlanLimit": "Seu plano {plan} permite {max} questionarios e voce tem {current}. Exclua questionarios ou faca upgrade para edita-los.",
+  "@errorQuizOverPlanLimit": {
+    "placeholders": {
+      "max": { "type": "int" },
+      "current": { "type": "int" },
+      "plan": { "type": "String" }
+    }
+  },
+  "quizOverPlanLimitBanner": "Modo somente leitura: voce tem {current} questionarios, mas seu plano permite {max}. Ainda pode praticar; exclua alguns ou faca upgrade para editar.",
+  "@quizOverPlanLimitBanner": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
   "billingPlanFreeName": "Gratuito",
   "billingPlanProName": "Pro",
   "billingPlanPremiumName": "Premium",
