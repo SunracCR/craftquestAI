@@ -1,7 +1,6 @@
 using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Models.Auth;
 using CraftQuest.Application.Options;
-using CraftQuest.Application.Options;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Email;
 using CraftQuest.Infrastructure.Persistence;
