@@ -39,31 +39,11 @@ if (!builder.Environment.IsEnvironment("Testing"))
     healthChecks.AddDbContextCheck<CraftQuestDbContext>("database");
 }
 
-var corsSection = builder.Configuration.GetSection(CorsOptions.SectionName);
-builder.Services.Configure<CorsOptions>(corsSection);
-
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("Default", policy =>
+    options.AddPolicy("AllowMyApp", policy =>
     {
-        if (builder.Environment.IsDevelopment()
-            || builder.Environment.IsEnvironment("Testing"))
-        {
-            policy.AllowAnyHeader()
-                .AllowAnyMethod()
-                .SetIsOriginAllowed(_ => true)
-                .AllowCredentials();
-            return;
-        }
-
-        var allowedOrigins = corsSection.Get<CorsOptions>()?.AllowedOrigins ?? [];
-        if (allowedOrigins.Length == 0)
-        {
-            throw new InvalidOperationException(
-                "Cors:AllowedOrigins must be configured when not running in Development.");
-        }
-
-        policy.WithOrigins(allowedOrigins)
+        policy.WithOrigins("https://app.craftquestai.com")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
@@ -87,7 +67,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors("Default");
+app.UseRouting();
+app.UseCors("AllowMyApp");
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<UserContextTelemetryMiddleware>();
