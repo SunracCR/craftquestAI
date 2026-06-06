@@ -28,11 +28,14 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
+      - name: Restore API
+        run: dotnet restore ${{ env.API_PROJECT }} -r linux-x64 -p:PublishReadyToRun=true
+
       - name: Build API
-        run: dotnet build ${{ env.API_PROJECT }} -c Release
+        run: dotnet build ${{ env.API_PROJECT }} -c Release --no-restore
 
       - name: dotnet publish
-        run: dotnet publish ${{ env.API_PROJECT }} -c Release -o ./publish
+        run: dotnet publish ${{ env.API_PROJECT }} -c Release -r linux-x64 -o ./publish --self-contained false -p:PublishReadyToRun=true --no-restore
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
