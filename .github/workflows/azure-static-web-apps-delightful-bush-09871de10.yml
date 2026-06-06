@@ -1,0 +1,77 @@
+name: Azure Static Web Apps CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches:
+      - main
+
+jobs:
+  build_and_deploy_job:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    runs-on: ubuntu-latest
+    name: Build and Deploy Job
+    permissions:
+       id-token: write
+       contents: read
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+          lfs: false
+          
+      # --- INICIO DE COMPILACIÓN FLUTTER ---
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Install dependencies
+        working-directory: mobile/craftquest_app
+        run: flutter pub get
+
+      - name: Build Flutter Web
+        working-directory: mobile/craftquest_app
+        # ¡OJO! Recuerda cambiar TU_CLIENT_ID_AQUI por tu Web Client ID real de Google Cloud
+        run: flutter build web --dart-define=API_BASE_URL=https://api.craftquestai.com --dart-define=GOOGLE_SERVER_CLIENT_ID=398143602966-d4urqebho1niu1qt7lgmqgvc2gn52c35.apps.googleusercontent.com
+      # --- FIN DE COMPILACIÓN FLUTTER ---
+
+      - name: Install OIDC Client from Core Package
+        run: npm install @actions/core@1.6.0 @actions/http-client
+        
+      - name: Get Id Token
+        uses: actions/github-script@v6
+        id: idtoken
+        with:
+           script: |
+               const coredemo = require('@actions/core')
+               return await coredemo.getIDToken()
+           result-encoding: string
+           
+      - name: Build And Deploy
+        id: builddeploy
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_DELIGHTFUL_BUSH_09871DE10 }}
+          action: "upload"
+          ###### Repository/Build Configurations ######
+          skip_app_build: true # Le dice a Azure que no intente compilar, Flutter ya lo hizo
+          app_location: "mobile/craftquest_app/build/web" # Apuntamos directo a los archivos finales
+          api_location: "" 
+          output_location: "" # Queda vacío porque app_location ya es la carpeta final
+          github_id_token: ${{ steps.idtoken.outputs.result }}
+          ###### End of Repository/Build Configurations ######
+
+  close_pull_request_job:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    name: Close Pull Request Job
+    steps:
+      - name: Close Pull Request
+        id: closepullrequest
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          action: "close"
