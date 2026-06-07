@@ -20,12 +20,33 @@ public class AnalyticsService(CraftQuestDbContext dbContext) : IAnalyticsService
             return;
         }
 
+        var questionIds = session.QuestionSnapshots
+            .Select(q => q.QuestionId)
+            .Distinct()
+            .ToList();
+
+        var selectedOptionIds = session.QuestionSnapshots
+            .SelectMany(q => q.AnswerOptionSnapshots)
+            .Where(a => a.WasSelected)
+            .Select(a => a.AnswerOptionId)
+            .Distinct()
+            .ToList();
+
+        var questionStatsById = questionIds.Count == 0
+            ? new Dictionary<Guid, QuestionStats>()
+            : await dbContext.QuestionStats
+                .Where(s => questionIds.Contains(s.QuestionId))
+                .ToDictionaryAsync(s => s.QuestionId, cancellationToken);
+
+        var optionStatsById = selectedOptionIds.Count == 0
+            ? new Dictionary<Guid, AnswerOptionStats>()
+            : await dbContext.AnswerOptionStats
+                .Where(s => selectedOptionIds.Contains(s.AnswerOptionId))
+                .ToDictionaryAsync(s => s.AnswerOptionId, cancellationToken);
+
         foreach (var questionSnapshot in session.QuestionSnapshots)
         {
-            var questionStats = await dbContext.QuestionStats
-                .FirstOrDefaultAsync(s => s.QuestionId == questionSnapshot.QuestionId, cancellationToken);
-
-            if (questionStats is null)
+            if (!questionStatsById.TryGetValue(questionSnapshot.QuestionId, out var questionStats))
             {
                 questionStats = new QuestionStats
                 {
@@ -33,6 +54,7 @@ public class AnalyticsService(CraftQuestDbContext dbContext) : IAnalyticsService
                     UpdatedAt = DateTime.UtcNow,
                 };
                 dbContext.QuestionStats.Add(questionStats);
+                questionStatsById[questionSnapshot.QuestionId] = questionStats;
             }
 
             questionStats.AttemptsCount++;
@@ -68,12 +90,7 @@ public class AnalyticsService(CraftQuestDbContext dbContext) : IAnalyticsService
                     continue;
                 }
 
-                var optionStats = await dbContext.AnswerOptionStats
-                    .FirstOrDefaultAsync(
-                        s => s.AnswerOptionId == answerSnapshot.AnswerOptionId,
-                        cancellationToken);
-
-                if (optionStats is null)
+                if (!optionStatsById.TryGetValue(answerSnapshot.AnswerOptionId, out var optionStats))
                 {
                     optionStats = new AnswerOptionStats
                     {
@@ -81,6 +98,7 @@ public class AnalyticsService(CraftQuestDbContext dbContext) : IAnalyticsService
                         QuestionId = questionSnapshot.QuestionId,
                     };
                     dbContext.AnswerOptionStats.Add(optionStats);
+                    optionStatsById[answerSnapshot.AnswerOptionId] = optionStats;
                 }
 
                 optionStats.SelectedCount++;
@@ -138,6 +156,7 @@ public class AnalyticsService(CraftQuestDbContext dbContext) : IAnalyticsService
             .OrderBy(q => q.SortOrder)
             .Include(q => q.AnswerOptions.Where(o => o.IsActive))
             .Include(q => q.CorrectAnswerOptions)
+            .AsSplitQuery()
             .ToListAsync(cancellationToken);
 
         if (classId.HasValue || assignmentId.HasValue)
@@ -166,6 +185,7 @@ public class AnalyticsService(CraftQuestDbContext dbContext) : IAnalyticsService
             var scopedSessions = await sessionsQuery
                 .Include(s => s.QuestionSnapshots)
                 .ThenInclude(q => q.AnswerOptionSnapshots)
+                .AsSplitQuery()
                 .ToListAsync(cancellationToken);
 
             return new QuizAnalyticsDto

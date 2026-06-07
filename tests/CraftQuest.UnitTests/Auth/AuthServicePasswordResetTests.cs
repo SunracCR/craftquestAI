@@ -6,6 +6,7 @@ using CraftQuest.Infrastructure.Email;
 using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.Security;
 using CraftQuest.Infrastructure.Services;
+using CraftQuest.UnitTests.Billing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -86,7 +87,7 @@ public class AuthServicePasswordResetTests
 
     private static AuthService CreateService(CraftQuestDbContext db, string pepper = "test-pepper")
     {
-        var billing = new BillingService(db);
+        var billing = BillingTestHelpers.CreateService(db);
         var jwt = new JwtTokenService(Options.Create(new JwtOptions
         {
             SecretKey = "CraftQuest-UnitTest-Secret-Key-32chars!",

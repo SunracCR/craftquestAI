@@ -2,6 +2,7 @@ using CraftQuest.Application.Exceptions;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.Services;
+using CraftQuest.UnitTests.Billing;
 using Microsoft.EntityFrameworkCore;
 
 namespace CraftQuest.UnitTests.Billing;
@@ -16,7 +17,7 @@ public class BillingServiceQuizModificationTests
         await SeedUserWithFreePlanAsync(db, userId, maxQuizzes: 2);
         await SeedOwnedQuizzesAsync(db, userId, count: 2);
 
-        var billing = new BillingService(db);
+        var billing = BillingTestHelpers.CreateService(db);
         await billing.EnsureCanModifyOwnedQuizzesAsync(userId);
     }
 
@@ -28,7 +29,7 @@ public class BillingServiceQuizModificationTests
         await SeedUserWithFreePlanAsync(db, userId, maxQuizzes: 2);
         await SeedOwnedQuizzesAsync(db, userId, count: 3);
 
-        var billing = new BillingService(db);
+        var billing = BillingTestHelpers.CreateService(db);
         var ex = await Assert.ThrowsAsync<AppException>(
             () => billing.EnsureCanModifyOwnedQuizzesAsync(userId));
 
@@ -45,7 +46,7 @@ public class BillingServiceQuizModificationTests
         await SeedUserWithProPlanAsync(db, userId);
         await SeedOwnedQuizzesAsync(db, userId, count: 10);
 
-        var billing = new BillingService(db);
+        var billing = BillingTestHelpers.CreateService(db);
         await billing.EnsureCanModifyOwnedQuizzesAsync(userId);
     }
 
@@ -57,7 +58,7 @@ public class BillingServiceQuizModificationTests
         await SeedUserWithFreePlanAsync(db, userId, maxQuizzes: 2);
         await SeedOwnedQuizzesAsync(db, userId, count: 5);
 
-        var billing = new BillingService(db);
+        var billing = BillingTestHelpers.CreateService(db);
         var result = await billing.GetMyBillingAsync(userId);
 
         Assert.True(result.Entitlements.QuizModificationLocked);

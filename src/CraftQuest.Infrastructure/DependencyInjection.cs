@@ -33,7 +33,11 @@ public static class DependencyInjection
 
             services.AddDbContext<CraftQuestDbContext>(options =>
                 options.UseSqlServer(connectionString, sql =>
-                    sql.MigrationsHistoryTable("__EFMigrationsHistory", "core")));
+                {
+                    sql.MigrationsHistoryTable("__EFMigrationsHistory", "core");
+                    sql.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(5), errorNumbersToAdd: null);
+                    sql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                }));
         }
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));

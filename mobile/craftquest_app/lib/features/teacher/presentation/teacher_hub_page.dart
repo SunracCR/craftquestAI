@@ -16,12 +16,27 @@ class TeacherHubPage extends StatefulWidget {
 
 class _TeacherHubPageState extends State<TeacherHubPage> {
   int _tab = 0;
+  final Set<int> _visitedTabs = {0};
+  final Map<int, Widget> _sectionCache = {};
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) showTeacherOnboardingIfNeeded(context);
+    });
+  }
+
+  Widget _sectionFor(int tabIndex) {
+    return _sectionCache.putIfAbsent(tabIndex, () {
+      switch (tabIndex) {
+        case 0:
+          return const _DashboardSection();
+        case 1:
+          return const _ClassesSection();
+        default:
+          return const SizedBox.shrink();
+      }
     });
   }
 
@@ -33,10 +48,10 @@ class _TeacherHubPageState extends State<TeacherHubPage> {
       backgroundColor: AppColors.background,
       body: IndexedStack(
         index: _tab,
-        children: const [
-          _DashboardSection(),
-          _ClassesSection(),
-        ],
+        children: List.generate(
+          2,
+          (i) => _visitedTabs.contains(i) ? _sectionFor(i) : const SizedBox.shrink(),
+        ),
       ),
       bottomNavigationBar: NavigationBarTheme(
         data: NavigationBarThemeData(
@@ -61,7 +76,10 @@ class _TeacherHubPageState extends State<TeacherHubPage> {
         ),
         child: NavigationBar(
           selectedIndex: _tab,
-          onDestinationSelected: (i) => setState(() => _tab = i),
+          onDestinationSelected: (i) => setState(() {
+            _visitedTabs.add(i);
+            _tab = i;
+          }),
           destinations: [
             NavigationDestination(
               icon: const Icon(Icons.dashboard_outlined),

@@ -3,6 +3,7 @@ using CraftQuest.Application.Options;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.Services;
+using CraftQuest.UnitTests.Billing;
 using CraftQuest.Infrastructure.Services.Payments;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -82,7 +83,7 @@ public class AiCreditPackPaymentTests
         });
         await db.SaveChangesAsync();
 
-        var billing = new BillingService(db);
+        var billing = BillingTestHelpers.CreateService(db);
         var result = await billing.GetMyBillingAsync(userId);
 
         Assert.Equal(150, await GetBalanceAsync(db, userId, "ai"));
@@ -108,7 +109,7 @@ public class AiCreditPackPaymentTests
 
     private static PaymentService CreatePaymentService(CraftQuestDbContext db)
     {
-        var billing = new BillingService(db);
+        var billing = BillingTestHelpers.CreateService(db);
         var paymentOptions = Options.Create(new PaymentOptions
         {
             UseMockPayments = true,

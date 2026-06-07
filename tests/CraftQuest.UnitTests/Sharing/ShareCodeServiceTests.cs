@@ -6,6 +6,7 @@ using CraftQuest.Domain.Constants;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.Services;
+using CraftQuest.UnitTests.Billing;
 using Microsoft.EntityFrameworkCore;
 
 namespace CraftQuest.UnitTests.Sharing;
@@ -18,7 +19,7 @@ public class ShareCodeServiceTests
         await using var db = CreateDb();
         var (ownerId, quizId) = await SeedOwnerAndPublishedQuizAsync(db);
 
-        var billing = new BillingService(db);
+        var billing = BillingTestHelpers.CreateService(db);
         var service = new ShareCodeService(
             db,
             billing,
@@ -77,7 +78,7 @@ public class ShareCodeServiceTests
 
         await db.SaveChangesAsync();
 
-        var billing = new BillingService(db);
+        var billing = BillingTestHelpers.CreateService(db);
         var service = new ShareCodeService(db, billing, new StubClassService());
 
         await service.RedeemAsync(studentId, new RedeemShareCodeRequest { Code = "CQ-000000" });
@@ -127,7 +128,7 @@ public class ShareCodeServiceTests
 
         await db.SaveChangesAsync();
 
-        var billing = new BillingService(db);
+        var billing = BillingTestHelpers.CreateService(db);
         var service = new ShareCodeService(db, billing, new StubClassService());
 
         await service.RedeemAsync(studentId, new RedeemShareCodeRequest { Code = "CQ-100000" });
@@ -162,7 +163,7 @@ public class ShareCodeServiceTests
         });
         await db.SaveChangesAsync();
 
-        var billing = new BillingService(db);
+        var billing = BillingTestHelpers.CreateService(db);
         var service = new ShareCodeService(db, billing, new StubClassService());
 
         var ex = await Assert.ThrowsAsync<CraftQuest.Application.Exceptions.AppException>(() =>
@@ -213,7 +214,7 @@ public class ShareCodeServiceTests
         });
         await db.SaveChangesAsync();
 
-        var billing = new BillingService(db);
+        var billing = BillingTestHelpers.CreateService(db);
         var service = new ShareCodeService(db, billing, new StubClassService());
 
         var result = await service.RedeemAsync(
@@ -286,7 +287,7 @@ public class ShareCodeServiceTests
         });
         await db.SaveChangesAsync();
 
-        var billing = new BillingService(db);
+        var billing = BillingTestHelpers.CreateService(db);
         var service = new ShareCodeService(db, billing, new StubClassService());
 
         var result = await service.InviteUsersByEmailAsync(
@@ -304,7 +305,7 @@ public class ShareCodeServiceTests
     {
         await using var db = CreateDb();
         var (ownerId, quizId) = await SeedOwnerAndPublishedQuizAsync(db);
-        var billing = new BillingService(db);
+        var billing = BillingTestHelpers.CreateService(db);
         var service = new ShareCodeService(db, billing, new StubClassService());
 
         var ex = await Assert.ThrowsAsync<AppException>(() =>

@@ -7,57 +7,84 @@ using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.Services.Billing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace CraftQuest.Infrastructure.Services;
 
-public class BillingService(CraftQuestDbContext dbContext) : IBillingService
+public class BillingService(CraftQuestDbContext dbContext, IMemoryCache memoryCache) : IBillingService
 {
+    private static readonly TimeSpan BillingCacheDuration = TimeSpan.FromSeconds(45);
+
     public async Task<UserBillingDto> GetMyBillingAsync(
         Guid userId,
         CancellationToken cancellationToken = default)
     {
+        var cacheKey = BillingCacheKey(userId);
+        if (memoryCache.TryGetValue(cacheKey, out UserBillingDto? cached) && cached is not null)
+        {
+            return cached;
+        }
+
         var subscription = await GetActiveSubscriptionAsync(userId, cancellationToken);
         var plan = subscription.Plan;
 
         await EnsureMonthlyAiCreditsAsync(userId, subscription, cancellationToken);
         await EnsureAiCreditBalanceMatchesPlanAsync(userId, subscription, cancellationToken);
 
-        var quizzesCreated = await dbContext.Quizzes
-            .CountAsync(q => q.CreatedByUserId == userId && q.DeletedAt == null, cancellationToken);
-
         var monthStart = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, DateTimeKind.Utc);
-        var shareCodesThisMonth = await dbContext.ShareCodes
+
+        var quizzesCreatedTask = CountOwnedQuizzesAsync(userId, cancellationToken);
+        var shareCodesThisMonthTask = dbContext.ShareCodes
+            .AsNoTracking()
             .CountAsync(
                 s => s.CreatedByUserId == userId && s.CreatedAt >= monthStart,
                 cancellationToken);
+        var redeemedSharedCountTask = CountRedeemedSharedQuizzesAsync(userId, cancellationToken);
+        var creditBalancesTask = GetCreditBalancesByTypeAsync(userId, cancellationToken);
+        var canInviteDirectlyTask = CanInviteUsersDirectlyAsync(userId, plan.Code, cancellationToken);
 
-        var redeemedSharedCount = await CountRedeemedSharedQuizzesAsync(userId, cancellationToken);
-        var entitlements = await MapEntitlementsAsync(
-            userId,
-            plan,
-            redeemedSharedCount,
-            quizzesCreated,
-            cancellationToken);
+        await Task.WhenAll(
+            quizzesCreatedTask,
+            shareCodesThisMonthTask,
+            redeemedSharedCountTask,
+            creditBalancesTask,
+            canInviteDirectlyTask);
 
-        return new UserBillingDto
+        var quizzesCreated = await quizzesCreatedTask;
+        var redeemedSharedCount = await redeemedSharedCountTask;
+        var creditBalances = await creditBalancesTask;
+        var baseEntitlements = MapEntitlements(plan, redeemedSharedCount);
+
+        var dto = new UserBillingDto
         {
             Plan = MapPlan(plan),
             Subscription = MapSubscription(subscription),
             Usage = new BillingUsageDto
             {
                 QuizzesCreated = quizzesCreated,
-                ShareCodesCreatedThisMonth = shareCodesThisMonth,
+                ShareCodesCreatedThisMonth = await shareCodesThisMonthTask,
             },
-            Entitlements = entitlements,
+            Entitlements = new PlanEntitlementsDto
+            {
+                MaxQuizzes = baseEntitlements.MaxQuizzes,
+                MaxQuestionsPerQuiz = baseEntitlements.MaxQuestionsPerQuiz,
+                MonthlyAiCredits = baseEntitlements.MonthlyAiCredits,
+                MonthlyShareCodes = baseEntitlements.MonthlyShareCodes,
+                MaxRedeemedSharedQuizzes = baseEntitlements.MaxRedeemedSharedQuizzes,
+                CurrentRedeemedSharedQuizzes = baseEntitlements.CurrentRedeemedSharedQuizzes,
+                CanInviteUsersDirectly = await canInviteDirectlyTask,
+                QuizModificationLocked = IsQuizModificationLocked(plan, quizzesCreated),
+            },
             Credits = new CreditBalancesDto
             {
-                AiCredits = await GetTotalAiCreditsBalanceAsync(userId, cancellationToken),
-                ShareCodeCredits = await GetCreditBalanceAsync(
-                    userId,
-                    BillingCreditTypes.ShareCode,
-                    cancellationToken),
+                AiCredits = GetBalanceFromMap(creditBalances, BillingCreditTypes.AiPlan)
+                    + GetBalanceFromMap(creditBalances, BillingCreditTypes.AiPurchased),
+                ShareCodeCredits = GetBalanceFromMap(creditBalances, BillingCreditTypes.ShareCode),
             },
         };
+
+        memoryCache.Set(cacheKey, dto, BillingCacheDuration);
+        return dto;
     }
 
     public async Task<IReadOnlyList<PurchaseHistoryItemDto>> GetMyPurchasesAsync(
@@ -270,6 +297,7 @@ public class BillingService(CraftQuestDbContext dbContext) : IBillingService
 
         var subscription = await GetActiveSubscriptionAsync(userId, cancellationToken);
         await EnsureMonthlyAiCreditsAsync(userId, subscription, cancellationToken);
+        await EnsureAiCreditBalanceMatchesPlanAsync(userId, subscription, cancellationToken);
 
         var balance = await GetTotalAiCreditsBalanceAsync(userId, cancellationToken);
         if (balance < amount)
@@ -300,8 +328,6 @@ public class BillingService(CraftQuestDbContext dbContext) : IBillingService
         }
 
         var subscription = await GetActiveSubscriptionAsync(userId, cancellationToken);
-        await EnsureMonthlyAiCreditsAsync(userId, subscription, cancellationToken);
-
         await EnsureHasAiCreditsAsync(userId, amount, cancellationToken);
 
         var remaining = amount;
@@ -352,6 +378,7 @@ public class BillingService(CraftQuestDbContext dbContext) : IBillingService
         if (saveImmediately)
         {
             await dbContext.SaveChangesAsync(cancellationToken);
+            InvalidateBillingCache(userId);
         }
     }
 
@@ -827,6 +854,7 @@ public class BillingService(CraftQuestDbContext dbContext) : IBillingService
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        InvalidateBillingCache(userId);
     }
 
     private async Task<UserSubscription> GetActiveSubscriptionAsync(
@@ -852,18 +880,14 @@ public class BillingService(CraftQuestDbContext dbContext) : IBillingService
         return subscription;
     }
 
-    private async Task<int> GetCreditBalanceAsync(
+    private Task<int> GetCreditBalanceAsync(
         Guid userId,
         string creditType,
-        CancellationToken cancellationToken)
-    {
-        var entries = await dbContext.CreditLedgerEntries
+        CancellationToken cancellationToken) =>
+        dbContext.CreditLedgerEntries
+            .AsNoTracking()
             .Where(e => e.UserId == userId && e.CreditType == creditType)
-            .Select(e => e.Delta)
-            .ToListAsync(cancellationToken);
-
-        return entries.Sum();
-    }
+            .SumAsync(e => e.Delta, cancellationToken);
 
     /// <summary>
     /// Corrige el saldo IA al cupo del plan activo si el usuario no ha consumido créditos
@@ -986,7 +1010,30 @@ public class BillingService(CraftQuestDbContext dbContext) : IBillingService
         if (saveImmediately)
         {
             await dbContext.SaveChangesAsync(cancellationToken);
+            InvalidateBillingCache(userId);
         }
+    }
+
+    private static string BillingCacheKey(Guid userId) => $"billing:me:{userId:D}";
+
+    private void InvalidateBillingCache(Guid userId) =>
+        memoryCache.Remove(BillingCacheKey(userId));
+
+    private static int GetBalanceFromMap(IReadOnlyDictionary<string, int> balances, string creditType) =>
+        balances.TryGetValue(creditType, out var balance) ? balance : 0;
+
+    private async Task<Dictionary<string, int>> GetCreditBalancesByTypeAsync(
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        var rows = await dbContext.CreditLedgerEntries
+            .AsNoTracking()
+            .Where(e => e.UserId == userId)
+            .GroupBy(e => e.CreditType)
+            .Select(g => new { CreditType = g.Key, Balance = g.Sum(e => e.Delta) })
+            .ToListAsync(cancellationToken);
+
+        return rows.ToDictionary(r => r.CreditType, r => r.Balance, StringComparer.OrdinalIgnoreCase);
     }
 
     private static SubscriptionDto MapSubscription(UserSubscription subscription)

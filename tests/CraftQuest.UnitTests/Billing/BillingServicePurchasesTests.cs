@@ -1,6 +1,7 @@
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.Services;
+using CraftQuest.UnitTests.Billing;
 using Microsoft.EntityFrameworkCore;
 
 namespace CraftQuest.UnitTests.Billing;
@@ -58,7 +59,7 @@ public class BillingServicePurchasesTests
             });
         await db.SaveChangesAsync();
 
-        var billing = new BillingService(db);
+        var billing = BillingTestHelpers.CreateService(db);
         var purchases = await billing.GetMyPurchasesAsync(userId);
 
         Assert.Equal(2, purchases.Count);
@@ -74,7 +75,7 @@ public class BillingServicePurchasesTests
         var userId = Guid.NewGuid();
         await SeedUserAndPlanAsync(db, userId, planCode: "free", planName: "Free");
 
-        var billing = new BillingService(db);
+        var billing = BillingTestHelpers.CreateService(db);
         var purchases = await billing.GetMyPurchasesAsync(userId);
 
         Assert.Empty(purchases);

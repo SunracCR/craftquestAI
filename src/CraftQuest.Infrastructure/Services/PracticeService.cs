@@ -206,11 +206,18 @@ public class PracticeService(
         SubmitAnswerRequest request,
         CancellationToken cancellationToken = default)
     {
-        var session = await LoadSessionForStudentAsync(studentUserId, sessionId, cancellationToken);
+        var questionSnapshot = await dbContext.PracticeQuestionSnapshots
+            .Include(q => q.AnswerOptionSnapshots)
+            .Include(q => q.PracticeSession)
+            .FirstOrDefaultAsync(
+                q => q.PracticeQuestionSnapshotId == practiceQuestionSnapshotId
+                    && q.PracticeSessionId == sessionId
+                    && q.PracticeSession.StudentUserId == studentUserId
+                    && q.PracticeSession.Status == "in_progress",
+                cancellationToken)
+            ?? throw new AppException("Practice session not found.", 404);
 
-        var questionSnapshot = session.QuestionSnapshots
-            .FirstOrDefault(q => q.PracticeQuestionSnapshotId == practiceQuestionSnapshotId)
-            ?? throw new AppException("Question snapshot not found.", 404);
+        var session = questionSnapshot.PracticeSession;
 
         var selectedIds = request.SelectedAnswerOptionIds?.Distinct().ToList() ?? [];
         if (selectedIds.Count == 0)

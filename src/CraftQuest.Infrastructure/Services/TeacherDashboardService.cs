@@ -2,15 +2,24 @@ using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Models.Teacher;
 using CraftQuest.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace CraftQuest.Infrastructure.Services;
 
-public class TeacherDashboardService(CraftQuestDbContext dbContext) : ITeacherDashboardService
+public class TeacherDashboardService(CraftQuestDbContext dbContext, IMemoryCache memoryCache) : ITeacherDashboardService
 {
+    private static readonly TimeSpan DashboardCacheDuration = TimeSpan.FromSeconds(30);
+
     public async Task<TeacherDashboardDto> GetDashboardAsync(
         Guid teacherUserId,
         CancellationToken cancellationToken = default)
     {
+        var cacheKey = $"teacher:dashboard:{teacherUserId:D}";
+        if (memoryCache.TryGetValue(cacheKey, out TeacherDashboardDto? cached) && cached is not null)
+        {
+            return cached;
+        }
+
         var classIds = await dbContext.TeacherClasses
             .AsNoTracking()
             .Where(c => c.TeacherUserId == teacherUserId && c.Status == "active")
@@ -18,62 +27,80 @@ public class TeacherDashboardService(CraftQuestDbContext dbContext) : ITeacherDa
             .ToListAsync(cancellationToken);
 
         var activeClasses = classIds.Count;
+        var assignmentIds = await GetTeacherAssignmentIdsAsync(teacherUserId, cancellationToken);
+        var weekAgo = DateTime.UtcNow.AddDays(-7);
 
-        var totalStudents = await dbContext.ClassMembers
-            .AsNoTracking()
-            .Where(m => classIds.Contains(m.ClassId) && m.Status == "active")
-            .Select(m => m.UserId)
-            .Distinct()
-            .CountAsync(cancellationToken);
+        var totalStudentsTask = classIds.Count == 0
+            ? Task.FromResult(0)
+            : dbContext.ClassMembers
+                .AsNoTracking()
+                .Where(m => classIds.Contains(m.ClassId) && m.Status == "active")
+                .Select(m => m.UserId)
+                .Distinct()
+                .CountAsync(cancellationToken);
 
-        var assignedQuizzes = classIds.Count == 0
-            ? 0
-            : await dbContext.Assignments
+        var assignedQuizzesTask = classIds.Count == 0
+            ? Task.FromResult(0)
+            : dbContext.Assignments
                 .AsNoTracking()
                 .Where(a => classIds.Contains(a.ClassId) && a.Status != "archived")
                 .Select(a => a.QuizId)
                 .Distinct()
                 .CountAsync(cancellationToken);
 
-        var assignmentIds = await GetTeacherAssignmentIdsAsync(teacherUserId, cancellationToken);
-        var weekAgo = DateTime.UtcNow.AddDays(-7);
+        var sessionsThisWeekTask = assignmentIds.Count == 0
+            ? Task.FromResult(0)
+            : dbContext.PracticeSessions
+                .AsNoTracking()
+                .CountAsync(
+                    ps => ps.AssignmentId.HasValue
+                        && assignmentIds.Contains(ps.AssignmentId.Value)
+                        && ps.Status == "finished"
+                        && ps.FinishedAt >= weekAgo
+                        && ps.GuestVisitId == null,
+                    cancellationToken);
 
-        var sessionsThisWeek = 0;
-        var uniqueActiveStudentsThisWeek = 0;
-        if (assignmentIds.Count > 0)
-        {
-            var weekSessionsQuery = dbContext.PracticeSessions
+        var uniqueActiveStudentsThisWeekTask = assignmentIds.Count == 0
+            ? Task.FromResult(0)
+            : dbContext.PracticeSessions
                 .AsNoTracking()
                 .Where(ps => ps.AssignmentId.HasValue
                     && assignmentIds.Contains(ps.AssignmentId.Value)
                     && ps.Status == "finished"
                     && ps.FinishedAt >= weekAgo
-                    && ps.GuestVisitId == null);
-
-            sessionsThisWeek = await weekSessionsQuery.CountAsync(cancellationToken);
-
-            uniqueActiveStudentsThisWeek = await weekSessionsQuery
-                .Where(ps => ps.StudentUserId != null)
+                    && ps.GuestVisitId == null
+                    && ps.StudentUserId != null)
                 .Select(ps => ps.StudentUserId!.Value)
                 .Distinct()
                 .CountAsync(cancellationToken);
-        }
 
-        var recentActivity = await GetActivityFeedAsync(teacherUserId, 20, cancellationToken);
-        var insights = await BuildInsightsAsync(teacherUserId, cancellationToken);
-        var urgentAssignments = await BuildUrgentAssignmentsAsync(teacherUserId, classIds, cancellationToken);
+        var recentActivityTask = GetActivityFeedAsync(teacherUserId, 20, cancellationToken, assignmentIds);
+        var insightsTask = BuildInsightsAsync(teacherUserId, cancellationToken, assignmentIds);
+        var urgentAssignmentsTask = BuildUrgentAssignmentsAsync(teacherUserId, classIds, cancellationToken);
 
-        return new TeacherDashboardDto
+        await Task.WhenAll(
+            totalStudentsTask,
+            assignedQuizzesTask,
+            sessionsThisWeekTask,
+            uniqueActiveStudentsThisWeekTask,
+            recentActivityTask,
+            insightsTask,
+            urgentAssignmentsTask);
+
+        var dto = new TeacherDashboardDto
         {
-            TotalStudents = totalStudents,
+            TotalStudents = await totalStudentsTask,
             ActiveClasses = activeClasses,
-            AssignedQuizzes = assignedQuizzes,
-            SessionsThisWeek = sessionsThisWeek,
-            UniqueActiveStudentsThisWeek = uniqueActiveStudentsThisWeek,
-            RecentActivity = recentActivity,
-            Insights = insights,
-            UrgentAssignments = urgentAssignments,
+            AssignedQuizzes = await assignedQuizzesTask,
+            SessionsThisWeek = await sessionsThisWeekTask,
+            UniqueActiveStudentsThisWeek = await uniqueActiveStudentsThisWeekTask,
+            RecentActivity = await recentActivityTask,
+            Insights = await insightsTask,
+            UrgentAssignments = await urgentAssignmentsTask,
         };
+
+        memoryCache.Set(cacheKey, dto, DashboardCacheDuration);
+        return dto;
     }
 
     public async Task<IReadOnlyList<ActivityFeedItemDto>> GetActivityFeedAsync(
@@ -81,8 +108,17 @@ public class TeacherDashboardService(CraftQuestDbContext dbContext) : ITeacherDa
         int take = 30,
         CancellationToken cancellationToken = default)
     {
-        var teacherAssignmentIds = await GetTeacherAssignmentIdsAsync(teacherUserId, cancellationToken);
-        if (teacherAssignmentIds.Count == 0)
+        var assignmentIds = await GetTeacherAssignmentIdsAsync(teacherUserId, cancellationToken);
+        return await GetActivityFeedAsync(teacherUserId, take, cancellationToken, assignmentIds);
+    }
+
+    private async Task<IReadOnlyList<ActivityFeedItemDto>> GetActivityFeedAsync(
+        Guid teacherUserId,
+        int take,
+        CancellationToken cancellationToken,
+        IReadOnlyList<Guid> assignmentIds)
+    {
+        if (assignmentIds.Count == 0)
         {
             return [];
         }
@@ -91,7 +127,7 @@ public class TeacherDashboardService(CraftQuestDbContext dbContext) : ITeacherDa
             .AsNoTracking()
             .Where(ps =>
                 ps.AssignmentId.HasValue
-                && teacherAssignmentIds.Contains(ps.AssignmentId.Value)
+                && assignmentIds.Contains(ps.AssignmentId.Value)
                 && ps.Status == "finished"
                 && ps.GuestVisitId == null
                 && ps.FinishedAt != null)
@@ -101,14 +137,14 @@ public class TeacherDashboardService(CraftQuestDbContext dbContext) : ITeacherDa
             .Take(take)
             .ToListAsync(cancellationToken);
 
-        var assignmentIds = sessions
+        var sessionAssignmentIds = sessions
             .Select(ps => ps.AssignmentId!.Value)
             .Distinct()
             .ToList();
 
         var assignmentTitles = await dbContext.Assignments
             .AsNoTracking()
-            .Where(a => assignmentIds.Contains(a.AssignmentId))
+            .Where(a => sessionAssignmentIds.Contains(a.AssignmentId))
             .ToDictionaryAsync(a => (Guid)a.AssignmentId, a => a.Title, cancellationToken);
 
         return sessions.Select(ps =>
@@ -289,9 +325,10 @@ public class TeacherDashboardService(CraftQuestDbContext dbContext) : ITeacherDa
 
     private async Task<IReadOnlyList<TeacherInsightDto>> BuildInsightsAsync(
         Guid teacherUserId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IReadOnlyList<Guid>? assignmentIds = null)
     {
-        var assignmentIds = await GetTeacherAssignmentIdsAsync(teacherUserId, cancellationToken);
+        assignmentIds ??= await GetTeacherAssignmentIdsAsync(teacherUserId, cancellationToken);
 
         if (assignmentIds.Count == 0)
         {

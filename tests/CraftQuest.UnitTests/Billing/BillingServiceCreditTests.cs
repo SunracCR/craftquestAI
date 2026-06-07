@@ -1,6 +1,7 @@
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.Services;
+using CraftQuest.UnitTests.Billing;
 using CraftQuest.Infrastructure.Services.Billing;
 using Microsoft.EntityFrameworkCore;
 
@@ -37,7 +38,7 @@ public class BillingServiceCreditTests
         });
         await db.SaveChangesAsync();
 
-        var billing = new BillingService(db);
+        var billing = BillingTestHelpers.CreateService(db);
         await billing.ActivatePlanAsync(userId, "pro", "paypal", "order-1");
 
         var balance = await db.CreditLedgerEntries
@@ -77,7 +78,7 @@ public class BillingServiceCreditTests
         });
         await db.SaveChangesAsync();
 
-        var billing = new BillingService(db);
+        var billing = BillingTestHelpers.CreateService(db);
         var result = await billing.GetMyBillingAsync(userId);
 
         Assert.Equal(20, result.Credits.AiCredits);
@@ -143,7 +144,7 @@ public class BillingServiceCreditTests
         });
         await db.SaveChangesAsync();
 
-        var billing = new BillingService(db);
+        var billing = BillingTestHelpers.CreateService(db);
         var result = await billing.GetMyBillingAsync(userId);
 
         Assert.Equal(0, result.Credits.AiCredits);
@@ -219,7 +220,7 @@ public class BillingServiceCreditTests
         });
         await db.SaveChangesAsync();
 
-        var billing = new BillingService(db);
+        var billing = BillingTestHelpers.CreateService(db);
         var result = await billing.GetMyBillingAsync(userId);
 
         Assert.Equal(150, result.Credits.AiCredits);
@@ -253,7 +254,7 @@ public class BillingServiceCreditTests
         });
         await db.SaveChangesAsync();
 
-        var billing = new BillingService(db);
+        var billing = BillingTestHelpers.CreateService(db);
         var capacity = await billing.GetQuizQuestionCapacityAsync(userId, quizId);
 
         Assert.Equal(2, (await db.Plans.FirstAsync(p => p.Code == "free")).MaxQuizzes);

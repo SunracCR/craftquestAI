@@ -19,16 +19,22 @@ class MainShellPage extends StatefulWidget {
 
 class _MainShellPageState extends State<MainShellPage> {
   int _index = 0;
+  final Set<int> _visitedTabs = {0};
+  final Map<int, Widget> _pageCache = {};
 
   static const int _prepTabIndex = 1;
 
   bool get _isTeacher => widget.user.roles.contains('teacher');
+
+  int get _pageCount => _isTeacher ? 4 : 3;
 
   @override
   void didUpdateWidget(covariant MainShellPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     final wasTeacher = oldWidget.user.roles.contains('teacher');
     if (wasTeacher && !_isTeacher) {
+      _pageCache.clear();
+      _visitedTabs.remove(2);
       if (_index == 2) {
         setState(() => _index = 0);
       } else if (_index > 2) {
@@ -37,22 +43,39 @@ class _MainShellPageState extends State<MainShellPage> {
     }
   }
 
-  void _goToPrepTab() => setState(() => _index = _prepTabIndex);
+  void _goToPrepTab() => _selectTab(_prepTabIndex);
+
+  void _selectTab(int value) {
+    setState(() {
+      _visitedTabs.add(value);
+      _index = value;
+    });
+  }
+
+  Widget _pageFor(int tabIndex) {
+    return _pageCache.putIfAbsent(tabIndex, () {
+      switch (tabIndex) {
+        case 0:
+          return HomePage(
+            key: ValueKey(widget.user.userId),
+            user: widget.user,
+            onOpenPrepPlus: _goToPrepTab,
+          );
+        case 1:
+          return const PrepPlusHubPage();
+        case 2:
+          return const TeacherHubPage();
+        case 3:
+          return ProfilePage(user: widget.user);
+        default:
+          return const SizedBox.shrink();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-
-    final pages = <Widget>[
-      HomePage(
-        key: ValueKey(widget.user.userId),
-        user: widget.user,
-        onOpenPrepPlus: _goToPrepTab,
-      ),
-      const PrepPlusHubPage(),
-      if (_isTeacher) const TeacherHubPage(),
-      ProfilePage(user: widget.user),
-    ];
 
     final destinations = <NavigationDestination>[
       NavigationDestination(
@@ -99,7 +122,7 @@ class _MainShellPageState extends State<MainShellPage> {
       ),
     ];
 
-    final safeIndex = _index.clamp(0, pages.length - 1);
+    final safeIndex = _index.clamp(0, _pageCount - 1);
     final isTeacherTab = _isTeacher && safeIndex == 2;
     final isPrepTab = safeIndex == _prepTabIndex;
 
@@ -107,7 +130,10 @@ class _MainShellPageState extends State<MainShellPage> {
       backgroundColor: AppColors.background,
       body: IndexedStack(
         index: safeIndex,
-        children: pages,
+        children: List.generate(
+          _pageCount,
+          (i) => _visitedTabs.contains(i) ? _pageFor(i) : const SizedBox.shrink(),
+        ),
       ),
       bottomNavigationBar: NavigationBarTheme(
         data: NavigationBarThemeData(
@@ -136,7 +162,7 @@ class _MainShellPageState extends State<MainShellPage> {
         ),
         child: NavigationBar(
           selectedIndex: safeIndex,
-          onDestinationSelected: (value) => setState(() => _index = value),
+          onDestinationSelected: _selectTab,
           destinations: destinations,
         ),
       ),

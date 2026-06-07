@@ -89,8 +89,6 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
     _titleFocusNode.addListener(_onTitleFocusChange);
     _publicationStatus = widget.publicationStatus;
     _refreshQuestionCount();
-    _loadPracticePreferences();
-    _loadActivePractice();
     if (widget.isOwner) {
       _loadBillingEntitlements();
     }
@@ -348,10 +346,8 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
           }
         }
         if (!mounted) return;
-        final questions = await _repository.getQuestions(widget.quizId);
-        if (!mounted) return;
         setState(() {
-          _questionCount = questions.length;
+          _questionCount = quiz.questionCount;
           _publicationStatus = quiz.publicationStatus;
           _randomizeQuestions = quiz.randomizeQuestions;
           _pendingReviewImportId = quiz.pendingReviewImportId;

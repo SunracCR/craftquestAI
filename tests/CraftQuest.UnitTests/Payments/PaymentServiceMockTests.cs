@@ -3,6 +3,7 @@ using CraftQuest.Application.Options;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.Services;
+using CraftQuest.UnitTests.Billing;
 using CraftQuest.Infrastructure.Services.Payments;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -66,7 +67,7 @@ public class PaymentServiceMockTests
         await using var db = CreateDb();
         await SeedPlansAndUserAsync(db);
         var userId = await db.Users.Select(u => u.UserId).FirstAsync();
-        var billing = new BillingService(db);
+        var billing = BillingTestHelpers.CreateService(db);
         var service = CreatePaymentService(db);
 
         var order = await service.CreatePayPalOrderAsync(
@@ -93,7 +94,7 @@ public class PaymentServiceMockTests
         await using var db = CreateDb();
         await SeedPlansAndUserAsync(db);
         var userId = await db.Users.Select(u => u.UserId).FirstAsync();
-        var billing = new BillingService(db);
+        var billing = BillingTestHelpers.CreateService(db);
         var service = CreatePaymentService(db);
 
         var created = await service.CreatePayPalSubscriptionAsync(
@@ -190,7 +191,7 @@ public class PaymentServiceMockTests
 
     private static PaymentService CreatePaymentService(CraftQuestDbContext db)
     {
-        var billing = new BillingService(db);
+        var billing = BillingTestHelpers.CreateService(db);
         var paymentOptions = Options.Create(new PaymentOptions
         {
             UseMockPayments = true,

@@ -35,10 +35,11 @@ class _TeacherClassListPageState extends State<TeacherClassListPage> {
   }
 
   Future<void> _load() async {
-    final future = Future.wait([
-      _repo.listClasses(status: 'active'),
-      _repo.listClasses(status: 'archived'),
-    ]).then((results) => (active: results[0], archived: results[1]));
+    final future = _repo.listClasses(status: 'all').then((all) {
+      final active = all.where((c) => c.status == 'active').toList();
+      final archived = all.where((c) => c.status == 'archived').toList();
+      return (active: active, archived: archived);
+    });
     setState(() {
       _future = future;
     });

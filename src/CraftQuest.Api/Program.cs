@@ -33,17 +33,39 @@ builder.Services.AddCraftQuestAuth(builder.Configuration);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var healthChecks = builder.Services.AddHealthChecks();
+var healthChecks = builder.Services.AddHealthChecks()
+    .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy(), tags: ["live"]);
 if (!builder.Environment.IsEnvironment("Testing"))
 {
-    healthChecks.AddDbContextCheck<CraftQuestDbContext>("database");
+    healthChecks.AddDbContextCheck<CraftQuestDbContext>("database", tags: ["ready"]);
 }
+
+builder.Services.Configure<CorsOptions>(builder.Configuration.GetSection(CorsOptions.SectionName));
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowMyApp", policy =>
     {
-        policy.WithOrigins("https://app.craftquestai.com")
+        if (builder.Environment.IsDevelopment())
+        {
+            policy.SetIsOriginAllowed(_ => true)
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+            return;
+        }
+
+        var configuredOrigins = builder.Configuration
+            .GetSection(CorsOptions.SectionName)
+            .Get<CorsOptions>()?.AllowedOrigins ?? [];
+
+        var allowedOrigins = configuredOrigins
+            .Where(static o => !string.IsNullOrWhiteSpace(o))
+            .Append("https://app.craftquestai.com")
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        policy.WithOrigins(allowedOrigins)
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
@@ -73,8 +95,15 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<UserContextTelemetryMiddleware>();
 app.UseStaticFiles();
-app.MapControllers();
-app.MapHealthChecks("/health");
+app.MapControllers().RequireCors("AllowMyApp");
+app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("live"),
+}).RequireCors("AllowMyApp");
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready"),
+}).RequireCors("AllowMyApp");
 
 if (app.Environment.IsDevelopment())
 {

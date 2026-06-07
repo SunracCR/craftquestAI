@@ -8,10 +8,38 @@ class BillingRepository {
 
   final ApiClient _apiClient;
 
-  Future<UserBillingModel> getMyBilling() async {
+  static const _cacheTtl = Duration(seconds: 45);
+
+  UserBillingModel? _cachedBilling;
+  DateTime? _cachedAt;
+  Future<UserBillingModel>? _inFlightBilling;
+
+  Future<UserBillingModel> getMyBilling({bool forceRefresh = false}) async {
+    if (!forceRefresh &&
+        _cachedBilling != null &&
+        _cachedAt != null &&
+        DateTime.now().difference(_cachedAt!) < _cacheTtl) {
+      return _cachedBilling!;
+    }
+
+    _inFlightBilling ??= _fetchMyBilling().whenComplete(() {
+      _inFlightBilling = null;
+    });
+    return _inFlightBilling!;
+  }
+
+  void invalidateMyBillingCache() {
+    _cachedBilling = null;
+    _cachedAt = null;
+  }
+
+  Future<UserBillingModel> _fetchMyBilling() async {
     final response =
         await _apiClient.dio.get<Map<String, dynamic>>('/api/billing/me');
-    return UserBillingModel.fromJson(response.data!);
+    final billing = UserBillingModel.fromJson(response.data!);
+    _cachedBilling = billing;
+    _cachedAt = DateTime.now();
+    return billing;
   }
 
   Future<List<PurchaseHistoryItemModel>> getMyPurchases() async {
@@ -54,7 +82,9 @@ class BillingRepository {
         if (billingCycle != null) 'billingCycle': billingCycle,
       },
     );
-    return PayPalSubscriptionActivationModel.fromJson(response.data!);
+    final result = PayPalSubscriptionActivationModel.fromJson(response.data!);
+    invalidateMyBillingCache();
+    return result;
   }
 
   Future<PayPalOrderModel> createPayPalOrder(
@@ -73,7 +103,9 @@ class BillingRepository {
       '/api/billing/paypal/capture-order',
       data: {'orderId': orderId},
     );
-    return PayPalCaptureModel.fromJson(response.data!);
+    final result = PayPalCaptureModel.fromJson(response.data!);
+    invalidateMyBillingCache();
+    return result;
   }
 
   Future<VerifyPurchaseModel> verifyMobilePurchase({
@@ -93,13 +125,16 @@ class BillingRepository {
         'billingCycle': billingCycle,
       },
     );
-    return VerifyPurchaseModel.fromJson(response.data!);
+    final result = VerifyPurchaseModel.fromJson(response.data!);
+    invalidateMyBillingCache();
+    return result;
   }
 
   Future<CancelAutoRenewModel> cancelSubscription() async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/api/billing/cancel',
     );
+    invalidateMyBillingCache();
     return CancelAutoRenewModel.fromJson(response.data!);
   }
 
@@ -107,6 +142,7 @@ class BillingRepository {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/api/billing/resume-auto-renew',
     );
+    invalidateMyBillingCache();
     return ReactivateAutoRenewModel.fromJson(response.data!);
   }
 
@@ -133,6 +169,7 @@ class BillingRepository {
       '/api/billing/paypal/capture-ai-credit-order',
       data: {'orderId': orderId},
     );
+    invalidateMyBillingCache();
     return PayPalAiCreditCaptureModel.fromJson(response.data!);
   }
 
@@ -151,6 +188,7 @@ class BillingRepository {
         if (transactionId != null) 'transactionId': transactionId,
       },
     );
+    invalidateMyBillingCache();
     return PayPalAiCreditCaptureModel.fromJson(response.data!);
   }
 
