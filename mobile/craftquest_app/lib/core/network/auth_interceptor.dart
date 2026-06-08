@@ -5,6 +5,12 @@ import 'package:craftquest_app/core/auth/session_expired_notifier.dart';
 import 'package:craftquest_app/core/auth/token_storage.dart';
 import 'package:dio/dio.dart';
 
+enum RefreshResult {
+  success,
+  authFailure,
+  transientFailure,
+}
+
 /// Attaches the access token and refreshes it on 401 using the refresh token.
 class AuthInterceptor extends QueuedInterceptor {
   AuthInterceptor({
@@ -22,7 +28,7 @@ class AuthInterceptor extends QueuedInterceptor {
   final Dio _refreshDio;
   final SessionExpiredNotifier? _sessionExpiredNotifier;
 
-  Completer<bool>? _refreshCompleter;
+  Completer<RefreshResult>? _refreshCompleter;
 
   static bool _isAuthEndpoint(String path) {
     return path.contains('/api/auth/login') ||
@@ -31,6 +37,11 @@ class AuthInterceptor extends QueuedInterceptor {
         path.contains('/api/auth/forgot-password') ||
         path.contains('/api/auth/reset-password') ||
         path.contains('/api/auth/change-password');
+  }
+
+  static bool _isRefreshAuthFailure(DioException error) {
+    final status = error.response?.statusCode;
+    return status == 401 || status == 403;
   }
 
   @override
@@ -42,8 +53,8 @@ class AuthInterceptor extends QueuedInterceptor {
     if (token != null &&
         token.isNotEmpty &&
         JwtUtils.shouldRefreshBeforeRequest(token)) {
-      final refreshed = await _refreshTokens();
-      if (refreshed) {
+      final result = await _refreshTokens();
+      if (result == RefreshResult.success) {
         token = await _tokenStorage.getAccessToken();
       }
     }
@@ -64,9 +75,11 @@ class AuthInterceptor extends QueuedInterceptor {
       return;
     }
 
-    final refreshed = await _refreshTokens();
-    if (!refreshed) {
-      _sessionExpiredNotifier?.notify();
+    final refreshResult = await _refreshTokens();
+    if (refreshResult != RefreshResult.success) {
+      if (refreshResult == RefreshResult.authFailure) {
+        _sessionExpiredNotifier?.notify();
+      }
       handler.next(err);
       return;
     }
@@ -84,18 +97,18 @@ class AuthInterceptor extends QueuedInterceptor {
     }
   }
 
-  Future<bool> _refreshTokens() async {
+  Future<RefreshResult> _refreshTokens() async {
     if (_refreshCompleter != null) {
       return _refreshCompleter!.future;
     }
 
-    _refreshCompleter = Completer<bool>();
+    _refreshCompleter = Completer<RefreshResult>();
     try {
       final refreshToken = await _tokenStorage.getRefreshToken();
       if (refreshToken == null || refreshToken.isEmpty) {
         await _clearSessionTokens();
-        _refreshCompleter!.complete(false);
-        return false;
+        _refreshCompleter!.complete(RefreshResult.authFailure);
+        return RefreshResult.authFailure;
       }
 
       final response = await _refreshDio.post<Map<String, dynamic>>(
@@ -111,24 +124,27 @@ class AuthInterceptor extends QueuedInterceptor {
           refresh == null ||
           refresh.isEmpty) {
         await _tokenStorage.clear();
-        _refreshCompleter!.complete(false);
-        return false;
+        _refreshCompleter!.complete(RefreshResult.authFailure);
+        return RefreshResult.authFailure;
       }
 
       await _tokenStorage.saveTokens(
         accessToken: access,
         refreshToken: refresh,
       );
-      _refreshCompleter!.complete(true);
-      return true;
-    } on DioException {
-      await _clearSessionTokens();
-      _refreshCompleter!.complete(false);
-      return false;
+      _refreshCompleter!.complete(RefreshResult.success);
+      return RefreshResult.success;
+    } on DioException catch (error) {
+      if (_isRefreshAuthFailure(error)) {
+        await _clearSessionTokens();
+        _refreshCompleter!.complete(RefreshResult.authFailure);
+        return RefreshResult.authFailure;
+      }
+      _refreshCompleter!.complete(RefreshResult.transientFailure);
+      return RefreshResult.transientFailure;
     } catch (_) {
-      await _clearSessionTokens();
-      _refreshCompleter!.complete(false);
-      return false;
+      _refreshCompleter!.complete(RefreshResult.transientFailure);
+      return RefreshResult.transientFailure;
     } finally {
       _refreshCompleter = null;
     }

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using CraftQuest.Application.Exceptions;
@@ -88,6 +89,19 @@ public sealed class ExceptionHandlingMiddleware(
     {
         var method = context.Request.Method;
         var path = context.Request.Path.Value ?? "/";
+
+        if (path.Contains("/api/auth/refresh", StringComparison.OrdinalIgnoreCase)
+            && statusCode == StatusCodes.Status401Unauthorized)
+        {
+            var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? context.User.FindFirstValue("sub");
+            logger.LogWarning(
+                "Auth refresh rejected with 401 for {Method} {Path}. UserId={UserId} ErrorCode={ErrorCode}",
+                method,
+                path,
+                userId ?? "anonymous",
+                exception is AppException app ? app.ErrorCode : null);
+        }
 
         if (includeException)
         {

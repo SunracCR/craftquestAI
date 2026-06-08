@@ -43,7 +43,7 @@ class _MainShellPageState extends State<MainShellPage> {
         setState(() => _index = _index - 1);
       }
     } else if (oldWidget.user != widget.user) {
-      _pageCache.remove(_profileTabIndex);
+      _pageCache[_profileTabIndex] = ProfilePage(user: widget.user);
     }
   }
 
