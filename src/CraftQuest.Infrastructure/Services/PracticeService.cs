@@ -466,16 +466,35 @@ public class PracticeService(
         Guid studentUserId,
         CancellationToken cancellationToken = default)
     {
-        await ExpireStaleInProgressSessionsAsync(studentUserId, cancellationToken);
+        var cutoff = DateTime.UtcNow.AddDays(-InProgressExpiryDays);
+        var now = DateTime.UtcNow;
+        await dbContext.PracticeSessions
+            .Where(s =>
+                s.StudentUserId == studentUserId
+                && s.Status == "in_progress"
+                && (s.LastActivityAt ?? s.StartedAt) < cutoff)
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(s => s.Status, "expired")
+                    .SetProperty(s => s.FinishedAt, now),
+                cancellationToken);
 
-        var sessions = await dbContext.PracticeSessions
+        return await dbContext.PracticeSessions
             .AsNoTracking()
-            .Include(s => s.QuestionSnapshots)
             .Where(s => s.StudentUserId == studentUserId && s.Status == "in_progress")
             .OrderByDescending(s => s.LastActivityAt ?? s.StartedAt)
+            .Select(s => new PracticeActiveSessionSummaryDto
+            {
+                PracticeSessionId = s.PracticeSessionId,
+                QuizId = s.QuizId,
+                StartedAt = s.StartedAt,
+                PausedAt = s.PausedAt,
+                LastActivityAt = s.LastActivityAt ?? s.StartedAt,
+                CurrentQuestionIndex = s.CurrentQuestionIndex ?? 0,
+                TotalQuestions = s.QuestionSnapshots.Count,
+                AnsweredCount = s.QuestionSnapshots.Count(q => q.AnswerStatus == "answered"),
+            })
             .ToListAsync(cancellationToken);
-
-        return sessions.Select(MapSummary).ToList();
     }
 
     public async Task<PracticeSessionDto> GetSessionAsync(

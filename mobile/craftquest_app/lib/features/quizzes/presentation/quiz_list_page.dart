@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:dio/dio.dart';
@@ -46,20 +48,13 @@ class _QuizListPageState extends State<QuizListPage> {
       _error = null;
     });
     try {
-      final results = await Future.wait([
-        _repository.getMyQuizzes(),
-        _practiceRepository.getInProgressSessions(),
-      ]);
-      final quizzes = results[0] as List<QuizModel>;
-      final inProgress = results[1] as List<PracticeActiveSessionModel>;
+      final quizzes = await _repository.getMyQuizzes();
       if (!mounted) return;
       setState(() {
         _quizzes = quizzes;
-        _inProgressByQuizId = {
-          for (final s in inProgress) s.quizId: s,
-        };
         _loading = false;
       });
+      unawaited(_loadInProgressSessions());
     } on DioException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -72,6 +67,20 @@ class _QuizListPageState extends State<QuizListPage> {
         _error = DioErrorMapper.genericMessage();
         _loading = false;
       });
+    }
+  }
+
+  Future<void> _loadInProgressSessions() async {
+    try {
+      final inProgress = await _practiceRepository.getInProgressSessions();
+      if (!mounted) return;
+      setState(() {
+        _inProgressByQuizId = {
+          for (final s in inProgress) s.quizId: s,
+        };
+      });
+    } catch (_) {
+      // No bloquea la lista de cuestionarios si falla o tarda la práctica en curso.
     }
   }
 

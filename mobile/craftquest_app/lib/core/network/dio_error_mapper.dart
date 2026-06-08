@@ -6,11 +6,18 @@ import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 
 abstract final class DioErrorMapper {
-  static bool isConnectivityFailure(DioException error) {
-    if (error.type == DioExceptionType.connectionError ||
-        error.type == DioExceptionType.connectionTimeout ||
+  static bool isTimeoutFailure(DioException error) {
+    return error.type == DioExceptionType.connectionTimeout ||
         error.type == DioExceptionType.sendTimeout ||
-        error.type == DioExceptionType.receiveTimeout) {
+        error.type == DioExceptionType.receiveTimeout;
+  }
+
+  static bool isConnectivityFailure(DioException error) {
+    if (isTimeoutFailure(error)) {
+      return false;
+    }
+
+    if (error.type == DioExceptionType.connectionError) {
       return true;
     }
 
@@ -38,6 +45,11 @@ abstract final class DioErrorMapper {
 
   static String map(DioException error, [AppLocalizations? l10n]) {
     final strings = l10n ?? LocalizedMessageHolder.current;
+
+    if (isTimeoutFailure(error)) {
+      return strings?.genericRequestErrorMessage ??
+          'La respuesta tardó demasiado. Inténtalo de nuevo en unos momentos.';
+    }
 
     if (isConnectivityFailure(error)) {
       if (_isLocalDevApi(error.requestOptions.baseUrl)) {
