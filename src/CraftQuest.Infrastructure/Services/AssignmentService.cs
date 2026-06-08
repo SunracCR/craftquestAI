@@ -582,7 +582,7 @@ public class AssignmentService(
     {
         var questions = await dbContext.Questions
             .AsNoTracking()
-            .Where(q => q.QuizId == quizId && q.DeletedAt == null)
+            .Where(q => q.QuizId == quizId)
             .OrderBy(q => q.SortOrder)
             .ToListAsync(cancellationToken);
 
@@ -645,7 +645,7 @@ public class AssignmentService(
 
         var questions = await dbContext.Questions
             .AsNoTracking()
-            .Where(q => q.QuizId == quizId && q.DeletedAt == null && hardQuestionIds.Contains(q.QuestionId))
+            .Where(q => q.QuizId == quizId && hardQuestionIds.Contains(q.QuestionId))
             .OrderBy(q => q.SortOrder)
             .Include(q => q.AnswerOptions.Where(o => o.IsActive))
             .Include(q => q.CorrectAnswerOptions)

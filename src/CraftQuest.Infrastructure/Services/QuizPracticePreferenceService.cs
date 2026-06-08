@@ -71,7 +71,7 @@ public class QuizPracticePreferenceService(
     {
         var quiz = await dbContext.Quizzes
             .AsNoTracking()
-            .FirstOrDefaultAsync(q => q.QuizId == quizId && q.DeletedAt == null, cancellationToken)
+            .FirstOrDefaultAsync(q => q.QuizId == quizId, cancellationToken)
             ?? throw new AppException("Quiz not found.", 404);
 
         if (quiz.CreatedByUserId == userId)

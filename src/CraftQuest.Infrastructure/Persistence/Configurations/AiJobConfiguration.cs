@@ -30,5 +30,10 @@ public class AiJobConfiguration : IEntityTypeConfiguration<AiJob>
             .WithMany()
             .HasForeignKey(x => x.StudyMaterialId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasIndex(x => new { x.RequestedByUserId, x.JobType, x.Status, x.TargetQuizId })
+            .HasFilter("[TargetQuizId] IS NOT NULL")
+            .IncludeProperties(x => new { x.CompletedAt, x.QuestionImportBatchId })
+            .HasDatabaseName("IX_AiJobs_PendingImportByQuiz");
     }
 }

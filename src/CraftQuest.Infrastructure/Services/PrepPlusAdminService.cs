@@ -191,8 +191,7 @@ public class PrepPlusAdminService(CraftQuestDbContext dbContext) : IPrepPlusAdmi
         var query = dbContext.Quizzes
             .AsNoTracking()
             .Where(q =>
-                q.DeletedAt == null
-                && adminUserIds.Contains(q.CreatedByUserId)
+                adminUserIds.Contains(q.CreatedByUserId)
                 && !catalogQuizIds.Contains(q.QuizId));
 
         if (!string.IsNullOrWhiteSpace(search))
@@ -215,7 +214,7 @@ public class PrepPlusAdminService(CraftQuestDbContext dbContext) : IPrepPlusAdmi
 
         var quizIds = quizzes.Select(q => q.QuizId).ToList();
         var questionCounts = await dbContext.Questions
-            .Where(q => quizIds.Contains(q.QuizId) && q.DeletedAt == null)
+            .Where(q => quizIds.Contains(q.QuizId))
             .GroupBy(q => q.QuizId)
             .Select(g => new { g.Key, Count = g.Count() })
             .ToDictionaryAsync(x => x.Key, x => x.Count, cancellationToken);
@@ -320,7 +319,7 @@ public class PrepPlusAdminService(CraftQuestDbContext dbContext) : IPrepPlusAdmi
         CancellationToken cancellationToken = default)
     {
         var quiz = await dbContext.Quizzes
-            .FirstOrDefaultAsync(q => q.QuizId == request.QuizId && q.DeletedAt == null, cancellationToken)
+            .FirstOrDefaultAsync(q => q.QuizId == request.QuizId, cancellationToken)
             ?? throw new AppException("Quiz not found.", 404, PrepPlusErrorCodes.QuizNotFound);
 
         await EnsureQuizLinkableAsync(quiz, cancellationToken);

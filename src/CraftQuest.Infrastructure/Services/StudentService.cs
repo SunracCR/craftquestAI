@@ -55,7 +55,7 @@ public class StudentService(CraftQuestDbContext dbContext) : IStudentService
                 && member.Status == "active"
                 && teacherClass.Status == "active"
                 && assignment.Status != "archived"
-                && quiz.DeletedAt == null
+               
                 && quiz.PublicationStatus == "published"
             orderby assignment.DueAt ?? assignment.CreatedAt descending
             select new
@@ -242,7 +242,7 @@ public class StudentService(CraftQuestDbContext dbContext) : IStudentService
         {
             var questions = await dbContext.Questions
                 .AsNoTracking()
-                .Where(q => q.QuizId == assignment.QuizId && q.DeletedAt == null)
+                .Where(q => q.QuizId == assignment.QuizId)
                 .OrderBy(q => q.SortOrder)
                 .Include(q => q.AnswerOptions.Where(o => o.IsActive))
                 .Include(q => q.CorrectAnswerOptions)

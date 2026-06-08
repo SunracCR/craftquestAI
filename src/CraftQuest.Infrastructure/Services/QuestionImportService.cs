@@ -119,7 +119,7 @@ public class QuestionImportService(
     {
         var quiz = await dbContext.Quizzes
             .AsNoTracking()
-            .FirstAsync(q => q.QuizId == quizId && q.DeletedAt == null, cancellationToken);
+            .FirstAsync(q => q.QuizId == quizId, cancellationToken);
         CqifDocumentNormalizer.ApplyQuizDefaults(document, quiz.DefaultQuestionPoints);
 
         var documentIssues = CqifValidator.ValidateDocument(document)
@@ -219,7 +219,7 @@ public class QuestionImportService(
         {
             var quiz = await dbContext.Quizzes
                 .AsNoTracking()
-                .FirstAsync(q => q.QuizId == linkedQuizId && q.DeletedAt == null, cancellationToken);
+                .FirstAsync(q => q.QuizId == linkedQuizId, cancellationToken);
             CqifDocumentNormalizer.ApplyQuizDefaults(document, quiz.DefaultQuestionPoints);
         }
 
@@ -317,7 +317,7 @@ public class QuestionImportService(
         var batchId = batch.QuestionImportBatchId;
         var quizDefaultPoints = await dbContext.Quizzes
             .AsNoTracking()
-            .Where(q => q.QuizId == quizId && q.DeletedAt == null)
+            .Where(q => q.QuizId == quizId)
             .Select(q => q.DefaultQuestionPoints)
             .FirstAsync(cancellationToken);
         var capacity = await billingService.GetQuizQuestionCapacityAsync(
@@ -330,7 +330,7 @@ public class QuestionImportService(
         var skippedDueToPlanLimit = 0;
 
         var sortOrder = await dbContext.Questions
-            .Where(q => q.QuizId == quizId && q.DeletedAt == null)
+            .Where(q => q.QuizId == quizId)
             .MaxAsync(q => (int?)q.SortOrder, cancellationToken) ?? 0;
 
         foreach (var row in batch.Rows.OrderBy(r => r.RowNumber))
@@ -469,7 +469,7 @@ public class QuestionImportService(
     {
         var quiz = await dbContext.Quizzes
             .AsNoTracking()
-            .FirstOrDefaultAsync(q => q.QuizId == quizId && q.DeletedAt == null, cancellationToken)
+            .FirstOrDefaultAsync(q => q.QuizId == quizId, cancellationToken)
             ?? throw new AppException("Quiz not found.", 404);
 
         if (quiz.CreatedByUserId != userId)

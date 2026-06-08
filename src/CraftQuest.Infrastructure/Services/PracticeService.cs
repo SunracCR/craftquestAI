@@ -28,7 +28,7 @@ public class PracticeService(
     {
         var quiz = await dbContext.Quizzes
             .AsNoTracking()
-            .FirstOrDefaultAsync(q => q.QuizId == request.QuizId && q.DeletedAt == null, cancellationToken)
+            .FirstOrDefaultAsync(q => q.QuizId == request.QuizId, cancellationToken)
             ?? throw new AppException("Quiz not found.", 404);
 
         if (quiz.PublicationStatus != "published")
@@ -74,7 +74,7 @@ public class PracticeService(
             .Include(q => q.CorrectAnswerOptions)
             .Include(q => q.Justification!)
                 .ThenInclude(j => j.Sources)
-            .Where(q => q.QuizId == request.QuizId && q.DeletedAt == null)
+            .Where(q => q.QuizId == request.QuizId)
             .OrderBy(q => q.SortOrder)
             .ToListAsync(cancellationToken);
 
@@ -860,7 +860,7 @@ public class PracticeService(
 
         var questions = await dbContext.Questions
             .AsNoTracking()
-            .Where(q => q.QuizId == quizId && q.DeletedAt == null)
+            .Where(q => q.QuizId == quizId)
             .OrderBy(q => q.SortOrder)
             .Include(q => q.AnswerOptions.Where(o => o.IsActive))
             .Include(q => q.CorrectAnswerOptions)

@@ -209,7 +209,7 @@ public class BillingService(CraftQuestDbContext dbContext, IMemoryCache memoryCa
         var subscription = await GetActiveSubscriptionAsync(userId, cancellationToken);
         var plan = subscription.Plan;
         var currentCount = await dbContext.Questions
-            .CountAsync(q => q.QuizId == quizId && q.DeletedAt == null, cancellationToken);
+            .CountAsync(q => q.QuizId == quizId, cancellationToken);
 
         var remaining = plan.MaxQuestionsPerQuiz.HasValue
             ? Math.Max(0, plan.MaxQuestionsPerQuiz.Value - currentCount)
@@ -1108,7 +1108,7 @@ public class BillingService(CraftQuestDbContext dbContext, IMemoryCache memoryCa
         Guid userId,
         CancellationToken cancellationToken) =>
         dbContext.Quizzes
-            .CountAsync(q => q.CreatedByUserId == userId && q.DeletedAt == null, cancellationToken);
+            .CountAsync(q => q.CreatedByUserId == userId, cancellationToken);
 
     private async Task<bool> CanInviteUsersDirectlyAsync(
         Guid userId,
@@ -1234,7 +1234,7 @@ public class BillingService(CraftQuestDbContext dbContext, IMemoryCache memoryCa
                 && a.AssignmentId == null
                 && a.AccessType == "redeemed")
             .Join(
-                dbContext.Quizzes.Where(q => q.DeletedAt == null),
+                dbContext.Quizzes,
                 a => a.QuizId,
                 q => q.QuizId,
                 (a, _) => a.QuizId)

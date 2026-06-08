@@ -52,7 +52,7 @@ public class AuthService(
         var normalizedEmail = request.Email.Trim().ToUpperInvariant();
 
         var emailExists = await dbContext.Users
-            .AnyAsync(u => u.Email.ToUpper() == normalizedEmail && u.DeletedAt == null, cancellationToken);
+            .AnyAsync(u => u.Email.ToUpper() == normalizedEmail, cancellationToken);
 
         if (emailExists)
         {
@@ -113,7 +113,7 @@ public class AuthService(
             .Include(u => u.UserRoles)
             .ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(
-                u => u.Email.ToUpper() == normalizedEmail && u.DeletedAt == null,
+                u => u.Email.ToUpper() == normalizedEmail,
                 cancellationToken);
 
         if (user is null || user.PasswordHash is null || user.Status != "active")
@@ -180,7 +180,7 @@ public class AuthService(
         var user = await dbContext.Users
             .Include(u => u.UserRoles)
             .ThenInclude(ur => ur.Role)
-            .FirstOrDefaultAsync(u => u.UserId == userId && u.DeletedAt == null, cancellationToken)
+            .FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken)
             ?? throw new AuthException("User not found.", 404);
 
         return MapProfile(user);
@@ -193,7 +193,7 @@ public class AuthService(
     {
         var snapshot = await dbContext.Users
             .AsNoTracking()
-            .Where(u => u.UserId == userId && u.DeletedAt == null)
+            .Where(u => u.UserId == userId)
             .Select(u => new
             {
                 u.UserId,
@@ -252,7 +252,7 @@ public class AuthService(
         {
             var updatedAt = DateTime.UtcNow;
             var rows = await dbContext.Users
-                .Where(u => u.UserId == userId && u.DeletedAt == null)
+                .Where(u => u.UserId == userId)
                 .ExecuteUpdateAsync(
                     setters => setters
                         .SetProperty(u => u.DisplayName, displayName)
@@ -295,7 +295,7 @@ public class AuthService(
         }
 
         var user = await dbContext.Users
-            .FirstOrDefaultAsync(u => u.UserId == userId && u.DeletedAt == null, cancellationToken)
+            .FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken)
             ?? throw new AuthException("User not found.", 404);
 
         if (user.PasswordHash is null)
@@ -333,7 +333,7 @@ public class AuthService(
             .AsNoTracking()
             .FirstOrDefaultAsync(
                 u => u.Email.ToUpper() == normalizedEmail
-                    && u.DeletedAt == null
+                   
                     && u.Status == "active"
                     && u.PasswordHash != null,
                 cancellationToken);
@@ -397,7 +397,7 @@ public class AuthService(
                 t => t.TokenHash == tokenHash && t.UsedAt == null && t.ExpiresAt > now,
                 cancellationToken);
 
-        if (resetToken is null || resetToken.User.DeletedAt is not null || resetToken.User.Status != "active")
+        if (resetToken is null || resetToken.User is null || resetToken.User.Status != "active")
         {
             throw new AuthException("Invalid or expired reset token.", 400, "INVALID_RESET_TOKEN");
         }
@@ -441,7 +441,7 @@ public class AuthService(
         var user = await dbContext.Users
             .Include(u => u.UserRoles)
             .ThenInclude(ur => ur.Role)
-            .FirstOrDefaultAsync(u => u.UserId == userId && u.DeletedAt == null, cancellationToken)
+            .FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken)
             ?? throw new AuthException("User not found.", 404);
 
         if (user.Status != "active")
@@ -474,7 +474,7 @@ public class AuthService(
                 ap => ap.ProviderCode == providerCode && ap.ProviderSubject == subject,
                 cancellationToken);
 
-        if (linked?.User is { DeletedAt: null, Status: "active" } activeUser)
+        if (linked?.User is { Status: "active" } activeUser)
         {
             return BuildAuthResponse(activeUser);
         }
@@ -496,7 +496,7 @@ public class AuthService(
             .ThenInclude(ur => ur.Role)
             .Include(u => u.AuthProviders)
             .FirstOrDefaultAsync(
-                u => u.Email.ToUpper() == normalizedEmail && u.DeletedAt == null,
+                u => u.Email.ToUpper() == normalizedEmail,
                 cancellationToken);
 
         if (userByEmail is not null)

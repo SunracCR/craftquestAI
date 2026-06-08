@@ -129,7 +129,7 @@ public class ShareCodeService(
         ValidateShareCodeActive(shareCode);
         await ValidateRegisteredAccessAsync(shareCode, userId, cancellationToken);
 
-        if (shareCode.QuizId is null || shareCode.Quiz is null || shareCode.Quiz.DeletedAt is not null)
+        if (shareCode.QuizId is null || shareCode.Quiz is null)
         {
             throw new AppException("Share code is not linked to a valid quiz.", 400);
         }
@@ -204,7 +204,7 @@ public class ShareCodeService(
                 && a.AssignmentId == null
                 && a.AccessType == "redeemed")
             .Include(a => a.Quiz)
-            .Where(a => a.Quiz.DeletedAt == null && a.Quiz.PublicationStatus == "published")
+            .Where(a => a.Quiz.PublicationStatus == "published")
             .OrderByDescending(a => a.GrantedAt)
             .ToListAsync(cancellationToken);
 
@@ -219,7 +219,7 @@ public class ShareCodeService(
                 cancellationToken);
 
         var questionCounts = await dbContext.Questions
-            .Where(q => quizIds.Contains(q.QuizId) && q.DeletedAt == null)
+            .Where(q => quizIds.Contains(q.QuizId))
             .GroupBy(q => q.QuizId)
             .Select(g => new { QuizId = g.Key, Count = g.Count() })
             .ToDictionaryAsync(x => x.QuizId, x => x.Count, cancellationToken);
@@ -246,7 +246,7 @@ public class ShareCodeService(
     {
         var quiz = await dbContext.Quizzes
             .AsNoTracking()
-            .FirstOrDefaultAsync(q => q.QuizId == quizId && q.DeletedAt == null, cancellationToken)
+            .FirstOrDefaultAsync(q => q.QuizId == quizId, cancellationToken)
             ?? throw new AppException("Quiz not found.", 404);
 
         if (quiz.CreatedByUserId == userId)
@@ -344,7 +344,7 @@ public class ShareCodeService(
     {
         var quiz = await dbContext.Quizzes
             .AsNoTracking()
-            .FirstOrDefaultAsync(q => q.QuizId == quizId && q.DeletedAt == null, cancellationToken);
+            .FirstOrDefaultAsync(q => q.QuizId == quizId, cancellationToken);
 
         if (quiz is null)
         {
@@ -408,7 +408,7 @@ public class ShareCodeService(
         var user = await dbContext.Users
             .AsNoTracking()
             .FirstOrDefaultAsync(
-                u => u.Email.ToUpper() == normalizedEmail && u.DeletedAt == null,
+                u => u.Email.ToUpper() == normalizedEmail,
                 cancellationToken);
 
         if (user is null)
@@ -502,7 +502,7 @@ public class ShareCodeService(
         CancellationToken cancellationToken)
     {
         var quiz = await dbContext.Quizzes
-            .FirstOrDefaultAsync(q => q.QuizId == quizId && q.DeletedAt == null, cancellationToken)
+            .FirstOrDefaultAsync(q => q.QuizId == quizId, cancellationToken)
             ?? throw new AppException("Quiz not found.", 404);
 
         if (quiz.CreatedByUserId != userId)

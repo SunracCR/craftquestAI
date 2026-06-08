@@ -81,8 +81,6 @@ public class MediaAccessService(CraftQuestDbContext dbContext) : IMediaAccessSer
             .AnyAsync(
                 o => o.MediaAssetId == mediaAssetId
                     && o.IsActive
-                    && o.Question.DeletedAt == null
-                    && o.Question.Quiz.DeletedAt == null
                     && o.Question.Quiz.CreatedByUserId == userId,
                 cancellationToken);
 
@@ -95,8 +93,6 @@ public class MediaAccessService(CraftQuestDbContext dbContext) : IMediaAccessSer
             .AnyAsync(
                 o => o.MediaAssetId == mediaAssetId
                     && o.IsActive
-                    && o.Question.DeletedAt == null
-                    && o.Question.Quiz.DeletedAt == null
                     && (
                         dbContext.QuizAccesses.Any(a =>
                             a.QuizId == o.Question.QuizId && a.UserId == userId)
@@ -145,8 +141,7 @@ public class MediaAccessService(CraftQuestDbContext dbContext) : IMediaAccessSer
             .AnyAsync(
                 o => o.MediaAssetId == mediaAssetId
                     && o.IsActive
-                    && o.Question.QuizId == visit.QuizId
-                    && o.Question.DeletedAt == null,
+                    && o.Question.QuizId == visit.QuizId,
                 cancellationToken);
     }
 }

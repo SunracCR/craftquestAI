@@ -79,7 +79,7 @@ public class GuestService(
             throw new AppException("Share code has expired.", 400);
         }
 
-        if (shareCode.QuizId is null || shareCode.Quiz is null || shareCode.Quiz.DeletedAt is not null)
+        if (shareCode.QuizId is null || shareCode.Quiz is null)
         {
             throw new AppException("Share code is not linked to a valid quiz.", 400);
         }
@@ -106,7 +106,7 @@ public class GuestService(
         await dbContext.SaveChangesAsync(cancellationToken);
 
         var questionCount = await dbContext.Questions
-            .CountAsync(q => q.QuizId == visit.QuizId && q.DeletedAt == null, cancellationToken);
+            .CountAsync(q => q.QuizId == visit.QuizId, cancellationToken);
 
         return MapVisit(visit, shareCode.Quiz, questionCount);
     }
@@ -126,7 +126,7 @@ public class GuestService(
         }
 
         var questionCount = await dbContext.Questions
-            .CountAsync(q => q.QuizId == visit.QuizId && q.DeletedAt == null, cancellationToken);
+            .CountAsync(q => q.QuizId == visit.QuizId, cancellationToken);
 
         return MapVisit(visit, visit.Quiz, questionCount);
     }
@@ -162,7 +162,7 @@ public class GuestService(
 
         var quiz = await dbContext.Quizzes
             .AsNoTracking()
-            .FirstOrDefaultAsync(q => q.QuizId == visit.QuizId && q.DeletedAt == null, cancellationToken)
+            .FirstOrDefaultAsync(q => q.QuizId == visit.QuizId, cancellationToken)
             ?? throw new AppException("Quiz not found.", 404);
 
         if (quiz.PublicationStatus != "published")
@@ -177,7 +177,7 @@ public class GuestService(
             .Include(q => q.CorrectAnswerOptions)
             .Include(q => q.Justification!)
                 .ThenInclude(j => j.Sources)
-            .Where(q => q.QuizId == visit.QuizId && q.DeletedAt == null)
+            .Where(q => q.QuizId == visit.QuizId)
             .OrderBy(q => q.SortOrder)
             .ToListAsync(cancellationToken);
 

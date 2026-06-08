@@ -72,31 +72,31 @@ public class QuizService(
     {
         var quizzes = await dbContext.Quizzes
             .AsNoTracking()
-            .Where(q => q.CreatedByUserId == userId && q.DeletedAt == null)
+            .Where(q => q.CreatedByUserId == userId)
             .OrderByDescending(q => q.CreatedAt)
-            .Select(q => new
+            .Select(q => new MyQuizSummaryRow
             {
-                Quiz = q,
-                QuestionCount = q.Questions.Count(qn => qn.DeletedAt == null),
+                QuizId = q.QuizId,
+                Title = q.Title,
+                Description = q.Description,
+                PublicationStatus = q.PublicationStatus,
+                Visibility = q.Visibility,
+                RandomizeQuestions = q.RandomizeQuestions,
+                QuestionCount = q.Questions.Count(),
             })
             .ToListAsync(cancellationToken);
 
-        var quizIds = quizzes.Select(x => x.Quiz.QuizId).ToList();
+        var quizIds = quizzes.Select(x => x.QuizId).ToList();
         var pendingByQuiz = await ResolvePendingAiImportsByQuizAsync(
             userId,
             quizIds,
             cancellationToken);
 
         return quizzes
-            .Select(x =>
+            .Select(row =>
             {
-                pendingByQuiz.TryGetValue(x.Quiz.QuizId, out var pending);
-                return MapQuiz(
-                    x.Quiz,
-                    x.QuestionCount,
-                    pending?.ImportId,
-                    pending?.ValidQuestions,
-                    isOwned: true);
+                pendingByQuiz.TryGetValue(row.QuizId, out var pending);
+                return MapQuiz(row, pending);
             })
             .ToList();
     }
@@ -108,7 +108,7 @@ public class QuizService(
     {
         var quiz = await dbContext.Quizzes
             .AsNoTracking()
-            .FirstOrDefaultAsync(q => q.QuizId == quizId && q.DeletedAt == null, cancellationToken)
+            .FirstOrDefaultAsync(q => q.QuizId == quizId, cancellationToken)
             ?? throw new AppException("Quiz not found.", 404);
 
         var isOwned = quiz.CreatedByUserId == userId;
@@ -121,7 +121,7 @@ public class QuizService(
         }
 
         var count = await dbContext.Questions
-            .CountAsync(q => q.QuizId == quizId && q.DeletedAt == null, cancellationToken);
+            .CountAsync(q => q.QuizId == quizId, cancellationToken);
 
         PendingAiImportInfo? pending = null;
         if (isOwned)
@@ -144,7 +144,7 @@ public class QuizService(
         CancellationToken cancellationToken = default)
     {
         var quiz = await dbContext.Quizzes
-            .FirstOrDefaultAsync(q => q.QuizId == quizId && q.DeletedAt == null, cancellationToken)
+            .FirstOrDefaultAsync(q => q.QuizId == quizId, cancellationToken)
             ?? throw new AppException("Quiz not found.", 404);
 
         EnsureQuizOwner(quiz, userId);
@@ -190,7 +190,7 @@ public class QuizService(
         await dbContext.SaveChangesAsync(cancellationToken);
 
         var count = await dbContext.Questions
-            .CountAsync(q => q.QuizId == quizId && q.DeletedAt == null, cancellationToken);
+            .CountAsync(q => q.QuizId == quizId, cancellationToken);
 
         return MapQuiz(quiz, count);
     }
@@ -202,20 +202,22 @@ public class QuizService(
     {
         var quiz = await GetOwnedQuizAsync(userId, quizId, cancellationToken);
         var now = DateTime.UtcNow;
+
+        await using var transaction =
+            await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        await dbContext.Questions
+            .Where(q => q.QuizId == quizId)
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(q => q.DeletedAt, now)
+                    .SetProperty(q => q.UpdatedAt, now),
+                cancellationToken);
+
         quiz.DeletedAt = now;
         quiz.UpdatedAt = now;
-
-        var questions = await dbContext.Questions
-            .Where(q => q.QuizId == quizId && q.DeletedAt == null)
-            .ToListAsync(cancellationToken);
-
-        foreach (var question in questions)
-        {
-            question.DeletedAt = now;
-            question.UpdatedAt = now;
-        }
-
         await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
     }
 
     public async Task<QuestionDto> CreateQuestionAsync(
@@ -242,7 +244,7 @@ public class QuizService(
 
         var sortOrder = explicitSortOrder
             ?? ((await dbContext.Questions
-                .Where(q => q.QuizId == quizId && q.DeletedAt == null)
+                .Where(q => q.QuizId == quizId)
                 .MaxAsync(q => (int?)q.SortOrder, cancellationToken) ?? 0) + 1);
 
         var questionId = Guid.NewGuid();
@@ -336,7 +338,7 @@ public class QuizService(
             .Include(q => q.Justification!)
                 .ThenInclude(j => j.Sources)
             .FirstOrDefaultAsync(
-                q => q.QuestionId == questionId && q.QuizId == quizId && q.DeletedAt == null,
+                q => q.QuestionId == questionId && q.QuizId == quizId,
                 cancellationToken)
             ?? throw new AppException("Question not found.", 404);
 
@@ -451,7 +453,7 @@ public class QuizService(
 
         var question = await dbContext.Questions
             .FirstOrDefaultAsync(
-                q => q.QuestionId == questionId && q.QuizId == quizId && q.DeletedAt == null,
+                q => q.QuestionId == questionId && q.QuizId == quizId,
                 cancellationToken)
             ?? throw new AppException("Question not found.", 404);
 
@@ -470,20 +472,60 @@ public class QuizService(
     {
         await GetOwnedQuizAsync(userId, quizId, cancellationToken);
 
-        var questions = await dbContext.Questions
+        return await dbContext.Questions
             .AsNoTracking()
-            .Include(q => q.QuestionType)
-            .Include(q => q.AnswerOptions.Where(o => o.IsActive))
-            .Include(q => q.CorrectAnswerOptions)
-            .Include(q => q.Justification!)
-                .ThenInclude(j => j.Sources)
-            .Where(q => q.QuizId == quizId && q.DeletedAt == null)
+            .Where(q => q.QuizId == quizId)
             .OrderBy(q => q.SortOrder)
+            .Select(q => new QuestionDto
+            {
+                QuestionId = q.QuestionId,
+                QuestionType = q.QuestionType.Code,
+                Text = q.QuestionText,
+                Points = q.Points,
+                RandomizeAnswerOptions = q.RandomizeAnswerOptions,
+                ExplanationVisibility = q.ExplanationVisibility,
+                AnswerOptions = q.AnswerOptions
+                    .Where(o => o.IsActive)
+                    .OrderBy(o => o.DefaultSortOrder)
+                    .Select(o => new AnswerOptionDto
+                    {
+                        AnswerOptionId = o.AnswerOptionId,
+                        StableKey = o.StableKey,
+                        Text = o.AnswerText,
+                        MediaAssetId = o.MediaAssetId,
+                    })
+                    .ToList(),
+                CorrectAnswerOptionIds = q.CorrectAnswerOptions
+                    .Select(c => c.AnswerOptionId)
+                    .ToList(),
+                Justification = q.Justification == null
+                    || q.Justification.JustificationText == null
+                    || q.Justification.JustificationText.Trim() == string.Empty
+                    ? null
+                    : new QuestionJustificationDto
+                    {
+                        Text = q.Justification.JustificationText,
+                        Status = q.Justification.Status,
+                        GeneratedByAi = q.Justification.GeneratedByAi,
+                        Visibility = q.ExplanationVisibility,
+                        Sources = q.Justification.Sources
+                            .OrderByDescending(s => s.IsPrimary)
+                            .ThenBy(s => s.SourcePageNumber)
+                            .Select(s => new QuestionJustificationSourceDto
+                            {
+                                JustificationSourceId = s.JustificationSourceId,
+                                Title = s.SourceTitle,
+                                SourceUrl = s.SourceUrl,
+                                Provider = s.SourceProvider,
+                                Snippet = s.Snippet,
+                                PageNumber = s.SourcePageNumber,
+                                StudyMaterialId = s.StudyMaterialId,
+                                IsPrimary = s.IsPrimary,
+                            })
+                            .ToList(),
+                    },
+            })
             .ToListAsync(cancellationToken);
-
-        return questions
-            .Select(q => MapQuestion(q, q.QuestionType.Code, includeCorrectIds: true))
-            .ToList();
     }
 
     private async Task<Quiz> GetOwnedQuizAsync(
@@ -492,7 +534,7 @@ public class QuizService(
         CancellationToken cancellationToken)
     {
         var quiz = await dbContext.Quizzes
-            .FirstOrDefaultAsync(q => q.QuizId == quizId && q.DeletedAt == null, cancellationToken)
+            .FirstOrDefaultAsync(q => q.QuizId == quizId, cancellationToken)
             ?? throw new AppException("Quiz not found.", 404);
 
         EnsureQuizOwner(quiz, userId);
@@ -614,6 +656,33 @@ public class QuizService(
         public required Guid ImportId { get; init; }
         public required int ValidQuestions { get; init; }
     }
+
+    private sealed class MyQuizSummaryRow
+    {
+        public required Guid QuizId { get; init; }
+        public required string Title { get; init; }
+        public string? Description { get; init; }
+        public required string PublicationStatus { get; init; }
+        public required string Visibility { get; init; }
+        public bool RandomizeQuestions { get; init; }
+        public int QuestionCount { get; init; }
+    }
+
+    private static QuizDto MapQuiz(
+        MyQuizSummaryRow row,
+        PendingAiImportInfo? pending = null) => new()
+    {
+        QuizId = row.QuizId,
+        Title = row.Title,
+        Description = row.Description,
+        PublicationStatus = row.PublicationStatus,
+        Visibility = row.Visibility,
+        QuestionCount = row.QuestionCount,
+        RandomizeQuestions = row.RandomizeQuestions,
+        PendingReviewImportId = pending?.ImportId,
+        PendingReviewValidQuestions = pending?.ValidQuestions,
+        IsOwned = true,
+    };
 
     private static QuizDto MapQuiz(
         Quiz quiz,

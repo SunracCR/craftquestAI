@@ -32,5 +32,11 @@ public class QuestionConfiguration : IEntityTypeConfiguration<Question>
         builder.HasOne(x => x.Justification)
             .WithOne(x => x.Question)
             .HasForeignKey<QuestionJustification>(x => x.QuestionId);
+
+        builder.HasQueryFilter(x => x.DeletedAt == null);
+
+        builder.HasIndex(x => new { x.QuizId, x.SortOrder })
+            .HasFilter("[DeletedAt] IS NULL")
+            .HasDatabaseName("IX_Questions_Quiz");
     }
 }

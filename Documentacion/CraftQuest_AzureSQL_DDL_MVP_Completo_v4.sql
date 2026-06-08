@@ -701,6 +701,7 @@ GO
 ========================= */
 
 CREATE INDEX IX_Quizzes_CreatedBy ON quiz.Quizzes(CreatedByUserId, PublicationStatus) WHERE DeletedAt IS NULL;
+CREATE INDEX IX_Quizzes_CreatedByUser_CreatedAt ON quiz.Quizzes(CreatedByUserId, CreatedAt DESC) WHERE DeletedAt IS NULL;
 CREATE INDEX IX_Questions_Quiz ON quiz.Questions(QuizId, SortOrder) WHERE DeletedAt IS NULL;
 CREATE INDEX IX_QuestionAnswerOptions_Question ON quiz.QuestionAnswerOptions(QuestionId, DefaultSortOrder) WHERE IsActive = 1;
 CREATE INDEX IX_PracticeSessions_Student ON practice.PracticeSessions(StudentUserId, StartedAt DESC);
@@ -708,6 +709,7 @@ CREATE INDEX IX_PracticeSessions_Assignment ON practice.PracticeSessions(Assignm
 CREATE INDEX IX_PracticeQuestionSnapshots_SessionOrder ON practice.PracticeQuestionSnapshots(PracticeSessionId, DisplayOrder);
 CREATE INDEX IX_PracticeAnswerOptionSnapshots_QuestionOrder ON practice.PracticeAnswerOptionSnapshots(PracticeQuestionSnapshotId, DisplayOrder);
 CREATE INDEX IX_QuestionImportBatches_User ON importing.QuestionImportBatches(UploadedByUserId, CreatedAt DESC);
+CREATE INDEX IX_AiJobs_PendingImportByQuiz ON ai.AiJobs(RequestedByUserId, JobType, Status, TargetQuizId) INCLUDE (CompletedAt, QuestionImportBatchId) WHERE TargetQuizId IS NOT NULL;
 CREATE INDEX IX_AuditEvents_Entity ON audit.AuditEvents(EntityType, EntityId, CreatedAt DESC);
 GO
 

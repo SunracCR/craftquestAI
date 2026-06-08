@@ -1,6 +1,6 @@
 # Checklist de scripts SQL — CraftQuest
 
-La base de datos se evoluciona con **scripts idempotentes** en `Documentacion/` (no hay migraciones EF automáticas).  
+La base de datos se evoluciona con **scripts idempotentes** en `Documentacion/` (no hay migraciones EF automáticas; no usar `dotnet ef migrations add` — los índices y DDL van en scripts SQL como `AlterIndexes_Quiz_Question_AiJob.sql`).  
 Ejecutar en **dev → staging → producción** en el orden indicado. Marcar cada fila al aplicarla.
 
 ## Cómo verificar si un script ya está aplicado
@@ -31,14 +31,16 @@ Antes de ejecutar, comprueba la columna **Verificación**. Si ya cumple la condi
 | 55 | `Assign_ContentAdmin_carlossm01.sql` | Rol content_admin a usuario concreto | **Solo si aplica** — editar email antes | ☐ | ☐ | ☐ |
 | 56 | `AssignTestPlan_User.sql` | Plan de prueba a usuario | **Solo dev/test** — no producción | ☐ | — | — |
 | 57 | `PasswordReset_Feature.sql` | Tokens de recuperación de contraseña | Tabla `core.PasswordResetTokens` | ☐ | ☐ | ☐ |
+| 58 | `AlterIndexes_Quiz_Question_AiJob.sql` | Índices listado quizzes, preguntas e imports IA pendientes | `IX_Quizzes_CreatedByUser_CreatedAt`, `IX_Questions_Quiz`, `IX_AiJobs_PendingImportByQuiz` | ☐ | ☐ | ☐ |
 
-## Estrategia (ítem 57)
+## Estrategia (ítem 58)
 
 1. **Fuente de verdad:** scripts en `Documentacion/` versionados en git.  
 2. **Nunca** aplicar solo en un entorno sin actualizar esta tabla.  
 3. Tras cada release, revisar si hay scripts nuevos y añadirlos al final de la tabla.  
 4. Para cambios nuevos, preferir scripts **idempotentes** (`IF COL_LENGTH` / `IF NOT EXISTS`).  
 5. Producción: backup antes del lote; ejecutar en ventana de mantenimiento si hay DDL pesado.
+6. **Índices EF (`HasIndex` en configuraciones):** reflejan el modelo; la aplicación en Azure SQL es vía script (p. ej. ítem 58), no vía `dotnet ef database update`.
 
 ## Scripts operativos (no obligatorios en todos los entornos)
 

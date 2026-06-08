@@ -258,7 +258,7 @@ public class ClassService(
         var normalizedEmail = trimmedEmail.ToUpperInvariant();
         var user = await dbContext.Users
             .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Email.ToUpper() == normalizedEmail && u.DeletedAt == null, cancellationToken)
+            .FirstOrDefaultAsync(u => u.Email.ToUpper() == normalizedEmail, cancellationToken)
             ?? throw new AppException(
                 "No user found with that email address.",
                 404,

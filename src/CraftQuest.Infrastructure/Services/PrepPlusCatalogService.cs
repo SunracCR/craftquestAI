@@ -110,7 +110,7 @@ public class PrepPlusCatalogService(
 
         var quizIds = items.Select(i => i.QuizId).Distinct().ToList();
         var questionCounts = await dbContext.Questions
-            .Where(q => quizIds.Contains(q.QuizId) && q.DeletedAt == null)
+            .Where(q => quizIds.Contains(q.QuizId))
             .GroupBy(q => q.QuizId)
             .Select(g => new { g.Key, Count = g.Count() })
             .ToDictionaryAsync(x => x.Key, x => x.Count, cancellationToken);
@@ -140,7 +140,7 @@ public class PrepPlusCatalogService(
         var access = await GetPurchaseAccessAsync(userId, item.CatalogItemId, item.QuizId, cancellationToken);
         var state = ResolveAccessState(access, now);
         var questionCount = await dbContext.Questions
-            .CountAsync(q => q.QuizId == item.QuizId && q.DeletedAt == null, cancellationToken);
+            .CountAsync(q => q.QuizId == item.QuizId, cancellationToken);
         var rootType = await GetRootCategoryTypeAsync(item.CategoryId, cancellationToken);
 
         return new PrepCatalogItemPublicDetailDto
@@ -202,7 +202,7 @@ public class PrepPlusCatalogService(
             .AsNoTracking()
             .Include(q => q.QuestionType)
             .Include(q => q.AnswerOptions.Where(o => o.IsActive))
-            .Where(q => samples.Contains(q.QuestionId) && q.DeletedAt == null)
+            .Where(q => samples.Contains(q.QuestionId))
             .ToListAsync(cancellationToken);
 
         var ordered = samples
@@ -247,7 +247,7 @@ public class PrepPlusCatalogService(
 
         var quizIds = catalogItems.Values.Select(i => i.QuizId).Distinct().ToList();
         var questionCounts = await dbContext.Questions
-            .Where(q => quizIds.Contains(q.QuizId) && q.DeletedAt == null)
+            .Where(q => quizIds.Contains(q.QuizId))
             .GroupBy(q => q.QuizId)
             .Select(g => new { g.Key, Count = g.Count() })
             .ToDictionaryAsync(x => x.Key, x => x.Count, cancellationToken);

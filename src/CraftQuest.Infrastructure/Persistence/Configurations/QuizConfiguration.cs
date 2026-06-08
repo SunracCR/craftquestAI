@@ -20,5 +20,12 @@ public class QuizConfiguration : IEntityTypeConfiguration<Quiz>
         builder.HasMany(x => x.Questions)
             .WithOne(x => x.Quiz)
             .HasForeignKey(x => x.QuizId);
+
+        builder.HasQueryFilter(x => x.DeletedAt == null);
+
+        builder.HasIndex(x => new { x.CreatedByUserId, x.CreatedAt })
+            .IsDescending(false, true)
+            .HasFilter("[DeletedAt] IS NULL")
+            .HasDatabaseName("IX_Quizzes_CreatedByUser_CreatedAt");
     }
 }

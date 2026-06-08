@@ -31,7 +31,7 @@ public static class DependencyInjection
             var connectionString = configuration.GetConnectionString("DefaultConnection")
                 ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
 
-            services.AddDbContext<CraftQuestDbContext>(options =>
+            services.AddDbContextPool<CraftQuestDbContext>(options =>
                 options.UseSqlServer(connectionString, sql =>
                 {
                     sql.MigrationsHistoryTable("__EFMigrationsHistory", "core");

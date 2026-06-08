@@ -713,7 +713,7 @@ public class QuizGenerationService(
         CancellationToken cancellationToken)
     {
         var owns = await dbContext.Quizzes.AnyAsync(
-            q => q.QuizId == quizId && q.CreatedByUserId == userId && q.DeletedAt == null,
+            q => q.QuizId == quizId && q.CreatedByUserId == userId,
             cancellationToken);
 
         if (!owns)

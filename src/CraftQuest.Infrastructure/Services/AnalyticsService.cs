@@ -116,7 +116,7 @@ public class AnalyticsService(CraftQuestDbContext dbContext) : IAnalyticsService
     {
         var quiz = await dbContext.Quizzes
             .AsNoTracking()
-            .FirstOrDefaultAsync(q => q.QuizId == quizId && q.DeletedAt == null, cancellationToken)
+            .FirstOrDefaultAsync(q => q.QuizId == quizId, cancellationToken)
             ?? throw new AppException("Quiz not found.", 404);
 
         if (quiz.CreatedByUserId != teacherUserId)
@@ -152,7 +152,7 @@ public class AnalyticsService(CraftQuestDbContext dbContext) : IAnalyticsService
 
         var questions = await dbContext.Questions
             .AsNoTracking()
-            .Where(q => q.QuizId == quizId && q.DeletedAt == null)
+            .Where(q => q.QuizId == quizId)
             .OrderBy(q => q.SortOrder)
             .Include(q => q.AnswerOptions.Where(o => o.IsActive))
             .Include(q => q.CorrectAnswerOptions)
