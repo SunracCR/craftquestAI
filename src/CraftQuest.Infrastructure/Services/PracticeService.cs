@@ -207,6 +207,7 @@ public class PracticeService(
         CancellationToken cancellationToken = default)
     {
         var questionSnapshot = await dbContext.PracticeQuestionSnapshots
+            .AsSplitQuery()
             .Include(q => q.AnswerOptionSnapshots)
             .Include(q => q.PracticeSession)
             .FirstOrDefaultAsync(
@@ -218,6 +219,22 @@ public class PracticeService(
             ?? throw new AppException("Practice session not found.", 404);
 
         var session = questionSnapshot.PracticeSession;
+
+        var gradingMeta = await dbContext.PracticeQuestionSnapshots
+            .AsNoTracking()
+            .Where(q => q.PracticeQuestionSnapshotId == practiceQuestionSnapshotId)
+            .Select(q => new
+            {
+                SupportsMultiple = dbContext.QuestionTypes
+                    .Where(t => t.Code == q.QuestionTypeCodeSnapshot)
+                    .Select(t => t.SupportsMultipleCorrectAnswers)
+                    .First(),
+                ScoringPolicy = dbContext.Questions
+                    .Where(qu => qu.QuestionId == q.QuestionId)
+                    .Select(qu => qu.ScoringPolicy)
+                    .FirstOrDefault(),
+            })
+            .FirstAsync(cancellationToken);
 
         var selectedIds = request.SelectedAnswerOptionIds?.Distinct().ToList() ?? [];
         if (selectedIds.Count == 0)
@@ -239,22 +256,16 @@ public class PracticeService(
             }
         }
 
-        var questionType = await dbContext.QuestionTypes
-            .AsNoTracking()
-            .FirstAsync(t => t.Code == questionSnapshot.QuestionTypeCodeSnapshot, cancellationToken);
+        var questionType = gradingMeta.SupportsMultiple;
 
         var correctIds = questionSnapshot.AnswerOptionSnapshots
             .Where(a => a.IsCorrectSnapshot)
             .Select(a => a.AnswerOptionId)
             .ToHashSet();
 
-        var scoringPolicy = await dbContext.Questions
-            .AsNoTracking()
-            .Where(q => q.QuestionId == questionSnapshot.QuestionId)
-            .Select(q => q.ScoringPolicy)
-            .FirstOrDefaultAsync(cancellationToken) ?? "strict";
+        var scoringPolicy = gradingMeta.ScoringPolicy ?? "strict";
 
-        if (questionType.SupportsMultipleCorrectAnswers)
+        if (questionType)
         {
             scoringPolicy = AnswerGradingService.PartialScoringPolicy;
         }
@@ -262,7 +273,7 @@ public class PracticeService(
         var grading = AnswerGradingService.GradeAnswer(
             selectedIds.ToHashSet(),
             correctIds,
-            questionType.SupportsMultipleCorrectAnswers,
+            questionType,
             scoringPolicy,
             questionSnapshot.PointsPossible);
 

@@ -12,7 +12,10 @@ enum RefreshResult {
 }
 
 /// Attaches the access token and refreshes it on 401 using the refresh token.
-class AuthInterceptor extends QueuedInterceptor {
+///
+/// Uses [Interceptor] (not [QueuedInterceptor]) so a slow billing/dashboard call
+/// does not block unrelated requests such as PATCH /api/auth/me.
+class AuthInterceptor extends Interceptor {
   AuthInterceptor({
     required TokenStorage tokenStorage,
     required Dio dio,

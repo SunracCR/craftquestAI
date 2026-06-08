@@ -191,15 +191,29 @@ public class AuthService(
         UpdateProfileRequest request,
         CancellationToken cancellationToken = default)
     {
-        var user = await dbContext.Users
-            .Include(u => u.UserRoles)
-            .ThenInclude(ur => ur.Role)
-            .FirstOrDefaultAsync(u => u.UserId == userId && u.DeletedAt == null, cancellationToken)
+        var snapshot = await dbContext.Users
+            .AsNoTracking()
+            .Where(u => u.UserId == userId && u.DeletedAt == null)
+            .Select(u => new
+            {
+                u.UserId,
+                u.Email,
+                u.DisplayName,
+                u.AvatarId,
+                u.PreferredLanguage,
+                Roles = u.UserRoles.Select(ur => ur.Role!.Code).ToList(),
+            })
+            .FirstOrDefaultAsync(cancellationToken)
             ?? throw new AuthException("User not found.", 404);
+
+        var displayName = snapshot.DisplayName;
+        var avatarId = snapshot.AvatarId;
+        var preferredLanguage = snapshot.PreferredLanguage;
+        var hasChanges = false;
 
         if (request.DisplayName is not null)
         {
-            var displayName = request.DisplayName.Trim();
+            displayName = request.DisplayName.Trim();
             if (displayName.Length == 0 || displayName.Length > 160)
             {
                 throw new AuthException(
@@ -208,7 +222,7 @@ public class AuthService(
                     "INVALID_DISPLAY_NAME");
             }
 
-            user.DisplayName = displayName;
+            hasChanges = true;
         }
 
         if (request.AvatarId is not null)
@@ -218,7 +232,8 @@ public class AuthService(
                 throw new AuthException("Invalid avatar selection.");
             }
 
-            user.AvatarId = request.AvatarId.Trim();
+            avatarId = request.AvatarId.Trim();
+            hasChanges = true;
         }
 
         if (request.PreferredLanguage is not null)
@@ -229,13 +244,38 @@ public class AuthService(
                 throw new AuthException("Unsupported language.");
             }
 
-            user.PreferredLanguage = language;
+            preferredLanguage = language;
+            hasChanges = true;
         }
 
-        user.UpdatedAt = DateTime.UtcNow;
-        await dbContext.SaveChangesAsync(cancellationToken);
+        if (hasChanges)
+        {
+            var updatedAt = DateTime.UtcNow;
+            var rows = await dbContext.Users
+                .Where(u => u.UserId == userId && u.DeletedAt == null)
+                .ExecuteUpdateAsync(
+                    setters => setters
+                        .SetProperty(u => u.DisplayName, displayName)
+                        .SetProperty(u => u.AvatarId, avatarId)
+                        .SetProperty(u => u.PreferredLanguage, preferredLanguage)
+                        .SetProperty(u => u.UpdatedAt, updatedAt),
+                    cancellationToken);
 
-        return MapProfile(user);
+            if (rows == 0)
+            {
+                throw new AuthException("User not found.", 404);
+            }
+        }
+
+        return new UserProfileDto
+        {
+            UserId = snapshot.UserId,
+            Email = snapshot.Email,
+            DisplayName = displayName,
+            AvatarId = avatarId ?? "craft_01",
+            PreferredLanguage = preferredLanguage,
+            Roles = snapshot.Roles,
+        };
     }
 
     public async Task ChangePasswordAsync(

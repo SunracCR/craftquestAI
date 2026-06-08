@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/locale/locale_controller.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
@@ -47,6 +49,7 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _savingAvatar = false;
   bool _savingName = false;
   UserBillingModel? _billing;
+  bool _billingLoadScheduled = false;
 
   bool get _hasProPlan =>
       _billing?.plan.code.toLowerCase() == 'pro' ||
@@ -58,20 +61,24 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     _avatarId = widget.user.avatarId ?? AvatarOption.defaultId;
-    _scheduleBillingLoad();
   }
 
-  void _scheduleBillingLoad() {
-    if (_billingRepository.hasFreshBillingCache) {
-      _loadBilling();
+  /// Billing is optional UI on this page — defer so profile edits are not queued behind it.
+  void _scheduleBillingLoadIfNeeded() {
+    if (_billingLoadScheduled || _billing != null) {
       return;
     }
-    // Evita competir en cola con PATCH /auth/me si el usuario edita el perfil al abrir la pestaña.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      Future<void>.delayed(const Duration(milliseconds: 600), () {
-        if (mounted) _loadBilling();
-      });
+    _billingLoadScheduled = true;
+
+    if (_billingRepository.hasFreshBillingCache) {
+      unawaited(_loadBilling());
+      return;
+    }
+
+    Future<void>.delayed(const Duration(seconds: 3), () {
+      if (mounted && _billing == null) {
+        unawaited(_loadBilling());
+      }
     });
   }
 
@@ -222,6 +229,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _scheduleBillingLoadIfNeeded();
+    });
+
     final l10n = AppLocalizations.of(context)!;
     final currentLanguage = _localeController.locale?.languageCode ??
         widget.user.preferredLanguage ??
