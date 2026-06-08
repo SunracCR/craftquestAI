@@ -65,7 +65,9 @@ class CraftQuestApp extends StatelessWidget {
               LocalizedMessageHolder.update(AppLocalizations.of(context));
               return AppConnectivityOverlay(child: child);
             },
-            home: const ParentalConsentGate(child: _AuthGate()),
+            home: const ParentalConsentGate(
+              child: _SessionExpiredListener(child: _AuthGate()),
+            ),
           );
         },
       ),

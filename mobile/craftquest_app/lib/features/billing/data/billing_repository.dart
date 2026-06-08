@@ -14,6 +14,11 @@ class BillingRepository {
   DateTime? _cachedAt;
   Future<UserBillingModel>? _inFlightBilling;
 
+  bool get hasFreshBillingCache =>
+      _cachedBilling != null &&
+      _cachedAt != null &&
+      DateTime.now().difference(_cachedAt!) < _cacheTtl;
+
   Future<UserBillingModel> getMyBilling({bool forceRefresh = false}) async {
     if (!forceRefresh &&
         _cachedBilling != null &&

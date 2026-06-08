@@ -28,6 +28,8 @@ class _MainShellPageState extends State<MainShellPage> {
 
   int get _pageCount => _isTeacher ? 4 : 3;
 
+  int get _profileTabIndex => _isTeacher ? 3 : 2;
+
   @override
   void didUpdateWidget(covariant MainShellPage oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -40,6 +42,8 @@ class _MainShellPageState extends State<MainShellPage> {
       } else if (_index > 2) {
         setState(() => _index = _index - 1);
       }
+    } else if (oldWidget.user != widget.user) {
+      _pageCache.remove(_profileTabIndex);
     }
   }
 
@@ -64,7 +68,9 @@ class _MainShellPageState extends State<MainShellPage> {
         case 1:
           return const PrepPlusHubPage();
         case 2:
-          return const TeacherHubPage();
+          return _isTeacher
+              ? const TeacherHubPage()
+              : ProfilePage(user: widget.user);
         case 3:
           return ProfilePage(user: widget.user);
         default:

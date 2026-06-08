@@ -43,6 +43,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final _billingRepository = getIt<BillingRepository>();
   final _localeController = getIt<LocaleController>();
   late String _avatarId;
+  String? _displayNameOverride;
   bool _savingAvatar = false;
   bool _savingName = false;
   UserBillingModel? _billing;
@@ -57,7 +58,21 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     _avatarId = widget.user.avatarId ?? AvatarOption.defaultId;
-    _loadBilling();
+    _scheduleBillingLoad();
+  }
+
+  void _scheduleBillingLoad() {
+    if (_billingRepository.hasFreshBillingCache) {
+      _loadBilling();
+      return;
+    }
+    // Evita competir en cola con PATCH /auth/me si el usuario edita el perfil al abrir la pestaña.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Future<void>.delayed(const Duration(milliseconds: 600), () {
+        if (mounted) _loadBilling();
+      });
+    });
   }
 
   Future<void> _loadBilling() async {
@@ -88,6 +103,9 @@ class _ProfilePageState extends State<ProfilePage> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.user.avatarId != widget.user.avatarId) {
       _avatarId = widget.user.avatarId ?? AvatarOption.defaultId;
+    }
+    if (oldWidget.user.displayName != widget.user.displayName) {
+      _displayNameOverride = null;
     }
   }
 
@@ -143,10 +161,13 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  String _effectiveDisplayName() =>
-      widget.user.displayName?.trim().isNotEmpty == true
-          ? widget.user.displayName!.trim()
-          : widget.user.email;
+  String _effectiveDisplayName() {
+    final override = _displayNameOverride?.trim();
+    if (override != null && override.isNotEmpty) return override;
+    return widget.user.displayName?.trim().isNotEmpty == true
+        ? widget.user.displayName!.trim()
+        : widget.user.email;
+  }
 
   bool get _canManagePrepPlus =>
       widget.user.roles.contains('content_admin') ||
@@ -168,25 +189,33 @@ class _ProfilePageState extends State<ProfilePage> {
     if (!mounted) return;
 
     final l10n = AppLocalizations.of(context)!;
-    setState(() => _savingName = true);
+    setState(() {
+      _savingName = true;
+      _displayNameOverride = newName;
+    });
     try {
       final updated = await _repository.updateProfile(displayName: newName);
       if (!mounted) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        context.read<AuthBloc>().add(AuthProfileUpdated(updated));
-        context.showSuccessSnackBar(l10n.profileNameUpdatedMessage);
-        if (mounted) setState(() => _savingName = false);
+      setState(() {
+        _displayNameOverride = null;
+        _savingName = false;
       });
+      context.read<AuthBloc>().add(AuthProfileUpdated(updated));
+      context.showSuccessSnackBar(l10n.profileNameUpdatedMessage);
     } on DioException catch (e) {
       if (!mounted) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        context.showDioErrorSnackBar(e);
-        if (mounted) setState(() => _savingName = false);
+      setState(() {
+        _displayNameOverride = null;
+        _savingName = false;
       });
+      context.showDioErrorSnackBar(e);
     } catch (_) {
-      if (mounted) setState(() => _savingName = false);
+      if (mounted) {
+        setState(() {
+          _displayNameOverride = null;
+          _savingName = false;
+        });
+      }
       rethrow;
     }
   }

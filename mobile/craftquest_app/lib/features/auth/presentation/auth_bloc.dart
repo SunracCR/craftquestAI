@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:craftquest_app/core/auth/oauth_sign_in_service.dart';
 import 'package:craftquest_app/core/auth/saved_login_credentials_storage.dart';
 import 'package:craftquest_app/core/auth/session_expired_notifier.dart';
+import 'package:craftquest_app/core/auth/token_storage.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/features/auth/data/auth_repository.dart';
@@ -34,6 +35,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     emit(const AuthLoading());
+
+    final tokenStorage = getIt<TokenStorage>();
+    final accessToken = await tokenStorage.getAccessToken();
+    final refreshToken = await tokenStorage.getRefreshToken();
+    final hasSession = (accessToken != null && accessToken.isNotEmpty) ||
+        (refreshToken != null && refreshToken.isNotEmpty);
+    if (!hasSession) {
+      emit(const AuthUnauthenticated());
+      return;
+    }
+
     try {
       final profile = await _repository.getProfile();
       emit(AuthAuthenticated(profile));

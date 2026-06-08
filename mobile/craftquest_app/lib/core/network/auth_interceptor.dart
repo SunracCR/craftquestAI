@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:craftquest_app/core/auth/jwt_utils.dart';
 import 'package:craftquest_app/core/auth/session_expired_notifier.dart';
 import 'package:craftquest_app/core/auth/token_storage.dart';
 import 'package:dio/dio.dart';
@@ -37,7 +38,15 @@ class AuthInterceptor extends QueuedInterceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final token = await _tokenStorage.getAccessToken();
+    var token = await _tokenStorage.getAccessToken();
+    if (token != null &&
+        token.isNotEmpty &&
+        JwtUtils.shouldRefreshBeforeRequest(token)) {
+      final refreshed = await _refreshTokens();
+      if (refreshed) {
+        token = await _tokenStorage.getAccessToken();
+      }
+    }
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
     }
