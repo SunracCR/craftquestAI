@@ -29,7 +29,6 @@ class _LoginPageState extends State<LoginPage> {
   final _credentialsStorage = getIt<SavedLoginCredentialsStorage>();
 
   bool _rememberLogin = false;
-  bool _loadingSavedCredentials = true;
   bool _isSubmitting = false;
   bool _obscurePassword = true;
 
@@ -55,10 +54,8 @@ class _LoginPageState extends State<LoginPage> {
         _emailController.text = savedEmail;
         _rememberLogin = true;
       }
-    } finally {
-      if (mounted) {
-        setState(() => _loadingSavedCredentials = false);
-      }
+    } catch (_) {
+      // Sin email guardado o almacenamiento no disponible.
     }
   }
 
@@ -69,14 +66,18 @@ class _LoginPageState extends State<LoginPage> {
 
     setState(() => _isSubmitting = true);
     final bloc = context.read<AuthBloc>();
+    final loginAttemptId = DateTime.now().millisecondsSinceEpoch;
     final resultFuture = bloc.stream.firstWhere(
-      (state) => state is AuthFailure || state is AuthAuthenticated,
+      (state) =>
+          state is AuthAuthenticated ||
+          (state is AuthFailure && state.attemptId == loginAttemptId),
     );
     bloc.add(
       AuthLoginRequested(
         email: _emailController.text.trim(),
         password: _passwordController.text,
         rememberCredentials: _rememberLogin,
+        attemptId: loginAttemptId,
       ),
     );
 
@@ -120,12 +121,6 @@ class _LoginPageState extends State<LoginPage> {
           child: BlocBuilder<AuthBloc, AuthState>(
             builder: (context, state) {
               final isLoading = _isSubmitting;
-
-              if (_loadingSavedCredentials) {
-                return const Center(
-                  child: CircularProgressIndicator(color: AppColors.accent),
-                );
-              }
 
               return LayoutBuilder(
                 builder: (context, constraints) {

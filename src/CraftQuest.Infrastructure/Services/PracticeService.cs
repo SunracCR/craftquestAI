@@ -219,19 +219,17 @@ public class PracticeService(
 
         var session = questionSnapshot.PracticeSession;
 
-        var supportsMultipleTask = dbContext.QuestionTypes
+        // EF Core: un DbContext no admite consultas concurrentes.
+        var supportsMultiple = await dbContext.QuestionTypes
             .AsNoTracking()
             .Where(t => t.Code == questionSnapshot.QuestionTypeCodeSnapshot)
             .Select(t => t.SupportsMultipleCorrectAnswers)
-            .FirstAsync(cancellationToken);
-        var scoringPolicyTask = dbContext.Questions
+            .FirstOrDefaultAsync(cancellationToken);
+        var scoringPolicy = await dbContext.Questions
             .AsNoTracking()
             .Where(q => q.QuestionId == questionSnapshot.QuestionId)
             .Select(q => q.ScoringPolicy)
-            .FirstOrDefaultAsync(cancellationToken);
-        await Task.WhenAll(supportsMultipleTask, scoringPolicyTask);
-        var supportsMultiple = await supportsMultipleTask;
-        var scoringPolicy = await scoringPolicyTask ?? "strict";
+            .FirstOrDefaultAsync(cancellationToken) ?? "strict";
 
         var selectedIds = request.SelectedAnswerOptionIds?.Distinct().ToList() ?? [];
         if (selectedIds.Count == 0)

@@ -33,26 +33,16 @@ public class BillingService(CraftQuestDbContext dbContext, IMemoryCache memoryCa
 
         var monthStart = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        var quizzesCreatedTask = CountOwnedQuizzesAsync(userId, cancellationToken);
-        var shareCodesThisMonthTask = dbContext.ShareCodes
+        // EF Core: un DbContext no admite consultas concurrentes.
+        var quizzesCreated = await CountOwnedQuizzesAsync(userId, cancellationToken);
+        var shareCodesThisMonth = await dbContext.ShareCodes
             .AsNoTracking()
             .CountAsync(
                 s => s.CreatedByUserId == userId && s.CreatedAt >= monthStart,
                 cancellationToken);
-        var redeemedSharedCountTask = CountRedeemedSharedQuizzesAsync(userId, cancellationToken);
-        var creditBalancesTask = GetCreditBalancesByTypeAsync(userId, cancellationToken);
-        var canInviteDirectlyTask = CanInviteUsersDirectlyAsync(userId, plan.Code, cancellationToken);
-
-        await Task.WhenAll(
-            quizzesCreatedTask,
-            shareCodesThisMonthTask,
-            redeemedSharedCountTask,
-            creditBalancesTask,
-            canInviteDirectlyTask);
-
-        var quizzesCreated = await quizzesCreatedTask;
-        var redeemedSharedCount = await redeemedSharedCountTask;
-        var creditBalances = await creditBalancesTask;
+        var redeemedSharedCount = await CountRedeemedSharedQuizzesAsync(userId, cancellationToken);
+        var creditBalances = await GetCreditBalancesByTypeAsync(userId, cancellationToken);
+        var canInviteDirectly = await CanInviteUsersDirectlyAsync(userId, plan.Code, cancellationToken);
         var baseEntitlements = MapEntitlements(plan, redeemedSharedCount);
 
         var dto = new UserBillingDto
@@ -62,7 +52,7 @@ public class BillingService(CraftQuestDbContext dbContext, IMemoryCache memoryCa
             Usage = new BillingUsageDto
             {
                 QuizzesCreated = quizzesCreated,
-                ShareCodesCreatedThisMonth = await shareCodesThisMonthTask,
+                ShareCodesCreatedThisMonth = shareCodesThisMonth,
             },
             Entitlements = new PlanEntitlementsDto
             {
@@ -72,7 +62,7 @@ public class BillingService(CraftQuestDbContext dbContext, IMemoryCache memoryCa
                 MonthlyShareCodes = baseEntitlements.MonthlyShareCodes,
                 MaxRedeemedSharedQuizzes = baseEntitlements.MaxRedeemedSharedQuizzes,
                 CurrentRedeemedSharedQuizzes = baseEntitlements.CurrentRedeemedSharedQuizzes,
-                CanInviteUsersDirectly = await canInviteDirectlyTask,
+                CanInviteUsersDirectly = canInviteDirectly,
                 QuizModificationLocked = IsQuizModificationLocked(plan, quizzesCreated),
             },
             Credits = new CreditBalancesDto

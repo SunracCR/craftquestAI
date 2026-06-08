@@ -37,7 +37,6 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
   OAuthSignInService? _oauth;
   AuthBloc? _authBloc;
   StreamSubscription<AuthState>? _authSubscription;
-  bool _loadingConfig = true;
   bool _appleAvailable = false;
   bool _busy = false;
   bool _apiAppleConfigured = false;
@@ -59,7 +58,8 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
   @override
   void initState() {
     super.initState();
-    _loadConfig();
+    _initOAuthFromLocal();
+    unawaited(_refreshOAuthConfigFromApi());
   }
 
   @override
@@ -94,7 +94,36 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
     super.dispose();
   }
 
-  Future<void> _loadConfig() async {
+  void _initOAuthFromLocal({
+    String? googleClientId,
+    String? appleServicesId,
+    String? appleWebRedirectUri,
+  }) {
+    final resolvedGoogleClientId =
+        googleClientId ?? OAuthConfig.googleServerClientId;
+    var resolvedAppleRedirect = appleWebRedirectUri;
+    if (kIsWeb &&
+        (resolvedAppleRedirect == null || resolvedAppleRedirect.isEmpty)) {
+      resolvedAppleRedirect = '${Uri.base.origin}/';
+      if (!resolvedAppleRedirect.endsWith('/')) {
+        resolvedAppleRedirect = '$resolvedAppleRedirect/';
+      }
+    }
+
+    final oauth = OAuthSignInService(
+      googleServerClientId: resolvedGoogleClientId,
+      appleWebServicesId: appleServicesId,
+      appleWebRedirectUri: resolvedAppleRedirect,
+    );
+    if (kIsWeb && resolvedGoogleClientId.isNotEmpty) {
+      oauth.configureWebGoogleListener(_onWebGoogleCredentials);
+    }
+
+    _oauth?.dispose();
+    _oauth = oauth;
+  }
+
+  Future<void> _refreshOAuthConfigFromApi() async {
     var googleClientId = OAuthConfig.googleServerClientId;
     String? appleServicesId;
     String? appleWebRedirectUri;
@@ -109,19 +138,18 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
         googleClientId = remote.googleWebClientId!;
       }
     } catch (_) {
-      // API no disponible: usar dart-define si existe.
+      // API no disponible: mantener IDs locales.
     }
 
     if (kIsWeb &&
         (appleWebRedirectUri == null || appleWebRedirectUri.isEmpty)) {
-      var redirect = '${Uri.base.origin}/';
-      if (!redirect.endsWith('/')) {
-        redirect = '$redirect/';
+      appleWebRedirectUri = '${Uri.base.origin}/';
+      if (!appleWebRedirectUri.endsWith('/')) {
+        appleWebRedirectUri = '$appleWebRedirectUri/';
       }
-      appleWebRedirectUri = redirect;
     }
 
-    var appleAvailable = false;
+    var appleAvailable = _appleAvailable;
     if (_supportsAppleUi) {
       try {
         appleAvailable = await SignInWithApple.isAvailable();
@@ -132,19 +160,14 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
 
     if (!mounted) return;
 
-    final oauth = OAuthSignInService(
-      googleServerClientId: googleClientId,
-      appleWebServicesId: appleServicesId,
+    _initOAuthFromLocal(
+      googleClientId: googleClientId,
+      appleServicesId: appleServicesId,
       appleWebRedirectUri: appleWebRedirectUri,
     );
-    if (kIsWeb && googleClientId.isNotEmpty) {
-      oauth.configureWebGoogleListener(_onWebGoogleCredentials);
-    }
 
     setState(() {
-      _oauth = oauth;
       _appleAvailable = kIsWeb ? true : appleAvailable;
-      _loadingConfig = false;
     });
   }
 
@@ -319,18 +342,7 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
           children: [
             _OAuthDivider(label: l10n.oauthDividerLabel),
             const SizedBox(height: AppSpacing.xs),
-            if (_loadingConfig)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: AppSpacing.xs),
-                child: Center(
-                  child: SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                ),
-              )
-            else if (sideBySide)
+            if (sideBySide)
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -384,7 +396,7 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
                 ),
               ],
             ],
-            if (_busy && !_loadingConfig) ...[
+            if (_busy) ...[
               const SizedBox(height: AppSpacing.xs),
               const Center(
                 child: SizedBox(

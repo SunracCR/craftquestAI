@@ -28,8 +28,10 @@
 
 1. Crear proyecto → APIs & Services → Credentials.
 2. Crear **OAuth client ID** tipo **Web application** → copiar a `WebClientId`.
-3. En ese cliente Web, **Authorized JavaScript origins** (Flutter web en local):
-   - `http://localhost:7357` y `http://127.0.0.1:7357` (o el puerto que uses con `flutter run -d chrome --web-port=7357`).
+3. En ese cliente Web, **Authorized JavaScript origins**:
+   - Producción: `https://app.craftquestai.com`
+   - Local: `http://localhost:7357` y `http://127.0.0.1:7357` (o el puerto que uses con `flutter run -d chrome --web-port=7357`).
+   - Sin el origen de producción, el botón GIS devuelve **400** y en consola: `The given origin is not allowed for the given client ID`.
 4. Crear cliente **Android** con package `com.craftquestai.craftquestai_app` + SHA-1 (debug/release).
 5. Crear cliente **iOS** con bundle `com.craftquestai.craftquestaiApp` si hace falta; añadir IDs extra a `AdditionalClientIds`.
 6. Pantalla de consentimiento OAuth configurada.

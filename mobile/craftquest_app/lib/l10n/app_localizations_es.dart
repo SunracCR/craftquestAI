@@ -221,7 +221,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get oauthGoogleWebOriginHint =>
-      ' En Google Cloud (cliente Web), añade orígenes JavaScript autorizados: http://localhost:7357 y http://127.0.0.1:7357 (mismo puerto que flutter run --web-port).';
+      ' En Google Cloud (cliente Web), añade orígenes JavaScript autorizados: https://app.craftquestai.com, http://localhost:7357 y http://127.0.0.1:7357.';
 
   @override
   String get oauthGooglePeopleApiHint =>

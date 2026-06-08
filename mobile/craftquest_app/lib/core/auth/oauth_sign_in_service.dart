@@ -63,7 +63,10 @@ class OAuthSignInService {
     );
   }
 
-  /// Web: escucha credenciales con idToken (renderButton / One Tap). No usar signIn().
+  /// Web: escucha credenciales del botón GIS (`renderButton`). No usar signIn().
+  ///
+  /// No llama a [GoogleSignIn.signInSilently]: eso dispara One Tap / FedCM al cargar
+  /// la pantalla y puede iniciar sesión sin que el usuario pulse el botón.
   void configureWebGoogleListener(void Function(OAuthSignInResult result) onResult) {
     if (!kIsWeb || !isGoogleConfigured) {
       return;
@@ -82,8 +85,6 @@ class OAuthSignInService {
         onResult(credentials);
       }
     });
-
-    unawaited(google.signInSilently());
   }
 
   void dispose() {
@@ -136,9 +137,8 @@ class OAuthSignInService {
 
     GoogleSignInAccount? account;
     if (kIsWeb) {
-      // signIn() en web solo devuelve accessToken (sin idToken). Usar One Tap / renderButton.
-      await google.signInSilently(suppressErrors: false);
-      account = google.currentUser;
+      // En web el idToken llega solo vía renderButton + onCurrentUserChanged.
+      return null;
     } else {
       account = await google.signIn();
     }

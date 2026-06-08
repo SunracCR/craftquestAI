@@ -16,14 +16,16 @@ class AuthLoginRequested extends AuthEvent {
     required this.email,
     required this.password,
     this.rememberCredentials = false,
+    this.attemptId,
   });
 
   final String email;
   final String password;
   final bool rememberCredentials;
+  final int? attemptId;
 
   @override
-  List<Object?> get props => [email, password, rememberCredentials];
+  List<Object?> get props => [email, password, rememberCredentials, attemptId];
 }
 
 class AuthOAuthSignInRequested extends AuthEvent {

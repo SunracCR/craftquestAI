@@ -100,7 +100,7 @@
   "oauthSignInGoogleShort": "Google",
   "oauthSignInAppleShort": "Apple",
   "oauthSignInFailed": "Social sign-in could not be completed.",
-  "oauthGoogleWebOriginHint": " In Google Cloud (Web client), add Authorized JavaScript origins: http://localhost:7357 and http://127.0.0.1:7357 (use the same port as flutter run --web-port).",
+  "oauthGoogleWebOriginHint": " In Google Cloud (Web client), add Authorized JavaScript origins: https://app.craftquestai.com, http://localhost:7357 and http://127.0.0.1:7357.",
   "oauthGooglePeopleApiHint": " Enable People API in Google Cloud (same project as your Client ID): https://console.cloud.google.com/apis/library/people.googleapis.com",
   "oauthGoogleNotConfigured": "Google sign-in is not configured. Set ExternalAuth:Google:WebClientId on the API or GOOGLE_SERVER_CLIENT_ID when running the app.",
   "oauthAppleNotConfigured": "Apple sign-in is not configured on the server (ExternalAuth:Apple:BundleId).",

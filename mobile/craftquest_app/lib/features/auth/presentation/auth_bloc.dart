@@ -73,15 +73,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       _resetSessionExpiredFlag();
       unawaited(_persistLoginCredentials(event));
     } on DioException catch (e) {
-      emit(_loginFailure(_repository.mapError(e)));
+      emit(_loginFailure(_repository.mapError(e), attemptId: event.attemptId));
     } catch (_) {
-      emit(_loginFailure(DioErrorMapper.genericMessage()));
+      emit(_loginFailure(DioErrorMapper.genericMessage(), attemptId: event.attemptId));
     }
   }
 
-  AuthFailure _loginFailure(String message) => AuthFailure(
+  AuthFailure _loginFailure(String message, {int? attemptId}) => AuthFailure(
         message,
-        attemptId: DateTime.now().millisecondsSinceEpoch,
+        attemptId: attemptId ?? DateTime.now().millisecondsSinceEpoch,
       );
 
   Future<void> _persistLoginCredentials(AuthLoginRequested event) async {
