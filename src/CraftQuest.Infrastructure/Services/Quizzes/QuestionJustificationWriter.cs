@@ -47,12 +47,17 @@ internal static class QuestionJustificationWriter
         justification.GeneratedByAi = generatedByAi;
         justification.UpdatedAt = now;
 
-        var existingSources = await dbContext.Set<QuestionJustificationSource>()
-            .Where(s => s.QuestionJustificationId == justification.QuestionJustificationId)
-            .ToListAsync(cancellationToken);
+        var existingSources = justification.Sources.ToList();
         if (existingSources.Count > 0)
         {
             dbContext.Set<QuestionJustificationSource>().RemoveRange(existingSources);
+            justification.Sources.Clear();
+        }
+        else if (justification.QuestionJustificationId != Guid.Empty)
+        {
+            await dbContext.Set<QuestionJustificationSource>()
+                .Where(s => s.QuestionJustificationId == justification.QuestionJustificationId)
+                .ExecuteDeleteAsync(cancellationToken);
         }
 
         var sources = input?.Sources ?? [];

@@ -207,7 +207,6 @@ public class PracticeService(
         CancellationToken cancellationToken = default)
     {
         var questionSnapshot = await dbContext.PracticeQuestionSnapshots
-            .AsSplitQuery()
             .Include(q => q.AnswerOptionSnapshots)
             .Include(q => q.PracticeSession)
             .FirstOrDefaultAsync(
@@ -220,21 +219,19 @@ public class PracticeService(
 
         var session = questionSnapshot.PracticeSession;
 
-        var gradingMeta = await dbContext.PracticeQuestionSnapshots
+        var supportsMultipleTask = dbContext.QuestionTypes
             .AsNoTracking()
-            .Where(q => q.PracticeQuestionSnapshotId == practiceQuestionSnapshotId)
-            .Select(q => new
-            {
-                SupportsMultiple = dbContext.QuestionTypes
-                    .Where(t => t.Code == q.QuestionTypeCodeSnapshot)
-                    .Select(t => t.SupportsMultipleCorrectAnswers)
-                    .First(),
-                ScoringPolicy = dbContext.Questions
-                    .Where(qu => qu.QuestionId == q.QuestionId)
-                    .Select(qu => qu.ScoringPolicy)
-                    .FirstOrDefault(),
-            })
+            .Where(t => t.Code == questionSnapshot.QuestionTypeCodeSnapshot)
+            .Select(t => t.SupportsMultipleCorrectAnswers)
             .FirstAsync(cancellationToken);
+        var scoringPolicyTask = dbContext.Questions
+            .AsNoTracking()
+            .Where(q => q.QuestionId == questionSnapshot.QuestionId)
+            .Select(q => q.ScoringPolicy)
+            .FirstOrDefaultAsync(cancellationToken);
+        await Task.WhenAll(supportsMultipleTask, scoringPolicyTask);
+        var supportsMultiple = await supportsMultipleTask;
+        var scoringPolicy = await scoringPolicyTask ?? "strict";
 
         var selectedIds = request.SelectedAnswerOptionIds?.Distinct().ToList() ?? [];
         if (selectedIds.Count == 0)
@@ -256,14 +253,12 @@ public class PracticeService(
             }
         }
 
-        var questionType = gradingMeta.SupportsMultiple;
+        var questionType = supportsMultiple;
 
         var correctIds = questionSnapshot.AnswerOptionSnapshots
             .Where(a => a.IsCorrectSnapshot)
             .Select(a => a.AnswerOptionId)
             .ToHashSet();
-
-        var scoringPolicy = gradingMeta.ScoringPolicy ?? "strict";
 
         if (questionType)
         {
@@ -280,8 +275,14 @@ public class PracticeService(
         var now = DateTime.UtcNow;
         foreach (var answer in questionSnapshot.AnswerOptionSnapshots)
         {
-            answer.WasSelected = selectedIds.Contains(answer.AnswerOptionId);
-            answer.SelectedAt = answer.WasSelected ? now : null;
+            var selected = selectedIds.Contains(answer.AnswerOptionId);
+            if (answer.WasSelected == selected && (!selected || answer.SelectedAt.HasValue))
+            {
+                continue;
+            }
+
+            answer.WasSelected = selected;
+            answer.SelectedAt = selected ? now : null;
         }
 
         questionSnapshot.AnswerStatus = "answered";

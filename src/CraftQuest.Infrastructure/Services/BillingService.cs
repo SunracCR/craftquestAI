@@ -156,16 +156,24 @@ public class BillingService(CraftQuestDbContext dbContext, IMemoryCache memoryCa
         Guid userId,
         CancellationToken cancellationToken = default)
     {
+        var cacheKey = $"billing:quiz-modify-ok:{userId}";
+        if (memoryCache.TryGetValue(cacheKey, out bool allowed) && allowed)
+        {
+            return;
+        }
+
         var subscription = await GetActiveSubscriptionAsync(userId, cancellationToken);
         var maxQuizzes = subscription.Plan.MaxQuizzes;
         if (!maxQuizzes.HasValue)
         {
+            memoryCache.Set(cacheKey, true, BillingCacheDuration);
             return;
         }
 
         var count = await CountOwnedQuizzesAsync(userId, cancellationToken);
         if (count <= maxQuizzes.Value)
         {
+            memoryCache.Set(cacheKey, true, BillingCacheDuration);
             return;
         }
 

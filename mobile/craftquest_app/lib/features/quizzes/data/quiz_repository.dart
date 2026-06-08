@@ -8,6 +8,10 @@ class QuizRepository {
 
   final ApiClient _apiClient;
 
+  static List<QuestionTypeModel>? _cachedQuestionTypes;
+  static DateTime? _questionTypesCachedAt;
+  static const _questionTypesTtl = Duration(hours: 1);
+
   Future<List<QuizModel>> getMyQuizzes() async {
     final response =
         await _apiClient.dio.get<List<dynamic>>('/api/quizzes');
@@ -39,11 +43,20 @@ class QuizRepository {
   }
 
   Future<List<QuestionTypeModel>> getQuestionTypes() async {
+    if (_cachedQuestionTypes != null &&
+        _questionTypesCachedAt != null &&
+        DateTime.now().difference(_questionTypesCachedAt!) < _questionTypesTtl) {
+      return _cachedQuestionTypes!;
+    }
+
     final response =
         await _apiClient.dio.get<List<dynamic>>('/api/question-types');
-    return (response.data ?? [])
+    final types = (response.data ?? [])
         .map((e) => QuestionTypeModel.fromJson(e as Map<String, dynamic>))
         .toList();
+    _cachedQuestionTypes = types;
+    _questionTypesCachedAt = DateTime.now();
+    return types;
   }
 
   Future<QuestionModel> createQuestion({

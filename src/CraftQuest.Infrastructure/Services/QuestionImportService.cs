@@ -329,6 +329,10 @@ public class QuestionImportService(
         var confirmErrors = new List<QuestionImportError>();
         var skippedDueToPlanLimit = 0;
 
+        var sortOrder = await dbContext.Questions
+            .Where(q => q.QuizId == quizId && q.DeletedAt == null)
+            .MaxAsync(q => (int?)q.SortOrder, cancellationToken) ?? 0;
+
         foreach (var row in batch.Rows.OrderBy(r => r.RowNumber))
         {
             if (row.Status is not ("valid" or "warning"))
@@ -353,11 +357,15 @@ public class QuestionImportService(
 
             try
             {
+                sortOrder++;
                 var created = await quizService.CreateQuestionAsync(
                     userId,
                     quizId,
                     createRequest,
-                    cancellationToken);
+                    cancellationToken,
+                    saveChanges: false,
+                    explicitSortOrder: sortOrder,
+                    skipBillingChecks: true);
 
                 createdIds.Add(created.QuestionId);
                 rowOutcomes[row.QuestionImportRowId] = ("created", created.QuestionId);
@@ -379,7 +387,12 @@ public class QuestionImportService(
             }
         }
 
-        // CreateQuestionAsync saves questions in the same DbContext; clear the tracker
+        if (createdIds.Count > 0)
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        // CreateQuestionAsync may track entities in the same DbContext; clear the tracker
         // so import row/batch updates are not applied with stale state (DbUpdateConcurrencyException).
         dbContext.ChangeTracker.Clear();
 

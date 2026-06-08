@@ -10,7 +10,14 @@ public interface IQuizService
     Task<QuizDto> GetQuizAsync(Guid userId, Guid quizId, CancellationToken cancellationToken = default);
     Task<QuizDto> UpdateQuizAsync(Guid userId, Guid quizId, UpdateQuizRequest request, CancellationToken cancellationToken = default);
     Task DeleteQuizAsync(Guid userId, Guid quizId, CancellationToken cancellationToken = default);
-    Task<QuestionDto> CreateQuestionAsync(Guid userId, Guid quizId, CreateQuestionRequest request, CancellationToken cancellationToken = default);
+    Task<QuestionDto> CreateQuestionAsync(
+        Guid userId,
+        Guid quizId,
+        CreateQuestionRequest request,
+        CancellationToken cancellationToken = default,
+        bool saveChanges = true,
+        int? explicitSortOrder = null,
+        bool skipBillingChecks = false);
     Task<QuestionDto> UpdateQuestionAsync(
         Guid userId,
         Guid quizId,

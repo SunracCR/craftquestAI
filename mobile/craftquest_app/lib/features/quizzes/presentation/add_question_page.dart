@@ -280,9 +280,10 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
 
     setState(() => _loading = true);
     try {
+      final QuestionModel saved;
       final existing = widget.existingQuestion;
       if (existing != null) {
-        await _repository.updateQuestion(
+        saved = await _repository.updateQuestion(
           quizId: widget.quizId,
           questionId: existing.questionId,
           questionType: _selectedType,
@@ -293,7 +294,7 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
           justification: _justificationPayload(),
         );
       } else {
-        await _repository.createQuestion(
+        saved = await _repository.createQuestion(
           quizId: widget.quizId,
           questionType: _selectedType,
           text: _textController.text.trim(),
@@ -304,7 +305,7 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
         );
       }
       if (!mounted) return;
-      Navigator.of(context).pop(true);
+      Navigator.of(context).pop(saved);
     } on DioException catch (e) {
       if (!mounted) return;
       context.showDioErrorSnackBar(e);

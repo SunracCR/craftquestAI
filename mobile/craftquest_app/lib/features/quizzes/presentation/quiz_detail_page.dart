@@ -445,16 +445,16 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
   }
 
   Future<void> _viewQuestions() async {
-    await Navigator.of(context).push<bool>(
-      MaterialPageRoute<bool>(
+    final newCount = await Navigator.of(context).push<int>(
+      MaterialPageRoute<int>(
         builder: (_) => QuizQuestionsPage(
           quizId: widget.quizId,
           quizTitle: _quizTitle,
         ),
       ),
     );
-    if (!mounted) return;
-    await _refreshQuestionCount(showLoading: false);
+    if (!mounted || newCount == null) return;
+    setState(() => _questionCount = newCount);
   }
 
   Future<void> _viewAnalytics() async {

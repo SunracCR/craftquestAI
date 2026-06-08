@@ -109,17 +109,19 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
       return;
     }
     final l10n = AppLocalizations.of(context)!;
-    final added = await Navigator.of(context).push<bool>(
-      MaterialPageRoute<bool>(
+    final added = await Navigator.of(context).push<QuestionModel>(
+      MaterialPageRoute<QuestionModel>(
         builder: (_) => AddQuestionPage(quizId: widget.quizId),
       ),
     );
-    if (added == true) {
+    if (added != null) {
       _dataChanged = true;
       if (mounted) {
         context.showSuccessSnackBar(l10n.questionSavedMessage);
+        setState(() {
+          _questions = [...(_questions ?? []), added];
+        });
       }
-      await _load();
     }
   }
 
@@ -129,20 +131,30 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
       return;
     }
     final l10n = AppLocalizations.of(context)!;
-    final updated = await Navigator.of(context).push<bool>(
-      MaterialPageRoute<bool>(
+    final updated = await Navigator.of(context).push<QuestionModel>(
+      MaterialPageRoute<QuestionModel>(
         builder: (_) => AddQuestionPage(
           quizId: widget.quizId,
           existingQuestion: question,
         ),
       ),
     );
-    if (updated == true) {
+    if (updated != null) {
       _dataChanged = true;
       if (mounted) {
         context.showSuccessSnackBar(l10n.questionSavedMessage);
+        setState(() {
+          final questions = [...(_questions ?? [])];
+          final index =
+              questions.indexWhere((q) => q.questionId == updated.questionId);
+          if (index >= 0) {
+            questions[index] = updated;
+          } else {
+            questions.add(updated);
+          }
+          _questions = questions;
+        });
       }
-      await _load();
     }
   }
 
@@ -201,7 +213,9 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
-        Navigator.of(context).pop(_dataChanged);
+        Navigator.of(context).pop(
+          _dataChanged ? (_questions?.length ?? 0) : null,
+        );
       },
       child: EdgeAwareScaffold(
         appBar: craftQuestAppBar(title: l10n.quizDetailQuestionsSection),

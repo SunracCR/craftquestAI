@@ -57,7 +57,6 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
   final Map<String, Set<String>> _pendingSelections = {};
   int _currentIndex = 0;
   bool _loading = true;
-  bool _submittingAnswer = false;
   bool _finishing = false;
   bool _savingProgress = false;
   String? _error;
@@ -65,6 +64,8 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
   Duration _elapsedBaseline = Duration.zero;
   final Stopwatch _stopwatch = Stopwatch();
   Timer? _elapsedTicker;
+  final Map<String, Timer> _persistDebounceTimers = {};
+  final Map<String, Future<void>> _persistInFlight = {};
 
   @override
   void initState() {
@@ -80,7 +81,20 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
   @override
   void dispose() {
     _elapsedTicker?.cancel();
+    for (final timer in _persistDebounceTimers.values) {
+      timer.cancel();
+    }
     super.dispose();
+  }
+
+  Future<void> _awaitPendingPersists() async {
+    for (final timer in _persistDebounceTimers.values) {
+      timer.cancel();
+    }
+    _persistDebounceTimers.clear();
+    if (_persistInFlight.isNotEmpty) {
+      await Future.wait(_persistInFlight.values);
+    }
   }
 
   Duration get _totalElapsed => _elapsedBaseline + _stopwatch.elapsed;
@@ -227,6 +241,7 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
 
   Future<void> _saveAndExit() async {
     _stopElapsedTimer();
+    await _awaitPendingPersists();
     await _saveProgress();
     if (mounted) {
       Navigator.of(context).pop();
@@ -304,8 +319,10 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
       _questionStatuses[question.practiceQuestionSnapshotId] ?? 'unanswered';
 
   bool _isQuestionDone(PracticeQuestionModel question) {
-    final status = _statusFor(question);
-    return status == 'answered';
+    if (_statusFor(question) == 'answered') {
+      return true;
+    }
+    return _selectionFor(question).isNotEmpty;
   }
 
   int get _completedCount {
@@ -337,7 +354,7 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
   List<PracticeQuestionNavStatus> _navStatuses() {
     final session = _session!;
     return session.questions.map((q) {
-      return _statusFor(q) == 'answered'
+      return _isQuestionDone(q)
           ? PracticeQuestionNavStatus.answered
           : PracticeQuestionNavStatus.pending;
     }).toList();
@@ -368,46 +385,65 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
     final questionId = question.practiceQuestionSnapshotId;
     final selected = _selectionFor(question).toList();
     if (selected.isEmpty) {
-      if (_isQuestionDone(question)) {
-        setState(() {
-          _questionStatuses[questionId] = 'unanswered';
-        });
+      if (_statusFor(question) == 'answered') {
+        setState(() => _questionStatuses[questionId] = 'unanswered');
       }
       return;
     }
 
-    if (!_submittingAnswer && mounted) {
-      setState(() => _submittingAnswer = true);
+    final future = _repository.submitAnswer(
+      sessionId: session.practiceSessionId,
+      practiceQuestionSnapshotId: questionId,
+      selectedAnswerOptionIds: selected,
+    ).then((_) async {
+      if (!mounted) return;
+      setState(() => _questionStatuses[questionId] = 'answered');
+    }).catchError((Object error) {
+      if (!mounted) return;
+      if (error is DioException) {
+        context.showDioErrorSnackBar(error);
+      }
+      setState(() {
+        _questionStatuses.remove(questionId);
+      });
+    }).whenComplete(() {
+      _persistInFlight.remove(questionId);
+    });
+
+    _persistInFlight[questionId] = future;
+  }
+
+  void _schedulePersistSelection(PracticeQuestionModel question) {
+    final questionId = question.practiceQuestionSnapshotId;
+    if (_isSingleSelect(question.questionType)) {
+      unawaited(_persistSelection(question));
+      return;
     }
 
-    try {
-      await _repository.submitAnswer(
-        sessionId: session.practiceSessionId,
-        practiceQuestionSnapshotId: questionId,
-        selectedAnswerOptionIds: selected,
-      );
-      if (!mounted) return;
-      setState(() {
-        _questionStatuses[questionId] = 'answered';
-        _submittingAnswer = false;
-      });
-    } on DioException catch (e) {
-      if (!mounted) return;
-      setState(() => _submittingAnswer = false);
-      context.showDioErrorSnackBar(e);
-    }
+    _persistDebounceTimers[questionId]?.cancel();
+    _persistDebounceTimers[questionId] = Timer(
+      const Duration(milliseconds: 450),
+      () {
+        _persistDebounceTimers.remove(questionId);
+        if (mounted) {
+          unawaited(_persistSelection(question));
+        }
+      },
+    );
   }
 
   void _toggleSingleOption(
     PracticeQuestionModel question,
     String answerOptionId,
   ) {
+    final questionId = question.practiceQuestionSnapshotId;
     setState(() {
       _selectionFor(question)
         ..clear()
         ..add(answerOptionId);
+      _questionStatuses[questionId] = 'answered';
     });
-    _persistSelection(question);
+    _schedulePersistSelection(question);
   }
 
   void _toggleMultiOption(
@@ -415,6 +451,7 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
     String answerOptionId,
     bool wasSelected,
   ) {
+    final questionId = question.practiceQuestionSnapshotId;
     setState(() {
       final set = _selectionFor(question);
       if (wasSelected) {
@@ -422,8 +459,13 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
       } else {
         set.add(answerOptionId);
       }
+      if (set.isEmpty) {
+        _questionStatuses.remove(questionId);
+      } else {
+        _questionStatuses[questionId] = 'answered';
+      }
     });
-    _persistSelection(question);
+    _schedulePersistSelection(question);
   }
 
   Future<void> _finish() async {
@@ -434,6 +476,7 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
 
     setState(() => _finishing = true);
     try {
+      await _awaitPendingPersists();
       _stopElapsedTimer();
       final result =
           await _repository.finishSession(session.practiceSessionId);
@@ -461,7 +504,7 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
       return null;
     }
 
-    final isBusy = _submittingAnswer || _finishing;
+    final isBusy = _finishing;
 
     return PracticeSessionBottomBar(
       canGoBack: _currentIndex > 0,
@@ -508,10 +551,7 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
           if (!_forfeitExitApplies)
             IconButton(
               tooltip: l10n.practiceSaveAndExitAction,
-              onPressed: (_session == null ||
-                      _finishing ||
-                      _savingProgress ||
-                      _submittingAnswer)
+              onPressed: (_session == null || _finishing || _savingProgress)
                   ? null
                   : _saveAndExit,
               icon: const Icon(Icons.pause_circle_outline_rounded),
@@ -590,7 +630,7 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
                                 ],
                                 const SizedBox(height: AppSpacing.lg),
                                 IgnorePointer(
-                                  ignoring: _submittingAnswer || _finishing,
+                                  ignoring: _finishing,
                                   child: Column(
                                     children: question.answers.map((option) {
                                       final selected = _selectionFor(question)

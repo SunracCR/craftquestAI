@@ -222,11 +222,17 @@ public class QuizService(
         Guid userId,
         Guid quizId,
         CreateQuestionRequest request,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        bool saveChanges = true,
+        int? explicitSortOrder = null,
+        bool skipBillingChecks = false)
     {
         var quiz = await GetOwnedQuizAsync(userId, quizId, cancellationToken);
-        await billingService.EnsureCanModifyOwnedQuizzesAsync(userId, cancellationToken);
-        await billingService.EnsureCanAddQuestionAsync(userId, quizId, cancellationToken);
+        if (!skipBillingChecks)
+        {
+            await billingService.EnsureCanModifyOwnedQuizzesAsync(userId, cancellationToken);
+            await billingService.EnsureCanAddQuestionAsync(userId, quizId, cancellationToken);
+        }
 
         var questionType = await dbContext.QuestionTypes
             .FirstOrDefaultAsync(t => t.Code == request.QuestionType && t.IsActive, cancellationToken)
@@ -234,9 +240,10 @@ public class QuizService(
 
         ValidateQuestionRequest(request, questionType);
 
-        var sortOrder = await dbContext.Questions
-            .Where(q => q.QuizId == quizId && q.DeletedAt == null)
-            .MaxAsync(q => (int?)q.SortOrder, cancellationToken) ?? 0;
+        var sortOrder = explicitSortOrder
+            ?? ((await dbContext.Questions
+                .Where(q => q.QuizId == quizId && q.DeletedAt == null)
+                .MaxAsync(q => (int?)q.SortOrder, cancellationToken) ?? 0) + 1);
 
         var questionId = Guid.NewGuid();
         var optionEntities = new List<QuestionAnswerOption>();
@@ -278,7 +285,7 @@ public class QuizService(
             QuestionTypeId = questionType.QuestionTypeId,
             QuestionText = request.Text.Trim(),
             Points = request.Points,
-            SortOrder = sortOrder + 1,
+            SortOrder = sortOrder,
             RandomizeAnswerOptions = request.RandomizeAnswerOptions,
             ScoringPolicy = AnswerGradingService.ResolveScoringPolicyForQuestionType(
                 questionType.Code,
@@ -305,13 +312,10 @@ public class QuizService(
             cancellationToken);
 
         quiz.UpdatedAt = DateTime.UtcNow;
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        await dbContext.Entry(question)
-            .Reference(q => q.Justification)
-            .Query()
-            .Include(j => j!.Sources)
-            .LoadAsync(cancellationToken);
+        if (saveChanges)
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
 
         return MapQuestion(question, questionType.Code, includeCorrectIds: true);
     }
@@ -327,7 +331,7 @@ public class QuizService(
         await billingService.EnsureCanModifyOwnedQuizzesAsync(userId, cancellationToken);
 
         var question = await dbContext.Questions
-            .Include(q => q.AnswerOptions)
+            .Include(q => q.AnswerOptions.Where(o => o.IsActive))
             .Include(q => q.CorrectAnswerOptions)
             .Include(q => q.Justification!)
                 .ThenInclude(j => j.Sources)
@@ -434,12 +438,6 @@ public class QuizService(
         await dbContext.SaveChangesAsync(cancellationToken);
 
         question.QuestionType = questionType;
-        await dbContext.Entry(question)
-            .Reference(q => q.Justification)
-            .Query()
-            .Include(j => j!.Sources)
-            .LoadAsync(cancellationToken);
-
         return MapQuestion(question, questionType.Code, includeCorrectIds: true);
     }
 
