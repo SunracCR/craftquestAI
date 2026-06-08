@@ -119,7 +119,8 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
       if (mounted) {
         context.showSuccessSnackBar(l10n.questionSavedMessage);
         setState(() {
-          _questions = [...(_questions ?? []), added];
+          _questions = List<QuestionModel>.from(_questions ?? const [])
+            ..add(added);
         });
       }
     }
@@ -144,7 +145,7 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
       if (mounted) {
         context.showSuccessSnackBar(l10n.questionSavedMessage);
         setState(() {
-          final questions = [...(_questions ?? [])];
+          final questions = List<QuestionModel>.from(_questions ?? const []);
           final index =
               questions.indexWhere((q) => q.questionId == updated.questionId);
           if (index >= 0) {
