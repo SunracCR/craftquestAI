@@ -53,4 +53,44 @@ public class CraftQuestDbContext(DbContextOptions<CraftQuestDbContext> options) 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(CraftQuestDbContext).Assembly);
         base.OnModelCreating(modelBuilder);
     }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        MaterializeUserEmailNormalizedForInMemory();
+        return base.SaveChangesAsync(cancellationToken);
+    }
+
+    public override int SaveChanges()
+    {
+        MaterializeUserEmailNormalizedForInMemory();
+        return base.SaveChanges();
+    }
+
+    /// <summary>
+    /// InMemory no evalúa <see cref="User.EmailNormalized"/> (columna calculada en SQL Server).
+    /// </summary>
+    private void MaterializeUserEmailNormalizedForInMemory()
+    {
+        if (!Database.IsInMemory())
+        {
+            return;
+        }
+
+        foreach (var entry in ChangeTracker.Entries<User>())
+        {
+            if (entry.State is not (EntityState.Added or EntityState.Modified))
+            {
+                continue;
+            }
+
+            if (entry.State == EntityState.Modified && !entry.Property(u => u.Email).IsModified)
+            {
+                continue;
+            }
+
+            var normalized = entry.Entity.Email.Trim().ToUpperInvariant();
+            entry.Property(u => u.EmailNormalized).CurrentValue = normalized;
+            entry.Property(u => u.EmailNormalized).IsModified = true;
+        }
+    }
 }

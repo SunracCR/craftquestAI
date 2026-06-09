@@ -5,6 +5,7 @@ public class User
     public Guid UserId { get; set; }
     public string? ExternalSubject { get; set; }
     public string Email { get; set; } = string.Empty;
+    public string EmailNormalized { get; set; } = string.Empty;
     public byte[]? PasswordHash { get; set; }
     public string? DisplayName { get; set; }
     public string? AvatarId { get; set; }

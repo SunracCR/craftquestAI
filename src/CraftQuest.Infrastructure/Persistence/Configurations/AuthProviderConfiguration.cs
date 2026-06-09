@@ -16,5 +16,9 @@ public class AuthProviderConfiguration : IEntityTypeConfiguration<AuthProvider>
         builder.HasOne(x => x.User)
             .WithMany(x => x.AuthProviders)
             .HasForeignKey(x => x.UserId);
+
+        builder.HasIndex(x => new { x.ProviderCode, x.ProviderSubject })
+            .IsUnique()
+            .HasDatabaseName("UQ_AuthProviders_ProviderSubject");
     }
 }

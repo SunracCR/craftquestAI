@@ -52,7 +52,7 @@ public class AuthService(
         var normalizedEmail = request.Email.Trim().ToUpperInvariant();
 
         var emailExists = await dbContext.Users
-            .AnyAsync(u => u.Email.ToUpper() == normalizedEmail, cancellationToken);
+            .AnyAsync(u => u.EmailNormalized == normalizedEmail, cancellationToken);
 
         if (emailExists)
         {
@@ -113,7 +113,7 @@ public class AuthService(
             .Include(u => u.UserRoles)
             .ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(
-                u => u.Email.ToUpper() == normalizedEmail,
+                u => u.EmailNormalized == normalizedEmail,
                 cancellationToken);
 
         if (user is null || user.PasswordHash is null || user.Status != "active")
@@ -332,8 +332,7 @@ public class AuthService(
         var user = await dbContext.Users
             .AsNoTracking()
             .FirstOrDefaultAsync(
-                u => u.Email.ToUpper() == normalizedEmail
-                   
+                u => u.EmailNormalized == normalizedEmail
                     && u.Status == "active"
                     && u.PasswordHash != null,
                 cancellationToken);
@@ -496,7 +495,7 @@ public class AuthService(
             .ThenInclude(ur => ur.Role)
             .Include(u => u.AuthProviders)
             .FirstOrDefaultAsync(
-                u => u.Email.ToUpper() == normalizedEmail,
+                u => u.EmailNormalized == normalizedEmail,
                 cancellationToken);
 
         if (userByEmail is not null)

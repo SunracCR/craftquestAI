@@ -408,7 +408,7 @@ public class ShareCodeService(
         var user = await dbContext.Users
             .AsNoTracking()
             .FirstOrDefaultAsync(
-                u => u.Email.ToUpper() == normalizedEmail,
+                u => u.EmailNormalized == normalizedEmail,
                 cancellationToken);
 
         if (user is null)
