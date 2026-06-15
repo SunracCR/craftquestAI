@@ -20,7 +20,7 @@ public class StudyMaterialsController(
         [FromForm] string? title,
         CancellationToken cancellationToken)
     {
-        if (file.Length == 0)
+        if (file is null || file.Length == 0)
         {
             return BadRequest(new { title = "File is empty." });
         }

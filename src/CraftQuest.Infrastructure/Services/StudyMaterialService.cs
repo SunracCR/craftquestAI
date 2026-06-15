@@ -8,6 +8,7 @@ using CraftQuest.Application.Services.StudyMaterials;
 using CraftQuest.Infrastructure.StudyMaterials;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace CraftQuest.Infrastructure.Services;
@@ -16,7 +17,8 @@ public class StudyMaterialService(
     CraftQuestDbContext dbContext,
     IServiceProvider serviceProvider,
     IOptions<AiGenerationOptions> generationOptions,
-    IOptions<MediaOptions> mediaOptions) : IStudyMaterialService
+    IOptions<MediaOptions> mediaOptions,
+    ILogger<StudyMaterialService> logger) : IStudyMaterialService
 {
     private static readonly Dictionary<string, string> ExtensionToFileType = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -53,42 +55,57 @@ public class StudyMaterialService(
             throw new AppException("Unsupported file type. Use PDF or DOCX with selectable text.", 400);
         }
 
-        await using var buffer = new MemoryStream();
-        await fileStream.CopyToAsync(buffer, cancellationToken);
-        buffer.Position = 0;
-
-        await ValidateSelectableTextAsync(buffer, fileType, cancellationToken);
-
-        var materialId = Guid.NewGuid();
-        var blobPath = $"study-materials/{userId:N}/{materialId:N}/original{extension}";
-        var storage = ResolveStorageProvider();
-        buffer.Position = 0;
-        await storage.SaveAsync(blobPath, buffer, contentType, cancellationToken);
-
-        var material = new StudyMaterial
+        try
         {
-            StudyMaterialId = materialId,
-            UploadedByUserId = userId,
-            FileType = fileType,
-            ProcessingStatus = "pending",
-            Title = string.IsNullOrWhiteSpace(title)
-                ? Path.GetFileNameWithoutExtension(fileName)
-                : title.Trim(),
-            OriginalFileName = Path.GetFileName(fileName),
-            FileSizeBytes = fileSize,
-            BlobPath = blobPath,
-            RetentionExpiresAt = DateTime.UtcNow.AddDays(options.RetentionDays),
-            CreatedAt = DateTime.UtcNow,
-        };
+            await using var buffer = new MemoryStream();
+            await fileStream.CopyToAsync(buffer, cancellationToken);
+            buffer.Position = 0;
 
-        dbContext.StudyMaterials.Add(material);
-        await dbContext.SaveChangesAsync(cancellationToken);
+            await ValidateSelectableTextAsync(buffer, fileType, cancellationToken);
 
-        return new StudyMaterialUploadResultDto
+            var materialId = Guid.NewGuid();
+            var blobPath = $"study-materials/{userId:N}/{materialId:N}/original{extension}";
+            var storage = ResolveStorageProvider();
+            buffer.Position = 0;
+            await storage.SaveAsync(blobPath, buffer, contentType, cancellationToken);
+
+            var material = new StudyMaterial
+            {
+                StudyMaterialId = materialId,
+                UploadedByUserId = userId,
+                FileType = fileType,
+                ProcessingStatus = "pending",
+                Title = string.IsNullOrWhiteSpace(title)
+                    ? Path.GetFileNameWithoutExtension(fileName)
+                    : title.Trim(),
+                OriginalFileName = Path.GetFileName(fileName),
+                FileSizeBytes = fileSize,
+                BlobPath = blobPath,
+                RetentionExpiresAt = DateTime.UtcNow.AddDays(options.RetentionDays),
+                CreatedAt = DateTime.UtcNow,
+            };
+
+            dbContext.StudyMaterials.Add(material);
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            return new StudyMaterialUploadResultDto
+            {
+                StudyMaterialId = materialId,
+                ProcessingStatus = material.ProcessingStatus,
+            };
+        }
+        catch (AppException)
         {
-            StudyMaterialId = materialId,
-            ProcessingStatus = material.ProcessingStatus,
-        };
+            throw;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw MapUploadException(ex);
+        }
     }
 
     public async Task<StudyMaterialDetailDto> UpdateExtractedTextAsync(
@@ -621,8 +638,24 @@ public class StudyMaterialService(
         CancellationToken cancellationToken)
     {
         var options = generationOptions.Value;
-        var extractor = ResolveExtractor(fileType);
-        var result = await extractor.ExtractAsync(content, cancellationToken);
+        DocumentExtractionResult result;
+        try
+        {
+            var extractor = ResolveExtractor(fileType);
+            result = await extractor.ExtractAsync(content, cancellationToken);
+        }
+        catch (AppException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Study material text extraction failed during upload validation.");
+            throw new AppException(
+                "Could not read the document. Use a valid PDF or DOCX with selectable text.",
+                400,
+                "MATERIAL_INVALID_FILE");
+        }
 
         if (result.Pages.Count > options.MaxPagesPerMaterial)
         {
@@ -669,6 +702,61 @@ public class StudyMaterialService(
             "azure" => serviceProvider.GetRequiredService<Media.AzureBlobMediaStorageProvider>(),
             _ => serviceProvider.GetRequiredService<Media.LocalMediaStorageProvider>(),
         };
+    }
+
+    private AppException MapUploadException(Exception ex)
+    {
+        logger.LogError(ex, "Study material upload failed.");
+
+        if (ex is InvalidOperationException invalidOp
+            && invalidOp.Message.Contains("ConnectionString", StringComparison.OrdinalIgnoreCase))
+        {
+            return new AppException(
+                "Media storage is not configured.",
+                503,
+                "STORAGE_NOT_CONFIGURED");
+        }
+
+        if (ex is DbUpdateException dbUpdate)
+        {
+            var sqlMessage = dbUpdate.InnerException?.Message ?? dbUpdate.Message;
+            if (sqlMessage.Contains("Invalid column name", StringComparison.OrdinalIgnoreCase))
+            {
+                return new AppException(
+                    "Study materials database schema is outdated. Apply AlterStudyMaterials_AI_Generation.sql.",
+                    503,
+                    "DATABASE_SCHEMA_OUTDATED");
+            }
+
+            return new AppException(
+                "Could not save study material metadata.",
+                500,
+                "DATABASE_ERROR");
+        }
+
+        var typeName = ex.GetType().FullName ?? ex.GetType().Name;
+        if (typeName.Contains("Azure.RequestFailedException", StringComparison.Ordinal)
+            || typeName.Contains("StorageException", StringComparison.Ordinal))
+        {
+            return new AppException(
+                "Could not save the file to storage.",
+                503,
+                "STORAGE_UPLOAD_FAILED");
+        }
+
+        if (typeName.Contains("PdfDocument", StringComparison.Ordinal)
+            || typeName.Contains("OpenXml", StringComparison.Ordinal))
+        {
+            return new AppException(
+                "Could not read the document. Use a valid PDF or DOCX with selectable text.",
+                400,
+                "MATERIAL_INVALID_FILE");
+        }
+
+        return new AppException(
+            "Could not upload study material.",
+            500,
+            "MATERIAL_UPLOAD_FAILED");
     }
 
     private static string FormatProcessingErrorMessage(Exception ex)

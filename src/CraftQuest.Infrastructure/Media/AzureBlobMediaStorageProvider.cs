@@ -18,9 +18,14 @@ public class AzureBlobMediaStorageProvider(IOptions<MediaOptions> options) : IMe
         string contentType,
         CancellationToken cancellationToken = default)
     {
-        var client = GetBlobClient(blobPath);
-        await client.UploadAsync(
-            content,
+        await using var seekableContent = new MemoryStream();
+        await content.CopyToAsync(seekableContent, cancellationToken);
+        seekableContent.Position = 0;
+
+        var (containerClient, blobClient) = GetContainerAndBlobClients(blobPath);
+        await containerClient.CreateIfNotExistsAsync(cancellationToken: cancellationToken);
+        await blobClient.UploadAsync(
+            seekableContent,
             new BlobUploadOptions
             {
                 HttpHeaders = new BlobHttpHeaders { ContentType = contentType },
@@ -32,7 +37,7 @@ public class AzureBlobMediaStorageProvider(IOptions<MediaOptions> options) : IMe
         string blobPath,
         CancellationToken cancellationToken = default)
     {
-        var client = GetBlobClient(blobPath);
+        var (_, client) = GetContainerAndBlobClients(blobPath);
         if (!await client.ExistsAsync(cancellationToken))
         {
             throw new FileNotFoundException($"Blob '{blobPath}' was not found.");
@@ -43,17 +48,18 @@ public class AzureBlobMediaStorageProvider(IOptions<MediaOptions> options) : IMe
     }
 
     public bool Exists(string blobPath) =>
-        GetBlobClient(blobPath).Exists().Value;
+        GetContainerAndBlobClients(blobPath).BlobClient.Exists().Value;
 
     public async Task DeleteIfExistsAsync(
         string blobPath,
         CancellationToken cancellationToken = default)
     {
-        var client = GetBlobClient(blobPath);
+        var (_, client) = GetContainerAndBlobClients(blobPath);
         await client.DeleteIfExistsAsync(cancellationToken: cancellationToken);
     }
 
-    private BlobClient GetBlobClient(string blobPath)
+    private (BlobContainerClient ContainerClient, BlobClient BlobClient) GetContainerAndBlobClients(
+        string blobPath)
     {
         if (string.IsNullOrWhiteSpace(_options.Azure.ConnectionString))
         {
@@ -63,6 +69,7 @@ public class AzureBlobMediaStorageProvider(IOptions<MediaOptions> options) : IMe
 
         var container = _options.Azure.ContainerName;
         var serviceClient = new BlobServiceClient(_options.Azure.ConnectionString);
-        return serviceClient.GetBlobContainerClient(container).GetBlobClient(blobPath);
+        var containerClient = serviceClient.GetBlobContainerClient(container);
+        return (containerClient, containerClient.GetBlobClient(blobPath));
     }
 }
