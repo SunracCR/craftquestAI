@@ -96,6 +96,8 @@ app.UseAuthorization();
 app.UseMiddleware<UserContextTelemetryMiddleware>();
 app.UseStaticFiles();
 app.MapControllers().RequireCors("AllowMyApp");
+app.MapGet("/", () => Results.Ok());
+app.MapHealthChecks("/healthz");
 app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
 {
     Predicate = check => check.Tags.Contains("live"),

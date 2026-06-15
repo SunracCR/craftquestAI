@@ -204,31 +204,79 @@ public class QuizService(
         var quiz = await GetOwnedQuizAsync(userId, quizId, cancellationToken);
         var now = DateTime.UtcNow;
 
-        await using var transaction =
-            await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        if (dbContext.Database.IsRelational())
+        {
+            var strategy = dbContext.Database.CreateExecutionStrategy();
+            await strategy.ExecuteAsync(async () =>
+            {
+                await using var transaction =
+                    await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-        await PracticeSessionCleanup.DeleteSessionsForQuizAsync(dbContext, quizId, cancellationToken);
+                await DeleteQuizCoreAsync(quiz, quizId, now, cancellationToken);
 
-        await dbContext.GuestVisits
-            .Where(v => v.QuizId == quizId)
-            .ExecuteDeleteAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+            });
 
-        await dbContext.UserQuizPracticePreferences
-            .Where(p => p.QuizId == quizId)
-            .ExecuteDeleteAsync(cancellationToken);
+            return;
+        }
 
-        await dbContext.Questions
-            .Where(q => q.QuizId == quizId)
-            .ExecuteUpdateAsync(
-                setters => setters
-                    .SetProperty(q => q.DeletedAt, now)
-                    .SetProperty(q => q.UpdatedAt, now),
-                cancellationToken);
+        await DeleteQuizCoreAsync(quiz, quizId, now, cancellationToken);
+    }
+
+    private async Task DeleteQuizCoreAsync(
+        Quiz quiz,
+        Guid quizId,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        await PracticeSessionCleanup.DeletePracticeDataForQuizAsync(dbContext, quizId, cancellationToken);
+
+        if (dbContext.Database.IsRelational())
+        {
+            await dbContext.GuestVisits
+                .Where(v => v.QuizId == quizId)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            await dbContext.UserQuizPracticePreferences
+                .Where(p => p.QuizId == quizId)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            await dbContext.Questions
+                .IgnoreQueryFilters()
+                .Where(q => q.QuizId == quizId)
+                .ExecuteUpdateAsync(
+                    setters => setters
+                        .SetProperty(q => q.DeletedAt, now)
+                        .SetProperty(q => q.UpdatedAt, now),
+                    cancellationToken);
+        }
+        else
+        {
+            var guestVisits = await dbContext.GuestVisits
+                .Where(v => v.QuizId == quizId)
+                .ToListAsync(cancellationToken);
+            dbContext.GuestVisits.RemoveRange(guestVisits);
+
+            var preferences = await dbContext.UserQuizPracticePreferences
+                .Where(p => p.QuizId == quizId)
+                .ToListAsync(cancellationToken);
+            dbContext.UserQuizPracticePreferences.RemoveRange(preferences);
+
+            var questions = await dbContext.Questions
+                .IgnoreQueryFilters()
+                .Where(q => q.QuizId == quizId)
+                .ToListAsync(cancellationToken);
+
+            foreach (var question in questions)
+            {
+                question.DeletedAt = now;
+                question.UpdatedAt = now;
+            }
+        }
 
         quiz.DeletedAt = now;
         quiz.UpdatedAt = now;
         await dbContext.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
     }
 
     public async Task<QuestionDto> CreateQuestionAsync(

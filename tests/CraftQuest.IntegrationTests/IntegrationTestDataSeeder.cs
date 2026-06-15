@@ -28,6 +28,35 @@ internal static class IntegrationTestDataSeeder
             });
         }
 
+        if (!db.QuestionTypes.Any(t => t.Code == "single_choice"))
+        {
+            db.QuestionTypes.AddRange(
+                new QuestionType
+                {
+                    Code = "single_choice",
+                    Name = "Single choice",
+                    SupportsMultipleCorrectAnswers = false,
+                    RequiresOptions = true,
+                    IsActive = true,
+                },
+                new QuestionType
+                {
+                    Code = "multiple_choice",
+                    Name = "Multiple choice",
+                    SupportsMultipleCorrectAnswers = true,
+                    RequiresOptions = true,
+                    IsActive = true,
+                },
+                new QuestionType
+                {
+                    Code = "true_false",
+                    Name = "True/False",
+                    SupportsMultipleCorrectAnswers = false,
+                    RequiresOptions = true,
+                    IsActive = true,
+                });
+        }
+
         db.SaveChanges();
     }
 }
