@@ -28,6 +28,7 @@ public class PracticeSessionConfiguration : IEntityTypeConfiguration<PracticeSes
 
         builder.HasMany(x => x.QuestionSnapshots)
             .WithOne(x => x.PracticeSession)
-            .HasForeignKey(x => x.PracticeSessionId);
+            .HasForeignKey(x => x.PracticeSessionId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -19,6 +19,7 @@ public class PracticeQuestionSnapshotConfiguration : IEntityTypeConfiguration<Pr
 
         builder.HasMany(x => x.AnswerOptionSnapshots)
             .WithOne(x => x.PracticeQuestionSnapshot)
-            .HasForeignKey(x => x.PracticeQuestionSnapshotId);
+            .HasForeignKey(x => x.PracticeQuestionSnapshotId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

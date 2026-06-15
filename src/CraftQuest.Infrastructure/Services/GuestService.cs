@@ -9,6 +9,7 @@ using CraftQuest.Application.Services.Quizzes;
 using CraftQuest.Application.Services.Teacher;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
+using CraftQuest.Infrastructure.Services.Practice;
 using Microsoft.EntityFrameworkCore;
 
 namespace CraftQuest.Infrastructure.Services;
@@ -605,6 +606,11 @@ public class GuestService(
             return;
         }
 
+        await PracticeSessionCleanup.DeleteSessionsForGuestVisitAsync(
+            dbContext,
+            guestVisitId,
+            cancellationToken);
+
         dbContext.GuestVisits.Remove(visit);
         await dbContext.SaveChangesAsync(cancellationToken);
     }
@@ -618,6 +624,14 @@ public class GuestService(
         if (expired.Count == 0)
         {
             return;
+        }
+
+        foreach (var visit in expired)
+        {
+            await PracticeSessionCleanup.DeleteSessionsForGuestVisitAsync(
+                dbContext,
+                visit.GuestVisitId,
+                cancellationToken);
         }
 
         dbContext.GuestVisits.RemoveRange(expired);

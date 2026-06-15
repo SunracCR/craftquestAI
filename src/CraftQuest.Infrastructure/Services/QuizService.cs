@@ -5,6 +5,7 @@ using CraftQuest.Application.Services;
 using CraftQuest.Application.Services.Quizzes;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
+using CraftQuest.Infrastructure.Services.Practice;
 using CraftQuest.Infrastructure.Services.Quizzes;
 using Microsoft.EntityFrameworkCore;
 
@@ -205,6 +206,16 @@ public class QuizService(
 
         await using var transaction =
             await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        await PracticeSessionCleanup.DeleteSessionsForQuizAsync(dbContext, quizId, cancellationToken);
+
+        await dbContext.GuestVisits
+            .Where(v => v.QuizId == quizId)
+            .ExecuteDeleteAsync(cancellationToken);
+
+        await dbContext.UserQuizPracticePreferences
+            .Where(p => p.QuizId == quizId)
+            .ExecuteDeleteAsync(cancellationToken);
 
         await dbContext.Questions
             .Where(q => q.QuizId == quizId)
