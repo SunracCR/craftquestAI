@@ -9,20 +9,42 @@ public class DocxPageTextExtractor : IPageTextExtractor
 {
     public string FileType => "docx";
 
-    public Task<DocumentExtractionResult> ExtractAsync(
+    public async Task<DocumentExtractionResult> ExtractAsync(
         Stream content,
         CancellationToken cancellationToken = default)
+    {
+        var seekable = await StudyMaterialStreamHelper.OpenSeekableCopyAsync(
+            content,
+            cancellationToken);
+        var ownsCopy = !ReferenceEquals(seekable, content);
+
+        try
+        {
+            return ExtractFromSeekableStream(seekable, cancellationToken);
+        }
+        finally
+        {
+            if (ownsCopy)
+            {
+                await seekable.DisposeAsync();
+            }
+        }
+    }
+
+    private static DocumentExtractionResult ExtractFromSeekableStream(
+        Stream content,
+        CancellationToken cancellationToken)
     {
         using var document = WordprocessingDocument.Open(content, false);
         var body = document.MainDocumentPart?.Document.Body;
         if (body is null)
         {
-            return Task.FromResult(new DocumentExtractionResult
+            return new DocumentExtractionResult
             {
                 Pages = [],
                 Sections = [],
                 NeedsOcr = true,
-            });
+            };
         }
 
         var pages = new List<ExtractedPage>();
@@ -73,12 +95,12 @@ public class DocxPageTextExtractor : IPageTextExtractor
             sections.AddRange(StudyMaterialOutlineHelper.BuildHeuristicSections(pages));
         }
 
-        return Task.FromResult(new DocumentExtractionResult
+        return new DocumentExtractionResult
         {
             Pages = pages,
             Sections = sections.Take(40).ToList(),
             NeedsOcr = StudyMaterialOutlineHelper.DetectNeedsOcr(pages),
-        });
+        };
 
         void FlushPage()
         {

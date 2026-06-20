@@ -44,7 +44,10 @@ public class AzureBlobMediaStorageProvider(IOptions<MediaOptions> options) : IMe
         }
 
         var response = await client.DownloadStreamingAsync(cancellationToken: cancellationToken);
-        return response.Value.Content;
+        var buffer = new MemoryStream();
+        await response.Value.Content.CopyToAsync(buffer, cancellationToken);
+        buffer.Position = 0;
+        return buffer;
     }
 
     public bool Exists(string blobPath) =>

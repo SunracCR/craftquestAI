@@ -7,39 +7,54 @@ public class PdfPageTextExtractor : IPageTextExtractor
 {
     public string FileType => "pdf";
 
-    public Task<DocumentExtractionResult> ExtractAsync(
+    public async Task<DocumentExtractionResult> ExtractAsync(
         Stream content,
         CancellationToken cancellationToken = default)
     {
-        var pages = new List<ExtractedPage>();
-        using var document = PdfDocument.Open(content);
+        var seekable = await StudyMaterialStreamHelper.OpenSeekableCopyAsync(
+            content,
+            cancellationToken);
+        var ownsCopy = !ReferenceEquals(seekable, content);
 
-        foreach (var page in document.GetPages())
+        try
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            var text = PdfTextExtractionHelper.ExtractPageText(page);
-            var wordCount = StudyMaterialOutlineHelper.CountWords(text);
-            var quality = ClassifyQuality(wordCount);
+            var pages = new List<ExtractedPage>();
+            using var document = PdfDocument.Open(seekable);
 
-            pages.Add(new ExtractedPage
+            foreach (var page in document.GetPages())
             {
-                PageNumber = page.Number,
-                Text = text,
-                WordCount = wordCount,
-                HasEmbeddedImages = page.GetImages().Any(),
-                ExtractionQuality = quality,
-            });
+                cancellationToken.ThrowIfCancellationRequested();
+                var text = PdfTextExtractionHelper.ExtractPageText(page);
+                var wordCount = StudyMaterialOutlineHelper.CountWords(text);
+                var quality = ClassifyQuality(wordCount);
+
+                pages.Add(new ExtractedPage
+                {
+                    PageNumber = page.Number,
+                    Text = text,
+                    WordCount = wordCount,
+                    HasEmbeddedImages = page.GetImages().Any(),
+                    ExtractionQuality = quality,
+                });
+            }
+
+            var sections = StudyMaterialOutlineHelper.BuildHeuristicSections(pages);
+            var needsOcr = StudyMaterialOutlineHelper.DetectNeedsOcr(pages);
+
+            return new DocumentExtractionResult
+            {
+                Pages = pages,
+                Sections = sections,
+                NeedsOcr = needsOcr,
+            };
         }
-
-        var sections = StudyMaterialOutlineHelper.BuildHeuristicSections(pages);
-        var needsOcr = StudyMaterialOutlineHelper.DetectNeedsOcr(pages);
-
-        return Task.FromResult(new DocumentExtractionResult
+        finally
         {
-            Pages = pages,
-            Sections = sections,
-            NeedsOcr = needsOcr,
-        });
+            if (ownsCopy)
+            {
+                await seekable.DisposeAsync();
+            }
+        }
     }
 
     private static string ClassifyQuality(int wordCount) => wordCount switch
