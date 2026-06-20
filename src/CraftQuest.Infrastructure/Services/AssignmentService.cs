@@ -6,6 +6,7 @@ using CraftQuest.Application.Models.Teacher;
 using CraftQuest.Application.Services;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
+using CraftQuest.Infrastructure.Services.Quizzes;
 using Microsoft.EntityFrameworkCore;
 
 namespace CraftQuest.Infrastructure.Services;
@@ -103,9 +104,13 @@ public class AssignmentService(
         var assignments = await dbContext.Assignments
             .AsNoTracking()
             .Where(a => a.ClassId == classId && a.Status != "archived")
-            .Include(a => a.Quiz)
             .OrderByDescending(a => a.CreatedAt)
             .ToListAsync(cancellationToken);
+
+        var quizTitles = await QuizTitleLookup.LoadTitlesAsync(
+            dbContext,
+            assignments.Select(a => a.QuizId),
+            cancellationToken);
 
         var result = new List<AssignmentSummaryDto>(assignments.Count);
         foreach (var a in assignments)
@@ -118,7 +123,7 @@ public class AssignmentService(
                 ClassId = a.ClassId,
                 QuizId = a.QuizId,
                 Title = a.Title,
-                QuizTitle = a.Quiz.Title,
+                QuizTitle = QuizTitleLookup.Resolve(quizTitles, a.QuizId, a.Title),
                 Status = a.Status,
                 ShowCorrectAnswersMode = a.ShowCorrectAnswersMode,
                 StartsAt = a.StartsAt,
@@ -143,13 +148,17 @@ public class AssignmentService(
     {
         var assignment = await dbContext.Assignments
             .AsNoTracking()
-            .Include(a => a.Quiz)
             .Include(a => a.Class)
             .FirstOrDefaultAsync(a => a.AssignmentId == assignmentId, cancellationToken)
             ?? throw new AppException("Assignment not found.", 404);
 
         if (assignment.Class.TeacherUserId != teacherUserId)
             throw new AppException("Assignment not found.", 404);
+
+        var quizTitles = await QuizTitleLookup.LoadTitlesAsync(
+            dbContext,
+            [assignment.QuizId],
+            cancellationToken);
 
         var memberCount = await dbContext.ClassMembers
             .CountAsync(m => m.ClassId == assignment.ClassId && m.Status == "active", cancellationToken);
@@ -182,7 +191,7 @@ public class AssignmentService(
             QuizId = assignment.QuizId,
             Title = assignment.Title,
             Instructions = assignment.Instructions,
-            QuizTitle = assignment.Quiz.Title,
+            QuizTitle = QuizTitleLookup.Resolve(quizTitles, assignment.QuizId, assignment.Title),
             Status = assignment.Status,
             ShowCorrectAnswersMode = assignment.ShowCorrectAnswersMode,
             StartsAt = assignment.StartsAt,
@@ -205,7 +214,6 @@ public class AssignmentService(
     {
         var assignment = await dbContext.Assignments
             .AsNoTracking()
-            .Include(a => a.Quiz)
             .Include(a => a.Class)
             .FirstOrDefaultAsync(a => a.AssignmentId == assignmentId, cancellationToken)
             ?? throw new AppException("Assignment not found.", 404);

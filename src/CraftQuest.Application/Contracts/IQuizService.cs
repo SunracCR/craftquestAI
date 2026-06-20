@@ -17,7 +17,9 @@ public interface IQuizService
         CancellationToken cancellationToken = default,
         bool saveChanges = true,
         int? explicitSortOrder = null,
-        bool skipBillingChecks = false);
+        bool skipBillingChecks = false,
+        Domain.Entities.Quiz? preloadedQuiz = null,
+        Domain.Entities.QuestionType? preloadedQuestionType = null);
     Task<QuestionDto> UpdateQuestionAsync(
         Guid userId,
         Guid quizId,

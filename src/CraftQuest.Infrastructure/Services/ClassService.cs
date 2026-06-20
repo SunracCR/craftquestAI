@@ -3,6 +3,7 @@ using CraftQuest.Application.Exceptions;
 using CraftQuest.Application.Models.Teacher;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
+using CraftQuest.Infrastructure.Services.Quizzes;
 using Microsoft.EntityFrameworkCore;
 
 namespace CraftQuest.Infrastructure.Services;
@@ -174,9 +175,13 @@ public class ClassService(
         var assignments = await dbContext.Assignments
             .AsNoTracking()
             .Where(a => a.ClassId == classId && a.Status != "archived")
-            .Include(a => a.Quiz)
             .OrderByDescending(a => a.CreatedAt)
             .ToListAsync(cancellationToken);
+
+        var quizTitles = await QuizTitleLookup.LoadTitlesAsync(
+            dbContext,
+            assignments.Select(a => a.QuizId),
+            cancellationToken);
 
         var memberCount = entity.Members.Count(m => m.Status == "active");
 
@@ -198,7 +203,7 @@ public class ClassService(
                 ClassId = a.ClassId,
                 QuizId = a.QuizId,
                 Title = a.Title,
-                QuizTitle = a.Quiz.Title,
+                QuizTitle = QuizTitleLookup.Resolve(quizTitles, a.QuizId, a.Title),
                 Status = a.Status,
                 ShowCorrectAnswersMode = a.ShowCorrectAnswersMode,
                 StartsAt = a.StartsAt,

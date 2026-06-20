@@ -79,6 +79,10 @@ class ImportRepository {
   Future<ImportConfirmResultModel> confirm(String importId) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/api/question-imports/$importId/confirm',
+      options: Options(
+        receiveTimeout: const Duration(minutes: 2),
+        sendTimeout: const Duration(seconds: 30),
+      ),
     );
     return ImportConfirmResultModel.fromJson(response.data!);
   }

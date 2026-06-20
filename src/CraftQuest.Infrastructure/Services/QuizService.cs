@@ -286,18 +286,29 @@ public class QuizService(
         CancellationToken cancellationToken = default,
         bool saveChanges = true,
         int? explicitSortOrder = null,
-        bool skipBillingChecks = false)
+        bool skipBillingChecks = false,
+        Quiz? preloadedQuiz = null,
+        QuestionType? preloadedQuestionType = null)
     {
-        var quiz = await GetOwnedQuizAsync(userId, quizId, cancellationToken);
+        var quiz = preloadedQuiz ?? await GetOwnedQuizAsync(userId, quizId, cancellationToken);
+        if (preloadedQuiz is not null)
+        {
+            EnsureQuizOwner(quiz, userId);
+        }
+
         if (!skipBillingChecks)
         {
             await billingService.EnsureCanModifyOwnedQuizzesAsync(userId, cancellationToken);
             await billingService.EnsureCanAddQuestionAsync(userId, quizId, cancellationToken);
         }
 
-        var questionType = await dbContext.QuestionTypes
-            .FirstOrDefaultAsync(t => t.Code == request.QuestionType && t.IsActive, cancellationToken)
-            ?? throw new AppException("Invalid question type.");
+        var questionType = preloadedQuestionType is not null
+            && string.Equals(preloadedQuestionType.Code, request.QuestionType, StringComparison.OrdinalIgnoreCase)
+            && preloadedQuestionType.IsActive
+            ? preloadedQuestionType
+            : await dbContext.QuestionTypes
+                .FirstOrDefaultAsync(t => t.Code == request.QuestionType && t.IsActive, cancellationToken)
+                ?? throw new AppException("Invalid question type.");
 
         ValidateQuestionRequest(request, questionType);
 

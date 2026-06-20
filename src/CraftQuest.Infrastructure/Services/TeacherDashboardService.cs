@@ -1,6 +1,7 @@
 using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Models.Teacher;
 using CraftQuest.Infrastructure.Persistence;
+using CraftQuest.Infrastructure.Services.Quizzes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -30,27 +31,27 @@ public class TeacherDashboardService(CraftQuestDbContext dbContext, IMemoryCache
         var assignmentIds = await GetTeacherAssignmentIdsAsync(teacherUserId, cancellationToken);
         var weekAgo = DateTime.UtcNow.AddDays(-7);
 
-        var totalStudentsTask = classIds.Count == 0
-            ? Task.FromResult(0)
-            : dbContext.ClassMembers
+        var totalStudents = classIds.Count == 0
+            ? 0
+            : await dbContext.ClassMembers
                 .AsNoTracking()
                 .Where(m => classIds.Contains(m.ClassId) && m.Status == "active")
                 .Select(m => m.UserId)
                 .Distinct()
                 .CountAsync(cancellationToken);
 
-        var assignedQuizzesTask = classIds.Count == 0
-            ? Task.FromResult(0)
-            : dbContext.Assignments
+        var assignedQuizzes = classIds.Count == 0
+            ? 0
+            : await dbContext.Assignments
                 .AsNoTracking()
                 .Where(a => classIds.Contains(a.ClassId) && a.Status != "archived")
                 .Select(a => a.QuizId)
                 .Distinct()
                 .CountAsync(cancellationToken);
 
-        var sessionsThisWeekTask = assignmentIds.Count == 0
-            ? Task.FromResult(0)
-            : dbContext.PracticeSessions
+        var sessionsThisWeek = assignmentIds.Count == 0
+            ? 0
+            : await dbContext.PracticeSessions
                 .AsNoTracking()
                 .CountAsync(
                     ps => ps.AssignmentId.HasValue
@@ -60,9 +61,9 @@ public class TeacherDashboardService(CraftQuestDbContext dbContext, IMemoryCache
                         && ps.GuestVisitId == null,
                     cancellationToken);
 
-        var uniqueActiveStudentsThisWeekTask = assignmentIds.Count == 0
-            ? Task.FromResult(0)
-            : dbContext.PracticeSessions
+        var uniqueActiveStudentsThisWeek = assignmentIds.Count == 0
+            ? 0
+            : await dbContext.PracticeSessions
                 .AsNoTracking()
                 .Where(ps => ps.AssignmentId.HasValue
                     && assignmentIds.Contains(ps.AssignmentId.Value)
@@ -74,29 +75,20 @@ public class TeacherDashboardService(CraftQuestDbContext dbContext, IMemoryCache
                 .Distinct()
                 .CountAsync(cancellationToken);
 
-        var recentActivityTask = GetActivityFeedAsync(teacherUserId, 20, cancellationToken, assignmentIds);
-        var insightsTask = BuildInsightsAsync(teacherUserId, cancellationToken, assignmentIds);
-        var urgentAssignmentsTask = BuildUrgentAssignmentsAsync(teacherUserId, classIds, cancellationToken);
-
-        await Task.WhenAll(
-            totalStudentsTask,
-            assignedQuizzesTask,
-            sessionsThisWeekTask,
-            uniqueActiveStudentsThisWeekTask,
-            recentActivityTask,
-            insightsTask,
-            urgentAssignmentsTask);
+        var recentActivity = await GetActivityFeedAsync(teacherUserId, 20, cancellationToken, assignmentIds);
+        var insights = await BuildInsightsAsync(teacherUserId, cancellationToken, assignmentIds);
+        var urgentAssignments = await BuildUrgentAssignmentsAsync(teacherUserId, classIds, cancellationToken);
 
         var dto = new TeacherDashboardDto
         {
-            TotalStudents = await totalStudentsTask,
+            TotalStudents = totalStudents,
             ActiveClasses = activeClasses,
-            AssignedQuizzes = await assignedQuizzesTask,
-            SessionsThisWeek = await sessionsThisWeekTask,
-            UniqueActiveStudentsThisWeek = await uniqueActiveStudentsThisWeekTask,
-            RecentActivity = await recentActivityTask,
-            Insights = await insightsTask,
-            UrgentAssignments = await urgentAssignmentsTask,
+            AssignedQuizzes = assignedQuizzes,
+            SessionsThisWeek = sessionsThisWeek,
+            UniqueActiveStudentsThisWeek = uniqueActiveStudentsThisWeek,
+            RecentActivity = recentActivity,
+            Insights = insights,
+            UrgentAssignments = urgentAssignments,
         };
 
         memoryCache.Set(cacheKey, dto, DashboardCacheDuration);
@@ -132,10 +124,14 @@ public class TeacherDashboardService(CraftQuestDbContext dbContext, IMemoryCache
                 && ps.GuestVisitId == null
                 && ps.FinishedAt != null)
             .Include(ps => ps.StudentUser)
-            .Include(ps => ps.Quiz)
             .OrderByDescending(ps => ps.FinishedAt)
             .Take(take)
             .ToListAsync(cancellationToken);
+
+        var quizTitles = await QuizTitleLookup.LoadTitlesAsync(
+            dbContext,
+            sessions.Select(ps => ps.QuizId),
+            cancellationToken);
 
         var sessionAssignmentIds = sessions
             .Select(ps => ps.AssignmentId!.Value)
@@ -158,7 +154,7 @@ public class TeacherDashboardService(CraftQuestDbContext dbContext, IMemoryCache
                 PracticeSessionId = ps.PracticeSessionId,
                 StudentName = ps.StudentUser?.DisplayName ?? ps.StudentUser?.Email ?? "Unknown",
                 StudentAvatarId = ps.StudentUser?.AvatarId,
-                QuizTitle = ps.Quiz.Title,
+                QuizTitle = QuizTitleLookup.Resolve(quizTitles, ps.QuizId),
                 AssignmentTitle = assignmentTitles.TryGetValue(ps.AssignmentId!.Value, out var t) ? t : null,
                 ScorePercent = scorePct,
                 Passed = scorePct >= 60,
@@ -362,10 +358,15 @@ public class TeacherDashboardService(CraftQuestDbContext dbContext, IMemoryCache
         {
             var questionIds = highErrorStats.Select(h => h.QuestionId).ToList();
             var questions = await dbContext.Questions
+                .IgnoreQueryFilters()
                 .AsNoTracking()
                 .Where(q => questionIds.Contains(q.QuestionId))
-                .Include(q => q.Quiz)
                 .ToListAsync(cancellationToken);
+
+            var quizTitles = await QuizTitleLookup.LoadTitlesAsync(
+                dbContext,
+                questions.Select(q => q.QuizId),
+                cancellationToken);
 
             foreach (var stat in highErrorStats)
             {
@@ -388,7 +389,7 @@ public class TeacherDashboardService(CraftQuestDbContext dbContext, IMemoryCache
                         ["questionText"] = questionPreview,
                     },
                     QuizId = question.QuizId,
-                    QuizTitle = question.Quiz.Title,
+                    QuizTitle = QuizTitleLookup.Resolve(quizTitles, question.QuizId),
                 });
             }
         }
@@ -419,11 +420,16 @@ public class TeacherDashboardService(CraftQuestDbContext dbContext, IMemoryCache
             var assignmentInfo = await dbContext.Assignments
                 .AsNoTracking()
                 .Where(a => a.AssignmentId == mostActive.AssignmentId)
-                .Select(a => new { a.Title, a.QuizId, QuizTitle = a.Quiz.Title })
+                .Select(a => new { a.Title, a.QuizId })
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (assignmentInfo is not null)
             {
+                var quizTitles = await QuizTitleLookup.LoadTitlesAsync(
+                    dbContext,
+                    [assignmentInfo.QuizId],
+                    cancellationToken);
+
                 insights.Add(new TeacherInsightDto
                 {
                     Type = "most_active_sessions",
@@ -434,7 +440,10 @@ public class TeacherDashboardService(CraftQuestDbContext dbContext, IMemoryCache
                     },
                     QuizId = assignmentInfo.QuizId,
                     AssignmentId = mostActive.AssignmentId,
-                    QuizTitle = assignmentInfo.Title,
+                    QuizTitle = QuizTitleLookup.Resolve(
+                        quizTitles,
+                        assignmentInfo.QuizId,
+                        assignmentInfo.Title),
                 });
             }
         }

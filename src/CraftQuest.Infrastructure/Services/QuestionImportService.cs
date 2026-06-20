@@ -333,6 +333,20 @@ public class QuestionImportService(
             .Where(q => q.QuizId == quizId)
             .MaxAsync(q => (int?)q.SortOrder, cancellationToken) ?? 0;
 
+        var quiz = await dbContext.Quizzes
+            .FirstOrDefaultAsync(q => q.QuizId == quizId, cancellationToken)
+            ?? throw new AppException("Quiz not found.", 404);
+
+        if (quiz.CreatedByUserId != userId)
+        {
+            throw new AppException("You do not have permission to modify this quiz.", 403);
+        }
+
+        var questionTypes = await dbContext.QuestionTypes
+            .AsNoTracking()
+            .Where(t => t.IsActive)
+            .ToDictionaryAsync(t => t.Code, StringComparer.OrdinalIgnoreCase, cancellationToken);
+
         foreach (var row in batch.Rows.OrderBy(r => r.RowNumber))
         {
             if (row.Status is not ("valid" or "warning"))
@@ -355,6 +369,23 @@ public class QuestionImportService(
                 createRequest.IsGeneratedByAi = true;
             }
 
+            if (!questionTypes.TryGetValue(createRequest.QuestionType, out var questionType))
+            {
+                rowOutcomes[row.QuestionImportRowId] = ("error", null);
+                confirmErrors.Add(new QuestionImportError
+                {
+                    QuestionImportErrorId = Guid.NewGuid(),
+                    QuestionImportBatchId = batchId,
+                    QuestionImportRowId = row.QuestionImportRowId,
+                    FieldName = "questionType",
+                    ErrorCode = "INVALID_QUESTION_TYPE",
+                    ErrorMessage = $"Invalid question type '{createRequest.QuestionType}'.",
+                    Severity = "error",
+                    CreatedAt = DateTime.UtcNow,
+                });
+                continue;
+            }
+
             try
             {
                 sortOrder++;
@@ -365,7 +396,9 @@ public class QuestionImportService(
                     cancellationToken,
                     saveChanges: false,
                     explicitSortOrder: sortOrder,
-                    skipBillingChecks: true);
+                    skipBillingChecks: true,
+                    preloadedQuiz: quiz,
+                    preloadedQuestionType: questionType);
 
                 createdIds.Add(created.QuestionId);
                 rowOutcomes[row.QuestionImportRowId] = ("created", created.QuestionId);
