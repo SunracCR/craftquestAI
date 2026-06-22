@@ -30,7 +30,7 @@ class PracticeRepository {
         if (classId != null) 'classId': classId,
         if (assignmentId != null) 'assignmentId': assignmentId,
       },
-      options: const Options(
+      options: Options(
         receiveTimeout: Duration(seconds: 90),
         sendTimeout: Duration(seconds: 30),
       ),

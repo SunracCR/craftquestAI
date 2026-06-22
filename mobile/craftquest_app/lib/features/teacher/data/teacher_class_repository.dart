@@ -7,7 +7,7 @@ class TeacherClassRepository {
 
   final ApiClient _apiClient;
 
-  static const _listOptions = Options(
+  static final _listOptions = Options(
     connectTimeout: Duration(seconds: 30),
     receiveTimeout: Duration(seconds: 60),
   );
