@@ -546,10 +546,15 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
     final isTeacher = authState is AuthAuthenticated &&
         authState.user.roles.contains('teacher');
 
-    final existing = await _sharingRepository.getQuizShareCode(widget.quizId);
+    ShareCodeModel? existing;
+    try {
+      existing = await _sharingRepository.getQuizShareCode(widget.quizId);
+    } catch (_) {
+      existing = null;
+    }
     if (!mounted) return;
 
-    if (existing != null) {
+    if (!isTeacher && existing != null) {
       await showShareCodeResultDialog(context, existing);
       return;
     }
@@ -558,6 +563,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
       context,
       quizId: widget.quizId,
       isTeacher: isTeacher,
+      existingShareCode: existing,
     );
     if (!mounted || shareCode == null) return;
     await showShareCodeResultDialog(context, shareCode);

@@ -17,15 +17,18 @@ class CreateShareCodeSheet extends StatefulWidget {
     super.key,
     required this.quizId,
     required this.isTeacher,
+    this.existingShareCode,
   });
 
   final String quizId;
   final bool isTeacher;
+  final ShareCodeModel? existingShareCode;
 
   static Future<ShareCodeModel?> show(
     BuildContext context, {
     required String quizId,
     required bool isTeacher,
+    ShareCodeModel? existingShareCode,
   }) {
     return showModalBottomSheet<ShareCodeModel>(
       context: context,
@@ -33,6 +36,7 @@ class CreateShareCodeSheet extends StatefulWidget {
       builder: (_) => CreateShareCodeSheet(
         quizId: quizId,
         isTeacher: isTeacher,
+        existingShareCode: existingShareCode,
       ),
     );
   }
@@ -55,6 +59,13 @@ class _CreateShareCodeSheetState extends State<CreateShareCodeSheet> {
   @override
   void initState() {
     super.initState();
+    final existing = widget.existingShareCode;
+    if (existing != null) {
+      _audience = existing.accessPolicy == 'group_only'
+          ? ShareAudience.group
+          : ShareAudience.anyone;
+      _selectedClassId = existing.classId;
+    }
     if (widget.isTeacher) {
       _loadClasses();
     }
@@ -70,7 +81,8 @@ class _CreateShareCodeSheetState extends State<CreateShareCodeSheet> {
       if (!mounted) return;
       setState(() {
         _classes = classes;
-        _selectedClassId = classes.isNotEmpty ? classes.first.classId : null;
+        _selectedClassId ??=
+            classes.isNotEmpty ? classes.first.classId : null;
         _loadingClasses = false;
       });
     } on DioException catch (e) {
