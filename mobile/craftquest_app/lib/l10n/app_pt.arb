@@ -451,6 +451,7 @@
   "practiceContinueAction": "Continuar",
   "practiceStartNewAction": "Comecar de novo",
   "practiceSaveAndExitAction": "Salvar e sair",
+  "practicePreparingSession": "Preparando sua tentativa…",
   "practiceInProgressChip": "Pratica em andamento",
   "practiceInProgressSubtitle": "{answered}/{total} respondidas",
   "@practiceInProgressSubtitle": {

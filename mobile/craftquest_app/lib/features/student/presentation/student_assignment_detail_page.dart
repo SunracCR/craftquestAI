@@ -3,6 +3,9 @@ import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/utils/assignment_dates.dart';
 import 'package:craftquest_app/core/widgets/app_section_card.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
+import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/features/practice/data/models/practice_models.dart';
+import 'package:craftquest_app/features/practice/data/practice_repository.dart';
 import 'package:craftquest_app/features/practice/presentation/practice_navigation.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_launch_options_card.dart';
 import 'package:craftquest_app/features/student/data/assignment_randomize_preference_store.dart';
@@ -31,6 +34,9 @@ class StudentAssignmentDetailPage extends StatefulWidget {
 class _StudentAssignmentDetailPageState extends State<StudentAssignmentDetailPage> {
   final _assignmentRandomizeStore = AssignmentRandomizePreferenceStore();
   bool _randomizeQuestions = false;
+  bool _starting = false;
+  late final Future<PracticeActiveSessionModel?> _activeSessionPrefetch =
+      _prefetchActiveSession();
 
   StudentAssignmentModel get assignment => widget.assignment;
 
@@ -55,6 +61,20 @@ class _StudentAssignmentDetailPageState extends State<StudentAssignmentDetailPag
       return;
     }
     setState(() => _randomizeQuestions = saved);
+  }
+
+  Future<PracticeActiveSessionModel?> _prefetchActiveSession() async {
+    if (!assignment.isOpen) {
+      return null;
+    }
+    try {
+      return await getIt<PracticeRepository>().getActiveSessionForQuiz(
+        assignment.quizId,
+        assignmentId: assignment.assignmentId,
+      );
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> _updateRandomizeQuestions(bool value) async {
@@ -83,19 +103,27 @@ class _StudentAssignmentDetailPageState extends State<StudentAssignmentDetailPag
       StudentAssignmentListLogic.statusLabel(l10n, assignment);
 
   Future<void> _start(BuildContext context) async {
-    if (!assignment.isOpen) return;
-    final shouldRefresh = await openPracticeSession(
-      context,
-      quizId: assignment.quizId,
-      quizTitle: assignment.title,
-      classId: assignment.classId,
-      assignmentId: assignment.assignmentId,
-      assignmentRandomizeQuestions: _effectiveRandomize,
-      allowStudentRandomizeQuestions: assignment.allowStudentRandomizeQuestions,
-      forfeitExitCountsAsAttempt: assignment.forfeitExitApplies,
-    );
-    if (shouldRefresh == true) {
-      widget.onChanged();
+    if (!assignment.isOpen || _starting) return;
+    setState(() => _starting = true);
+    try {
+      final shouldRefresh = await openPracticeSession(
+        context,
+        quizId: assignment.quizId,
+        quizTitle: assignment.title,
+        classId: assignment.classId,
+        assignmentId: assignment.assignmentId,
+        assignmentRandomizeQuestions: _effectiveRandomize,
+        allowStudentRandomizeQuestions: assignment.allowStudentRandomizeQuestions,
+        forfeitExitCountsAsAttempt: assignment.forfeitExitApplies,
+        activeSessionPrefetch: _activeSessionPrefetch,
+      );
+      if (shouldRefresh == true) {
+        widget.onChanged();
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _starting = false);
+      }
     }
   }
 
@@ -325,8 +353,17 @@ class _StudentAssignmentDetailPageState extends State<StudentAssignmentDetailPag
                     borderRadius: BorderRadius.circular(AppColors.radiusSm),
                   ),
                 ),
-                onPressed: () => _start(context),
-                icon: const Icon(Icons.play_arrow_rounded, size: 22),
+                onPressed: _starting ? null : () => _start(context),
+                icon: _starting
+                    ? SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.background.withValues(alpha: 0.9),
+                        ),
+                      )
+                    : const Icon(Icons.play_arrow_rounded, size: 22),
                 label: Text(
                   l10n.studentAssignmentStartAction,
                   style: const TextStyle(fontWeight: FontWeight.w700),

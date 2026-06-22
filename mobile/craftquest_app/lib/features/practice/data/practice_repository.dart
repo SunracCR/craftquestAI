@@ -30,6 +30,10 @@ class PracticeRepository {
         if (classId != null) 'classId': classId,
         if (assignmentId != null) 'assignmentId': assignmentId,
       },
+      options: const Options(
+        receiveTimeout: Duration(seconds: 90),
+        sendTimeout: Duration(seconds: 30),
+      ),
     );
     return PracticeSessionModel.fromJson(response.data!);
   }

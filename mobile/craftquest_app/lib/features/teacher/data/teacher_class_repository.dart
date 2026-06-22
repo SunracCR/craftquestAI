@@ -1,10 +1,16 @@
 import 'package:craftquest_app/core/network/api_client.dart';
 import 'package:craftquest_app/features/teacher/data/models/teacher_class_models.dart';
+import 'package:dio/dio.dart';
 
 class TeacherClassRepository {
   TeacherClassRepository(this._apiClient);
 
   final ApiClient _apiClient;
+
+  static const _listOptions = Options(
+    connectTimeout: Duration(seconds: 30),
+    receiveTimeout: Duration(seconds: 60),
+  );
 
   Future<List<TeacherClassSummaryModel>> listClasses({String? status}) async {
     final response = await _apiClient.dio.get<List<dynamic>>(
@@ -12,6 +18,7 @@ class TeacherClassRepository {
       queryParameters: {
         if (status != null) 'status': status,
       },
+      options: _listOptions,
     );
     return (response.data ?? [])
         .map((e) =>
@@ -31,8 +38,10 @@ class TeacherClassRepository {
   }
 
   Future<ClassDetailModel> getClassDetail(String classId) async {
-    final response = await _apiClient.dio
-        .get<Map<String, dynamic>>('/api/teacher/classes/$classId');
+    final response = await _apiClient.dio.get<Map<String, dynamic>>(
+      '/api/teacher/classes/$classId',
+      options: _listOptions,
+    );
     return ClassDetailModel.fromJson(response.data!);
   }
 

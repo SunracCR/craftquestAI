@@ -22,8 +22,8 @@ class ApiClient {
                   'API_BASE_URL',
                   defaultValue: 'https://localhost:7080',
                 ),
-            connectTimeout: const Duration(seconds: 15),
-            receiveTimeout: const Duration(seconds: 15),
+            connectTimeout: const Duration(seconds: 30),
+            receiveTimeout: const Duration(seconds: 45),
             headers: {'Content-Type': 'application/json'},
           ),
         ) {

@@ -1870,6 +1870,12 @@ abstract class AppLocalizations {
   /// **'Guardar y salir'**
   String get practiceSaveAndExitAction;
 
+  /// No description provided for @practicePreparingSession.
+  ///
+  /// In es, this message translates to:
+  /// **'Preparando tu intento…'**
+  String get practicePreparingSession;
+
   /// No description provided for @practiceInProgressChip.
   ///
   /// In es, this message translates to:

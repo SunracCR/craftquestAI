@@ -13,11 +13,13 @@ import 'package:craftquest_app/core/widgets/app_zoomable_network_image.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/features/practice/data/models/practice_models.dart';
 import 'package:craftquest_app/features/practice/data/practice_repository.dart';
+import 'package:craftquest_app/features/practice/data/practice_preferences_repository.dart';
 import 'package:craftquest_app/features/practice/domain/practice_launch_options.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_elapsed_timer.dart';
 import 'package:craftquest_app/features/practice/presentation/practice_result_page.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_question_nav_header.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_question_nav_status.dart';
+import 'package:craftquest_app/features/practice/presentation/widgets/practice_resume_dialog.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_session_bottom_bar.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
@@ -34,6 +36,7 @@ class PracticeSessionPage extends StatefulWidget {
     this.assignmentId,
     this.allowAssignmentRandomizeOverride = false,
     this.forfeitExitCountsAsAttempt = false,
+    this.activeSessionPrefetch,
   });
 
   final String quizId;
@@ -44,6 +47,7 @@ class PracticeSessionPage extends StatefulWidget {
   final String? assignmentId;
   final bool allowAssignmentRandomizeOverride;
   final bool forfeitExitCountsAsAttempt;
+  final Future<PracticeActiveSessionModel?>? activeSessionPrefetch;
 
   @override
   State<PracticeSessionPage> createState() => _PracticeSessionPageState();
@@ -53,6 +57,7 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
   final _repository = getIt<PracticeRepository>();
 
   PracticeSessionModel? _session;
+  PracticeLaunchOptions _launchOptions = PracticeLaunchOptions.defaults;
   final Map<String, String> _questionStatuses = {};
   final Map<String, Set<String>> _pendingSelections = {};
   int _currentIndex = 0;
@@ -60,6 +65,7 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
   bool _finishing = false;
   bool _savingProgress = false;
   String? _error;
+  String? _loadingMessage;
   bool _showTimer = false;
   Duration _elapsedBaseline = Duration.zero;
   final Stopwatch _stopwatch = Stopwatch();
@@ -70,11 +76,90 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
   @override
   void initState() {
     super.initState();
+    _launchOptions = widget.options;
     _showTimer = widget.options.showTimer;
     if (widget.resumeSessionId != null) {
       _resumeSession(widget.resumeSessionId!);
     } else {
-      _start();
+      _initializeSession();
+    }
+  }
+
+  Future<void> _initializeSession() async {
+    final l10n = AppLocalizations.of(context)!;
+    setState(() {
+      _loading = true;
+      _error = null;
+      _loadingMessage = l10n.practicePreparingSession;
+    });
+
+    try {
+      PracticeActiveSessionModel? active;
+      if (widget.activeSessionPrefetch != null) {
+        active = await widget.activeSessionPrefetch;
+      } else {
+        active = await _repository.getActiveSessionForQuiz(
+          widget.quizId,
+          assignmentId: widget.assignmentId,
+        );
+      }
+
+      if (!mounted) {
+        return;
+      }
+
+      if (active != null) {
+        final choice = await showPracticeResumeDialog(
+          context,
+          summary: active,
+        );
+        if (!mounted || choice == null || choice == PracticeResumeChoice.cancel) {
+          Navigator.of(context).pop();
+          return;
+        }
+        if (choice == PracticeResumeChoice.resume) {
+          await _resumeSession(active.practiceSessionId);
+          return;
+        }
+        await _repository.abandonSession(active.practiceSessionId);
+      }
+
+      if (widget.assignmentId == null) {
+        try {
+          final preferencesRepository = getIt<PracticePreferencesRepository>();
+          _launchOptions =
+              await preferencesRepository.loadLaunchOptions(widget.quizId);
+        } catch (_) {
+          _launchOptions = widget.options;
+        }
+      } else {
+        _launchOptions = widget.options;
+      }
+
+      if (!mounted) {
+        return;
+      }
+
+      _showTimer = _launchOptions.showTimer;
+      await _start();
+    } on DioException catch (e) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _error = DioErrorMapper.map(e);
+        _loading = false;
+        _loadingMessage = null;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _error = DioErrorMapper.genericMessage();
+        _loading = false;
+        _loadingMessage = null;
+      });
     }
   }
 
@@ -132,9 +217,11 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
   }
 
   Future<void> _resumeSession(String sessionId) async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() {
       _loading = true;
       _error = null;
+      _loadingMessage = l10n.practicePreparingSession;
     });
     try {
       final session = await _repository.getSession(sessionId);
@@ -142,6 +229,7 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
       setState(() {
         _applySession(session);
         _loading = false;
+        _loadingMessage = null;
       });
       _beginElapsedTimer();
     } on DioException catch (e) {
@@ -149,12 +237,14 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
       setState(() {
         _error = DioErrorMapper.map(e);
         _loading = false;
+        _loadingMessage = null;
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _error = DioErrorMapper.genericMessage();
         _loading = false;
+        _loadingMessage = null;
       });
     }
   }
@@ -267,19 +357,21 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
   }
 
   Future<void> _start() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() {
       _loading = true;
       _error = null;
+      _loadingMessage = l10n.practicePreparingSession;
     });
     try {
       final session = await _repository.startSession(
         quizId: widget.quizId,
         randomizeQuestions: widget.assignmentId != null
             ? (widget.allowAssignmentRandomizeOverride
-                ? widget.options.randomizeQuestions
+                ? _launchOptions.randomizeQuestions
                 : null)
-            : widget.options.randomizeQuestions,
-        showElapsedTimer: widget.options.showTimer,
+            : _launchOptions.randomizeQuestions,
+        showElapsedTimer: _launchOptions.showTimer,
         classId: widget.classId,
         assignmentId: widget.assignmentId,
       );
@@ -287,6 +379,7 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
       setState(() {
         _applySession(session);
         _loading = false;
+        _loadingMessage = null;
       });
       _beginElapsedTimer();
     } on DioException catch (e) {
@@ -294,12 +387,14 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
       setState(() {
         _error = DioErrorMapper.map(e);
         _loading = false;
+        _loadingMessage = null;
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _error = DioErrorMapper.genericMessage();
         _loading = false;
+        _loadingMessage = null;
       });
     }
   }
@@ -560,12 +655,14 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
       ),
       bottomBar: _buildBottomBar(l10n),
       body: _loading
-          ? const AppLoadingView()
+          ? AppLoadingView(message: _loadingMessage)
           : _error != null
               ? AppErrorView(
                   message: _error!,
                   retryLabel: l10n.retry,
-                  onRetry: _start,
+                  onRetry: widget.resumeSessionId != null
+                      ? () => _resumeSession(widget.resumeSessionId!)
+                      : _initializeSession,
                 )
               : session == null || question == null
                   ? AppEmptyView(message: l10n.practiceNoQuestions)

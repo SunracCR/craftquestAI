@@ -39,19 +39,12 @@ public class PracticeService(
         Assignment? assignment = null;
         if (request.AssignmentId.HasValue)
         {
-            await ValidateAssignmentPracticeWindowAsync(
+            assignment = await LoadValidatedAssignmentForPracticeAsync(
                 studentUserId,
                 request.AssignmentId.Value,
                 request.QuizId,
                 request.ClientUtcOffsetMinutes,
                 cancellationToken);
-
-            assignment = await dbContext.Assignments
-                .AsNoTracking()
-                .FirstOrDefaultAsync(
-                    a => a.AssignmentId == request.AssignmentId.Value,
-                    cancellationToken)
-                ?? throw new AppException("Assignment not found.", 404);
         }
         else
         {
@@ -72,8 +65,6 @@ public class PracticeService(
             .Include(q => q.QuestionType)
             .Include(q => q.AnswerOptions.Where(o => o.IsActive))
             .Include(q => q.CorrectAnswerOptions)
-            .Include(q => q.Justification!)
-                .ThenInclude(j => j.Sources)
             .Where(q => q.QuizId == request.QuizId)
             .OrderBy(q => q.SortOrder)
             .ToListAsync(cancellationToken);
@@ -82,6 +73,13 @@ public class PracticeService(
         {
             throw new AppException("Quiz has no questions.", 400);
         }
+
+        var questionIds = questions.Select(q => q.QuestionId).ToList();
+        var justificationsByQuestionId = await dbContext.QuestionJustifications
+            .AsNoTracking()
+            .Include(j => j.Sources)
+            .Where(j => questionIds.Contains(j.QuestionId))
+            .ToDictionaryAsync(j => j.QuestionId, cancellationToken);
 
         var randomizeQuestions = PracticeSessionOrdering.ResolveRandomizeQuestions(
             request.AssignmentId.HasValue,
@@ -110,91 +108,101 @@ public class PracticeService(
 
         const string questionImageKey = "QUESTION_IMAGE";
 
-        var displayOrder = 0;
-        foreach (var question in questionList)
+        var autoDetectChanges = dbContext.ChangeTracker.AutoDetectChangesEnabled;
+        dbContext.ChangeTracker.AutoDetectChangesEnabled = false;
+        try
         {
-            displayOrder++;
-            var snapshotId = Guid.NewGuid();
-            var seed = Guid.NewGuid().ToString("N");
-
-            var allOptions = question.AnswerOptions.Where(o => o.IsActive).ToList();
-            var stemOption = allOptions.FirstOrDefault(o =>
-                string.Equals(o.StableKey, questionImageKey, StringComparison.OrdinalIgnoreCase));
-            var selectableOptions = allOptions
-                .Where(o => !string.Equals(o.StableKey, questionImageKey, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-
-            var correctIds = question.CorrectAnswerOptions
-                .Select(c => c.AnswerOptionId)
-                .ToHashSet();
-
-            var orderedOptions = question.RandomizeAnswerOptions
-                ? PracticeSessionOrdering.ShuffleAnswerOptions(selectableOptions, seed)
-                : selectableOptions.OrderBy(o => o.DefaultSortOrder).ToList();
-
-            var labels = AnswerGradingService.BuildDisplayLabels(orderedOptions.Count);
-            var answerSnapshots = new List<PracticeAnswerOptionSnapshot>();
-
-            if (stemOption is not null)
+            var displayOrder = 0;
+            foreach (var question in questionList)
             {
-                answerSnapshots.Add(new PracticeAnswerOptionSnapshot
+                displayOrder++;
+                var snapshotId = Guid.NewGuid();
+                var seed = Guid.NewGuid().ToString("N");
+
+                var allOptions = question.AnswerOptions.Where(o => o.IsActive).ToList();
+                var stemOption = allOptions.FirstOrDefault(o =>
+                    string.Equals(o.StableKey, questionImageKey, StringComparison.OrdinalIgnoreCase));
+                var selectableOptions = allOptions
+                    .Where(o => !string.Equals(o.StableKey, questionImageKey, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                var correctIds = question.CorrectAnswerOptions
+                    .Select(c => c.AnswerOptionId)
+                    .ToHashSet();
+
+                var orderedOptions = question.RandomizeAnswerOptions
+                    ? PracticeSessionOrdering.ShuffleAnswerOptions(selectableOptions, seed)
+                    : selectableOptions.OrderBy(o => o.DefaultSortOrder).ToList();
+
+                var labels = AnswerGradingService.BuildDisplayLabels(orderedOptions.Count);
+                var answerSnapshots = new List<PracticeAnswerOptionSnapshot>();
+
+                if (stemOption is not null)
                 {
-                    PracticeAnswerOptionSnapshotId = Guid.NewGuid(),
+                    answerSnapshots.Add(new PracticeAnswerOptionSnapshot
+                    {
+                        PracticeAnswerOptionSnapshotId = Guid.NewGuid(),
+                        PracticeQuestionSnapshotId = snapshotId,
+                        AnswerOptionId = stemOption.AnswerOptionId,
+                        StableKeySnapshot = stemOption.StableKey,
+                        DisplayOrder = 0,
+                        DisplayLabel = string.Empty,
+                        AnswerTextSnapshot = stemOption.AnswerText,
+                        MediaAssetIdSnapshot = stemOption.MediaAssetId,
+                        IsCorrectSnapshot = false,
+                        WasSelected = false,
+                        CreatedAt = DateTime.UtcNow,
+                    });
+                }
+
+                for (var i = 0; i < orderedOptions.Count; i++)
+                {
+                    var option = orderedOptions[i];
+                    answerSnapshots.Add(new PracticeAnswerOptionSnapshot
+                    {
+                        PracticeAnswerOptionSnapshotId = Guid.NewGuid(),
+                        PracticeQuestionSnapshotId = snapshotId,
+                        AnswerOptionId = option.AnswerOptionId,
+                        StableKeySnapshot = option.StableKey,
+                        DisplayOrder = i + 1,
+                        DisplayLabel = labels[i],
+                        AnswerTextSnapshot = option.AnswerText,
+                        MediaAssetIdSnapshot = option.MediaAssetId,
+                        IsCorrectSnapshot = correctIds.Contains(option.AnswerOptionId),
+                        WasSelected = false,
+                        CreatedAt = DateTime.UtcNow,
+                    });
+                }
+
+                justificationsByQuestionId.TryGetValue(question.QuestionId, out var justification);
+                var (justificationText, justificationSourcesJson) =
+                    QuestionJustificationMapper.BuildPracticeSnapshot(justification);
+
+                session.QuestionSnapshots.Add(new PracticeQuestionSnapshot
+                {
                     PracticeQuestionSnapshotId = snapshotId,
-                    AnswerOptionId = stemOption.AnswerOptionId,
-                    StableKeySnapshot = stemOption.StableKey,
-                    DisplayOrder = 0,
-                    DisplayLabel = string.Empty,
-                    AnswerTextSnapshot = stemOption.AnswerText,
-                    MediaAssetIdSnapshot = stemOption.MediaAssetId,
-                    IsCorrectSnapshot = false,
-                    WasSelected = false,
+                    PracticeSessionId = sessionId,
+                    QuestionId = question.QuestionId,
+                    QuestionTypeCodeSnapshot = question.QuestionType.Code,
+                    QuestionTextSnapshot = question.QuestionText,
+                    PointsPossible = question.Points,
+                    DisplayOrder = displayOrder,
+                    AnswerStatus = "unanswered",
+                    RandomizationSeed = seed,
+                    JustificationTextSnapshot = justificationText,
+                    JustificationSourcesSnapshot = justificationSourcesJson,
                     CreatedAt = DateTime.UtcNow,
+                    AnswerOptionSnapshots = answerSnapshots,
                 });
             }
 
-            for (var i = 0; i < orderedOptions.Count; i++)
-            {
-                var option = orderedOptions[i];
-                answerSnapshots.Add(new PracticeAnswerOptionSnapshot
-                {
-                    PracticeAnswerOptionSnapshotId = Guid.NewGuid(),
-                    PracticeQuestionSnapshotId = snapshotId,
-                    AnswerOptionId = option.AnswerOptionId,
-                    StableKeySnapshot = option.StableKey,
-                    DisplayOrder = i + 1,
-                    DisplayLabel = labels[i],
-                    AnswerTextSnapshot = option.AnswerText,
-                    MediaAssetIdSnapshot = option.MediaAssetId,
-                    IsCorrectSnapshot = correctIds.Contains(option.AnswerOptionId),
-                    WasSelected = false,
-                    CreatedAt = DateTime.UtcNow,
-                });
-            }
-
-            var (justificationText, justificationSourcesJson) =
-                QuestionJustificationMapper.BuildPracticeSnapshot(question.Justification);
-
-            session.QuestionSnapshots.Add(new PracticeQuestionSnapshot
-            {
-                PracticeQuestionSnapshotId = snapshotId,
-                PracticeSessionId = sessionId,
-                QuestionId = question.QuestionId,
-                QuestionTypeCodeSnapshot = question.QuestionType.Code,
-                QuestionTextSnapshot = question.QuestionText,
-                PointsPossible = question.Points,
-                DisplayOrder = displayOrder,
-                AnswerStatus = "unanswered",
-                RandomizationSeed = seed,
-                JustificationTextSnapshot = justificationText,
-                JustificationSourcesSnapshot = justificationSourcesJson,
-                CreatedAt = DateTime.UtcNow,
-                AnswerOptionSnapshots = answerSnapshots,
-            });
+            dbContext.PracticeSessions.Add(session);
+            await dbContext.SaveChangesAsync(cancellationToken);
         }
-
-        dbContext.PracticeSessions.Add(session);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        finally
+        {
+            dbContext.ChangeTracker.AutoDetectChangesEnabled = autoDetectChanges;
+        }
 
         return MapSession(session);
     }
@@ -439,11 +447,21 @@ public class PracticeService(
         Guid? assignmentId = null,
         CancellationToken cancellationToken = default)
     {
-        await ExpireStaleInProgressSessionsAsync(studentUserId, cancellationToken);
+        var cutoff = DateTime.UtcNow.AddDays(-InProgressExpiryDays);
+        var now = DateTime.UtcNow;
+        await dbContext.PracticeSessions
+            .Where(s =>
+                s.StudentUserId == studentUserId
+                && s.Status == "in_progress"
+                && (s.LastActivityAt ?? s.StartedAt) < cutoff)
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(s => s.Status, "expired")
+                    .SetProperty(s => s.FinishedAt, now),
+                cancellationToken);
 
         var query = dbContext.PracticeSessions
             .AsNoTracking()
-            .Include(s => s.QuestionSnapshots)
             .Where(s =>
                 s.StudentUserId == studentUserId
                 && s.QuizId == quizId
@@ -453,11 +471,20 @@ public class PracticeService(
             ? query.Where(s => s.AssignmentId == assignmentId)
             : query.Where(s => s.AssignmentId == null);
 
-        var session = await query
+        return await query
             .OrderByDescending(s => s.LastActivityAt ?? s.StartedAt)
+            .Select(s => new PracticeActiveSessionSummaryDto
+            {
+                PracticeSessionId = s.PracticeSessionId,
+                QuizId = s.QuizId,
+                StartedAt = s.StartedAt,
+                PausedAt = s.PausedAt,
+                LastActivityAt = s.LastActivityAt ?? s.StartedAt,
+                CurrentQuestionIndex = s.CurrentQuestionIndex ?? 0,
+                TotalQuestions = s.QuestionSnapshots.Count,
+                AnsweredCount = s.QuestionSnapshots.Count(q => q.AnswerStatus == "answered"),
+            })
             .FirstOrDefaultAsync(cancellationToken);
-
-        return session is null ? null : MapSummary(session);
     }
 
     public async Task<IReadOnlyList<PracticeActiveSessionSummaryDto>> GetInProgressSessionsAsync(
@@ -624,52 +651,6 @@ public class PracticeService(
         session.CorrectAnswers = correct;
         session.IncorrectAnswers = incorrect;
         session.OmittedAnswers = omitted;
-    }
-
-    private async Task ExpireStaleInProgressSessionsAsync(
-        Guid studentUserId,
-        CancellationToken cancellationToken)
-    {
-        var cutoff = DateTime.UtcNow.AddDays(-InProgressExpiryDays);
-        var stale = await dbContext.PracticeSessions
-            .Where(s =>
-                s.StudentUserId == studentUserId
-                && s.Status == "in_progress"
-                && (s.LastActivityAt ?? s.StartedAt) < cutoff)
-            .ToListAsync(cancellationToken);
-
-        if (stale.Count == 0)
-        {
-            return;
-        }
-
-        var now = DateTime.UtcNow;
-        foreach (var session in stale)
-        {
-            session.Status = "expired";
-            session.FinishedAt = now;
-        }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-    }
-
-    private static PracticeActiveSessionSummaryDto MapSummary(PracticeSession session)
-    {
-        var total = session.QuestionSnapshots.Count;
-        var answered = session.QuestionSnapshots.Count(q => q.AnswerStatus == "answered");
-        var resumeIndex = ResolveResumeQuestionIndex(session);
-
-        return new PracticeActiveSessionSummaryDto
-        {
-            PracticeSessionId = session.PracticeSessionId,
-            QuizId = session.QuizId,
-            StartedAt = session.StartedAt,
-            PausedAt = session.PausedAt,
-            LastActivityAt = session.LastActivityAt ?? session.StartedAt,
-            CurrentQuestionIndex = resumeIndex,
-            AnsweredCount = answered,
-            TotalQuestions = total,
-        };
     }
 
     private static int ResolveResumeQuestionIndex(PracticeSession session)
@@ -928,7 +909,7 @@ public class PracticeService(
         await EnsureSharedQuizPracticeAccessAsync(userId, session.QuizId, cancellationToken);
     }
 
-    private async Task ValidateAssignmentPracticeWindowAsync(
+    private async Task<Assignment> LoadValidatedAssignmentForPracticeAsync(
         Guid studentUserId,
         Guid assignmentId,
         Guid quizId,
@@ -996,5 +977,7 @@ public class PracticeService(
                     errorCode: "ASSIGNMENT_MAX_ATTEMPTS");
             }
         }
+
+        return assignment;
     }
 }

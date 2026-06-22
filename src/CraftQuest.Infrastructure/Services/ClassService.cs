@@ -4,6 +4,7 @@ using CraftQuest.Application.Models.Teacher;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.Services.Quizzes;
+using CraftQuest.Infrastructure.Services.Teacher;
 using Microsoft.EntityFrameworkCore;
 
 namespace CraftQuest.Infrastructure.Services;
@@ -39,9 +40,21 @@ public class ClassService(
                 c.Status,
                 ActiveMemberCount = c.Members.Count(m => m.Status == "active"),
                 PendingMemberCount = c.Members.Count(m => m.Status == "pending"),
-                AssignmentCount = dbContext.Assignments.Count(a => a.ClassId == c.ClassId && a.Status != "archived"),
             })
             .ToListAsync(cancellationToken);
+
+        if (classes.Count == 0)
+        {
+            return [];
+        }
+
+        var classIds = classes.Select(c => c.ClassId).ToList();
+        var assignmentCounts = await dbContext.Assignments
+            .AsNoTracking()
+            .Where(a => classIds.Contains(a.ClassId) && a.Status != "archived")
+            .GroupBy(a => a.ClassId)
+            .Select(g => new { ClassId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.ClassId, x => x.Count, cancellationToken);
 
         return classes
             .Select(c => new TeacherClassSummaryDto
@@ -52,7 +65,7 @@ public class ClassService(
                 Status = c.Status,
                 ActiveMemberCount = c.ActiveMemberCount,
                 PendingMemberCount = c.PendingMemberCount,
-                AssignmentCount = c.AssignmentCount,
+                AssignmentCount = assignmentCounts.GetValueOrDefault(c.ClassId),
             })
             .ToList();
     }
@@ -185,17 +198,15 @@ public class ClassService(
 
         var memberCount = entity.Members.Count(m => m.Status == "active");
 
+        var completedByAssignment = await AssignmentCompletionLookup.LoadUniqueCompletedCountsAsync(
+            dbContext,
+            assignments.Select(a => a.AssignmentId),
+            cancellationToken);
+
         var assignmentSummaries = new List<AssignmentSummaryDto>(assignments.Count);
         foreach (var a in assignments)
         {
-            var completed = await dbContext.PracticeSessions
-                .AsNoTracking()
-                .Where(ps => ps.AssignmentId == a.AssignmentId
-                    && ps.Status == "finished"
-                    && ps.StudentUserId != null)
-                .Select(ps => ps.StudentUserId!.Value)
-                .Distinct()
-                .CountAsync(cancellationToken);
+            completedByAssignment.TryGetValue(a.AssignmentId, out var completed);
 
             assignmentSummaries.Add(new AssignmentSummaryDto
             {

@@ -1043,6 +1043,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get practiceSaveAndExitAction => 'Save and exit';
 
   @override
+  String get practicePreparingSession => 'Preparing your attempt…';
+
+  @override
   String get practiceInProgressChip => 'Practice in progress';
 
   @override

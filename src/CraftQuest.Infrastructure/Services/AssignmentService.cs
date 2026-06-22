@@ -7,6 +7,7 @@ using CraftQuest.Application.Services;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.Services.Quizzes;
+using CraftQuest.Infrastructure.Services.Teacher;
 using Microsoft.EntityFrameworkCore;
 
 namespace CraftQuest.Infrastructure.Services;
@@ -112,10 +113,15 @@ public class AssignmentService(
             assignments.Select(a => a.QuizId),
             cancellationToken);
 
+        var completedByAssignment = await AssignmentCompletionLookup.LoadUniqueCompletedCountsAsync(
+            dbContext,
+            assignments.Select(a => a.AssignmentId),
+            cancellationToken);
+
         var result = new List<AssignmentSummaryDto>(assignments.Count);
         foreach (var a in assignments)
         {
-            var completed = await CountUniqueStudentsCompletedAsync(a.AssignmentId, cancellationToken);
+            completedByAssignment.TryGetValue(a.AssignmentId, out var completed);
 
             result.Add(new AssignmentSummaryDto
             {
@@ -485,18 +491,6 @@ public class AssignmentService(
 
         return assignment;
     }
-
-    private async Task<int> CountUniqueStudentsCompletedAsync(
-        Guid assignmentId,
-        CancellationToken cancellationToken) =>
-        await dbContext.PracticeSessions
-            .AsNoTracking()
-            .Where(ps => ps.AssignmentId == assignmentId
-                && ps.Status == "finished"
-                && ps.StudentUserId != null)
-            .Select(ps => ps.StudentUserId!.Value)
-            .Distinct()
-            .CountAsync(cancellationToken);
 
     private static List<AssignmentStudentProgressDto> BuildStudentProgress(
         IReadOnlyList<ClassMember> members,

@@ -1049,6 +1049,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get practiceSaveAndExitAction => 'Salvar e sair';
 
   @override
+  String get practicePreparingSession => 'Preparando sua tentativa…';
+
+  @override
   String get practiceInProgressChip => 'Pratica em andamento';
 
   @override

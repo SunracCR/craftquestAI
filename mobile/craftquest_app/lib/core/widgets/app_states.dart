@@ -5,12 +5,32 @@ import 'package:flutter/material.dart';
 
 /// Indicador de carga centrado (solo presentación).
 class AppLoadingView extends StatelessWidget {
-  const AppLoadingView({super.key});
+  const AppLoadingView({super.key, this.message});
+
+  final String? message;
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: CircularProgressIndicator(),
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(),
+          if (message != null && message!.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: Text(
+                message!,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
