@@ -19,6 +19,7 @@ import 'package:craftquest_app/features/practice/data/models/practice_models.dar
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_elapsed_timer.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_question_nav_header.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_question_nav_status.dart';
+import 'package:craftquest_app/features/practice/presentation/widgets/practice_resume_dialog.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_session_bottom_bar.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
@@ -32,7 +33,7 @@ class GuestPracticeSessionPage extends StatefulWidget {
     required this.quizTitle,
     this.randomizeQuestions,
     this.showElapsedTimer = false,
-    this.resumeSessionId,
+    this.activeSessionPrefetch,
   });
 
   final String visitId;
@@ -40,7 +41,7 @@ class GuestPracticeSessionPage extends StatefulWidget {
   final String quizTitle;
   final bool? randomizeQuestions;
   final bool showElapsedTimer;
-  final String? resumeSessionId;
+  final Future<PracticeActiveSessionModel?>? activeSessionPrefetch;
 
   @override
   State<GuestPracticeSessionPage> createState() =>
@@ -55,32 +56,102 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
   final Map<String, Set<String>> _pendingSelections = {};
   int _currentIndex = 0;
   bool _loading = true;
-  bool _submittingAnswer = false;
   bool _finishing = false;
   bool _savingProgress = false;
   String? _error;
+  String? _loadingMessage;
   bool _showTimer = false;
   Duration _elapsedBaseline = Duration.zero;
   final Stopwatch _stopwatch = Stopwatch();
   Timer? _elapsedTicker;
+  final Map<String, Timer> _persistDebounceTimers = {};
+  final Map<String, Future<void>> _persistInFlight = {};
 
   @override
   void initState() {
     super.initState();
     _repository = getIt<GuestRepository>();
     _showTimer = widget.showElapsedTimer;
-
-    if (widget.resumeSessionId != null) {
-      _resumeSession(widget.resumeSessionId!);
-    } else {
-      _start();
-    }
+    _initializeSession();
   }
 
   @override
   void dispose() {
     _elapsedTicker?.cancel();
+    for (final timer in _persistDebounceTimers.values) {
+      timer.cancel();
+    }
     super.dispose();
+  }
+
+  Future<void> _awaitPendingPersists() async {
+    for (final timer in _persistDebounceTimers.values) {
+      timer.cancel();
+    }
+    _persistDebounceTimers.clear();
+    if (_persistInFlight.isNotEmpty) {
+      await Future.wait(_persistInFlight.values);
+    }
+  }
+
+  Future<void> _initializeSession() async {
+    final l10n = AppLocalizations.of(context)!;
+    setState(() {
+      _loading = true;
+      _error = null;
+      _loadingMessage = l10n.practicePreparingSession;
+    });
+
+    try {
+      PracticeActiveSessionModel? active;
+      if (widget.activeSessionPrefetch != null) {
+        active = await widget.activeSessionPrefetch;
+      } else {
+        active = await _repository.getActiveSession(
+          visitId: widget.visitId,
+          token: widget.token,
+        );
+      }
+
+      if (!mounted) return;
+
+      if (active != null) {
+        final choice = await showPracticeResumeDialog(
+          context,
+          summary: active,
+        );
+        if (!mounted || choice == null || choice == PracticeResumeChoice.cancel) {
+          Navigator.of(context).pop();
+          return;
+        }
+        if (choice == PracticeResumeChoice.resume) {
+          await _resumeSession(active.practiceSessionId);
+          return;
+        }
+        await _repository.abandonSession(
+          visitId: widget.visitId,
+          token: widget.token,
+          sessionId: active.practiceSessionId,
+        );
+      }
+
+      if (!mounted) return;
+      await _start();
+    } on DioException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = DioErrorMapper.map(e);
+        _loading = false;
+        _loadingMessage = null;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _error = DioErrorMapper.genericMessage();
+        _loading = false;
+        _loadingMessage = null;
+      });
+    }
   }
 
   Duration get _totalElapsed => _elapsedBaseline + _stopwatch.elapsed;
@@ -118,9 +189,11 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
   }
 
   Future<void> _start() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() {
       _loading = true;
       _error = null;
+      _loadingMessage = l10n.practicePreparingSession;
     });
     try {
       final session = await _repository.startPractice(
@@ -133,6 +206,7 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
       setState(() {
         _applySession(session);
         _loading = false;
+        _loadingMessage = null;
       });
       _beginElapsedTimer();
     } on DioException catch (e) {
@@ -140,20 +214,24 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
       setState(() {
         _error = DioErrorMapper.map(e);
         _loading = false;
+        _loadingMessage = null;
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _error = DioErrorMapper.genericMessage();
         _loading = false;
+        _loadingMessage = null;
       });
     }
   }
 
   Future<void> _resumeSession(String sessionId) async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() {
       _loading = true;
       _error = null;
+      _loadingMessage = l10n.practicePreparingSession;
     });
     try {
       final session = await _repository.getSession(
@@ -165,6 +243,7 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
       setState(() {
         _applySession(session);
         _loading = false;
+        _loadingMessage = null;
       });
       _beginElapsedTimer();
     } on DioException catch (e) {
@@ -172,12 +251,14 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
       setState(() {
         _error = DioErrorMapper.map(e);
         _loading = false;
+        _loadingMessage = null;
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _error = DioErrorMapper.genericMessage();
         _loading = false;
+        _loadingMessage = null;
       });
     }
   }
@@ -185,6 +266,7 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
   Future<void> _saveProgress() async {
     final session = _session;
     if (session == null || _savingProgress) return;
+    await _awaitPendingPersists();
     setState(() => _savingProgress = true);
     try {
       await _repository.updateProgress(
@@ -226,8 +308,12 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
   String _statusFor(PracticeQuestionModel question) =>
       _questionStatuses[question.practiceQuestionSnapshotId] ?? 'unanswered';
 
-  bool _isQuestionDone(PracticeQuestionModel question) =>
-      _statusFor(question) == 'answered';
+  bool _isQuestionDone(PracticeQuestionModel question) {
+    if (_statusFor(question) == 'answered') {
+      return true;
+    }
+    return _selectionFor(question).isNotEmpty;
+  }
 
   int get _completedCount {
     final session = _session;
@@ -250,7 +336,7 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
 
   List<PracticeQuestionNavStatus> _navStatuses() {
     return _session!.questions.map((q) {
-      return _statusFor(q) == 'answered'
+      return _isQuestionDone(q)
           ? PracticeQuestionNavStatus.answered
           : PracticeQuestionNavStatus.pending;
     }).toList();
@@ -263,47 +349,69 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
     final questionId = question.practiceQuestionSnapshotId;
     final selected = _selectionFor(question).toList();
     if (selected.isEmpty) {
-      if (_isQuestionDone(question)) {
+      if (_statusFor(question) == 'answered') {
         setState(() => _questionStatuses[questionId] = 'unanswered');
       }
       return;
     }
 
-    if (!_submittingAnswer && mounted) {
-      setState(() => _submittingAnswer = true);
+    final future = _repository.submitAnswer(
+      visitId: widget.visitId,
+      token: widget.token,
+      sessionId: session.practiceSessionId,
+      snapshotId: questionId,
+      selectedAnswerOptionIds: selected,
+    ).then((_) async {
+      if (!mounted) return;
+      setState(() => _questionStatuses[questionId] = 'answered');
+    }).catchError((Object error) {
+      if (!mounted) return;
+      if (error is DioException) {
+        context.showDioErrorSnackBar(error);
+      }
+      setState(() {
+        _questionStatuses.remove(questionId);
+      });
+    }).whenComplete(() {
+      _persistInFlight.remove(questionId);
+    });
+
+    _persistInFlight[questionId] = future;
+  }
+
+  void _schedulePersistSelection(PracticeQuestionModel question) {
+    final questionId = question.practiceQuestionSnapshotId;
+    if (_isSingleSelect(question.questionType)) {
+      unawaited(_persistSelection(question));
+      return;
     }
 
-    try {
-      await _repository.submitAnswer(
-        visitId: widget.visitId,
-        token: widget.token,
-        sessionId: session.practiceSessionId,
-        snapshotId: questionId,
-        selectedAnswerOptionIds: selected,
-      );
-      if (!mounted) return;
-      setState(() {
-        _questionStatuses[questionId] = 'answered';
-        _submittingAnswer = false;
-      });
-    } on DioException catch (e) {
-      if (!mounted) return;
-      setState(() => _submittingAnswer = false);
-      context.showDioErrorSnackBar(e);
-    }
+    _persistDebounceTimers[questionId]?.cancel();
+    _persistDebounceTimers[questionId] = Timer(
+      const Duration(milliseconds: 450),
+      () {
+        _persistDebounceTimers.remove(questionId);
+        if (mounted) {
+          unawaited(_persistSelection(question));
+        }
+      },
+    );
   }
 
   void _toggleSingleOption(PracticeQuestionModel question, String optionId) {
+    final questionId = question.practiceQuestionSnapshotId;
     setState(() {
       _selectionFor(question)
         ..clear()
         ..add(optionId);
+      _questionStatuses[questionId] = 'answered';
     });
-    _persistSelection(question);
+    _schedulePersistSelection(question);
   }
 
   void _toggleMultiOption(
       PracticeQuestionModel question, String optionId, bool wasSelected) {
+    final questionId = question.practiceQuestionSnapshotId;
     setState(() {
       final set = _selectionFor(question);
       if (wasSelected) {
@@ -311,8 +419,13 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
       } else {
         set.add(optionId);
       }
+      if (set.isEmpty) {
+        _questionStatuses.remove(questionId);
+      } else {
+        _questionStatuses[questionId] = 'answered';
+      }
     });
-    _persistSelection(question);
+    _schedulePersistSelection(question);
   }
 
   Future<void> _finish() async {
@@ -321,6 +434,7 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
 
     setState(() => _finishing = true);
     try {
+      await _awaitPendingPersists();
       _stopElapsedTimer();
       final result = await _repository.finishSession(
         visitId: widget.visitId,
@@ -392,7 +506,7 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
     final session = _session;
     if (session == null || session.questions.isEmpty) return null;
 
-    final isBusy = _submittingAnswer || _finishing;
+    final isBusy = _finishing;
 
     return PracticeSessionBottomBar(
       canGoBack: _currentIndex > 0,
@@ -426,6 +540,7 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
         final should = await _confirmExit(context, l10n);
         if (should && mounted) {
           _stopElapsedTimer();
+          await _awaitPendingPersists();
           await _saveProgress();
           if (mounted) Navigator.of(context).pop();
         }
@@ -452,12 +567,12 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
         ),
         bottomBar: _buildBottomBar(l10n),
         body: _loading
-            ? const AppLoadingView()
+            ? AppLoadingView(message: _loadingMessage)
             : _error != null
                 ? AppErrorView(
                     message: _error!,
                     retryLabel: l10n.retry,
-                    onRetry: _start,
+                    onRetry: _initializeSession,
                   )
                 : session == null || question == null
                     ? AppEmptyView(message: l10n.practiceNoQuestions)
@@ -519,10 +634,8 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
                                     ),
                                   ],
                                   const SizedBox(height: AppSpacing.lg),
-                                  IgnorePointer(
-                                    ignoring: _submittingAnswer || _finishing,
-                                    child: Column(
-                                      children: question.answers.map((option) {
+                                  Column(
+                                    children: question.answers.map((option) {
                                         final selected =
                                             _selectionFor(question).contains(
                                                 option.answerOptionId);
@@ -554,7 +667,6 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
                                               selected),
                                         );
                                       }).toList(),
-                                    ),
                                   ),
                                   const SizedBox(height: AppSpacing.md),
                                 ],

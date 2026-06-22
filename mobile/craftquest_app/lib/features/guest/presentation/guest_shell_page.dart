@@ -13,6 +13,7 @@ import 'package:craftquest_app/features/guest/data/guest_models.dart';
 import 'package:craftquest_app/features/guest/data/guest_repository.dart';
 import 'package:craftquest_app/features/guest/presentation/guest_practice_navigation.dart';
 import 'package:craftquest_app/features/guest/presentation/guest_session_navigation.dart';
+import 'package:craftquest_app/features/practice/data/models/practice_models.dart';
 import 'package:craftquest_app/features/teacher/presentation/teacher_session_review_page.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -32,7 +33,10 @@ class _GuestShellPageState extends State<GuestShellPage>
   late GuestVisitModel _visit;
   List<GuestAttemptModel> _attempts = [];
   bool _loadingAttempts = false;
+  bool _startingPractice = false;
   bool _randomize = false;
+  late final Future<PracticeActiveSessionModel?> _activeSessionPrefetch =
+      _prefetchActiveSession();
 
   static const _heroGradient = LinearGradient(
     begin: Alignment.topLeft,
@@ -91,16 +95,34 @@ class _GuestShellPageState extends State<GuestShellPage>
     }
   }
 
+  Future<PracticeActiveSessionModel?> _prefetchActiveSession() async {
+    try {
+      return await getIt<GuestRepository>().getActiveSession(
+        visitId: _visit.guestVisitId,
+        token: _visit.token,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> _startPractice(BuildContext context) async {
-    await openGuestPracticeSession(
-      context,
-      visitId: _visit.guestVisitId,
-      token: _visit.token,
-      quizTitle: _visit.quizTitle,
-      randomizeQuestions: _randomize ? true : null,
-      showElapsedTimer: false,
-    );
-    if (mounted) _loadAttempts();
+    if (_startingPractice) return;
+    setState(() => _startingPractice = true);
+    try {
+      await openGuestPracticeSession(
+        context,
+        visitId: _visit.guestVisitId,
+        token: _visit.token,
+        quizTitle: _visit.quizTitle,
+        randomizeQuestions: _randomize ? true : null,
+        showElapsedTimer: false,
+        activeSessionPrefetch: _activeSessionPrefetch,
+      );
+      if (mounted) await _loadAttempts();
+    } finally {
+      if (mounted) setState(() => _startingPractice = false);
+    }
   }
 
   Future<void> _openReview(
@@ -170,7 +192,8 @@ class _GuestShellPageState extends State<GuestShellPage>
             AppGradientPrimaryButton(
               label: l10n.guestStartPracticeAction,
               icon: Icons.play_arrow_rounded,
-              onPressed: () => _startPractice(context),
+              isLoading: _startingPractice,
+              onPressed: _startingPractice ? null : () => _startPractice(context),
             ),
           ],
         ),

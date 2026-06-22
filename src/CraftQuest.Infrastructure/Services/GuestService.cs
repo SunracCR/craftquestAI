@@ -176,8 +176,6 @@ public class GuestService(
             .Include(q => q.QuestionType)
             .Include(q => q.AnswerOptions.Where(o => o.IsActive))
             .Include(q => q.CorrectAnswerOptions)
-            .Include(q => q.Justification!)
-                .ThenInclude(j => j.Sources)
             .Where(q => q.QuizId == visit.QuizId)
             .OrderBy(q => q.SortOrder)
             .ToListAsync(cancellationToken);
@@ -187,10 +185,15 @@ public class GuestService(
             throw new AppException("Quiz has no questions.", 400);
         }
 
+        var questionIds = questions.Select(q => q.QuestionId).ToList();
+        var justificationsByQuestionId = await dbContext.QuestionJustifications
+            .AsNoTracking()
+            .Include(j => j.Sources)
+            .Where(j => questionIds.Contains(j.QuestionId))
+            .ToDictionaryAsync(j => j.QuestionId, cancellationToken);
+
         var randomize = request.RandomizeQuestions ?? quiz.RandomizeQuestions;
-        var questionList = randomize
-            ? questions.OrderBy(_ => Random.Shared.Next()).ToList()
-            : questions;
+        var questionList = PracticeSessionOrdering.OrderQuestions(questions, randomize);
 
         var sessionId = Guid.NewGuid();
         var now = DateTime.UtcNow;
@@ -211,94 +214,104 @@ public class GuestService(
         };
 
         const string questionImageKey = "QUESTION_IMAGE";
-        var displayOrder = 0;
 
-        foreach (var question in questionList)
+        var autoDetectChanges = dbContext.ChangeTracker.AutoDetectChangesEnabled;
+        dbContext.ChangeTracker.AutoDetectChangesEnabled = false;
+        try
         {
-            displayOrder++;
-            var snapshotId = Guid.NewGuid();
-            var seed = Guid.NewGuid().ToString("N");
-
-            var allOptions = question.AnswerOptions.Where(o => o.IsActive).ToList();
-            var stemOption = allOptions.FirstOrDefault(o =>
-                string.Equals(o.StableKey, questionImageKey, StringComparison.OrdinalIgnoreCase));
-            var selectableOptions = allOptions
-                .Where(o => !string.Equals(o.StableKey, questionImageKey, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-
-            var correctIds = question.CorrectAnswerOptions
-                .Select(c => c.AnswerOptionId)
-                .ToHashSet();
-
-            var orderedOptions = question.RandomizeAnswerOptions
-                ? Shuffle(selectableOptions, seed)
-                : selectableOptions.OrderBy(o => o.DefaultSortOrder).ToList();
-
-            var labels = AnswerGradingService.BuildDisplayLabels(orderedOptions.Count);
-            var answerSnapshots = new List<PracticeAnswerOptionSnapshot>();
-
-            if (stemOption is not null)
+            var displayOrder = 0;
+            foreach (var question in questionList)
             {
-                answerSnapshots.Add(new PracticeAnswerOptionSnapshot
+                displayOrder++;
+                var snapshotId = Guid.NewGuid();
+                var seed = Guid.NewGuid().ToString("N");
+
+                var allOptions = question.AnswerOptions.Where(o => o.IsActive).ToList();
+                var stemOption = allOptions.FirstOrDefault(o =>
+                    string.Equals(o.StableKey, questionImageKey, StringComparison.OrdinalIgnoreCase));
+                var selectableOptions = allOptions
+                    .Where(o => !string.Equals(o.StableKey, questionImageKey, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                var correctIds = question.CorrectAnswerOptions
+                    .Select(c => c.AnswerOptionId)
+                    .ToHashSet();
+
+                var orderedOptions = question.RandomizeAnswerOptions
+                    ? PracticeSessionOrdering.ShuffleAnswerOptions(selectableOptions, seed)
+                    : selectableOptions.OrderBy(o => o.DefaultSortOrder).ToList();
+
+                var labels = AnswerGradingService.BuildDisplayLabels(orderedOptions.Count);
+                var answerSnapshots = new List<PracticeAnswerOptionSnapshot>();
+
+                if (stemOption is not null)
                 {
-                    PracticeAnswerOptionSnapshotId = Guid.NewGuid(),
+                    answerSnapshots.Add(new PracticeAnswerOptionSnapshot
+                    {
+                        PracticeAnswerOptionSnapshotId = Guid.NewGuid(),
+                        PracticeQuestionSnapshotId = snapshotId,
+                        AnswerOptionId = stemOption.AnswerOptionId,
+                        StableKeySnapshot = stemOption.StableKey,
+                        DisplayOrder = 0,
+                        DisplayLabel = string.Empty,
+                        AnswerTextSnapshot = stemOption.AnswerText,
+                        MediaAssetIdSnapshot = stemOption.MediaAssetId,
+                        IsCorrectSnapshot = false,
+                        WasSelected = false,
+                        CreatedAt = now,
+                    });
+                }
+
+                for (var i = 0; i < orderedOptions.Count; i++)
+                {
+                    var option = orderedOptions[i];
+                    answerSnapshots.Add(new PracticeAnswerOptionSnapshot
+                    {
+                        PracticeAnswerOptionSnapshotId = Guid.NewGuid(),
+                        PracticeQuestionSnapshotId = snapshotId,
+                        AnswerOptionId = option.AnswerOptionId,
+                        StableKeySnapshot = option.StableKey,
+                        DisplayOrder = i + 1,
+                        DisplayLabel = labels[i],
+                        AnswerTextSnapshot = option.AnswerText,
+                        MediaAssetIdSnapshot = option.MediaAssetId,
+                        IsCorrectSnapshot = correctIds.Contains(option.AnswerOptionId),
+                        WasSelected = false,
+                        CreatedAt = now,
+                    });
+                }
+
+                justificationsByQuestionId.TryGetValue(question.QuestionId, out var justification);
+                var (justificationText, justificationSourcesJson) =
+                    QuestionJustificationMapper.BuildPracticeSnapshot(justification);
+
+                session.QuestionSnapshots.Add(new PracticeQuestionSnapshot
+                {
                     PracticeQuestionSnapshotId = snapshotId,
-                    AnswerOptionId = stemOption.AnswerOptionId,
-                    StableKeySnapshot = stemOption.StableKey,
-                    DisplayOrder = 0,
-                    DisplayLabel = string.Empty,
-                    AnswerTextSnapshot = stemOption.AnswerText,
-                    MediaAssetIdSnapshot = stemOption.MediaAssetId,
-                    IsCorrectSnapshot = false,
-                    WasSelected = false,
+                    PracticeSessionId = sessionId,
+                    QuestionId = question.QuestionId,
+                    QuestionTypeCodeSnapshot = question.QuestionType.Code,
+                    QuestionTextSnapshot = question.QuestionText,
+                    PointsPossible = question.Points,
+                    DisplayOrder = displayOrder,
+                    AnswerStatus = "unanswered",
+                    RandomizationSeed = seed,
+                    JustificationTextSnapshot = justificationText,
+                    JustificationSourcesSnapshot = justificationSourcesJson,
                     CreatedAt = now,
+                    AnswerOptionSnapshots = answerSnapshots,
                 });
             }
 
-            for (var i = 0; i < orderedOptions.Count; i++)
-            {
-                var option = orderedOptions[i];
-                answerSnapshots.Add(new PracticeAnswerOptionSnapshot
-                {
-                    PracticeAnswerOptionSnapshotId = Guid.NewGuid(),
-                    PracticeQuestionSnapshotId = snapshotId,
-                    AnswerOptionId = option.AnswerOptionId,
-                    StableKeySnapshot = option.StableKey,
-                    DisplayOrder = i + 1,
-                    DisplayLabel = labels[i],
-                    AnswerTextSnapshot = option.AnswerText,
-                    MediaAssetIdSnapshot = option.MediaAssetId,
-                    IsCorrectSnapshot = correctIds.Contains(option.AnswerOptionId),
-                    WasSelected = false,
-                    CreatedAt = now,
-                });
-            }
+            dbContext.PracticeSessions.Add(session);
 
-            var (justificationText, justificationSourcesJson) =
-                QuestionJustificationMapper.BuildPracticeSnapshot(question.Justification);
-
-            session.QuestionSnapshots.Add(new PracticeQuestionSnapshot
-            {
-                PracticeQuestionSnapshotId = snapshotId,
-                PracticeSessionId = sessionId,
-                QuestionId = question.QuestionId,
-                QuestionTypeCodeSnapshot = question.QuestionType.Code,
-                QuestionTextSnapshot = question.QuestionText,
-                PointsPossible = question.Points,
-                DisplayOrder = displayOrder,
-                AnswerStatus = "unanswered",
-                RandomizationSeed = seed,
-                JustificationTextSnapshot = justificationText,
-                JustificationSourcesSnapshot = justificationSourcesJson,
-                CreatedAt = now,
-                AnswerOptionSnapshots = answerSnapshots,
-            });
+            visit.LastActivityAt = now;
+            await dbContext.SaveChangesAsync(cancellationToken);
         }
-
-        dbContext.PracticeSessions.Add(session);
-
-        visit.LastActivityAt = now;
-        await dbContext.SaveChangesAsync(cancellationToken);
+        finally
+        {
+            dbContext.ChangeTracker.AutoDetectChangesEnabled = autoDetectChanges;
+        }
 
         return MapSession(session);
     }
@@ -310,14 +323,22 @@ public class GuestService(
     {
         await ResolveVisitAsync(guestVisitId, token, cancellationToken);
 
-        var session = await dbContext.PracticeSessions
+        return await dbContext.PracticeSessions
             .AsNoTracking()
-            .Include(s => s.QuestionSnapshots)
             .Where(s => s.GuestVisitId == guestVisitId && s.Status == "in_progress")
             .OrderByDescending(s => s.LastActivityAt ?? s.StartedAt)
+            .Select(s => new PracticeActiveSessionSummaryDto
+            {
+                PracticeSessionId = s.PracticeSessionId,
+                QuizId = s.QuizId,
+                StartedAt = s.StartedAt,
+                PausedAt = s.PausedAt,
+                LastActivityAt = s.LastActivityAt ?? s.StartedAt,
+                CurrentQuestionIndex = s.CurrentQuestionIndex ?? 0,
+                TotalQuestions = s.QuestionSnapshots.Count,
+                AnsweredCount = s.QuestionSnapshots.Count(q => q.AnswerStatus == "answered"),
+            })
             .FirstOrDefaultAsync(cancellationToken);
-
-        return session is null ? null : MapActiveSummary(session);
     }
 
     public async Task AbandonSessionAsync(
@@ -360,11 +381,30 @@ public class GuestService(
         CancellationToken cancellationToken = default)
     {
         await ResolveVisitAsync(guestVisitId, token, cancellationToken);
-        var session = await LoadGuestSessionInProgressAsync(guestVisitId, sessionId, cancellationToken);
 
-        var questionSnapshot = session.QuestionSnapshots
-            .FirstOrDefault(q => q.PracticeQuestionSnapshotId == practiceQuestionSnapshotId)
+        var questionSnapshot = await dbContext.PracticeQuestionSnapshots
+            .Include(q => q.AnswerOptionSnapshots)
+            .Include(q => q.PracticeSession)
+            .FirstOrDefaultAsync(
+                q => q.PracticeQuestionSnapshotId == practiceQuestionSnapshotId
+                    && q.PracticeSessionId == sessionId
+                    && q.PracticeSession.GuestVisitId == guestVisitId
+                    && q.PracticeSession.Status == "in_progress",
+                cancellationToken)
             ?? throw new AppException("Question snapshot not found.", 404);
+
+        var session = questionSnapshot.PracticeSession;
+
+        var supportsMultiple = await dbContext.QuestionTypes
+            .AsNoTracking()
+            .Where(t => t.Code == questionSnapshot.QuestionTypeCodeSnapshot)
+            .Select(t => t.SupportsMultipleCorrectAnswers)
+            .FirstOrDefaultAsync(cancellationToken);
+        var scoringPolicy = await dbContext.Questions
+            .AsNoTracking()
+            .Where(q => q.QuestionId == questionSnapshot.QuestionId)
+            .Select(q => q.ScoringPolicy)
+            .FirstOrDefaultAsync(cancellationToken) ?? "strict";
 
         var selectedIds = request.SelectedAnswerOptionIds?.Distinct().ToList() ?? [];
         if (selectedIds.Count == 0)
@@ -384,22 +424,12 @@ public class GuestService(
             }
         }
 
-        var questionType = await dbContext.QuestionTypes
-            .AsNoTracking()
-            .FirstAsync(t => t.Code == questionSnapshot.QuestionTypeCodeSnapshot, cancellationToken);
-
         var correctIds = questionSnapshot.AnswerOptionSnapshots
             .Where(a => a.IsCorrectSnapshot)
             .Select(a => a.AnswerOptionId)
             .ToHashSet();
 
-        var scoringPolicy = await dbContext.Questions
-            .AsNoTracking()
-            .Where(q => q.QuestionId == questionSnapshot.QuestionId)
-            .Select(q => q.ScoringPolicy)
-            .FirstOrDefaultAsync(cancellationToken) ?? "strict";
-
-        if (questionType.SupportsMultipleCorrectAnswers)
+        if (supportsMultiple)
         {
             scoringPolicy = AnswerGradingService.PartialScoringPolicy;
         }
@@ -407,15 +437,21 @@ public class GuestService(
         var grading = AnswerGradingService.GradeAnswer(
             selectedIds.ToHashSet(),
             correctIds,
-            questionType.SupportsMultipleCorrectAnswers,
+            supportsMultiple,
             scoringPolicy,
             questionSnapshot.PointsPossible);
 
         var now = DateTime.UtcNow;
         foreach (var answer in questionSnapshot.AnswerOptionSnapshots)
         {
-            answer.WasSelected = selectedIds.Contains(answer.AnswerOptionId);
-            answer.SelectedAt = answer.WasSelected ? now : null;
+            var selected = selectedIds.Contains(answer.AnswerOptionId);
+            if (answer.WasSelected == selected && (!selected || answer.SelectedAt.HasValue))
+            {
+                continue;
+            }
+
+            answer.WasSelected = selected;
+            answer.SelectedAt = selected ? now : null;
         }
 
         questionSnapshot.AnswerStatus = "answered";
@@ -756,42 +792,6 @@ public class GuestService(
         };
     }
 
-    private static PracticeActiveSessionSummaryDto MapActiveSummary(PracticeSession session)
-    {
-        var total = session.QuestionSnapshots.Count;
-        var answered = session.QuestionSnapshots.Count(q => q.AnswerStatus == "answered");
-
-        return new PracticeActiveSessionSummaryDto
-        {
-            PracticeSessionId = session.PracticeSessionId,
-            QuizId = session.QuizId,
-            StartedAt = session.StartedAt,
-            PausedAt = session.PausedAt,
-            LastActivityAt = session.LastActivityAt ?? session.StartedAt,
-            CurrentQuestionIndex = ResolveResumeQuestionIndex(session),
-            AnsweredCount = answered,
-            TotalQuestions = total,
-        };
-    }
-
-    private static int ResolveResumeQuestionIndex(PracticeSession session)
-    {
-        var questions = session.QuestionSnapshots.OrderBy(q => q.DisplayOrder).ToList();
-        if (questions.Count == 0)
-        {
-            return 0;
-        }
-
-        if (session.CurrentQuestionIndex is >= 0 and var savedIndex
-            && savedIndex < questions.Count)
-        {
-            return savedIndex;
-        }
-
-        var firstUnanswered = questions.FindIndex(q => q.AnswerStatus != "answered");
-        return firstUnanswered >= 0 ? firstUnanswered : questions.Count - 1;
-    }
-
     private static GuestVisitDto MapVisit(GuestVisit visit, Quiz quiz, int questionCount) => new()
     {
         GuestVisitId = visit.GuestVisitId,
@@ -810,18 +810,5 @@ public class GuestService(
             .Replace('+', '-')
             .Replace('/', '_')
             .TrimEnd('=');
-    }
-
-    private static List<QuestionAnswerOption> Shuffle(List<QuestionAnswerOption> options, string seed)
-    {
-        var list = options.ToList();
-        var random = new Random(HashCode.Combine(seed.GetHashCode()));
-        for (var i = list.Count - 1; i > 0; i--)
-        {
-            var j = random.Next(i + 1);
-            (list[i], list[j]) = (list[j], list[i]);
-        }
-
-        return list;
     }
 }

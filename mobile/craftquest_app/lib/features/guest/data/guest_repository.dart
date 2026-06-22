@@ -47,7 +47,11 @@ class GuestRepository {
         if (randomizeQuestions != null) 'randomizeQuestions': randomizeQuestions,
         'showElapsedTimer': showElapsedTimer,
       },
-      options: _guestOptions(token),
+      options: Options(
+        headers: {'X-Guest-Token': token},
+        receiveTimeout: Duration(seconds: 90),
+        sendTimeout: Duration(seconds: 30),
+      ),
     );
     return PracticeSessionModel.fromJson(response.data!);
   }
