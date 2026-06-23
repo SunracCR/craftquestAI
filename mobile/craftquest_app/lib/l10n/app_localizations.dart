@@ -1678,6 +1678,36 @@ abstract class AppLocalizations {
   /// **'Muestra un reloj mientras respondes el cuestionario'**
   String get practiceShowTimerHint;
 
+  /// No description provided for @practiceBackgroundMusicLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Música de fondo'**
+  String get practiceBackgroundMusicLabel;
+
+  /// No description provided for @practiceBackgroundMusicHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Reproduce una pista de fondo en bucle mientras practicas'**
+  String get practiceBackgroundMusicHint;
+
+  /// No description provided for @practiceSoundEffectsLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Efectos de sonido'**
+  String get practiceSoundEffectsLabel;
+
+  /// No description provided for @practiceSoundEffectsHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Sonidos al iniciar, navegar entre preguntas y finalizar'**
+  String get practiceSoundEffectsHint;
+
+  /// No description provided for @practiceSelectMusicTrackLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Pista de música'**
+  String get practiceSelectMusicTrackLabel;
+
   /// No description provided for @practiceElapsedLabel.
   ///
   /// In es, this message translates to:

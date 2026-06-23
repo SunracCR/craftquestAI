@@ -1,8 +1,11 @@
+import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/utils/assignment_dates.dart';
 import 'package:craftquest_app/core/widgets/app_section_card.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
+import 'package:craftquest_app/features/practice/data/practice_sound_preference_store.dart';
+import 'package:craftquest_app/features/practice/domain/practice_launch_options.dart';
 import 'package:craftquest_app/features/practice/presentation/practice_navigation.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_launch_options_card.dart';
 import 'package:craftquest_app/features/student/data/assignment_randomize_preference_store.dart';
@@ -30,7 +33,11 @@ class StudentAssignmentDetailPage extends StatefulWidget {
 
 class _StudentAssignmentDetailPageState extends State<StudentAssignmentDetailPage> {
   final _assignmentRandomizeStore = AssignmentRandomizePreferenceStore();
+  final _soundPreferenceStore = getIt<PracticeSoundPreferenceStore>();
   bool _randomizeQuestions = false;
+  bool _enableMusic = PracticeLaunchOptions.defaults.enableMusic;
+  bool _enableSoundEffects = PracticeLaunchOptions.defaults.enableSoundEffects;
+  int _musicTrackIndex = PracticeLaunchOptions.defaults.musicTrackIndex;
   bool _starting = false;
 
   StudentAssignmentModel get assignment => widget.assignment;
@@ -44,7 +51,43 @@ class _StudentAssignmentDetailPageState extends State<StudentAssignmentDetailPag
     super.initState();
     _randomizeQuestions = assignment.randomizeQuestions;
     _loadAssignmentRandomizePreference();
+    _loadSoundPreferences();
   }
+
+  Future<void> _loadSoundPreferences() async {
+    try {
+      final prefs = await _soundPreferenceStore.load();
+      if (!mounted) return;
+      setState(() {
+        _enableMusic = prefs.enableMusic;
+        _enableSoundEffects = prefs.enableSoundEffects;
+        _musicTrackIndex = prefs.musicTrackIndex;
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _updateMusic(bool value) async {
+    setState(() => _enableMusic = value);
+    await _soundPreferenceStore.saveMusic(value);
+  }
+
+  Future<void> _updateSoundEffects(bool value) async {
+    setState(() => _enableSoundEffects = value);
+    await _soundPreferenceStore.saveSoundEffects(value);
+  }
+
+  Future<void> _updateMusicTrackIndex(int value) async {
+    setState(() => _musicTrackIndex = value);
+    await _soundPreferenceStore.saveMusicTrackIndex(value);
+  }
+
+  PracticeLaunchOptions get _currentLaunchOptions => PracticeLaunchOptions(
+        randomizeQuestions: _effectiveRandomize,
+        showTimer: PracticeLaunchOptions.defaults.showTimer,
+        enableMusic: _enableMusic,
+        enableSoundEffects: _enableSoundEffects,
+        musicTrackIndex: _musicTrackIndex,
+      );
 
   Future<void> _loadAssignmentRandomizePreference() async {
     if (!assignment.allowStudentRandomizeQuestions) {
@@ -96,6 +139,7 @@ class _StudentAssignmentDetailPageState extends State<StudentAssignmentDetailPag
         assignmentRandomizeQuestions: _effectiveRandomize,
         allowStudentRandomizeQuestions: assignment.allowStudentRandomizeQuestions,
         forfeitExitCountsAsAttempt: assignment.forfeitExitApplies,
+        launchOptions: _currentLaunchOptions,
       );
       if (shouldRefresh == true) {
         widget.onChanged();
@@ -285,16 +329,7 @@ class _StudentAssignmentDetailPageState extends State<StudentAssignmentDetailPag
           ),
           const SizedBox(height: AppSpacing.md),
           if (canStart) ...[
-            if (assignment.allowStudentRandomizeQuestions)
-              PracticeLaunchOptionsCard(
-                randomizeQuestions: _randomizeQuestions,
-                showTimer: false,
-                showTimerOption: false,
-                onRandomizeQuestionsChanged: _updateRandomizeQuestions,
-                onShowTimerChanged: (_) {},
-                randomizeQuestionsHint: l10n.practiceRandomizeQuestionsHint,
-              )
-            else
+            if (!assignment.allowStudentRandomizeQuestions)
               AppSectionCard(
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -321,6 +356,23 @@ class _StudentAssignmentDetailPageState extends State<StudentAssignmentDetailPag
                   ],
                 ),
               ),
+            if (!assignment.allowStudentRandomizeQuestions)
+              const SizedBox(height: AppSpacing.md),
+            PracticeLaunchOptionsCard(
+              randomizeQuestions: _randomizeQuestions,
+              showTimer: false,
+              showTimerOption: false,
+              showRandomizeOption: assignment.allowStudentRandomizeQuestions,
+              enableMusic: _enableMusic,
+              enableSoundEffects: _enableSoundEffects,
+              musicTrackIndex: _musicTrackIndex,
+              onRandomizeQuestionsChanged: _updateRandomizeQuestions,
+              onShowTimerChanged: (_) {},
+              onMusicChanged: _updateMusic,
+              onSoundEffectsChanged: _updateSoundEffects,
+              onMusicTrackChanged: _updateMusicTrackIndex,
+              randomizeQuestionsHint: l10n.practiceRandomizeQuestionsHint,
+            ),
             const SizedBox(height: AppSpacing.md),
             SizedBox(
               width: double.infinity,

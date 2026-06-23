@@ -33,6 +33,7 @@ dependencies:
   google_sign_in_web: ^0.12.4
   sign_in_with_apple: ^6.1.4
   flutter_svg: ^2.0.17
+  audioplayers: ^6.4.0
 
 dev_dependencies:
   flutter_test:
@@ -46,3 +47,5 @@ flutter:
     - assets/images/auth/
     - assets/images/brand/
     - assets/icons/oauth/
+    - assets/audio/music/
+    - assets/audio/sfx/

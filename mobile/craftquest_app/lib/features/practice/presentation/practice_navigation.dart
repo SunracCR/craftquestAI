@@ -16,17 +16,19 @@ Future<bool?> openPracticeSession(
   bool allowStudentRandomizeQuestions = false,
   bool forfeitExitCountsAsAttempt = false,
   Future<PracticeActiveSessionModel?>? activeSessionPrefetch,
+  PracticeLaunchOptions? launchOptions,
 }) async {
   if (!context.mounted) {
     return null;
   }
 
-  final options = assignmentId != null
-      ? PracticeLaunchOptions(
-          randomizeQuestions: assignmentRandomizeQuestions,
-          showTimer: PracticeLaunchOptions.defaults.showTimer,
-        )
-      : PracticeLaunchOptions.defaults;
+  final options = launchOptions ??
+      (assignmentId != null
+          ? PracticeLaunchOptions(
+              randomizeQuestions: assignmentRandomizeQuestions,
+              showTimer: PracticeLaunchOptions.defaults.showTimer,
+            )
+          : PracticeLaunchOptions.defaults);
 
   return Navigator.of(context).push<bool>(
     MaterialPageRoute<bool>(

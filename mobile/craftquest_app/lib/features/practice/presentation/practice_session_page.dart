@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/api_client.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
+import 'package:craftquest_app/core/services/sound_service.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_media_display.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
@@ -56,6 +57,7 @@ class PracticeSessionPage extends StatefulWidget {
 
 class _PracticeSessionPageState extends State<PracticeSessionPage> {
   final _repository = getIt<PracticeRepository>();
+  final _soundService = getIt<SoundService>();
 
   PracticeSessionModel? _session;
   PracticeLaunchOptions _launchOptions = PracticeLaunchOptions.defaults;
@@ -65,6 +67,7 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
   bool _loading = true;
   bool _finishing = false;
   bool _savingProgress = false;
+  bool _musicStarted = false;
   String? _error;
   String? _loadingMessage;
   bool _showTimer = false;
@@ -123,8 +126,13 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
       if (widget.assignmentId == null) {
         try {
           final preferencesRepository = getIt<PracticePreferencesRepository>();
-          _launchOptions =
+          final apiOptions =
               await preferencesRepository.loadLaunchOptions(widget.quizId);
+          _launchOptions = apiOptions.copyWith(
+            enableMusic: widget.options.enableMusic,
+            enableSoundEffects: widget.options.enableSoundEffects,
+            musicTrackIndex: widget.options.musicTrackIndex,
+          );
         } catch (_) {
           _launchOptions = widget.options;
         }
@@ -165,7 +173,42 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
     for (final timer in _persistDebounceTimers.values) {
       timer.cancel();
     }
+    unawaited(_soundService.stopMusic());
     super.dispose();
+  }
+
+  void _maybeStartMusic() {
+    if (!_launchOptions.enableMusic || _musicStarted) {
+      return;
+    }
+    _musicStarted = true;
+    unawaited(
+      _soundService.startMusicTrack(_launchOptions.clampedMusicTrackIndex),
+    );
+  }
+
+  void _playStartSfx() {
+    if (!_launchOptions.enableSoundEffects) {
+      return;
+    }
+    unawaited(_soundService.playStartSfx());
+  }
+
+  void _playNavSfx() {
+    if (!_launchOptions.enableSoundEffects) {
+      return;
+    }
+    unawaited(_soundService.playNavSfx());
+  }
+
+  void _onSessionInteractive() {
+    _playStartSfx();
+    _maybeStartMusic();
+  }
+
+  Future<void> _stopSessionAudio() async {
+    await _soundService.stopMusic();
+    _musicStarted = false;
   }
 
   Future<void> _awaitPendingPersists() async {
@@ -242,6 +285,7 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
         _loadingMessage = null;
       });
       _beginElapsedTimer();
+      _onSessionInteractive();
     } on DioException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -309,6 +353,7 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
       return;
     }
     _stopElapsedTimer();
+    await _stopSessionAudio();
     setState(() => _savingProgress = true);
     try {
       await _repository.forfeitSession(session.practiceSessionId);
@@ -341,6 +386,7 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
 
   Future<void> _saveAndExit() async {
     _stopElapsedTimer();
+    await _stopSessionAudio();
     await _awaitPendingPersists();
     await _saveProgress();
     if (mounted) {
@@ -392,6 +438,7 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
         _loadingMessage = null;
       });
       _beginElapsedTimer();
+      _onSessionInteractive();
     } on DioException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -584,6 +631,10 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
     try {
       await _awaitPendingPersists();
       _stopElapsedTimer();
+      if (_launchOptions.enableSoundEffects) {
+        unawaited(_soundService.playFinishSfx());
+      }
+      await _stopSessionAudio();
       final result =
           await _repository.finishSession(session.practiceSessionId);
       if (!mounted) return;
@@ -617,8 +668,14 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
       canGoForward: _currentIndex < session.questions.length - 1,
       allCompleted: _allCompleted,
       isBusy: isBusy,
-      onPrevious: () => _goToQuestion(_currentIndex - 1),
-      onNext: () => _goToQuestion(_currentIndex + 1),
+      onPrevious: () {
+        _playNavSfx();
+        _goToQuestion(_currentIndex - 1);
+      },
+      onNext: () {
+        _playNavSfx();
+        _goToQuestion(_currentIndex + 1);
+      },
       onFinish: _finish,
       l10n: l10n,
     );

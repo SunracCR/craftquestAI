@@ -23,6 +23,8 @@ import 'package:craftquest_app/features/teacher/presentation/teacher_attempts_pa
 import 'package:craftquest_app/features/practice/data/models/practice_models.dart';
 import 'package:craftquest_app/features/practice/data/practice_preferences_repository.dart';
 import 'package:craftquest_app/features/practice/data/practice_repository.dart';
+import 'package:craftquest_app/features/practice/data/practice_sound_preference_store.dart';
+import 'package:craftquest_app/features/practice/domain/practice_launch_options.dart';
 import 'package:craftquest_app/features/practice/presentation/practice_navigation.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_launch_options_card.dart';
 import 'package:craftquest_app/features/auth/presentation/auth_bloc.dart';
@@ -61,6 +63,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
   final _billingRepository = getIt<BillingRepository>();
   final _practiceRepository = getIt<PracticeRepository>();
   final _preferencesRepository = getIt<PracticePreferencesRepository>();
+  final _soundPreferenceStore = getIt<PracticeSoundPreferenceStore>();
   int _questionCount = 0;
   String? _pendingReviewImportId;
   int? _pendingReviewValidQuestions;
@@ -70,6 +73,9 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
   String _publicationStatus = 'draft';
   bool _randomizeQuestions = false;
   bool _showTimer = true;
+  bool _enableMusic = PracticeLaunchOptions.defaults.enableMusic;
+  bool _enableSoundEffects = PracticeLaunchOptions.defaults.enableSoundEffects;
+  int _musicTrackIndex = PracticeLaunchOptions.defaults.musicTrackIndex;
   late String _quizTitle;
   late final TextEditingController _titleController;
   late final FocusNode _titleFocusNode;
@@ -226,6 +232,41 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
       ),
     );
   }
+
+  Future<void> _loadSoundPreferences() async {
+    try {
+      final prefs = await _soundPreferenceStore.load();
+      if (!mounted) return;
+      setState(() {
+        _enableMusic = prefs.enableMusic;
+        _enableSoundEffects = prefs.enableSoundEffects;
+        _musicTrackIndex = prefs.musicTrackIndex;
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _updateMusic(bool value) async {
+    setState(() => _enableMusic = value);
+    await _soundPreferenceStore.saveMusic(value);
+  }
+
+  Future<void> _updateSoundEffects(bool value) async {
+    setState(() => _enableSoundEffects = value);
+    await _soundPreferenceStore.saveSoundEffects(value);
+  }
+
+  Future<void> _updateMusicTrackIndex(int value) async {
+    setState(() => _musicTrackIndex = value);
+    await _soundPreferenceStore.saveMusicTrackIndex(value);
+  }
+
+  PracticeLaunchOptions get _currentLaunchOptions => PracticeLaunchOptions(
+        randomizeQuestions: _randomizeQuestions,
+        showTimer: _showTimer,
+        enableMusic: _enableMusic,
+        enableSoundEffects: _enableSoundEffects,
+        musicTrackIndex: _musicTrackIndex,
+      );
 
   Future<void> _loadPracticePreferences() async {
     setState(() => _loadingPreferences = true);
@@ -397,6 +438,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
     }
     await Future.wait([
       _loadPracticePreferences(),
+      _loadSoundPreferences(),
       _loadActivePractice(),
     ]);
   }
@@ -576,6 +618,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
       quizId: widget.quizId,
       quizTitle: _quizTitle,
       resumeSessionId: _activePractice?.practiceSessionId,
+      launchOptions: _currentLaunchOptions,
     );
     if (!mounted) return;
     await _loadActivePractice();
@@ -586,6 +629,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
       context,
       quizId: widget.quizId,
       quizTitle: _quizTitle,
+      launchOptions: _currentLaunchOptions,
     );
     if (!mounted) return;
     await _loadActivePractice();
@@ -1105,9 +1149,17 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
                                       showRandomizeOption: !widget.isOwner ||
                                           !_quizModificationLocked,
                                       showTimer: _showTimer,
+                                      enableMusic: _enableMusic,
+                                      enableSoundEffects: _enableSoundEffects,
+                                      musicTrackIndex: _musicTrackIndex,
                                       onRandomizeQuestionsChanged:
                                           _updateRandomizeQuestions,
                                       onShowTimerChanged: _updateShowTimer,
+                                      onMusicChanged: _updateMusic,
+                                      onSoundEffectsChanged:
+                                          _updateSoundEffects,
+                                      onMusicTrackChanged:
+                                          _updateMusicTrackIndex,
                                     ),
                             ],
                           ],

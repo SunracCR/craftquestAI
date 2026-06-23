@@ -5,6 +5,7 @@ import 'package:craftquest_app/core/auth/token_storage.dart';
 import 'package:craftquest_app/core/locale/locale_controller.dart';
 import 'package:craftquest_app/core/network/api_client.dart';
 import 'package:craftquest_app/core/network/network_connectivity_service.dart';
+import 'package:craftquest_app/core/services/sound_service.dart';
 import 'package:craftquest_app/features/auth/data/auth_repository.dart';
 import 'package:craftquest_app/features/auth/presentation/auth_bloc.dart';
 import 'package:craftquest_app/features/guest/data/guest_repository.dart';
@@ -23,6 +24,7 @@ import 'package:craftquest_app/features/teacher/data/teacher_review_repository.d
 import 'package:craftquest_app/features/student/data/student_repository.dart';
 import 'package:craftquest_app/features/practice/data/practice_preferences_repository.dart';
 import 'package:craftquest_app/features/practice/data/practice_repository.dart';
+import 'package:craftquest_app/features/practice/data/practice_sound_preference_store.dart';
 import 'package:craftquest_app/features/quizzes/data/quiz_repository.dart';
 import 'package:craftquest_app/features/prep_plus/data/prep_plus_admin_repository.dart';
 import 'package:craftquest_app/features/prep_plus/data/prep_plus_repository.dart';
@@ -61,6 +63,8 @@ void configureDependencies() {
   getIt.registerLazySingleton(
     () => PracticePreferencesRepository(getIt<ApiClient>()),
   );
+  getIt.registerLazySingleton(PracticeSoundPreferenceStore.new);
+  getIt.registerLazySingleton(SoundService.new);
   getIt.registerLazySingleton(() => ImportRepository(getIt<ApiClient>()));
   getIt.registerLazySingleton(() => StudentRepository(getIt<ApiClient>()));
   getIt.registerLazySingleton(() => TeacherReviewRepository(getIt<ApiClient>()));

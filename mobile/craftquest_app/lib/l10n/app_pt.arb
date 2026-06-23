@@ -389,6 +389,11 @@
   "quizRandomizeQuestionsHint": "Aplica-se as tarefas dos seus alunos e quando praticam este questionario",
   "practiceShowTimerLabel": "Mostrar tempo decorrido",
   "practiceShowTimerHint": "Exibe um relogio enquanto voce responde o questionario",
+  "practiceBackgroundMusicLabel": "Musica de fundo",
+  "practiceBackgroundMusicHint": "Reproduz uma faixa de fundo em loop enquanto pratica",
+  "practiceSoundEffectsLabel": "Efeitos sonoros",
+  "practiceSoundEffectsHint": "Sons ao iniciar, navegar entre perguntas e finalizar",
+  "practiceSelectMusicTrackLabel": "Faixa de musica",
   "practiceElapsedLabel": "Tempo: {elapsed}",
   "@practiceElapsedLabel": {
     "placeholders": { "elapsed": { "type": "String" } }

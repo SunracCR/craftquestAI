@@ -941,6 +941,23 @@ class AppLocalizationsEs extends AppLocalizations {
       'Muestra un reloj mientras respondes el cuestionario';
 
   @override
+  String get practiceBackgroundMusicLabel => 'Música de fondo';
+
+  @override
+  String get practiceBackgroundMusicHint =>
+      'Reproduce una pista de fondo en bucle mientras practicas';
+
+  @override
+  String get practiceSoundEffectsLabel => 'Efectos de sonido';
+
+  @override
+  String get practiceSoundEffectsHint =>
+      'Sonidos al iniciar, navegar entre preguntas y finalizar';
+
+  @override
+  String get practiceSelectMusicTrackLabel => 'Pista de música';
+
+  @override
   String practiceElapsedLabel(String elapsed) {
     return 'Tiempo: $elapsed';
   }
