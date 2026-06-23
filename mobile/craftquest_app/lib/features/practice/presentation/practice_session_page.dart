@@ -95,15 +95,10 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
     });
 
     try {
-      PracticeActiveSessionModel? active;
-      if (widget.activeSessionPrefetch != null) {
-        active = await widget.activeSessionPrefetch;
-      } else {
-        active = await _repository.getActiveSessionForQuiz(
-          widget.quizId,
-          assignmentId: widget.assignmentId,
-        );
-      }
+      final active = await _repository.getActiveSessionForQuiz(
+        widget.quizId,
+        assignmentId: widget.assignmentId,
+      );
 
       if (!mounted) {
         return;

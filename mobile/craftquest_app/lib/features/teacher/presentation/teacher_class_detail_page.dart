@@ -36,13 +36,16 @@ class _TeacherClassDetailPageState extends State<TeacherClassDetailPage>
   final _classRepo = getIt<TeacherClassRepository>();
 
   late TabController _tabController;
-  late Future<ClassDetailModel> _detailFuture;
+  ClassDetailModel? _detail;
+  Object? _error;
+  bool _initialLoading = true;
+  bool _refreshing = false;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _load();
+    _load(showInitialLoader: true);
   }
 
   @override
@@ -51,12 +54,30 @@ class _TeacherClassDetailPageState extends State<TeacherClassDetailPage>
     super.dispose();
   }
 
-  Future<void> _load() async {
-    final future = _classRepo.getClassDetail(widget.classId);
-    setState(() {
-      _detailFuture = future;
-    });
-    await future;
+  Future<void> _load({bool showInitialLoader = false}) async {
+    if (showInitialLoader || _detail == null) {
+      setState(() => _initialLoading = true);
+    } else {
+      setState(() => _refreshing = true);
+    }
+
+    try {
+      final detail = await _classRepo.getClassDetail(widget.classId);
+      if (!mounted) return;
+      setState(() {
+        _detail = detail;
+        _error = null;
+        _initialLoading = false;
+        _refreshing = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e;
+        _initialLoading = false;
+        _refreshing = false;
+      });
+    }
   }
 
   Future<void> _archive(AppLocalizations l10n) async {
@@ -178,31 +199,32 @@ class _TeacherClassDetailPageState extends State<TeacherClassDetailPage>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
+    if (_initialLoading && _detail == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: AppLoadingView(),
+      );
+    }
+
+    if (_error != null && _detail == null) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: AppErrorView(
+          message: _error.toString(),
+          onRetry: () => _load(showInitialLoader: true),
+          retryLabel: l10n.retry,
+        ),
+      );
+    }
+
+    final detail = _detail!;
+    final isArchived = detail.status == 'archived';
+
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: FutureBuilder<ClassDetailModel>(
-        future: _detailFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Scaffold(
-              backgroundColor: AppColors.background,
-              body: AppLoadingView(),
-            );
-          }
-          if (snapshot.hasError) {
-            return Scaffold(
-              backgroundColor: AppColors.background,
-              body: AppErrorView(
-                message: snapshot.error.toString(),
-                onRetry: _load,
-                retryLabel: l10n.retry,
-              ),
-            );
-          }
-
-          final detail = snapshot.data!;
-          final isArchived = detail.status == 'archived';
-          return NestedScrollView(
+      body: Stack(
+        children: [
+          NestedScrollView(
             headerSliverBuilder: (_, __) => [
               TeacherDetailTabbedAppBar(
                 title: detail.name,
@@ -288,6 +310,7 @@ class _TeacherClassDetailPageState extends State<TeacherClassDetailPage>
               controller: _tabController,
               children: [
                 _MembersTab(
+                  key: const PageStorageKey<String>('teacher-class-members'),
                   classId: widget.classId,
                   detail: detail,
                   readOnly: isArchived,
@@ -302,8 +325,19 @@ class _TeacherClassDetailPageState extends State<TeacherClassDetailPage>
                 _AnalyticsTab(classId: widget.classId),
               ],
             ),
-          );
-        },
+          ),
+          if (_refreshing)
+            const Positioned(
+              left: 0,
+              right: 0,
+              top: 0,
+              child: LinearProgressIndicator(
+                minHeight: 2,
+                color: AppColors.teacherAccent,
+                backgroundColor: Colors.transparent,
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -313,6 +347,7 @@ class _TeacherClassDetailPageState extends State<TeacherClassDetailPage>
 
 class _MembersTab extends StatefulWidget {
   const _MembersTab({
+    super.key,
     required this.classId,
     required this.detail,
     required this.readOnly,
@@ -328,10 +363,14 @@ class _MembersTab extends StatefulWidget {
   State<_MembersTab> createState() => _MembersTabState();
 }
 
-class _MembersTabState extends State<_MembersTab> {
+class _MembersTabState extends State<_MembersTab>
+    with AutomaticKeepAliveClientMixin {
   final _repo = getIt<TeacherClassRepository>();
   final _emailCtrl = TextEditingController();
   bool _addLoading = false;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void dispose() {
@@ -361,82 +400,106 @@ class _MembersTabState extends State<_MembersTab> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final l10n = AppLocalizations.of(context)!;
     final pending = widget.detail.members.where((m) => m.status == 'pending').toList();
     final active = widget.detail.members.where((m) => m.status == 'active').toList();
 
     return AppPaddedScrollBody(
       includeTop: false,
-      child: ListView(
-      children: [
-        if (!widget.readOnly)
-          Row(
-            children: [
-              Expanded(
-                child: TextFormField(
-                  controller: _emailCtrl,
-                  keyboardType: TextInputType.emailAddress,
-                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
-                  decoration: InputDecoration(
-                    hintText: l10n.teacherClassAddMemberEmailHint,
-                    hintStyle: const TextStyle(color: AppColors.textSecondary),
-                    filled: true,
-                    fillColor: AppColors.surface,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppColors.radiusSm),
-                      borderSide: BorderSide.none,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (!widget.readOnly) _buildAddMemberRow(l10n),
+          Expanded(
+            child: ListView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              children: [
+                if (pending.isNotEmpty) ...[
+                  const SizedBox(height: 20),
+                  _sectionHeader(l10n.teacherClassPendingApprovalsTitle, badge: pending.length),
+                  const SizedBox(height: 8),
+                  ...pending.map((m) => _MemberTile(
+                        member: m,
+                        classId: widget.classId,
+                        readOnly: widget.readOnly,
+                        onChanged: widget.onChanged,
+                      )),
+                ],
+                SizedBox(height: widget.readOnly ? 0 : 20),
+                _sectionHeader('${l10n.teacherClassMembersTab} (${active.length})'),
+                const SizedBox(height: 8),
+                if (active.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: Text(
+                      l10n.teacherClassMembersEmpty,
+                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                      textAlign: TextAlign.center,
                     ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.teacherAccent,
-                  foregroundColor: AppColors.background,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                onPressed: _addLoading ? null : _addMember,
-                child: _addLoading
-                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.background))
-                    : Text(l10n.teacherClassAddMemberAction, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
-              ),
-            ],
-          ),
-        if (pending.isNotEmpty) ...[
-          const SizedBox(height: 20),
-          _sectionHeader(l10n.teacherClassPendingApprovalsTitle, badge: pending.length),
-          const SizedBox(height: 8),
-          ...pending.map((m) => _MemberTile(
-                member: m,
-                classId: widget.classId,
-                readOnly: widget.readOnly,
-                onChanged: widget.onChanged,
-              )),
-        ],
-        SizedBox(height: widget.readOnly ? 0 : 20),
-        _sectionHeader('${l10n.teacherClassMembersTab} (${active.length})'),
-        const SizedBox(height: 8),
-        if (active.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 24),
-            child: Text(
-              l10n.teacherClassMembersEmpty,
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
-              textAlign: TextAlign.center,
+                  )
+                else
+                  ...active.map((m) => _MemberTile(
+                        member: m,
+                        classId: widget.classId,
+                        readOnly: widget.readOnly,
+                        onChanged: widget.onChanged,
+                      )),
+              ],
             ),
-          )
-        else
-          ...active.map((m) => _MemberTile(
-                member: m,
-                classId: widget.classId,
-                readOnly: widget.readOnly,
-                onChanged: widget.onChanged,
-              )),
-      ],
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildAddMemberRow(AppLocalizations l10n) {
+    return Row(
+      children: [
+        Expanded(
+          child: TextFormField(
+            controller: _emailCtrl,
+            keyboardType: TextInputType.emailAddress,
+            autocorrect: false,
+            enableSuggestions: false,
+            style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
+            decoration: InputDecoration(
+              hintText: l10n.teacherClassAddMemberEmailHint,
+              hintStyle: const TextStyle(color: AppColors.textSecondary),
+              filled: true,
+              fillColor: AppColors.surface,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppColors.radiusSm),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.teacherAccent,
+            foregroundColor: AppColors.background,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+          onPressed: _addLoading ? null : _addMember,
+          child: _addLoading
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.background,
+                  ),
+                )
+              : Text(
+                  l10n.teacherClassAddMemberAction,
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                ),
+        ),
+      ],
     );
   }
 

@@ -104,15 +104,10 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
     });
 
     try {
-      PracticeActiveSessionModel? active;
-      if (widget.activeSessionPrefetch != null) {
-        active = await widget.activeSessionPrefetch;
-      } else {
-        active = await _repository.getActiveSession(
-          visitId: widget.visitId,
-          token: widget.token,
-        );
-      }
+      final active = await _repository.getActiveSession(
+        visitId: widget.visitId,
+        token: widget.token,
+      );
 
       if (!mounted) return;
 

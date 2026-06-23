@@ -13,7 +13,6 @@ import 'package:craftquest_app/features/guest/data/guest_models.dart';
 import 'package:craftquest_app/features/guest/data/guest_repository.dart';
 import 'package:craftquest_app/features/guest/presentation/guest_practice_navigation.dart';
 import 'package:craftquest_app/features/guest/presentation/guest_session_navigation.dart';
-import 'package:craftquest_app/features/practice/data/models/practice_models.dart';
 import 'package:craftquest_app/features/teacher/presentation/teacher_session_review_page.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -35,8 +34,6 @@ class _GuestShellPageState extends State<GuestShellPage>
   bool _loadingAttempts = false;
   bool _startingPractice = false;
   bool _randomize = false;
-  late final Future<PracticeActiveSessionModel?> _activeSessionPrefetch =
-      _prefetchActiveSession();
 
   static const _heroGradient = LinearGradient(
     begin: Alignment.topLeft,
@@ -95,17 +92,6 @@ class _GuestShellPageState extends State<GuestShellPage>
     }
   }
 
-  Future<PracticeActiveSessionModel?> _prefetchActiveSession() async {
-    try {
-      return await getIt<GuestRepository>().getActiveSession(
-        visitId: _visit.guestVisitId,
-        token: _visit.token,
-      );
-    } catch (_) {
-      return null;
-    }
-  }
-
   Future<void> _startPractice(BuildContext context) async {
     if (_startingPractice) return;
     setState(() => _startingPractice = true);
@@ -117,7 +103,6 @@ class _GuestShellPageState extends State<GuestShellPage>
         quizTitle: _visit.quizTitle,
         randomizeQuestions: _randomize ? true : null,
         showElapsedTimer: false,
-        activeSessionPrefetch: _activeSessionPrefetch,
       );
       if (mounted) await _loadAttempts();
     } finally {
