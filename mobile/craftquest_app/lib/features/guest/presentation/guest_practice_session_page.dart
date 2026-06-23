@@ -16,6 +16,7 @@ import 'package:craftquest_app/features/guest/presentation/bloc/guest_session_cu
 import 'package:craftquest_app/features/guest/presentation/guest_result_page.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:craftquest_app/features/practice/data/models/practice_models.dart';
+import 'package:craftquest_app/features/practice/presentation/practice_image_precacher.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_elapsed_timer.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_question_nav_header.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_question_nav_status.dart';
@@ -186,6 +187,20 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
     _elapsedBaseline = Duration(seconds: session.elapsedSecondsBeforePause);
     _currentIndex = index;
     _session = session;
+    _precacheAdjacentQuestions();
+  }
+
+  void _precacheAdjacentQuestions() {
+    final session = _session;
+    if (session == null || !mounted) {
+      return;
+    }
+    PracticeImagePrecacher.precacheAdjacentQuestions(
+      context,
+      apiBaseUrl: getIt<ApiClient>().dio.options.baseUrl,
+      questions: session.questions,
+      currentIndex: _currentIndex,
+    );
   }
 
   Future<void> _start() async {
@@ -296,6 +311,7 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
       _currentIndex = index;
       _hydrateSelections(session.questions[index]);
     });
+    _precacheAdjacentQuestions();
   }
 
   Set<String> _selectionFor(PracticeQuestionModel question) {

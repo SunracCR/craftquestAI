@@ -303,10 +303,16 @@ public class GuestService(
                 });
             }
 
-            dbContext.PracticeSessions.Add(session);
-
             visit.LastActivityAt = now;
-            await dbContext.SaveChangesAsync(cancellationToken);
+            await PracticeSnapshotBulkInserter.InsertAsync(
+                dbContext,
+                session,
+                new PracticeSnapshotBulkInserter.PersistOptions
+                {
+                    GuestVisitId = guestVisitId,
+                    GuestVisitLastActivityAt = now,
+                },
+                cancellationToken);
         }
         finally
         {

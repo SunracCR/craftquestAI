@@ -36,6 +36,7 @@ public static class DependencyInjection
                 {
                     sql.MigrationsHistoryTable("__EFMigrationsHistory", "core");
                     sql.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(5), errorNumbersToAdd: null);
+                    sql.CommandTimeout(60);
                     sql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                 }));
         }

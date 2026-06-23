@@ -9,6 +9,7 @@ using CraftQuest.Application.Services.Quizzes;
 using CraftQuest.Application.Services.Teacher;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
+using CraftQuest.Infrastructure.Services.Practice;
 using Microsoft.EntityFrameworkCore;
 
 namespace CraftQuest.Infrastructure.Services;
@@ -196,8 +197,10 @@ public class PracticeService(
                 });
             }
 
-            dbContext.PracticeSessions.Add(session);
-            await dbContext.SaveChangesAsync(cancellationToken);
+            await PracticeSnapshotBulkInserter.InsertAsync(
+                dbContext,
+                session,
+                cancellationToken: cancellationToken);
         }
         finally
         {

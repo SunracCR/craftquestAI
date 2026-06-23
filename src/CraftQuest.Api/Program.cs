@@ -27,7 +27,8 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new UtcDateTimeJsonConverter());
         options.JsonSerializerOptions.Converters.Add(new NullableUtcDateTimeJsonConverter());
     });
-builder.Services.AddCraftQuestApplicationInsights(builder.Configuration);
+builder.Services.AddCraftQuestApplicationInsights(builder.Configuration, builder.Environment);
+builder.Logging.AddCraftQuestApplicationInsightsLogging(builder.Environment);
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddCraftQuestAuth(builder.Configuration);
 builder.Services.AddEndpointsApiExplorer();

@@ -1165,7 +1165,7 @@
   "guestCodePasteTooltip": "Pegar",
   "guestEphemeralNotice": "Esta sesión es temporal. Al salir se borra todo.",
   "guestAnonymousLimitTitle": "¡Buen trabajo practicando!",
-  "guestAnonymousLimitMessage": "Has alcanzado el límite de prácticas anónimas. Crea una cuenta gratis en 10 segundos para seguir jugando, guardar tu progreso y crear tus propios cuestionarios.",
+  "guestAnonymousLimitMessage": "Has alcanzado el límite de prácticas anónimas. Crea una cuenta gratis en 10 segundos para seguir practicando, guardar tu progreso y crear tus propios cuestionarios.",
   "guestAnonymousLimitLater": "Más tarde",
   "guestAnonymousLimitSignUp": "Crear cuenta",
   "guestPracticeWithCodeAction": "Practicar con código",

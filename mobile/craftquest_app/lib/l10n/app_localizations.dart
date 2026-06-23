@@ -469,7 +469,7 @@ abstract class AppLocalizations {
   /// No description provided for @oauthGoogleWebOriginHint.
   ///
   /// In es, this message translates to:
-  /// **' En Google Cloud (cliente Web), añade orígenes JavaScript autorizados: http://localhost:7357 y http://127.0.0.1:7357 (mismo puerto que flutter run --web-port).'**
+  /// **' En Google Cloud (cliente Web), añade orígenes JavaScript autorizados: https://app.craftquestai.com, http://localhost:7357 y http://127.0.0.1:7357.'**
   String get oauthGoogleWebOriginHint;
 
   /// No description provided for @oauthGooglePeopleApiHint.
@@ -4050,7 +4050,7 @@ abstract class AppLocalizations {
   /// No description provided for @guestAnonymousLimitMessage.
   ///
   /// In es, this message translates to:
-  /// **'Has alcanzado el límite de prácticas anónimas. Crea una cuenta gratis en 10 segundos para seguir jugando, guardar tu progreso y crear tus propios cuestionarios.'**
+  /// **'Has alcanzado el límite de prácticas anónimas. Crea una cuenta gratis en 10 segundos para seguir practicando, guardar tu progreso y crear tus propios cuestionarios.'**
   String get guestAnonymousLimitMessage;
 
   /// No description provided for @guestAnonymousLimitLater.

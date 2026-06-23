@@ -2453,7 +2453,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get guestAnonymousLimitMessage =>
-      'Has alcanzado el límite de prácticas anónimas. Crea una cuenta gratis en 10 segundos para seguir jugando, guardar tu progreso y crear tus propios cuestionarios.';
+      'Has alcanzado el límite de prácticas anónimas. Crea una cuenta gratis en 10 segundos para seguir practicando, guardar tu progreso y crear tus propios cuestionarios.';
 
   @override
   String get guestAnonymousLimitLater => 'Más tarde';

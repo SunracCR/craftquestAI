@@ -16,6 +16,7 @@ import 'package:craftquest_app/features/practice/data/practice_repository.dart';
 import 'package:craftquest_app/features/practice/data/practice_preferences_repository.dart';
 import 'package:craftquest_app/features/practice/domain/practice_launch_options.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_elapsed_timer.dart';
+import 'package:craftquest_app/features/practice/presentation/practice_image_precacher.dart';
 import 'package:craftquest_app/features/practice/presentation/practice_result_page.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_question_nav_header.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_question_nav_status.dart';
@@ -214,6 +215,20 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
     _elapsedBaseline = Duration(seconds: session.elapsedSecondsBeforePause);
     _currentIndex = index;
     _session = session;
+    _precacheAdjacentQuestions();
+  }
+
+  void _precacheAdjacentQuestions() {
+    final session = _session;
+    if (session == null || !mounted) {
+      return;
+    }
+    PracticeImagePrecacher.precacheAdjacentQuestions(
+      context,
+      apiBaseUrl: getIt<ApiClient>().dio.options.baseUrl,
+      questions: session.questions,
+      currentIndex: _currentIndex,
+    );
   }
 
   Future<void> _resumeSession(String sessionId) async {
@@ -469,6 +484,7 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
       _currentIndex = index;
       _hydrateSelections(session.questions[index]);
     });
+    _precacheAdjacentQuestions();
   }
 
   Future<void> _persistSelection(PracticeQuestionModel question) async {

@@ -1,3 +1,4 @@
+import 'package:craftquest_app/core/utils/media_request_headers.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class GuestTokenStorage {
@@ -13,6 +14,7 @@ class GuestTokenStorage {
     required String visitId,
     required String token,
   }) async {
+    MediaRequestHeaders.invalidate();
     await _storage.write(key: _visitIdKey, value: visitId);
     await _storage.write(key: _tokenKey, value: token);
   }
@@ -25,6 +27,7 @@ class GuestTokenStorage {
   }
 
   Future<void> clear() async {
+    MediaRequestHeaders.invalidate();
     await _storage.delete(key: _visitIdKey);
     await _storage.delete(key: _tokenKey);
   }
