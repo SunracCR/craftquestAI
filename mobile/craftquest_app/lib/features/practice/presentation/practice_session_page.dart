@@ -620,6 +620,9 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
       final result =
           await _repository.finishSession(session.practiceSessionId);
       if (!mounted) return;
+      if (result.canViewDetailedReview) {
+        _repository.prefetchMySessionReview(result.practiceSessionId);
+      }
       final elapsed = _showTimer ? _totalElapsed : null;
       await Navigator.of(context).pushReplacement(
         MaterialPageRoute<void>(
@@ -627,7 +630,6 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
             result: result,
             quizTitle: widget.quizTitle,
             elapsed: elapsed,
-            enableSoundEffects: _launchOptions.enableSoundEffects,
           ),
         ),
       );

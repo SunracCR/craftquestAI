@@ -45,19 +45,6 @@ class PracticeSessionFeedback {
     HapticFeedback.mediumImpact();
   }
 
-  void onResult(double percentage) {
-    if (_enabled) {
-      _soundService.playResultSfx(percentage);
-    }
-    if (percentage >= 80) {
-      HapticFeedback.mediumImpact();
-    } else if (percentage >= 50) {
-      HapticFeedback.lightImpact();
-    } else {
-      HapticFeedback.selectionClick();
-    }
-  }
-
   /// Plays a short preview when the user enables sound effects in settings.
   static void previewEnabled(SoundService soundService) {
     unawaited(soundService.warmUp());

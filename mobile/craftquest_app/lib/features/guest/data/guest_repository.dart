@@ -156,6 +156,59 @@ class GuestRepository {
     required String visitId,
     required String token,
     required String sessionId,
+    bool forceRefresh = false,
+  }) async {
+    final cacheKey = _attemptReviewCacheKey(visitId, sessionId);
+    if (!forceRefresh && _cachedAttemptReviewKey == cacheKey) {
+      final cached = _cachedAttemptReview;
+      if (cached != null) {
+        return cached;
+      }
+    }
+    if (!forceRefresh &&
+        _attemptReviewInFlight != null &&
+        _attemptReviewInFlightKey == cacheKey) {
+      return _attemptReviewInFlight!;
+    }
+
+    final request = _fetchAttemptReview(
+      visitId: visitId,
+      token: token,
+      sessionId: sessionId,
+    );
+    _attemptReviewInFlight = request;
+    _attemptReviewInFlightKey = cacheKey;
+    try {
+      final review = await request;
+      _cachedAttemptReview = review;
+      _cachedAttemptReviewKey = cacheKey;
+      return review;
+    } finally {
+      if (identical(_attemptReviewInFlight, request)) {
+        _attemptReviewInFlight = null;
+        _attemptReviewInFlightKey = null;
+      }
+    }
+  }
+
+  Future<void> prefetchAttemptReview({
+    required String visitId,
+    required String token,
+    required String sessionId,
+  }) async {
+    try {
+      await getAttemptReview(
+        visitId: visitId,
+        token: token,
+        sessionId: sessionId,
+      );
+    } catch (_) {}
+  }
+
+  Future<TeacherPracticeReviewModel> _fetchAttemptReview({
+    required String visitId,
+    required String token,
+    required String sessionId,
   }) async {
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
       '/api/guest/$visitId/attempts/$sessionId/review',
@@ -163,6 +216,14 @@ class GuestRepository {
     );
     return TeacherPracticeReviewModel.fromJson(response.data!);
   }
+
+  static String _attemptReviewCacheKey(String visitId, String sessionId) =>
+      '$visitId::$sessionId';
+
+  TeacherPracticeReviewModel? _cachedAttemptReview;
+  String? _cachedAttemptReviewKey;
+  Future<TeacherPracticeReviewModel>? _attemptReviewInFlight;
+  String? _attemptReviewInFlightKey;
 
   Future<void> leave({
     required String visitId,

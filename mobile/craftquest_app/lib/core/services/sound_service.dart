@@ -41,24 +41,6 @@ class SoundService {
 
   void playFinishSfx() => playSfx(AudioAssets.sfxFinish);
 
-  void playResultSfx(double percentage) {
-    if (percentage >= 80) {
-      playSfx(
-        AudioAssets.sfxStart,
-        volume: 1,
-        playbackRate: 1.05,
-      );
-    } else if (percentage >= 50) {
-      playSfx(AudioAssets.sfxFinish);
-    } else {
-      playSfx(
-        AudioAssets.sfxFinish,
-        volume: 0.75,
-        playbackRate: 0.92,
-      );
-    }
-  }
-
   void playSfx(
     String assetPath, {
     double volume = 1,

@@ -1,5 +1,4 @@
 import 'package:craftquest_app/core/di/injection.dart';
-import 'package:craftquest_app/core/services/sound_service.dart';
 import 'package:craftquest_app/core/utils/assignment_dates.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
@@ -11,7 +10,7 @@ import 'package:craftquest_app/core/widgets/app_page_header.dart';
 import 'package:craftquest_app/core/widgets/app_section_card.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/features/practice/data/models/practice_models.dart';
-import 'package:craftquest_app/features/practice/presentation/practice_session_feedback.dart';
+import 'package:craftquest_app/features/practice/data/practice_repository.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_score_summary_card.dart';
 import 'package:craftquest_app/features/teacher/presentation/teacher_session_review_page.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
@@ -23,13 +22,11 @@ class PracticeResultPage extends StatefulWidget {
     required this.result,
     required this.quizTitle,
     this.elapsed,
-    this.enableSoundEffects = true,
   });
 
   final PracticeSessionResultModel result;
   final String quizTitle;
   final Duration? elapsed;
-  final bool enableSoundEffects;
 
   @override
   State<PracticeResultPage> createState() => _PracticeResultPageState();
@@ -39,10 +36,10 @@ class _PracticeResultPageState extends State<PracticeResultPage> {
   @override
   void initState() {
     super.initState();
-    PracticeSessionFeedback(
-      getIt<SoundService>(),
-      enabled: widget.enableSoundEffects,
-    ).onResult(widget.result.percentage);
+    if (widget.result.canViewDetailedReview) {
+      getIt<PracticeRepository>()
+          .prefetchMySessionReview(widget.result.practiceSessionId);
+    }
   }
 
   String _reviewHiddenMessage(AppLocalizations l10n, String locale) {

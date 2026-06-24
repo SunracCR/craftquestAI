@@ -475,6 +475,11 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
         sessionId: session.practiceSessionId,
       );
       if (!mounted) return;
+      _repository.prefetchAttemptReview(
+        visitId: widget.visitId,
+        token: widget.token,
+        sessionId: result.practiceSessionId,
+      );
       final guestCubit = context.read<GuestSessionCubit>();
       final elapsed = _showTimer ? _totalElapsed : null;
       await Navigator.of(context).pushReplacement(
@@ -487,7 +492,6 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
               guestVisitId: widget.visitId,
               guestToken: widget.token,
               elapsed: elapsed,
-              enableSoundEffects: widget.enableSoundEffects,
             ),
           ),
         ),

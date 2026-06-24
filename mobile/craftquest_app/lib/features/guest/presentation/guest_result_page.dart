@@ -1,5 +1,4 @@
 import 'package:craftquest_app/core/di/injection.dart';
-import 'package:craftquest_app/core/services/sound_service.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_bottom_bar.dart';
@@ -7,10 +6,10 @@ import 'package:craftquest_app/core/widgets/app_buttons.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/features/auth/presentation/auth_bloc.dart';
 import 'package:craftquest_app/features/auth/presentation/register_page.dart';
+import 'package:craftquest_app/features/guest/data/guest_repository.dart';
 import 'package:craftquest_app/features/guest/presentation/guest_session_navigation.dart';
 import 'package:craftquest_app/features/guest/presentation/widgets/guest_register_benefits_promo_page.dart';
 import 'package:craftquest_app/features/practice/data/models/practice_models.dart';
-import 'package:craftquest_app/features/practice/presentation/practice_session_feedback.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_score_summary_card.dart';
 import 'package:craftquest_app/features/teacher/presentation/teacher_session_review_page.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
@@ -25,7 +24,6 @@ class GuestResultPage extends StatefulWidget {
     required this.guestVisitId,
     required this.guestToken,
     this.elapsed,
-    this.enableSoundEffects = true,
   });
 
   final PracticeSessionResultModel result;
@@ -33,7 +31,6 @@ class GuestResultPage extends StatefulWidget {
   final String guestVisitId;
   final String guestToken;
   final Duration? elapsed;
-  final bool enableSoundEffects;
 
   @override
   State<GuestResultPage> createState() => _GuestResultPageState();
@@ -43,10 +40,11 @@ class _GuestResultPageState extends State<GuestResultPage> {
   @override
   void initState() {
     super.initState();
-    PracticeSessionFeedback(
-      getIt<SoundService>(),
-      enabled: widget.enableSoundEffects,
-    ).onResult(widget.result.percentage);
+    getIt<GuestRepository>().prefetchAttemptReview(
+      visitId: widget.guestVisitId,
+      token: widget.guestToken,
+      sessionId: widget.result.practiceSessionId,
+    );
   }
 
   @override

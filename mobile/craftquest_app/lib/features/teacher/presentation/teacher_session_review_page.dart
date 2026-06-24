@@ -58,7 +58,7 @@ class _TeacherSessionReviewPageState extends State<TeacherSessionReviewPage> {
     _load();
   }
 
-  Future<void> _load() async {
+  Future<void> _load({bool forceRefresh = false}) async {
     setState(() {
       _loading = true;
       _error = null;
@@ -73,9 +73,13 @@ class _TeacherSessionReviewPageState extends State<TeacherSessionReviewPage> {
           visitId: widget.guestVisitId!,
           token: widget.guestToken!,
           sessionId: widget.sessionId,
+          forceRefresh: forceRefresh,
         );
       } else if (widget.isMyReview) {
-        review = await _practiceRepository.getMySessionReview(widget.sessionId);
+        review = await _practiceRepository.getMySessionReview(
+          widget.sessionId,
+          forceRefresh: forceRefresh,
+        );
       } else {
         review = await _teacherRepository.getSessionReview(widget.sessionId);
       }
@@ -278,7 +282,7 @@ class _TeacherSessionReviewPageState extends State<TeacherSessionReviewPage> {
               ? AppErrorView(
                   message: _error!,
                   retryLabel: l10n.retry,
-                  onRetry: _load,
+                  onRetry: () => _load(forceRefresh: true),
                 )
               : review == null
                   ? const SizedBox.shrink()

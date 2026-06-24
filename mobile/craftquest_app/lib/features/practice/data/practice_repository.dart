@@ -130,12 +130,54 @@ class PracticeRepository {
         .toList();
   }
 
-  Future<TeacherPracticeReviewModel> getMySessionReview(String sessionId) async {
+  Future<TeacherPracticeReviewModel> getMySessionReview(
+    String sessionId, {
+    bool forceRefresh = false,
+  }) async {
+    if (!forceRefresh &&
+        _cachedMyReview != null &&
+        _cachedMyReviewSessionId == sessionId) {
+      return _cachedMyReview!;
+    }
+    if (!forceRefresh &&
+        _myReviewInFlight != null &&
+        _myReviewInFlightSessionId == sessionId) {
+      return _myReviewInFlight!;
+    }
+
+    final request = _fetchMySessionReview(sessionId);
+    _myReviewInFlight = request;
+    _myReviewInFlightSessionId = sessionId;
+    try {
+      final review = await request;
+      _cachedMyReview = review;
+      _cachedMyReviewSessionId = sessionId;
+      return review;
+    } finally {
+      if (identical(_myReviewInFlight, request)) {
+        _myReviewInFlight = null;
+        _myReviewInFlightSessionId = null;
+      }
+    }
+  }
+
+  Future<void> prefetchMySessionReview(String sessionId) async {
+    try {
+      await getMySessionReview(sessionId);
+    } catch (_) {}
+  }
+
+  Future<TeacherPracticeReviewModel> _fetchMySessionReview(String sessionId) async {
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
       '/api/practice-sessions/$sessionId/my-review',
     );
     return TeacherPracticeReviewModel.fromJson(response.data!);
   }
+
+  TeacherPracticeReviewModel? _cachedMyReview;
+  String? _cachedMyReviewSessionId;
+  Future<TeacherPracticeReviewModel>? _myReviewInFlight;
+  String? _myReviewInFlightSessionId;
 
   Future<MyQuizPracticeAnalyticsModel> getMyQuizAnalytics(String quizId) async {
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
