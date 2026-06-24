@@ -302,6 +302,7 @@ public class GeminiQuizGenerationProvider(
         catch (Exception ex)
         {
             trace.GeminiResponse(label, model, jsonText, null, $"parse failed: {ex.Message}");
+            trace.RecordCqifRepair(label);
             trace.Stage("repair.start", $"Repairing CQIF for {label}");
             var repaired = await RepairCqifAsync(jsonText, model, label, cancellationToken);
             trace.DocumentSnapshot($"{label}-repaired", repaired);

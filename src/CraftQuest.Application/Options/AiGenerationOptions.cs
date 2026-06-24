@@ -21,7 +21,8 @@ public class AiGenerationOptions
     /// <summary>Shorter window when user starts a new generation (unblocks stuck jobs sooner).</summary>
     public int StaleProcessingMinutesOnStart { get; set; } = 8;
     public int ChunkTargetWordsPerRequest { get; set; } = 3800;
-    public int MaxParallelChunkRequests { get; set; } = 3;
+    public int MaxParallelChunkRequests { get; set; } = 4;
+    public int ProcessingLoopDelayMilliseconds { get; set; } = 500;
     public bool UseOutlinePhase { get; set; } = true;
     public int OutlineMaxSourceCharacters { get; set; } = 10_000;
     public int MinQuestionsForOutlinePhase { get; set; } = 5;

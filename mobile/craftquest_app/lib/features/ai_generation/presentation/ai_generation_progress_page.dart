@@ -12,6 +12,7 @@ import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/features/ai/data/ai_repository.dart';
 import 'package:craftquest_app/features/ai/data/models/ai_job_model.dart';
 import 'package:craftquest_app/features/ai_generation/presentation/utils/ai_job_stage_labels.dart';
+import 'package:craftquest_app/features/imports/data/import_repository.dart';
 import 'package:craftquest_app/features/imports/data/models/import_models.dart';
 import 'package:craftquest_app/features/imports/presentation/import_preview_page.dart';
 import 'package:craftquest_app/features/quizzes/presentation/quiz_flow_anchor.dart';
@@ -23,6 +24,8 @@ import 'package:flutter/material.dart';
 /// Aligns with backend [StaleProcessingMinutes] (appsettings AiGeneration).
 const _staleJobThreshold = Duration(minutes: 12);
 const _longRunningHint = Duration(minutes: 8);
+const _pollIntervalPending = Duration(seconds: 2);
+const _pollIntervalProcessing = Duration(milliseconds: 500);
 
 class AiGenerationProgressPage extends StatefulWidget {
   const AiGenerationProgressPage({
@@ -42,6 +45,7 @@ class AiGenerationProgressPage extends StatefulWidget {
 
 class _AiGenerationProgressPageState extends State<AiGenerationProgressPage> {
   final _aiRepository = getIt<AiRepository>();
+  final _importRepository = getIt<ImportRepository>();
   String? _error;
   String? _errorDetail;
   AiJobModel? _job;
@@ -77,6 +81,13 @@ class _AiGenerationProgressPageState extends State<AiGenerationProgressPage> {
       _error = l10n.aiGenerationProgressStuck;
       _errorDetail = l10n.aiGenerationProgressStuckDetail;
     });
+  }
+
+  Duration _pollIntervalFor(AiJobModel job) {
+    if (job.status == 'pending' || job.isDeferredRetry) {
+      return _pollIntervalPending;
+    }
+    return _pollIntervalProcessing;
   }
 
   Future<void> _poll() async {
@@ -116,6 +127,9 @@ class _AiGenerationProgressPageState extends State<AiGenerationProgressPage> {
 
         if (job.isCompleted && job.questionImportBatchId != null) {
           final importId = job.questionImportBatchId!;
+          await _importRepository.prefetchPreview(importId);
+          if (!mounted) return;
+
           final quizId = job.targetQuizId ?? widget.targetQuizId;
           final confirmed = await Navigator.of(context).push<bool>(
             MaterialPageRoute<bool>(
@@ -158,7 +172,7 @@ class _AiGenerationProgressPageState extends State<AiGenerationProgressPage> {
           return;
         }
 
-        await Future<void>.delayed(const Duration(seconds: 2));
+        await Future<void>.delayed(_pollIntervalFor(job));
       } on DioException catch (e) {
         if (!mounted) return;
         final status = e.response?.statusCode;

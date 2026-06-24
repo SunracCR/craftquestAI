@@ -12,6 +12,10 @@ class ImportRepository {
 
   static const int maxExcelFileBytes = 5 * 1024 * 1024;
 
+  String? _cachedPreviewImportId;
+  ImportPreviewModel? _cachedPreview;
+  Future<ImportPreviewModel>? _previewInFlight;
+
   Future<Uint8List> downloadExcelTemplate({required String languageCode}) async {
     final response = await _apiClient.dio.get<List<int>>(
       '/api/question-imports/excel-template',
@@ -69,7 +73,46 @@ class ImportRepository {
     return ImportStatusModel.fromJson(response.data!);
   }
 
-  Future<ImportPreviewModel> getPreview(String importId) async {
+  Future<void> prefetchPreview(String importId) async {
+    try {
+      await getPreview(importId);
+    } catch (_) {
+      // Best-effort warm cache before navigation.
+    }
+  }
+
+  Future<ImportPreviewModel> getPreview(
+    String importId, {
+    bool forceRefresh = false,
+  }) async {
+    if (!forceRefresh &&
+        _cachedPreviewImportId == importId &&
+        _cachedPreview != null) {
+      return _cachedPreview!;
+    }
+
+    if (!forceRefresh &&
+        _previewInFlight != null &&
+        _cachedPreviewImportId == importId) {
+      return _previewInFlight!;
+    }
+
+    final request = _fetchPreview(importId);
+    _cachedPreviewImportId = importId;
+    _previewInFlight = request;
+
+    try {
+      final preview = await request;
+      _cachedPreview = preview;
+      return preview;
+    } finally {
+      if (identical(_previewInFlight, request)) {
+        _previewInFlight = null;
+      }
+    }
+  }
+
+  Future<ImportPreviewModel> _fetchPreview(String importId) async {
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
       '/api/question-imports/$importId/preview',
     );

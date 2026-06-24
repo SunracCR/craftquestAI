@@ -22,19 +22,22 @@ public sealed class AiGenerationTraceContext(
     private Guid? _jobId;
     private StreamWriter? _fileWriter;
     private bool _enabled;
+    private int _cqifRepairCount;
 
     public bool IsActive => _enabled && _jobId is not null;
+
+    public int CqifRepairCount => _cqifRepairCount;
 
     public void BeginJob(Guid jobId)
     {
         EndJob();
+        _cqifRepairCount = 0;
+        _jobId = jobId;
         _enabled = options.Value.EnableAiGenerationTraceLogging;
         if (!_enabled)
         {
             return;
         }
-
-        _jobId = jobId;
         try
         {
             var dir = ResolveLogDirectory();
@@ -80,11 +83,29 @@ public sealed class AiGenerationTraceContext(
 
         if (_jobId is not null)
         {
+            if (_cqifRepairCount > 0)
+            {
+                logger.LogWarning(
+                    "[AiGen] JobId={JobId} completed with {RepairCount} CQIF JSON repair(s)",
+                    _jobId,
+                    _cqifRepairCount);
+            }
+
             logger.LogInformation("[AiGenTrace] JobId={JobId} END trace", _jobId);
         }
 
         _jobId = null;
         _enabled = false;
+    }
+
+    public void RecordCqifRepair(string label)
+    {
+        var count = Interlocked.Increment(ref _cqifRepairCount);
+        logger.LogWarning(
+            "[AiGen] JobId={JobId} CQIF parse failed for {Label}; repair invoked (total repairs={Count})",
+            _jobId,
+            label,
+            count);
     }
 
     public void Stage(string stage, string message, object? data = null)
