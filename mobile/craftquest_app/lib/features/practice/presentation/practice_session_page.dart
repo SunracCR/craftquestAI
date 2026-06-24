@@ -67,7 +67,6 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
   bool _loading = true;
   bool _finishing = false;
   bool _savingProgress = false;
-  bool _musicStarted = false;
   String? _error;
   String? _loadingMessage;
   bool _showTimer = false;
@@ -129,9 +128,7 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
           final apiOptions =
               await preferencesRepository.loadLaunchOptions(widget.quizId);
           _launchOptions = apiOptions.copyWith(
-            enableMusic: widget.options.enableMusic,
             enableSoundEffects: widget.options.enableSoundEffects,
-            musicTrackIndex: widget.options.musicTrackIndex,
           );
         } catch (_) {
           _launchOptions = widget.options;
@@ -173,18 +170,7 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
     for (final timer in _persistDebounceTimers.values) {
       timer.cancel();
     }
-    unawaited(_soundService.stopMusic());
     super.dispose();
-  }
-
-  void _maybeStartMusic() {
-    if (!_launchOptions.enableMusic || _musicStarted) {
-      return;
-    }
-    _musicStarted = true;
-    unawaited(
-      _soundService.startMusicTrack(_launchOptions.clampedMusicTrackIndex),
-    );
   }
 
   void _playStartSfx() {
@@ -203,12 +189,6 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
 
   void _onSessionInteractive() {
     _playStartSfx();
-    _maybeStartMusic();
-  }
-
-  Future<void> _stopSessionAudio() async {
-    await _soundService.stopMusic();
-    _musicStarted = false;
   }
 
   Future<void> _awaitPendingPersists() async {
@@ -353,7 +333,6 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
       return;
     }
     _stopElapsedTimer();
-    await _stopSessionAudio();
     setState(() => _savingProgress = true);
     try {
       await _repository.forfeitSession(session.practiceSessionId);
@@ -386,7 +365,6 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
 
   Future<void> _saveAndExit() async {
     _stopElapsedTimer();
-    await _stopSessionAudio();
     await _awaitPendingPersists();
     await _saveProgress();
     if (mounted) {
@@ -634,7 +612,6 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
       if (_launchOptions.enableSoundEffects) {
         unawaited(_soundService.playFinishSfx());
       }
-      await _stopSessionAudio();
       final result =
           await _repository.finishSession(session.practiceSessionId);
       if (!mounted) return;

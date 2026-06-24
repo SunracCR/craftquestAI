@@ -1,0 +1,17 @@
+{
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": [
+      "/assets/*",
+      "/*.{css,scss,js,map,json,wasm,png,jpg,jpeg,gif,svg,webp,ico,woff,woff2,ttf,otf,mp3,wav,ogg}"
+    ]
+  },
+  "mimeTypes": {
+    ".mp3": "audio/mpeg",
+    ".wav": "audio/wav",
+    ".ogg": "audio/ogg"
+  },
+  "globalHeaders": {
+    "Access-Control-Allow-Origin": "*"
+  }
+}

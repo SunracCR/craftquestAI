@@ -1,60 +1,20 @@
+import 'dart:typed_data';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:craftquest_app/core/assets/audio_assets.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 
-/// Lazy singleton for practice background music and one-shot sound effects.
+/// Lazy singleton for practice session sound effects.
 class SoundService {
-  AudioPlayer? _musicPlayer;
   AudioPlayer? _sfxPlayer;
-  bool _musicPlaying = false;
-  String? _currentMusicAsset;
-
-  Future<void> startMusic(String assetPath) async {
-    if (_musicPlaying && _currentMusicAsset == assetPath) {
-      return;
-    }
-    try {
-      if (_musicPlaying) {
-        await _musicPlayer?.stop();
-        _musicPlaying = false;
-      }
-      _musicPlayer ??= AudioPlayer();
-      await _musicPlayer!.setReleaseMode(ReleaseMode.loop);
-      await _musicPlayer!.setVolume(0.35);
-      await _musicPlayer!.play(AssetSource(_assetKey(assetPath)));
-      _currentMusicAsset = assetPath;
-      _musicPlaying = true;
-    } catch (e, st) {
-      if (kDebugMode) {
-        debugPrint('SoundService.startMusic failed: $e\n$st');
-      }
-    }
-  }
-
-  Future<void> startMusicTrack(int trackIndex) =>
-      startMusic(AudioAssets.musicTrack(trackIndex));
-
-  Future<void> stopMusic() async {
-    if (!_musicPlaying && _musicPlayer == null) {
-      return;
-    }
-    try {
-      await _musicPlayer?.stop();
-    } catch (e, st) {
-      if (kDebugMode) {
-        debugPrint('SoundService.stopMusic failed: $e\n$st');
-      }
-    } finally {
-      _musicPlaying = false;
-      _currentMusicAsset = null;
-    }
-  }
+  static final Map<String, Uint8List> _webBytesCache = {};
 
   Future<void> playSfx(String assetPath) async {
     try {
       _sfxPlayer ??= AudioPlayer();
       await _sfxPlayer!.stop();
-      await _sfxPlayer!.play(AssetSource(_assetKey(assetPath)));
+      await _playAsset(_sfxPlayer!, assetPath);
     } catch (e, st) {
       if (kDebugMode) {
         debugPrint('SoundService.playSfx failed: $e\n$st');
@@ -69,11 +29,33 @@ class SoundService {
   Future<void> playFinishSfx() => playSfx(AudioAssets.sfxFinish);
 
   Future<void> dispose() async {
-    await stopMusic();
-    await _musicPlayer?.dispose();
     await _sfxPlayer?.dispose();
-    _musicPlayer = null;
     _sfxPlayer = null;
+  }
+
+  Future<void> _playAsset(AudioPlayer player, String assetPath) async {
+    if (kIsWeb) {
+      final bytes = await _loadWebBytes(assetPath);
+      await player.play(BytesSource(bytes, mimeType: 'audio/mpeg'));
+      return;
+    }
+    await player.play(
+      AssetSource(_assetKey(assetPath), mimeType: 'audio/mpeg'),
+    );
+  }
+
+  Future<Uint8List> _loadWebBytes(String assetPath) async {
+    final cached = _webBytesCache[assetPath];
+    if (cached != null) {
+      return cached;
+    }
+    final data = await rootBundle.load(assetPath);
+    final bytes = data.buffer.asUint8List(
+      data.offsetInBytes,
+      data.lengthInBytes,
+    );
+    _webBytesCache[assetPath] = bytes;
+    return bytes;
   }
 
   static String _assetKey(String assetPath) =>

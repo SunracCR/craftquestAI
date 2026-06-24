@@ -47,5 +47,4 @@ flutter:
     - assets/images/auth/
     - assets/images/brand/
     - assets/icons/oauth/
-    - assets/audio/music/
     - assets/audio/sfx/

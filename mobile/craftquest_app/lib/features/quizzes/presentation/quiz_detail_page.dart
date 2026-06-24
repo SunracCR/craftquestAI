@@ -73,9 +73,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
   String _publicationStatus = 'draft';
   bool _randomizeQuestions = false;
   bool _showTimer = true;
-  bool _enableMusic = PracticeLaunchOptions.defaults.enableMusic;
   bool _enableSoundEffects = PracticeLaunchOptions.defaults.enableSoundEffects;
-  int _musicTrackIndex = PracticeLaunchOptions.defaults.musicTrackIndex;
   late String _quizTitle;
   late final TextEditingController _titleController;
   late final FocusNode _titleFocusNode;
@@ -238,16 +236,9 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
       final prefs = await _soundPreferenceStore.load();
       if (!mounted) return;
       setState(() {
-        _enableMusic = prefs.enableMusic;
         _enableSoundEffects = prefs.enableSoundEffects;
-        _musicTrackIndex = prefs.musicTrackIndex;
       });
     } catch (_) {}
-  }
-
-  Future<void> _updateMusic(bool value) async {
-    setState(() => _enableMusic = value);
-    await _soundPreferenceStore.saveMusic(value);
   }
 
   Future<void> _updateSoundEffects(bool value) async {
@@ -255,17 +246,10 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
     await _soundPreferenceStore.saveSoundEffects(value);
   }
 
-  Future<void> _updateMusicTrackIndex(int value) async {
-    setState(() => _musicTrackIndex = value);
-    await _soundPreferenceStore.saveMusicTrackIndex(value);
-  }
-
   PracticeLaunchOptions get _currentLaunchOptions => PracticeLaunchOptions(
         randomizeQuestions: _randomizeQuestions,
         showTimer: _showTimer,
-        enableMusic: _enableMusic,
         enableSoundEffects: _enableSoundEffects,
-        musicTrackIndex: _musicTrackIndex,
       );
 
   Future<void> _loadPracticePreferences() async {
@@ -1149,17 +1133,12 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
                                       showRandomizeOption: !widget.isOwner ||
                                           !_quizModificationLocked,
                                       showTimer: _showTimer,
-                                      enableMusic: _enableMusic,
                                       enableSoundEffects: _enableSoundEffects,
-                                      musicTrackIndex: _musicTrackIndex,
                                       onRandomizeQuestionsChanged:
                                           _updateRandomizeQuestions,
                                       onShowTimerChanged: _updateShowTimer,
-                                      onMusicChanged: _updateMusic,
                                       onSoundEffectsChanged:
                                           _updateSoundEffects,
-                                      onMusicTrackChanged:
-                                          _updateMusicTrackIndex,
                                     ),
                             ],
                           ],

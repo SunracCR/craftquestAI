@@ -35,9 +35,7 @@ class _StudentAssignmentDetailPageState extends State<StudentAssignmentDetailPag
   final _assignmentRandomizeStore = AssignmentRandomizePreferenceStore();
   final _soundPreferenceStore = getIt<PracticeSoundPreferenceStore>();
   bool _randomizeQuestions = false;
-  bool _enableMusic = PracticeLaunchOptions.defaults.enableMusic;
   bool _enableSoundEffects = PracticeLaunchOptions.defaults.enableSoundEffects;
-  int _musicTrackIndex = PracticeLaunchOptions.defaults.musicTrackIndex;
   bool _starting = false;
 
   StudentAssignmentModel get assignment => widget.assignment;
@@ -59,16 +57,9 @@ class _StudentAssignmentDetailPageState extends State<StudentAssignmentDetailPag
       final prefs = await _soundPreferenceStore.load();
       if (!mounted) return;
       setState(() {
-        _enableMusic = prefs.enableMusic;
         _enableSoundEffects = prefs.enableSoundEffects;
-        _musicTrackIndex = prefs.musicTrackIndex;
       });
     } catch (_) {}
-  }
-
-  Future<void> _updateMusic(bool value) async {
-    setState(() => _enableMusic = value);
-    await _soundPreferenceStore.saveMusic(value);
   }
 
   Future<void> _updateSoundEffects(bool value) async {
@@ -76,17 +67,10 @@ class _StudentAssignmentDetailPageState extends State<StudentAssignmentDetailPag
     await _soundPreferenceStore.saveSoundEffects(value);
   }
 
-  Future<void> _updateMusicTrackIndex(int value) async {
-    setState(() => _musicTrackIndex = value);
-    await _soundPreferenceStore.saveMusicTrackIndex(value);
-  }
-
   PracticeLaunchOptions get _currentLaunchOptions => PracticeLaunchOptions(
         randomizeQuestions: _effectiveRandomize,
         showTimer: PracticeLaunchOptions.defaults.showTimer,
-        enableMusic: _enableMusic,
         enableSoundEffects: _enableSoundEffects,
-        musicTrackIndex: _musicTrackIndex,
       );
 
   Future<void> _loadAssignmentRandomizePreference() async {
@@ -363,14 +347,10 @@ class _StudentAssignmentDetailPageState extends State<StudentAssignmentDetailPag
               showTimer: false,
               showTimerOption: false,
               showRandomizeOption: assignment.allowStudentRandomizeQuestions,
-              enableMusic: _enableMusic,
               enableSoundEffects: _enableSoundEffects,
-              musicTrackIndex: _musicTrackIndex,
               onRandomizeQuestionsChanged: _updateRandomizeQuestions,
               onShowTimerChanged: (_) {},
-              onMusicChanged: _updateMusic,
               onSoundEffectsChanged: _updateSoundEffects,
-              onMusicTrackChanged: _updateMusicTrackIndex,
               randomizeQuestionsHint: l10n.practiceRandomizeQuestionsHint,
             ),
             const SizedBox(height: AppSpacing.md),

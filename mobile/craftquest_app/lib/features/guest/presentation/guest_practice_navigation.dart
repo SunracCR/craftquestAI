@@ -12,9 +12,7 @@ Future<void> openGuestPracticeSession(
   required String quizTitle,
   bool? randomizeQuestions,
   bool showElapsedTimer = false,
-  bool enableMusic = false,
   bool enableSoundEffects = true,
-  int musicTrackIndex = 0,
   Future<PracticeActiveSessionModel?>? activeSessionPrefetch,
 }) async {
   if (!context.mounted) {
@@ -32,9 +30,7 @@ Future<void> openGuestPracticeSession(
           quizTitle: quizTitle,
           randomizeQuestions: randomizeQuestions,
           showElapsedTimer: showElapsedTimer,
-          enableMusic: enableMusic,
           enableSoundEffects: enableSoundEffects,
-          musicTrackIndex: musicTrackIndex,
           activeSessionPrefetch: activeSessionPrefetch,
         ),
       ),

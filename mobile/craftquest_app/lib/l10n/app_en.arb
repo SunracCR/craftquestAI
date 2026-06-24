@@ -389,11 +389,8 @@
   "quizRandomizeQuestionsHint": "Applies to your students' assignments and when they practice this quiz",
   "practiceShowTimerLabel": "Show elapsed time",
   "practiceShowTimerHint": "Displays a running clock while you answer the quiz",
-  "practiceBackgroundMusicLabel": "Background music",
-  "practiceBackgroundMusicHint": "Plays a looping background track while you practice",
   "practiceSoundEffectsLabel": "Sound effects",
   "practiceSoundEffectsHint": "Sounds when starting, navigating questions, and finishing",
-  "practiceSelectMusicTrackLabel": "Music track",
   "practiceElapsedLabel": "Time: {elapsed}",
   "@practiceElapsedLabel": {
     "placeholders": { "elapsed": { "type": "String" } }

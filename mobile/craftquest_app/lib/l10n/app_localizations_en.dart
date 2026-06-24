@@ -934,21 +934,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Displays a running clock while you answer the quiz';
 
   @override
-  String get practiceBackgroundMusicLabel => 'Background music';
-
-  @override
-  String get practiceBackgroundMusicHint =>
-      'Plays a looping background track while you practice';
-
-  @override
   String get practiceSoundEffectsLabel => 'Sound effects';
 
   @override
   String get practiceSoundEffectsHint =>
       'Sounds when starting, navigating questions, and finishing';
-
-  @override
-  String get practiceSelectMusicTrackLabel => 'Music track';
 
   @override
   String practiceElapsedLabel(String elapsed) {

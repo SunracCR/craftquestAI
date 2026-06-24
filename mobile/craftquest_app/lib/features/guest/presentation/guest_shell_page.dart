@@ -1,4 +1,3 @@
-import 'package:craftquest_app/core/assets/audio_assets.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/utils/assignment_dates.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
@@ -37,9 +36,7 @@ class _GuestShellPageState extends State<GuestShellPage>
   bool _loadingAttempts = false;
   bool _startingPractice = false;
   bool _randomize = false;
-  bool _enableMusic = PracticeLaunchOptions.defaults.enableMusic;
   bool _enableSoundEffects = PracticeLaunchOptions.defaults.enableSoundEffects;
-  int _musicTrackIndex = PracticeLaunchOptions.defaults.musicTrackIndex;
   final _soundPreferenceStore = getIt<PracticeSoundPreferenceStore>();
 
   static const _heroGradient = LinearGradient(
@@ -73,26 +70,14 @@ class _GuestShellPageState extends State<GuestShellPage>
       final prefs = await _soundPreferenceStore.load();
       if (!mounted) return;
       setState(() {
-        _enableMusic = prefs.enableMusic;
         _enableSoundEffects = prefs.enableSoundEffects;
-        _musicTrackIndex = prefs.musicTrackIndex;
       });
     } catch (_) {}
-  }
-
-  Future<void> _updateMusic(bool value) async {
-    setState(() => _enableMusic = value);
-    await _soundPreferenceStore.saveMusic(value);
   }
 
   Future<void> _updateSoundEffects(bool value) async {
     setState(() => _enableSoundEffects = value);
     await _soundPreferenceStore.saveSoundEffects(value);
-  }
-
-  Future<void> _updateMusicTrackIndex(int value) async {
-    setState(() => _musicTrackIndex = value);
-    await _soundPreferenceStore.saveMusicTrackIndex(value);
   }
 
   @override
@@ -138,9 +123,7 @@ class _GuestShellPageState extends State<GuestShellPage>
         quizTitle: _visit.quizTitle,
         randomizeQuestions: _randomize ? true : null,
         showElapsedTimer: false,
-        enableMusic: _enableMusic,
         enableSoundEffects: _enableSoundEffects,
-        musicTrackIndex: _musicTrackIndex,
       );
       if (mounted) await _loadAttempts();
     } finally {
@@ -271,62 +254,6 @@ class _GuestShellPageState extends State<GuestShellPage>
                       freeBadge: l10n.guestShellFreeBadge,
                       onUnlock: () => _goRegister(context),
                     ),
-                    Divider(
-                      height: 1,
-                      indent: AppSpacing.md,
-                      endIndent: AppSpacing.md,
-                      color: AppColors.textSecondary.withValues(alpha: 0.12),
-                    ),
-                    _GuestOptionTile(
-                      icon: Icons.music_note_rounded,
-                      iconColor: AppColors.accentGold,
-                      title: l10n.practiceBackgroundMusicLabel,
-                      subtitle: l10n.practiceBackgroundMusicHint,
-                      value: _enableMusic,
-                      onChanged: _updateMusic,
-                    ),
-                    if (_enableMusic) ...[
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppSpacing.md,
-                          0,
-                          AppSpacing.md,
-                          AppSpacing.sm,
-                        ),
-                        child: DropdownButtonFormField<int>(
-                          value: _musicTrackIndex.clamp(
-                            0,
-                            AudioAssets.trackCount - 1,
-                          ),
-                          decoration: InputDecoration(
-                            labelText: l10n.practiceSelectMusicTrackLabel,
-                            isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.sm,
-                              vertical: AppSpacing.xs,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppColors.radiusSm),
-                            ),
-                          ),
-                          items: List.generate(
-                            AudioAssets.trackCount,
-                            (index) => DropdownMenuItem(
-                              value: index,
-                              child: Text(
-                                AudioAssets.musicTrackLabel(index),
-                              ),
-                            ),
-                          ),
-                          onChanged: (value) {
-                            if (value != null) {
-                              _updateMusicTrackIndex(value);
-                            }
-                          },
-                        ),
-                      ),
-                    ],
                     Divider(
                       height: 1,
                       indent: AppSpacing.md,

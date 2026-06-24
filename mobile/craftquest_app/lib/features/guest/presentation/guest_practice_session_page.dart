@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:craftquest_app/core/assets/audio_assets.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/api_client.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
@@ -36,9 +35,7 @@ class GuestPracticeSessionPage extends StatefulWidget {
     required this.quizTitle,
     this.randomizeQuestions,
     this.showElapsedTimer = false,
-    this.enableMusic = false,
     this.enableSoundEffects = true,
-    this.musicTrackIndex = 0,
     this.activeSessionPrefetch,
   });
 
@@ -47,9 +44,7 @@ class GuestPracticeSessionPage extends StatefulWidget {
   final String quizTitle;
   final bool? randomizeQuestions;
   final bool showElapsedTimer;
-  final bool enableMusic;
   final bool enableSoundEffects;
-  final int musicTrackIndex;
   final Future<PracticeActiveSessionModel?>? activeSessionPrefetch;
 
   @override
@@ -68,7 +63,6 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
   bool _loading = true;
   bool _finishing = false;
   bool _savingProgress = false;
-  bool _musicStarted = false;
   String? _error;
   String? _loadingMessage;
   bool _showTimer = false;
@@ -92,18 +86,7 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
     for (final timer in _persistDebounceTimers.values) {
       timer.cancel();
     }
-    unawaited(_soundService.stopMusic());
     super.dispose();
-  }
-
-  void _maybeStartMusic() {
-    if (!widget.enableMusic || _musicStarted) {
-      return;
-    }
-    _musicStarted = true;
-    final trackIndex =
-        widget.musicTrackIndex.clamp(0, AudioAssets.trackCount - 1);
-    unawaited(_soundService.startMusicTrack(trackIndex));
   }
 
   void _playStartSfx() {
@@ -122,12 +105,6 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
 
   void _onSessionInteractive() {
     _playStartSfx();
-    _maybeStartMusic();
-  }
-
-  Future<void> _stopSessionAudio() async {
-    await _soundService.stopMusic();
-    _musicStarted = false;
   }
 
   Future<void> _awaitPendingPersists() async {
@@ -497,7 +474,6 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
       if (widget.enableSoundEffects) {
         unawaited(_soundService.playFinishSfx());
       }
-      await _stopSessionAudio();
       final result = await _repository.finishSession(
         visitId: widget.visitId,
         token: widget.token,
@@ -608,7 +584,6 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
         final should = await _confirmExit(context, l10n);
         if (should && mounted) {
           _stopElapsedTimer();
-          await _stopSessionAudio();
           await _awaitPendingPersists();
           await _saveProgress();
           if (mounted) Navigator.of(context).pop();
