@@ -21,6 +21,7 @@ import 'package:craftquest_app/features/practice/presentation/practice_image_pre
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_elapsed_timer.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_question_nav_header.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_question_nav_status.dart';
+import 'package:craftquest_app/features/practice/presentation/practice_session_feedback.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_resume_dialog.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_session_bottom_bar.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
@@ -55,6 +56,7 @@ class GuestPracticeSessionPage extends StatefulWidget {
 class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
   late final GuestRepository _repository;
   final _soundService = getIt<SoundService>();
+  late final PracticeSessionFeedback _feedback;
 
   PracticeSessionModel? _session;
   final Map<String, String> _questionStatuses = {};
@@ -75,6 +77,11 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
   @override
   void initState() {
     super.initState();
+    _feedback = PracticeSessionFeedback(
+      _soundService,
+      enabled: widget.enableSoundEffects,
+    );
+    unawaited(_soundService.warmUp());
     _repository = getIt<GuestRepository>();
     _showTimer = widget.showElapsedTimer;
     _initializeSession();
@@ -87,24 +94,6 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
       timer.cancel();
     }
     super.dispose();
-  }
-
-  void _playStartSfx() {
-    if (!widget.enableSoundEffects) {
-      return;
-    }
-    unawaited(_soundService.playStartSfx());
-  }
-
-  void _playNavSfx() {
-    if (!widget.enableSoundEffects) {
-      return;
-    }
-    unawaited(_soundService.playNavSfx());
-  }
-
-  void _onSessionInteractive() {
-    _playStartSfx();
   }
 
   Future<void> _awaitPendingPersists() async {
@@ -241,7 +230,6 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
         _loadingMessage = null;
       });
       _beginElapsedTimer();
-      _onSessionInteractive();
     } on DioException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -279,7 +267,6 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
         _loadingMessage = null;
       });
       _beginElapsedTimer();
-      _onSessionInteractive();
     } on DioException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -434,6 +421,7 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
   }
 
   void _toggleSingleOption(PracticeQuestionModel question, String optionId) {
+    _feedback.onSelectAnswer();
     final questionId = question.practiceQuestionSnapshotId;
     setState(() {
       _selectionFor(question)
@@ -446,6 +434,7 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
 
   void _toggleMultiOption(
       PracticeQuestionModel question, String optionId, bool wasSelected) {
+    _feedback.onSelectAnswer();
     final questionId = question.practiceQuestionSnapshotId;
     setState(() {
       final set = _selectionFor(question);
@@ -467,13 +456,12 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
     final session = _session;
     if (session == null) return;
 
+    _feedback.onFinish();
+
     setState(() => _finishing = true);
     try {
       await _awaitPendingPersists();
       _stopElapsedTimer();
-      if (widget.enableSoundEffects) {
-        unawaited(_soundService.playFinishSfx());
-      }
       final result = await _repository.finishSession(
         visitId: widget.visitId,
         token: widget.token,
@@ -492,6 +480,7 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
               guestVisitId: widget.visitId,
               guestToken: widget.token,
               elapsed: elapsed,
+              enableSoundEffects: widget.enableSoundEffects,
             ),
           ),
         ),
@@ -552,11 +541,11 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
       allCompleted: _allCompleted,
       isBusy: isBusy,
       onPrevious: () {
-        _playNavSfx();
+        _feedback.onPreviousQuestion();
         _goToQuestion(_currentIndex - 1);
       },
       onNext: () {
-        _playNavSfx();
+        _feedback.onNextQuestion();
         _goToQuestion(_currentIndex + 1);
       },
       onFinish: _finish,

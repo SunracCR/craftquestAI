@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/services/sound_service.dart';
 import 'package:craftquest_app/features/practice/data/models/practice_models.dart';
 import 'package:craftquest_app/features/practice/domain/practice_launch_options.dart';
 import 'package:craftquest_app/features/practice/presentation/practice_session_page.dart';
@@ -29,6 +33,12 @@ Future<bool?> openPracticeSession(
               showTimer: PracticeLaunchOptions.defaults.showTimer,
             )
           : PracticeLaunchOptions.defaults);
+
+  if (resumeSessionId == null && options.enableSoundEffects) {
+    final soundService = getIt<SoundService>();
+    unawaited(soundService.warmUp());
+    soundService.playStartSfx();
+  }
 
   return Navigator.of(context).push<bool>(
     MaterialPageRoute<bool>(

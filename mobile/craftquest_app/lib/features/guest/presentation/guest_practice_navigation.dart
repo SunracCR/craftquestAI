@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/services/sound_service.dart';
 import 'package:craftquest_app/features/guest/presentation/bloc/guest_session_cubit.dart';
 import 'package:craftquest_app/features/guest/presentation/guest_practice_session_page.dart';
 import 'package:craftquest_app/features/practice/data/models/practice_models.dart';
@@ -20,6 +24,12 @@ Future<void> openGuestPracticeSession(
   }
 
   final guestCubit = context.read<GuestSessionCubit>();
+  if (enableSoundEffects) {
+    final soundService = getIt<SoundService>();
+    unawaited(soundService.warmUp());
+    soundService.playStartSfx();
+  }
+
   await Navigator.of(context).push(
     MaterialPageRoute<void>(
       builder: (_) => BlocProvider.value(

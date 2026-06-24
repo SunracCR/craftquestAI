@@ -1,3 +1,5 @@
+import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/services/sound_service.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_bottom_bar.dart';
@@ -8,13 +10,14 @@ import 'package:craftquest_app/features/auth/presentation/register_page.dart';
 import 'package:craftquest_app/features/guest/presentation/guest_session_navigation.dart';
 import 'package:craftquest_app/features/guest/presentation/widgets/guest_register_benefits_promo_page.dart';
 import 'package:craftquest_app/features/practice/data/models/practice_models.dart';
+import 'package:craftquest_app/features/practice/presentation/practice_session_feedback.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_score_summary_card.dart';
 import 'package:craftquest_app/features/teacher/presentation/teacher_session_review_page.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class GuestResultPage extends StatelessWidget {
+class GuestResultPage extends StatefulWidget {
   const GuestResultPage({
     super.key,
     required this.result,
@@ -22,6 +25,7 @@ class GuestResultPage extends StatelessWidget {
     required this.guestVisitId,
     required this.guestToken,
     this.elapsed,
+    this.enableSoundEffects = true,
   });
 
   final PracticeSessionResultModel result;
@@ -29,6 +33,21 @@ class GuestResultPage extends StatelessWidget {
   final String guestVisitId;
   final String guestToken;
   final Duration? elapsed;
+  final bool enableSoundEffects;
+
+  @override
+  State<GuestResultPage> createState() => _GuestResultPageState();
+}
+
+class _GuestResultPageState extends State<GuestResultPage> {
+  @override
+  void initState() {
+    super.initState();
+    PracticeSessionFeedback(
+      getIt<SoundService>(),
+      enabled: widget.enableSoundEffects,
+    ).onResult(widget.result.percentage);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +69,7 @@ class GuestResultPage extends StatelessWidget {
             children: [
               const SizedBox(height: AppSpacing.sm),
               Text(
-                quizTitle,
+                widget.quizTitle,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
@@ -64,15 +83,15 @@ class GuestResultPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     PracticeScoreSummaryCard(
-                      percentage: result.percentage,
-                      scoreObtained: result.scoreObtained,
-                      scorePossible: result.scorePossible,
-                      elapsed: elapsed,
+                      percentage: widget.result.percentage,
+                      scoreObtained: widget.result.scoreObtained,
+                      scorePossible: widget.result.scorePossible,
+                      elapsed: widget.elapsed,
                     ),
                     const SizedBox(height: AppSpacing.md),
                     _StatsStrip(
-                      correct: result.correctAnswers,
-                      incorrect: result.incorrectAnswers,
+                      correct: widget.result.correctAnswers,
+                      incorrect: widget.result.incorrectAnswers,
                       l10n: l10n,
                     ),
                     const SizedBox(height: AppSpacing.md),
@@ -100,11 +119,11 @@ class GuestResultPage extends StatelessWidget {
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         builder: (_) => TeacherSessionReviewPage(
-          sessionId: result.practiceSessionId,
-          quizTitle: quizTitle,
+          sessionId: widget.result.practiceSessionId,
+          quizTitle: widget.quizTitle,
           isGuestMode: true,
-          guestVisitId: guestVisitId,
-          guestToken: guestToken,
+          guestVisitId: widget.guestVisitId,
+          guestToken: widget.guestToken,
         ),
       ),
     );

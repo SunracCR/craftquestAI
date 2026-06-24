@@ -25,7 +25,9 @@ import 'package:craftquest_app/features/practice/data/practice_preferences_repos
 import 'package:craftquest_app/features/practice/data/practice_repository.dart';
 import 'package:craftquest_app/features/practice/data/practice_sound_preference_store.dart';
 import 'package:craftquest_app/features/practice/domain/practice_launch_options.dart';
+import 'package:craftquest_app/core/services/sound_service.dart';
 import 'package:craftquest_app/features/practice/presentation/practice_navigation.dart';
+import 'package:craftquest_app/features/practice/presentation/practice_session_feedback.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_launch_options_card.dart';
 import 'package:craftquest_app/features/auth/presentation/auth_bloc.dart';
 import 'package:craftquest_app/features/sharing/data/sharing_repository.dart';
@@ -244,6 +246,9 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
   Future<void> _updateSoundEffects(bool value) async {
     setState(() => _enableSoundEffects = value);
     await _soundPreferenceStore.saveSoundEffects(value);
+    if (value) {
+      PracticeSessionFeedback.previewEnabled(getIt<SoundService>());
+    }
   }
 
   PracticeLaunchOptions get _currentLaunchOptions => PracticeLaunchOptions(

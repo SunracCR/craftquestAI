@@ -13,8 +13,10 @@ import 'package:craftquest_app/features/guest/data/guest_models.dart';
 import 'package:craftquest_app/features/guest/data/guest_repository.dart';
 import 'package:craftquest_app/features/guest/presentation/guest_practice_navigation.dart';
 import 'package:craftquest_app/features/guest/presentation/guest_session_navigation.dart';
+import 'package:craftquest_app/core/services/sound_service.dart';
 import 'package:craftquest_app/features/practice/data/practice_sound_preference_store.dart';
 import 'package:craftquest_app/features/practice/domain/practice_launch_options.dart';
+import 'package:craftquest_app/features/practice/presentation/practice_session_feedback.dart';
 import 'package:craftquest_app/features/teacher/presentation/teacher_session_review_page.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -78,6 +80,9 @@ class _GuestShellPageState extends State<GuestShellPage>
   Future<void> _updateSoundEffects(bool value) async {
     setState(() => _enableSoundEffects = value);
     await _soundPreferenceStore.saveSoundEffects(value);
+    if (value) {
+      PracticeSessionFeedback.previewEnabled(getIt<SoundService>());
+    }
   }
 
   @override

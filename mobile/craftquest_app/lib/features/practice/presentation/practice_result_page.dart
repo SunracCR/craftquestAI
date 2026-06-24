@@ -1,3 +1,5 @@
+import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/services/sound_service.dart';
 import 'package:craftquest_app/core/utils/assignment_dates.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
@@ -9,27 +11,44 @@ import 'package:craftquest_app/core/widgets/app_page_header.dart';
 import 'package:craftquest_app/core/widgets/app_section_card.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/features/practice/data/models/practice_models.dart';
+import 'package:craftquest_app/features/practice/presentation/practice_session_feedback.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_score_summary_card.dart';
 import 'package:craftquest_app/features/teacher/presentation/teacher_session_review_page.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
-class PracticeResultPage extends StatelessWidget {
+class PracticeResultPage extends StatefulWidget {
   const PracticeResultPage({
     super.key,
     required this.result,
     required this.quizTitle,
     this.elapsed,
+    this.enableSoundEffects = true,
   });
 
   final PracticeSessionResultModel result;
   final String quizTitle;
   final Duration? elapsed;
+  final bool enableSoundEffects;
+
+  @override
+  State<PracticeResultPage> createState() => _PracticeResultPageState();
+}
+
+class _PracticeResultPageState extends State<PracticeResultPage> {
+  @override
+  void initState() {
+    super.initState();
+    PracticeSessionFeedback(
+      getIt<SoundService>(),
+      enabled: widget.enableSoundEffects,
+    ).onResult(widget.result.percentage);
+  }
 
   String _reviewHiddenMessage(AppLocalizations l10n, String locale) {
-    final mode = result.assignmentShowCorrectAnswersMode;
+    final mode = widget.result.assignmentShowCorrectAnswersMode;
     if (mode == 'after_due_date') {
-      final dueAt = result.assignmentDueAt;
+      final dueAt = widget.result.assignmentDueAt;
       if (dueAt != null) {
         final dueLabel = AssignmentDates.formatWithLocale(
           locale,
@@ -46,7 +65,7 @@ class PracticeResultPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).toString();
-    final canViewReview = result.canViewDetailedReview;
+    final canViewReview = widget.result.canViewDetailedReview;
 
     return EdgeAwareScaffold(
       appBar: craftQuestAppBar(title: l10n.practiceResultTitle),
@@ -78,7 +97,7 @@ class PracticeResultPage extends StatelessWidget {
                 AppSpacing.md,
               ),
               child: Text(
-                quizTitle,
+                widget.quizTitle,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -103,27 +122,27 @@ class PracticeResultPage extends StatelessWidget {
                   const SizedBox(height: AppSpacing.md),
                 ],
                 PracticeScoreSummaryCard(
-                  percentage: result.percentage,
-                  scoreObtained: result.scoreObtained,
-                  scorePossible: result.scorePossible,
-                  elapsed: elapsed,
+                  percentage: widget.result.percentage,
+                  scoreObtained: widget.result.scoreObtained,
+                  scorePossible: widget.result.scorePossible,
+                  elapsed: widget.elapsed,
                 ),
-                if (result.scoreTrendVsPrevious != null) ...[
+                if (widget.result.scoreTrendVsPrevious != null) ...[
                   const SizedBox(height: AppSpacing.md),
                   AppNoticeBanner(
-                    message: result.scoreTrendVsPrevious! >= 0
+                    message: widget.result.scoreTrendVsPrevious! >= 0
                         ? l10n.practiceResultTrendUp(
-                            result.scoreTrendVsPrevious!.abs().toStringAsFixed(0),
+                            widget.result.scoreTrendVsPrevious!.abs().toStringAsFixed(0),
                           )
                         : l10n.practiceResultTrendDown(
-                            result.scoreTrendVsPrevious!.abs().toStringAsFixed(0),
+                            widget.result.scoreTrendVsPrevious!.abs().toStringAsFixed(0),
                           ),
-                    variant: result.scoreTrendVsPrevious! >= 0
+                    variant: widget.result.scoreTrendVsPrevious! >= 0
                         ? AppNoticeVariant.success
                         : AppNoticeVariant.warning,
                   ),
                 ],
-                if (canViewReview && result.questionsToReview.isNotEmpty) ...[
+                if (canViewReview && widget.result.questionsToReview.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.lg),
                   Text(
                     l10n.practiceResultRepracticeTitle,
@@ -132,7 +151,7 @@ class PracticeResultPage extends StatelessWidget {
                         ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  ...result.questionsToReview.map(
+                  ...widget.result.questionsToReview.map(
                     (q) => Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: AppSectionCard(
@@ -163,14 +182,14 @@ class PracticeResultPage extends StatelessWidget {
                 const SizedBox(height: AppSpacing.lg),
                 AppHighlightStatRow(
                   icon: Icons.check_circle_rounded,
-                  label: l10n.practiceCorrectLabel(result.correctAnswers),
-                  value: '${result.correctAnswers}',
+                  label: l10n.practiceCorrectLabel(widget.result.correctAnswers),
+                  value: '${widget.result.correctAnswers}',
                   color: AppColors.accentMint,
                 ),
                 AppHighlightStatRow(
                   icon: Icons.cancel_rounded,
-                  label: l10n.practiceIncorrectLabel(result.incorrectAnswers),
-                  value: '${result.incorrectAnswers}',
+                  label: l10n.practiceIncorrectLabel(widget.result.incorrectAnswers),
+                  value: '${widget.result.incorrectAnswers}',
                   color: AppColors.accent,
                 ),
               ],
@@ -188,8 +207,8 @@ class PracticeResultPage extends StatelessWidget {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => TeacherSessionReviewPage(
-          sessionId: result.practiceSessionId,
-          quizTitle: quizTitle,
+          sessionId: widget.result.practiceSessionId,
+          quizTitle: widget.quizTitle,
           isMyReview: true,
           initialQuestionSnapshotId: questionSnapshotId,
         ),
