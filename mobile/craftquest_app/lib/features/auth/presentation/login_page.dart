@@ -149,6 +149,7 @@ class _LoginPageState extends State<LoginPage> {
         ],
       ),
     );
+  }
 
   InputDecoration _fieldDecoration({
     required String label,
