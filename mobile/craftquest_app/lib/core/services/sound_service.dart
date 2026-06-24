@@ -158,7 +158,7 @@ class SoundService {
           usageType: AndroidUsageType.assistanceSonification,
           audioFocus: AndroidAudioFocus.gainTransientMayDuck,
         ),
-        iOS: const AudioContextIOS(
+        iOS: AudioContextIOS(
           category: AVAudioSessionCategory.ambient,
         ),
       ),

@@ -86,7 +86,7 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
       _soundService,
       enabled: widget.options.enableSoundEffects,
     );
-    unawaited(getIt<AppWarmupService>().warmSoundOnly());
+    getIt<AppWarmupService>().warmSoundOnly();
     _launchOptions = widget.options;
     _showTimer = widget.options.showTimer;
     if (widget.resumeSessionId != null) {
