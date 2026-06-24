@@ -49,5 +49,18 @@
 	<string>CraftQuest needs access to your photos to attach images to questions and answer options.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>CraftQuest can save images to your photo library when you export content.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.craftquestai.craftquestaiApp</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>craftquest</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

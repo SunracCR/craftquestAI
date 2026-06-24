@@ -10,14 +10,18 @@ import 'package:craftquest_app/core/locale/locale_controller.dart';
 import 'package:craftquest_app/core/theme/app_theme.dart';
 import 'package:craftquest_app/core/widgets/app_connectivity_overlay.dart';
 import 'package:craftquest_app/features/auth/presentation/auth_bloc.dart';
+import 'package:craftquest_app/features/auth/presentation/join_launch.dart';
 import 'package:craftquest_app/features/auth/presentation/login_page.dart';
 import 'package:craftquest_app/features/auth/presentation/password_reset_launch.dart';
 import 'package:craftquest_app/features/auth/presentation/reset_password_page.dart';
 import 'package:craftquest_app/features/guest/data/guest_repository.dart';
 import 'package:craftquest_app/features/guest/data/guest_token_storage.dart';
 import 'package:craftquest_app/features/guest/presentation/bloc/guest_session_cubit.dart';
+import 'package:craftquest_app/features/guest/presentation/guest_code_page.dart';
 import 'package:craftquest_app/features/guest/presentation/guest_shell_page.dart';
+import 'package:craftquest_app/features/sharing/presentation/redeem_code_page.dart';
 import 'package:craftquest_app/features/shell/presentation/main_shell_page.dart';
+import 'package:craftquest_app/core/services/deep_link_service.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -122,13 +126,93 @@ class _SessionExpiredListenerState extends State<_SessionExpiredListener> {
   Widget build(BuildContext context) => widget.child;
 }
 
-class _AuthGate extends StatelessWidget {
+class _AuthGate extends StatefulWidget {
   const _AuthGate();
+
+  @override
+  State<_AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<_AuthGate> {
+  final _handledJoinCodes = <String>{};
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(
+      getIt<DeepLinkService>().initialize(
+        onJoinCode: (_) => _scheduleJoinRoute(),
+      ),
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scheduleJoinRoute());
+  }
+
+  void _scheduleJoinRoute() {
+    if (!mounted) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _routePendingJoinIfReady();
+      }
+    });
+  }
+
+  void _routePendingJoinIfReady() {
+    final deepLinkService = getIt<DeepLinkService>();
+    final code = deepLinkService.pendingJoinCode ?? readWebJoinCode();
+    if (code == null || _handledJoinCodes.contains(code)) {
+      return;
+    }
+
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthInitial || authState is AuthLoading) {
+      return;
+    }
+
+    final resetToken = readWebPasswordResetToken();
+    if (resetToken != null) {
+      return;
+    }
+
+    _handledJoinCodes.add(code);
+    deepLinkService.consumePendingJoinCode();
+
+    if (authState is AuthAuthenticated) {
+      rootNavigatorKey.currentState?.push(
+        MaterialPageRoute<void>(
+          builder: (_) => RedeemCodePage(initialCode: code),
+        ),
+      );
+      return;
+    }
+
+    final guestState = context.read<GuestSessionCubit>().state;
+    if (guestState.isActive) {
+      return;
+    }
+
+    rootNavigatorKey.currentState?.push(
+      MaterialPageRoute<void>(
+        builder: (_) => GuestCodePage(initialCode: code),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocListener(
       listeners: [
+        BlocListener<AuthBloc, AuthState>(
+          listenWhen: (_, current) =>
+              current is AuthAuthenticated || current is AuthUnauthenticated,
+          listener: (context, _) => _scheduleJoinRoute(),
+        ),
+        BlocListener<GuestSessionCubit, GuestSessionState>(
+          listenWhen: (previous, current) =>
+              previous.isActive != current.isActive,
+          listener: (context, _) => _scheduleJoinRoute(),
+        ),
         BlocListener<AuthBloc, AuthState>(
           listenWhen: (_, current) => current is AuthAuthenticated,
           listener: (context, state) {

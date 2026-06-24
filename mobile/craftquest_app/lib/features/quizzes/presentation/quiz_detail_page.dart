@@ -662,7 +662,11 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
     if (!mounted) return;
 
     if (!isTeacher && existing != null) {
-      await showShareCodeResultDialog(context, existing);
+      await showShareCodeResultDialog(
+        context,
+        existing,
+        quizTitle: _quizTitle,
+      );
       return;
     }
 
@@ -673,7 +677,11 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
       existingShareCode: existing,
     );
     if (!mounted || shareCode == null) return;
-    await showShareCodeResultDialog(context, shareCode);
+    await showShareCodeResultDialog(
+      context,
+      shareCode,
+      quizTitle: _quizTitle,
+    );
   }
 
   Future<void> _continuePractice() async {

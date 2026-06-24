@@ -9,6 +9,7 @@ import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 
 enum ShareAudience { anyone, group }
 
@@ -225,9 +226,15 @@ class _CreateShareCodeSheetState extends State<CreateShareCodeSheet> {
 
 Future<void> showShareCodeResultDialog(
   BuildContext context,
-  ShareCodeModel shareCode,
-) async {
+  ShareCodeModel shareCode, {
+  String? quizTitle,
+}) async {
   final l10n = AppLocalizations.of(context)!;
+  final joinUrl = shareCode.joinUrl;
+  final displayTitle = (quizTitle?.trim().isNotEmpty ?? false)
+      ? quizTitle!.trim()
+      : l10n.shareCodeTitle;
+
   await showDialog<void>(
     context: context,
     builder: (ctx) => AlertDialog(
@@ -240,6 +247,15 @@ Future<void> showShareCodeResultDialog(
             shareCode.code,
             style: Theme.of(ctx).textTheme.headlineSmall,
           ),
+          if (joinUrl != null) ...[
+            const SizedBox(height: 12),
+            SelectableText(
+              joinUrl,
+              style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(ctx).colorScheme.primary,
+                  ),
+            ),
+          ],
           const SizedBox(height: 12),
           if (shareCode.isExisting)
             Text(
@@ -264,6 +280,28 @@ Future<void> showShareCodeResultDialog(
           },
           child: Text(l10n.shareCodeCopyAction),
         ),
+        if (joinUrl != null)
+          TextButton(
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: joinUrl));
+              ScaffoldMessenger.of(ctx).showSnackBar(
+                SnackBar(content: Text(l10n.shareCodeLinkCopied)),
+              );
+            },
+            child: Text(l10n.shareCodeCopyLinkAction),
+          ),
+        if (joinUrl != null)
+          TextButton(
+            onPressed: () async {
+              final message = l10n.shareCodeShareLinkMessage(
+                displayTitle,
+                joinUrl,
+                shareCode.code,
+              );
+              await Share.share(message);
+            },
+            child: Text(l10n.shareCodeShareLinkAction),
+          ),
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(),
           child: Text(l10n.shareCodeCloseAction),

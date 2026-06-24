@@ -15,7 +15,10 @@ public class QuizPdfExportService(
     CraftQuestDbContext dbContext) : IQuizPdfExportService
 {
     private const string QuestionImageStableKey = "QUESTION_IMAGE";
+    private const string BrandName = "CraftQuestAI";
     private const string BrandWebsite = "www.CraftQuestAI.com";
+    private const string BrandPrimaryColor = "#1A2F35";
+    private const string BrandAccentColor = "#4ECDC4";
 
     public async Task<(byte[] Bytes, string FileName)> GenerateQuizPdfAsync(
         Guid userId,
@@ -102,7 +105,7 @@ public class QuizPdfExportService(
                 page.Footer().Element(footer => ComposeBrandedFooter(
                     footer,
                     labels,
-                    labels.QuestionsSectionFooter));
+                    labels.QuestionsSection));
             });
 
             container.Page(page =>
@@ -139,7 +142,10 @@ public class QuizPdfExportService(
                     }
                 });
 
-                page.Footer().Element(footer => ComposeBrandedFooter(footer, labels));
+                page.Footer().Element(footer => ComposeBrandedFooter(
+                    footer,
+                    labels,
+                    labels.AnswerSheetSection));
             });
         }).GeneratePdf();
     }
@@ -147,28 +153,58 @@ public class QuizPdfExportService(
     private static void ComposeBrandedFooter(
         IContainer container,
         QuizPdfExportLabels labels,
-        string? pagePrefix = null)
+        string? sectionLabel = null)
     {
-        container.AlignCenter().Column(column =>
+        container.PaddingTop(4).Column(column =>
         {
-            column.Item().Text(labels.GeneratedBy)
-                .FontSize(8)
-                .FontColor(Colors.Grey.Darken1);
-            column.Item().Text(BrandWebsite)
-                .FontSize(8)
-                .FontColor(Colors.Grey.Darken1);
-            column.Item().PaddingTop(4).DefaultTextStyle(x => x.FontSize(8).FontColor(Colors.Grey.Darken2))
-                .Text(text =>
-                {
-                    if (!string.IsNullOrEmpty(pagePrefix))
-                    {
-                        text.Span(pagePrefix);
-                    }
+            column.Item().Height(2).Background(BrandAccentColor);
 
-                    text.CurrentPageNumber();
-                    text.Span(" / ");
-                    text.TotalPages();
+            column.Item().PaddingTop(10).Row(row =>
+            {
+                row.RelativeItem(2).AlignLeft().Column(left =>
+                {
+                    left.Item().Text(BrandName)
+                        .Bold()
+                        .FontSize(10)
+                        .FontColor(BrandPrimaryColor);
+                    left.Item().PaddingTop(2).Text(labels.GeneratedBy)
+                        .FontSize(7.5f)
+                        .FontColor(Colors.Grey.Medium);
                 });
+
+                if (!string.IsNullOrEmpty(sectionLabel))
+                {
+                    row.RelativeItem().AlignCenter().AlignMiddle()
+                        .PaddingVertical(2)
+                        .PaddingHorizontal(10)
+                        .Background(Colors.Grey.Lighten4)
+                        .Text(sectionLabel)
+                        .SemiBold()
+                        .FontSize(7.5f)
+                        .FontColor(BrandPrimaryColor);
+                }
+                else
+                {
+                    row.RelativeItem();
+                }
+
+                row.RelativeItem(2).AlignRight().Column(right =>
+                {
+                    right.Item().AlignRight().Text(BrandWebsite)
+                        .SemiBold()
+                        .FontSize(8.5f)
+                        .FontColor(BrandAccentColor);
+                    right.Item().PaddingTop(3).AlignRight()
+                        .DefaultTextStyle(x => x.FontSize(7.5f).FontColor(Colors.Grey.Darken2))
+                        .Text(text =>
+                        {
+                            text.Span($"{labels.Page} ");
+                            text.CurrentPageNumber();
+                            text.Span($" {labels.PageOf} ");
+                            text.TotalPages();
+                        });
+                });
+            });
         });
     }
 
@@ -209,9 +245,12 @@ public class QuizPdfExportService(
         string Points,
         string AnswerSheetTitle,
         string Justification,
-        string QuestionsSectionFooter,
+        string QuestionsSection,
+        string AnswerSheetSection,
         string ImageOptionPlaceholder,
-        string GeneratedBy)
+        string GeneratedBy,
+        string Page,
+        string PageOf)
     {
         public static QuizPdfExportLabels ForLanguage(string? languageCode) =>
             languageCode?.Trim().ToLowerInvariant() switch
@@ -221,25 +260,34 @@ public class QuizPdfExportService(
                     "Points",
                     "Answer key",
                     "Justification",
-                    "Questions — page ",
+                    "Questions",
+                    "Answer key",
                     "[Image option]",
-                    "Generated by CraftQuestAI"),
+                    "Generated by CraftQuestAI",
+                    "Page",
+                    "of"),
                 "pt" => new QuizPdfExportLabels(
                     "Pergunta",
                     "Pontos",
                     "Gabarito",
                     "Justificativa",
-                    "Perguntas — pagina ",
+                    "Perguntas",
+                    "Gabarito",
                     "[Opcao com imagem]",
-                    "Gerado por CraftQuestAI"),
+                    "Gerado por CraftQuestAI",
+                    "Pag.",
+                    "de"),
                 _ => new QuizPdfExportLabels(
                     "Pregunta",
                     "Puntos",
                     "Hoja de respuestas",
                     "Justificacion",
-                    "Preguntas — pagina ",
+                    "Preguntas",
+                    "Respuestas",
                     "[Opcion con imagen]",
-                    "Generado por CraftQuestAI"),
+                    "Generado por CraftQuestAI",
+                    "Pag.",
+                    "de"),
             };
     }
 }

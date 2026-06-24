@@ -45,6 +45,7 @@ if (!builder.Environment.IsEnvironment("Testing"))
 }
 
 builder.Services.Configure<CorsOptions>(builder.Configuration.GetSection(CorsOptions.SectionName));
+builder.Services.Configure<JoinLinkOptions>(builder.Configuration.GetSection(JoinLinkOptions.SectionName));
 
 builder.Services.AddCors(options =>
 {

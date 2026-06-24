@@ -11,7 +11,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 class RedeemCodePage extends StatefulWidget {
-  const RedeemCodePage({super.key});
+  const RedeemCodePage({super.key, this.initialCode});
+
+  final String? initialCode;
 
   @override
   State<RedeemCodePage> createState() => _RedeemCodePageState();
@@ -21,6 +23,15 @@ class _RedeemCodePageState extends State<RedeemCodePage> {
   final _repository = getIt<SharingRepository>();
   final _codeController = TextEditingController();
   bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialCode?.trim();
+    if (initial != null && initial.isNotEmpty) {
+      _codeController.text = initial.toUpperCase();
+    }
+  }
 
   @override
   void dispose() {

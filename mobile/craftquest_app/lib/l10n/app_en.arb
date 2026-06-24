@@ -806,6 +806,17 @@
   "shareCodeResultGroupHint": "Class members only, with an account.",
   "shareCodeCopyAction": "Copy",
   "shareCodeCopied": "Code copied",
+  "shareCodeCopyLinkAction": "Copy link",
+  "shareCodeLinkCopied": "Link copied",
+  "shareCodeShareLinkAction": "Share link",
+  "shareCodeShareLinkMessage": "Join \"{title}\" on CraftQuestAI:\n{url}\n\nOr use code: {code}",
+  "@shareCodeShareLinkMessage": {
+    "placeholders": {
+      "title": { "type": "String" },
+      "url": { "type": "String" },
+      "code": { "type": "String" }
+    }
+  },
   "shareCodeCloseAction": "Close",
   "quizInviteTitle": "Invite people",
   "quizInviteSubtitle": "They must have a CraftQuest account. The quiz appears in Shared quizzes (no code needed).",

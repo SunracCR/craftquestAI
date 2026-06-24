@@ -2,12 +2,14 @@ using CraftQuest.Application.Constants;
 using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Exceptions;
 using CraftQuest.Application.Models.Sharing;
+using CraftQuest.Application.Options;
 using CraftQuest.Domain.Constants;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.Services;
 using CraftQuest.UnitTests.Billing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace CraftQuest.UnitTests.Sharing;
 
@@ -20,10 +22,7 @@ public class ShareCodeServiceTests
         var (ownerId, quizId) = await SeedOwnerAndPublishedQuizAsync(db);
 
         var billing = BillingTestHelpers.CreateService(db);
-        var service = new ShareCodeService(
-            db,
-            billing,
-            new StubClassService());
+        var service = CreateService(db, billing);
 
         var first = await service.CreateShareCodeAsync(
             ownerId,
@@ -79,7 +78,7 @@ public class ShareCodeServiceTests
         await db.SaveChangesAsync();
 
         var billing = BillingTestHelpers.CreateService(db);
-        var service = new ShareCodeService(db, billing, new StubClassService());
+        var service = CreateService(db, billing);
 
         await service.RedeemAsync(studentId, new RedeemShareCodeRequest { Code = "CQ-000000" });
         await service.RedeemAsync(studentId, new RedeemShareCodeRequest { Code = "CQ-000001" });
@@ -129,7 +128,7 @@ public class ShareCodeServiceTests
         await db.SaveChangesAsync();
 
         var billing = BillingTestHelpers.CreateService(db);
-        var service = new ShareCodeService(db, billing, new StubClassService());
+        var service = CreateService(db, billing);
 
         await service.RedeemAsync(studentId, new RedeemShareCodeRequest { Code = "CQ-100000" });
         await service.RedeemAsync(studentId, new RedeemShareCodeRequest { Code = "CQ-100001" });
@@ -164,7 +163,7 @@ public class ShareCodeServiceTests
         await db.SaveChangesAsync();
 
         var billing = BillingTestHelpers.CreateService(db);
-        var service = new ShareCodeService(db, billing, new StubClassService());
+        var service = CreateService(db, billing);
 
         var ex = await Assert.ThrowsAsync<CraftQuest.Application.Exceptions.AppException>(() =>
             service.RedeemAsync(ownerId, new RedeemShareCodeRequest { Code = "CQ-OWN001" }));
@@ -215,7 +214,7 @@ public class ShareCodeServiceTests
         await db.SaveChangesAsync();
 
         var billing = BillingTestHelpers.CreateService(db);
-        var service = new ShareCodeService(db, billing, new StubClassService());
+        var service = CreateService(db, billing);
 
         var result = await service.RedeemAsync(
             studentId,
@@ -288,7 +287,7 @@ public class ShareCodeServiceTests
         await db.SaveChangesAsync();
 
         var billing = BillingTestHelpers.CreateService(db);
-        var service = new ShareCodeService(db, billing, new StubClassService());
+        var service = CreateService(db, billing);
 
         var result = await service.InviteUsersByEmailAsync(
             ownerId,
@@ -306,7 +305,7 @@ public class ShareCodeServiceTests
         await using var db = CreateDb();
         var (ownerId, quizId) = await SeedOwnerAndPublishedQuizAsync(db);
         var billing = BillingTestHelpers.CreateService(db);
-        var service = new ShareCodeService(db, billing, new StubClassService());
+        var service = CreateService(db, billing);
 
         var ex = await Assert.ThrowsAsync<AppException>(() =>
             service.InviteUsersByEmailAsync(
@@ -498,4 +497,16 @@ public class ShareCodeServiceTests
             CancellationToken cancellationToken = default) =>
             throw new NotImplementedException();
     }
+
+    private static ShareCodeService CreateService(
+        CraftQuestDbContext db,
+        IBillingService billing) =>
+        new(
+            db,
+            billing,
+            new StubClassService(),
+            Options.Create(new JoinLinkOptions
+            {
+                LinkBaseUrl = "https://api.craftquestai.com",
+            }));
 }

@@ -27,6 +27,7 @@ public sealed class ShareCodeDto
     public Guid? ClassId { get; init; }
     public DateTime? ExpiresAt { get; init; }
     public bool IsExisting { get; init; }
+    public string? JoinUrl { get; init; }
 }
 
 public class RedeemShareCodeRequest
@@ -71,4 +72,13 @@ public sealed class InviteUserResultItemDto
     /// <summary>invited | already_had_access | not_found | invalid_email | slot_limit | self</summary>
     public required string Outcome { get; init; }
     public string? DisplayName { get; init; }
+}
+
+public sealed class JoinPreviewDto
+{
+    public required string Code { get; init; }
+    public required string QuizTitle { get; init; }
+    public required string AccessPolicy { get; init; }
+    public required bool RequiresAccount { get; init; }
+    public string? JoinUrl { get; init; }
 }

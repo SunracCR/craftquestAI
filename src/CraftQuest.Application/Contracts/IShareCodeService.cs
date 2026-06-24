@@ -39,4 +39,8 @@ public interface IShareCodeService
         Guid quizId,
         InviteUsersRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<JoinPreviewDto?> GetJoinPreviewAsync(
+        string code,
+        CancellationToken cancellationToken = default);
 }

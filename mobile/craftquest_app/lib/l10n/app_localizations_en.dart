@@ -1649,6 +1649,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareCodeCopied => 'Code copied';
 
   @override
+  String get shareCodeCopyLinkAction => 'Copy link';
+
+  @override
+  String get shareCodeLinkCopied => 'Link copied';
+
+  @override
+  String get shareCodeShareLinkAction => 'Share link';
+
+  @override
+  String shareCodeShareLinkMessage(String title, String url, String code) {
+    return 'Join "$title" on CraftQuestAI:\n$url\n\nOr use code: $code';
+  }
+
+  @override
   String get shareCodeCloseAction => 'Close';
 
   @override

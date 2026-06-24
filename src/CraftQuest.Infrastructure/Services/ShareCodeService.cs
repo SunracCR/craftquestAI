@@ -5,6 +5,7 @@ using CraftQuest.Application.Exceptions;
 using CraftQuest.Application.Models.Sharing;
 using CraftQuest.Domain.Constants;
 using CraftQuest.Domain.Entities;
+using CraftQuest.Application;
 using CraftQuest.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,8 +14,11 @@ namespace CraftQuest.Infrastructure.Services;
 public class ShareCodeService(
     CraftQuestDbContext dbContext,
     IBillingService billingService,
-    IClassService classService) : IShareCodeService
+    IClassService classService,
+    Microsoft.Extensions.Options.IOptions<CraftQuest.Application.Options.JoinLinkOptions> joinLinkOptions) : IShareCodeService
 {
+    private readonly CraftQuest.Application.Options.JoinLinkOptions _joinLinkOptions =
+        joinLinkOptions.Value;
     private static readonly HashSet<string> ValidCodeTypes =
         ["single_use", "class_capacity", "purchased_key"];
 
@@ -660,7 +664,52 @@ public class ShareCodeService(
         return metadata;
     }
 
-    private static ShareCodeDto MapShareCode(ShareCode entity, bool isExisting = false) => new()
+    public async Task<JoinPreviewDto?> GetJoinPreviewAsync(
+        string code,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedCode = code.Trim().ToUpperInvariant();
+        if (!JoinLinkUrlBuilder.IsValidCodeFormat(normalizedCode))
+        {
+            return null;
+        }
+
+        var shareCode = await dbContext.ShareCodes
+            .AsNoTracking()
+            .Include(s => s.Quiz)
+            .FirstOrDefaultAsync(s => s.Code == normalizedCode, cancellationToken);
+
+        if (shareCode?.Quiz is null)
+        {
+            return null;
+        }
+
+        if (shareCode.Status == "revoked")
+        {
+            return null;
+        }
+
+        if (shareCode.ExpiresAt.HasValue && shareCode.ExpiresAt.Value < DateTime.UtcNow)
+        {
+            return null;
+        }
+
+        if (shareCode.Quiz.PublicationStatus != "published")
+        {
+            return null;
+        }
+
+        return new JoinPreviewDto
+        {
+            Code = normalizedCode,
+            QuizTitle = shareCode.Quiz.Title,
+            AccessPolicy = shareCode.AccessPolicy,
+            RequiresAccount = shareCode.AccessPolicy is "group_only" or "direct_user",
+            JoinUrl = JoinLinkUrlBuilder.BuildJoinUrl(_joinLinkOptions, normalizedCode),
+        };
+    }
+
+    private ShareCodeDto MapShareCode(ShareCode entity, bool isExisting = false) => new()
     {
         ShareCodeId = entity.ShareCodeId,
         Code = entity.Code,
@@ -673,5 +722,6 @@ public class ShareCodeService(
         ClassId = entity.ClassId,
         ExpiresAt = entity.ExpiresAt,
         IsExisting = isExisting,
+        JoinUrl = JoinLinkUrlBuilder.BuildJoinUrl(_joinLinkOptions, entity.Code),
     };
 }

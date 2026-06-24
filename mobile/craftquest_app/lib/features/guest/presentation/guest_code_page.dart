@@ -12,7 +12,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class GuestCodePage extends StatefulWidget {
-  const GuestCodePage({super.key});
+  const GuestCodePage({super.key, this.initialCode});
+
+  final String? initialCode;
 
   @override
   State<GuestCodePage> createState() => _GuestCodePageState();
@@ -21,6 +23,15 @@ class GuestCodePage extends StatefulWidget {
 class _GuestCodePageState extends State<GuestCodePage> {
   final _codeController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialCode?.trim();
+    if (initial != null && initial.isNotEmpty) {
+      _codeController.text = initial.toUpperCase();
+    }
+  }
 
   @override
   void dispose() {

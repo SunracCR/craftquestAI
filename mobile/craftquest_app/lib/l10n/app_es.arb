@@ -806,6 +806,17 @@
   "shareCodeResultGroupHint": "Solo miembros de la clase seleccionada, con cuenta.",
   "shareCodeCopyAction": "Copiar",
   "shareCodeCopied": "Código copiado",
+  "shareCodeCopyLinkAction": "Copiar link",
+  "shareCodeLinkCopied": "Link copiado",
+  "shareCodeShareLinkAction": "Compartir link",
+  "shareCodeShareLinkMessage": "Únete a \"{title}\" en CraftQuestAI:\n{url}\n\nO usa el código: {code}",
+  "@shareCodeShareLinkMessage": {
+    "placeholders": {
+      "title": { "type": "String" },
+      "url": { "type": "String" },
+      "code": { "type": "String" }
+    }
+  },
   "shareCodeCloseAction": "Cerrar",
   "quizInviteTitle": "Invitar personas",
   "quizInviteSubtitle": "La persona debe tener cuenta en CraftQuest. Aparecerá el cuestionario en Mis compartidos (sin código).",

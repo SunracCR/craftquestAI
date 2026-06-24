@@ -9,6 +9,7 @@ class ShareCodeModel {
     required this.accessPolicy,
     this.classId,
     this.isExisting = false,
+    this.joinUrl,
   });
 
   factory ShareCodeModel.fromJson(Map<String, dynamic> json) {
@@ -22,6 +23,7 @@ class ShareCodeModel {
       accessPolicy: json['accessPolicy'] as String? ?? 'registered_open',
       classId: json['classId'] as String?,
       isExisting: json['isExisting'] as bool? ?? false,
+      joinUrl: json['joinUrl'] as String?,
     );
   }
 
@@ -34,6 +36,7 @@ class ShareCodeModel {
   final String accessPolicy;
   final String? classId;
   final bool isExisting;
+  final String? joinUrl;
 }
 
 class RedeemResultModel {

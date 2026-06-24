@@ -2820,6 +2820,30 @@ abstract class AppLocalizations {
   /// **'Código copiado'**
   String get shareCodeCopied;
 
+  /// No description provided for @shareCodeCopyLinkAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Copiar link'**
+  String get shareCodeCopyLinkAction;
+
+  /// No description provided for @shareCodeLinkCopied.
+  ///
+  /// In es, this message translates to:
+  /// **'Link copiado'**
+  String get shareCodeLinkCopied;
+
+  /// No description provided for @shareCodeShareLinkAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartir link'**
+  String get shareCodeShareLinkAction;
+
+  /// No description provided for @shareCodeShareLinkMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Únete a "{title}" en CraftQuestAI:\n{url}\n\nO usa el código: {code}'**
+  String shareCodeShareLinkMessage(String title, String url, String code);
+
   /// No description provided for @shareCodeCloseAction.
   ///
   /// In es, this message translates to:
