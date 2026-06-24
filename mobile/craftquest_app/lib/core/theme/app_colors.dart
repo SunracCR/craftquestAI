@@ -95,4 +95,14 @@ abstract final class AppColors {
         'draft' => accentGold,
         _ => textSecondary,
       };
+
+  /// Colores por nivel de carpeta de cuestionarios (depth 0, 1, 2).
+  static const List<Color> quizFolderDepthColors = [
+    accentCool,
+    accentViolet,
+    accentMint,
+  ];
+
+  static Color quizFolderColor(int depth) =>
+      quizFolderDepthColors[depth % quizFolderDepthColors.length];
 }

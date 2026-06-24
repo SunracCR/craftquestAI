@@ -694,6 +694,18 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get quizSearchHint => 'Buscar questionarios';
+
+  @override
+  String get quizSearchNoResults => 'Sem resultados';
+
+  @override
+  String get quizFolderDropToRoot => 'Mover para a raiz';
+
+  @override
+  String get quizFolderMoveInvalid => 'Nao e possivel mover para la';
+
+  @override
   String get createQuizTitle => 'Novo questionario';
 
   @override

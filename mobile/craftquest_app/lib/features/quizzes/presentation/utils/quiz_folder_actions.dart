@@ -272,6 +272,58 @@ Future<void> deleteQuizFolderFlow({
   );
 }
 
+Future<void> moveFolderFlow({
+  required BuildContext context,
+  required QuizRepository repository,
+  required QuizFolderModel folder,
+  required String? newParentId,
+  required VoidCallback onSuccess,
+}) async {
+  await handleQuizFolderMutation(
+    context: context,
+    action: () async {
+      if (newParentId == null) {
+        await repository.moveFolder(
+          folderId: folder.quizFolderId,
+          clearParent: true,
+        );
+      } else {
+        await repository.moveFolder(
+          folderId: folder.quizFolderId,
+          parentFolderId: newParentId,
+        );
+      }
+    },
+    onSuccess: onSuccess,
+  );
+}
+
+Future<void> reassignQuizFromDrag({
+  required BuildContext context,
+  required QuizRepository repository,
+  required QuizModel quiz,
+  required String? folderId,
+  required VoidCallback onSuccess,
+}) async {
+  await handleQuizFolderMutation(
+    context: context,
+    action: () async {
+      if (folderId == null) {
+        await repository.moveQuizToFolder(
+          quizId: quiz.quizId,
+          clearFolder: true,
+        );
+      } else {
+        await repository.moveQuizToFolder(
+          quizId: quiz.quizId,
+          folderId: folderId,
+        );
+      }
+    },
+    onSuccess: onSuccess,
+  );
+}
+
 Future<void> moveQuizToFolderFlow({
   required BuildContext context,
   required QuizRepository repository,

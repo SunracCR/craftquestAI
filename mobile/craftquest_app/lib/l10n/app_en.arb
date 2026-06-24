@@ -293,6 +293,10 @@
       "quizCount": { "type": "int" }
     }
   },
+  "quizSearchHint": "Search quizzes",
+  "quizSearchNoResults": "No results",
+  "quizFolderDropToRoot": "Move to root",
+  "quizFolderMoveInvalid": "Cannot move here",
   "createQuizTitle": "New quiz",
   "createQuizNextStepTitle": "Add questions to your quiz",
   "createQuizNextStepSubtitle": "Start by creating a question, importing from a file, or generating with AI.",

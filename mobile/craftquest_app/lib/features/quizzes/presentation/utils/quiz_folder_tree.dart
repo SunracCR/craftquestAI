@@ -12,6 +12,22 @@ class QuizFolderNode {
   final List<QuizModel> quizzes;
 }
 
+sealed class QuizDragData {
+  const QuizDragData();
+}
+
+class QuizFolderDrag extends QuizDragData {
+  const QuizFolderDrag(this.folder);
+
+  final QuizFolderModel folder;
+}
+
+class QuizItemDrag extends QuizDragData {
+  const QuizItemDrag(this.quiz);
+
+  final QuizModel quiz;
+}
+
 List<QuizFolderNode> buildQuizFolderTree({
   required List<QuizFolderModel> folders,
   required List<QuizModel> quizzes,
@@ -68,6 +84,10 @@ bool isFolderDescendantOf({
   required String folderId,
   required String potentialAncestorId,
 }) {
+  if (folderId == potentialAncestorId) {
+    return true;
+  }
+
   var current = folders.where((f) => f.quizFolderId == folderId).firstOrNull;
   while (current != null) {
     if (current.parentFolderId == potentialAncestorId) {
@@ -80,4 +100,113 @@ bool isFolderDescendantOf({
     current = folders.where((f) => f.quizFolderId == parentId).firstOrNull;
   }
   return false;
+}
+
+int folderSubtreeHeight({
+  required List<QuizFolderModel> folders,
+  required String folderId,
+}) {
+  final children = folders
+      .where((folder) => folder.parentFolderId == folderId)
+      .toList();
+  if (children.isEmpty) {
+    return 0;
+  }
+
+  var maxChildHeight = 0;
+  for (final child in children) {
+    final childHeight = folderSubtreeHeight(
+      folders: folders,
+      folderId: child.quizFolderId,
+    );
+    if (childHeight > maxChildHeight) {
+      maxChildHeight = childHeight;
+    }
+  }
+  return 1 + maxChildHeight;
+}
+
+bool canDropFolderInto({
+  required List<QuizFolderModel> folders,
+  required String dragFolderId,
+  String? targetFolderId,
+}) {
+  if (targetFolderId == null) {
+    return true;
+  }
+
+  if (dragFolderId == targetFolderId) {
+    return false;
+  }
+
+  if (isFolderDescendantOf(
+    folders: folders,
+    folderId: targetFolderId,
+    potentialAncestorId: dragFolderId,
+  )) {
+    return false;
+  }
+
+  final target = folders
+      .where((folder) => folder.quizFolderId == targetFolderId)
+      .firstOrNull;
+  if (target == null) {
+    return false;
+  }
+
+  final subtreeHeight = folderSubtreeHeight(
+    folders: folders,
+    folderId: dragFolderId,
+  );
+  return target.depth + 1 + subtreeHeight <= 2;
+}
+
+bool canDropQuizInto({
+  required QuizModel quiz,
+  String? targetFolderId,
+}) {
+  if (targetFolderId == null) {
+    return quiz.folderId != null;
+  }
+  return quiz.folderId != targetFolderId;
+}
+
+String folderPathLabel({
+  required List<QuizFolderModel> folders,
+  required String? folderId,
+  required String uncategorizedLabel,
+}) {
+  if (folderId == null) {
+    return uncategorizedLabel;
+  }
+
+  final segments = <String>[];
+  String? currentId = folderId;
+  while (currentId != null) {
+    final folder =
+        folders.where((item) => item.quizFolderId == currentId).firstOrNull;
+    if (folder == null) {
+      break;
+    }
+    segments.insert(0, folder.name);
+    currentId = folder.parentFolderId;
+  }
+
+  return segments.isEmpty ? uncategorizedLabel : segments.join(' / ');
+}
+
+List<QuizModel> filterQuizzesBySearch({
+  required List<QuizModel> quizzes,
+  required String query,
+}) {
+  final normalized = query.trim().toLowerCase();
+  if (normalized.isEmpty) {
+    return quizzes;
+  }
+
+  return quizzes.where((quiz) {
+    final title = quiz.title.toLowerCase();
+    final description = quiz.description?.toLowerCase() ?? '';
+    return title.contains(normalized) || description.contains(normalized);
+  }).toList();
 }

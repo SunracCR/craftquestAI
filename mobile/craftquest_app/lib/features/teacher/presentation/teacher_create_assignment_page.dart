@@ -14,6 +14,7 @@ import 'package:craftquest_app/features/quizzes/data/quiz_repository.dart';
 import 'package:craftquest_app/features/quizzes/presentation/quiz_content_setup_flow.dart';
 import 'package:craftquest_app/features/quizzes/presentation/quiz_flow_anchor.dart';
 import 'package:craftquest_app/features/quizzes/presentation/widgets/quiz_folder_grouped_list.dart';
+import 'package:craftquest_app/features/quizzes/presentation/widgets/quiz_search_field.dart';
 import 'package:craftquest_app/features/teacher/presentation/assignment_form_draft.dart';
 import 'package:craftquest_app/features/teacher/data/models/teacher_assignment_models.dart';
 import 'package:craftquest_app/features/teacher/data/teacher_assignment_repository.dart';
@@ -186,6 +187,9 @@ class _TeacherCreateAssignmentPageState
 
   Future<void> _openQuizPicker() async {
     final l10n = AppLocalizations.of(context)!;
+    final searchController = TextEditingController();
+    var searchQuery = '';
+
     final picked = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
@@ -194,102 +198,115 @@ class _TeacherCreateAssignmentPageState
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
-        return DraggableScrollableSheet(
-          expand: false,
-          initialChildSize: 0.72,
-          minChildSize: 0.4,
-          maxChildSize: 0.92,
-          builder: (context, scrollController) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 10),
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AppColors.textSecondary.withValues(alpha: 0.35),
-                      borderRadius: BorderRadius.circular(2),
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return DraggableScrollableSheet(
+              expand: false,
+              initialChildSize: 0.72,
+              minChildSize: 0.4,
+              maxChildSize: 0.92,
+              builder: (context, scrollController) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: 10),
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppColors.textSecondary.withValues(alpha: 0.35),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.md,
-                    AppSpacing.md,
-                    AppSpacing.md,
-                    AppSpacing.sm,
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          l10n.myQuizzesAction,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.md,
+                        AppSpacing.md,
+                        AppSpacing.md,
+                        AppSpacing.sm,
                       ),
-                      TextButton.icon(
-                        onPressed: () {
-                          Navigator.pop(ctx);
-                          _createQuiz();
-                        },
-                        icon: const Icon(Icons.add_rounded, size: 18),
-                        label: Text(l10n.createQuizAction),
-                        style: TextButton.styleFrom(
-                          foregroundColor: AppColors.teacherAccent,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: _quizzes.isEmpty
-                      ? Center(
-                          child: Padding(
-                            padding: AppSpacing.page,
+                      child: Row(
+                        children: [
+                          Expanded(
                             child: Text(
-                              l10n.teacherAssignmentNoQuizzesHint,
-                              textAlign: TextAlign.center,
+                              l10n.myQuizzesAction,
                               style: const TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 14,
-                                height: 1.45,
+                                color: AppColors.textPrimary,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
                               ),
                             ),
                           ),
-                        )
-                      : QuizFolderGroupedList(
-                          folders: _folders,
-                          quizzes: _quizzes,
-                          scrollController: scrollController,
-                          initiallyExpandFolders: true,
-                          padding: const EdgeInsets.fromLTRB(
-                            AppSpacing.md,
-                            0,
-                            AppSpacing.md,
-                            AppSpacing.xl,
+                          TextButton.icon(
+                            onPressed: () {
+                              Navigator.pop(ctx);
+                              _createQuiz();
+                            },
+                            icon: const Icon(Icons.add_rounded, size: 18),
+                            label: Text(l10n.createQuizAction),
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppColors.teacherAccent,
+                            ),
                           ),
-                          quizBuilder: (quiz) {
-                            final selected = quiz.quizId == _selectedQuizId;
-                            return _QuizPickerTile(
-                              quiz: quiz,
-                              selected: selected,
-                              onTap: () => Navigator.pop(ctx, quiz.quizId),
-                            );
-                          },
-                        ),
-                ),
-              ],
+                        ],
+                      ),
+                    ),
+                    QuizSearchField(
+                      controller: searchController,
+                      onChanged: (value) =>
+                          setSheetState(() => searchQuery = value),
+                    ),
+                    Expanded(
+                      child: _quizzes.isEmpty
+                          ? Center(
+                              child: Padding(
+                                padding: AppSpacing.page,
+                                child: Text(
+                                  l10n.teacherAssignmentNoQuizzesHint,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 14,
+                                    height: 1.45,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : QuizFolderGroupedList(
+                              folders: _folders,
+                              quizzes: _quizzes,
+                              scrollController: scrollController,
+                              searchQuery: searchQuery,
+                              initiallyExpandFolders: false,
+                              enableDrag: false,
+                              padding: const EdgeInsets.fromLTRB(
+                                AppSpacing.md,
+                                0,
+                                AppSpacing.md,
+                                AppSpacing.xl,
+                              ),
+                              quizBuilder: (quiz) {
+                                final selected = quiz.quizId == _selectedQuizId;
+                                return _QuizPickerTile(
+                                  quiz: quiz,
+                                  selected: selected,
+                                  onTap: () => Navigator.pop(ctx, quiz.quizId),
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                );
+              },
             );
           },
         );
       },
     );
+
+    searchController.dispose();
 
     if (picked != null && mounted) {
       final quiz = _quizzes.firstWhere((q) => q.quizId == picked);

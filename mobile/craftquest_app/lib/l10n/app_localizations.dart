@@ -1270,6 +1270,18 @@ abstract class AppLocalizations {
   /// **'Se eliminará la carpeta \"{folderName}\" y sus subcarpetas. {quizCount} cuestionarios quedarán sin carpeta.'**
   String quizFolderDeleteConfirmWithQuizzes(String folderName, int quizCount);
 
+  /// No description provided for @quizSearchHint.
+  String get quizSearchHint;
+
+  /// No description provided for @quizSearchNoResults.
+  String get quizSearchNoResults;
+
+  /// No description provided for @quizFolderDropToRoot.
+  String get quizFolderDropToRoot;
+
+  /// No description provided for @quizFolderMoveInvalid.
+  String get quizFolderMoveInvalid;
+
   /// No description provided for @createQuizTitle.
   ///
   /// In es, this message translates to:

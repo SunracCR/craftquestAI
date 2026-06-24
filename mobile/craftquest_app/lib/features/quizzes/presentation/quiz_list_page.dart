@@ -4,7 +4,6 @@ import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:dio/dio.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
-import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_bottom_bar.dart';
 import 'package:craftquest_app/core/widgets/app_buttons.dart';
 import 'package:craftquest_app/core/widgets/app_list_entry_card.dart';
@@ -21,6 +20,7 @@ import 'package:craftquest_app/features/quizzes/presentation/quiz_detail_page.da
 import 'package:craftquest_app/features/quizzes/presentation/utils/quiz_folder_actions.dart';
 import 'package:craftquest_app/features/quizzes/presentation/utils/quiz_folder_tree.dart';
 import 'package:craftquest_app/features/quizzes/presentation/widgets/quiz_folder_grouped_list.dart';
+import 'package:craftquest_app/features/quizzes/presentation/widgets/quiz_search_field.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
@@ -34,16 +34,24 @@ class QuizListPage extends StatefulWidget {
 class _QuizListPageState extends State<QuizListPage> {
   late final QuizRepository _repository = getIt<QuizRepository>();
   late final PracticeRepository _practiceRepository = getIt<PracticeRepository>();
+  final _searchController = TextEditingController();
   List<QuizModel>? _quizzes;
   List<QuizFolderModel> _folders = [];
   Map<String, PracticeActiveSessionModel> _inProgressByQuizId = {};
   String? _error;
   bool _loading = true;
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -141,6 +149,26 @@ class _QuizListPageState extends State<QuizListPage> {
       quiz: quiz,
       folders: _folders,
       folderTree: _folderTree,
+      onSuccess: _load,
+    );
+  }
+
+  Future<void> _reparentFolder(QuizFolderModel folder, String? newParentId) async {
+    await moveFolderFlow(
+      context: context,
+      repository: _repository,
+      folder: folder,
+      newParentId: newParentId,
+      onSuccess: _load,
+    );
+  }
+
+  Future<void> _reassignQuiz(QuizModel quiz, String? folderId) async {
+    await reassignQuizFromDrag(
+      context: context,
+      repository: _repository,
+      quiz: quiz,
+      folderId: folderId,
       onSuccess: _load,
     );
   }
@@ -256,15 +284,32 @@ class _QuizListPageState extends State<QuizListPage> {
                 )
               : (_quizzes == null || _quizzes!.isEmpty)
                   ? AppEmptyView(message: l10n.quizzesEmpty)
-                  : RefreshIndicator(
-                      onRefresh: _load,
-                      child: QuizFolderGroupedList(
-                        folders: _folders,
-                        quizzes: _quizzes!,
-                        quizBuilder: _buildQuizCard,
-                        onFolderMenu: _showFolderMenu,
-                        onQuizMove: _folders.isEmpty ? null : _moveQuiz,
-                      ),
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        QuizSearchField(
+                          controller: _searchController,
+                          onChanged: (value) =>
+                              setState(() => _searchQuery = value),
+                        ),
+                        Expanded(
+                          child: RefreshIndicator(
+                            onRefresh: _load,
+                            child: QuizFolderGroupedList(
+                              folders: _folders,
+                              quizzes: _quizzes!,
+                              searchQuery: _searchQuery,
+                              initiallyExpandFolders: false,
+                              enableDrag: _searchQuery.trim().isEmpty,
+                              quizBuilder: _buildQuizCard,
+                              onFolderMenu: _showFolderMenu,
+                              onQuizMove: _folders.isEmpty ? null : _moveQuiz,
+                              onReparentFolder: _reparentFolder,
+                              onReassignQuiz: _reassignQuiz,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
     );
   }
