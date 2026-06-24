@@ -110,7 +110,8 @@ Future<String?> showMoveQuizFolderPicker({
               (folder) => _FolderPickOption(
                 id: folder.quizFolderId,
                 label: folder.name,
-                depth: folder.depth + 1,
+                depth: folder.depth,
+                folderDepth: folder.depth,
               ),
             ),
       ];
@@ -136,16 +137,43 @@ Future<String?> showMoveQuizFolderPicker({
                   final selected = option.id == '__uncategorized__'
                       ? currentFolderId == null
                       : currentFolderId == option.id;
+                  final isUncategorized = option.id == '__uncategorized__';
+                  final folderColor = option.folderDepth == null
+                      ? AppColors.textSecondary
+                      : AppColors.quizFolderColor(option.folderDepth!);
+
                   return ListTile(
-                    leading: Icon(
-                      option.id == '__uncategorized__'
-                          ? Icons.inbox_outlined
-                          : Icons.folder_outlined,
-                      color: AppColors.accentCool,
+                    contentPadding: EdgeInsets.only(
+                      left: AppSpacing.md + option.depth * 20.0,
+                      right: AppSpacing.md,
                     ),
-                    title: Padding(
-                      padding: EdgeInsets.only(left: option.depth * 16.0),
-                      child: Text(option.label),
+                    leading: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (!isUncategorized)
+                          Container(
+                            width: 4,
+                            height: 28,
+                            margin: const EdgeInsets.only(right: AppSpacing.sm),
+                            decoration: BoxDecoration(
+                              color: folderColor,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        Icon(
+                          isUncategorized
+                              ? Icons.inbox_outlined
+                              : Icons.folder_rounded,
+                          color: folderColor,
+                        ),
+                      ],
+                    ),
+                    title: Text(
+                      option.label,
+                      style: TextStyle(
+                        fontWeight:
+                            option.depth == 0 ? FontWeight.w700 : FontWeight.w500,
+                      ),
                     ),
                     trailing: selected
                         ? const Icon(Icons.check_rounded, color: AppColors.accent)
@@ -167,11 +195,15 @@ class _FolderPickOption {
     required this.id,
     required this.label,
     required this.depth,
+    this.folderDepth,
   });
 
   final String id;
   final String label;
+  /// Indent level (0 = root / uncategorized).
   final int depth;
+  /// Folder depth for color (null = uncategorized).
+  final int? folderDepth;
 }
 
 Future<void> handleQuizFolderMutation({
