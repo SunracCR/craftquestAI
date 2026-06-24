@@ -648,6 +648,52 @@ class AppLocalizationsPt extends AppLocalizations {
   String get createQuizAction => 'Criar questionario';
 
   @override
+  String get quizFolderNewFolderAction => 'Nova pasta';
+
+  @override
+  String get quizFolderCreateTitle => 'Nova pasta';
+
+  @override
+  String get quizFolderCreateSubfolderTitle => 'Nova subpasta';
+
+  @override
+  String get quizFolderRenameTitle => 'Renomear pasta';
+
+  @override
+  String get quizFolderRenameAction => 'Renomear';
+
+  @override
+  String get quizFolderDeleteAction => 'Excluir pasta';
+
+  @override
+  String get quizFolderCreateSubfolderAction => 'Criar subpasta';
+
+  @override
+  String get quizFolderMoveQuizAction => 'Mover para pasta';
+
+  @override
+  String get quizFolderMoveQuizTitle => 'Mover questionario';
+
+  @override
+  String get quizFolderUncategorized => 'Sem pasta';
+
+  @override
+  String get quizFolderNameHint => 'Nome da pasta';
+
+  @override
+  String get quizFolderDeleteConfirmTitle => 'Excluir pasta?';
+
+  @override
+  String quizFolderDeleteConfirmMessage(String folderName) {
+    return 'A pasta \"$folderName\" sera excluida. Os questionarios nao serao excluidos.';
+  }
+
+  @override
+  String quizFolderDeleteConfirmWithQuizzes(String folderName, int quizCount) {
+    return 'A pasta \"$folderName\" e suas subpastas serao excluidas. $quizCount questionarios ficarao sem pasta.';
+  }
+
+  @override
   String get createQuizTitle => 'Novo questionario';
 
   @override

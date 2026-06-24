@@ -13,6 +13,7 @@ import 'package:craftquest_app/features/quizzes/data/models/quiz_models.dart';
 import 'package:craftquest_app/features/quizzes/data/quiz_repository.dart';
 import 'package:craftquest_app/features/quizzes/presentation/quiz_content_setup_flow.dart';
 import 'package:craftquest_app/features/quizzes/presentation/quiz_flow_anchor.dart';
+import 'package:craftquest_app/features/quizzes/presentation/widgets/quiz_folder_grouped_list.dart';
 import 'package:craftquest_app/features/teacher/presentation/assignment_form_draft.dart';
 import 'package:craftquest_app/features/teacher/data/models/teacher_assignment_models.dart';
 import 'package:craftquest_app/features/teacher/data/teacher_assignment_repository.dart';
@@ -65,6 +66,7 @@ class _TeacherCreateAssignmentPageState
   }
   AssignmentFormDraft? _draftSnapshot;
   List<QuizModel> _quizzes = [];
+  List<QuizFolderModel> _folders = [];
   bool _quizzesLoading = true;
 
   QuizModel? get _selectedQuiz {
@@ -113,7 +115,12 @@ class _TeacherCreateAssignmentPageState
   Future<void> _loadQuizzes({String? selectQuizId}) async {
     setState(() => _quizzesLoading = true);
     try {
-      final all = await _quizRepo.getMyQuizzes();
+      final results = await Future.wait([
+        _quizRepo.getMyQuizzes(),
+        _quizRepo.getFolders(),
+      ]);
+      final all = results[0] as List<QuizModel>;
+      final folders = results[1] as List<QuizFolderModel>;
       final quizzes = all.toList()
         ..sort((a, b) {
           final pubA = a.publicationStatus == 'published' ? 0 : 1;
@@ -124,6 +131,7 @@ class _TeacherCreateAssignmentPageState
       if (mounted) {
         setState(() {
           _quizzes = quizzes;
+          _folders = folders;
           _quizzesLoading = false;
           if (selectQuizId != null) _selectedQuizId = selectQuizId;
         });
@@ -255,19 +263,18 @@ class _TeacherCreateAssignmentPageState
                             ),
                           ),
                         )
-                      : ListView.separated(
-                          controller: scrollController,
+                      : QuizFolderGroupedList(
+                          folders: _folders,
+                          quizzes: _quizzes,
+                          scrollController: scrollController,
+                          initiallyExpandFolders: true,
                           padding: const EdgeInsets.fromLTRB(
                             AppSpacing.md,
                             0,
                             AppSpacing.md,
                             AppSpacing.xl,
                           ),
-                          itemCount: _quizzes.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: AppSpacing.xs),
-                          itemBuilder: (context, index) {
-                            final quiz = _quizzes[index];
+                          quizBuilder: (quiz) {
                             final selected = quiz.quizId == _selectedQuizId;
                             return _QuizPickerTile(
                               quiz: quiz,

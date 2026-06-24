@@ -83,6 +83,7 @@ public class QuizService(
                 PublicationStatus = q.PublicationStatus,
                 Visibility = q.Visibility,
                 RandomizeQuestions = q.RandomizeQuestions,
+                FolderId = q.FolderId,
                 QuestionCount = q.Questions.Count(),
             })
             .ToListAsync(cancellationToken);
@@ -185,6 +186,16 @@ public class QuizService(
         if (request.DefaultRandomizeAnswerOptions.HasValue)
         {
             quiz.DefaultRandomizeAnswerOptions = request.DefaultRandomizeAnswerOptions.Value;
+        }
+
+        if (request.ClearFolder)
+        {
+            quiz.FolderId = null;
+        }
+        else if (request.FolderId.HasValue)
+        {
+            await EnsureOwnedFolderAsync(userId, request.FolderId.Value, cancellationToken);
+            quiz.FolderId = request.FolderId;
         }
 
         quiz.UpdatedAt = DateTime.UtcNow;
@@ -619,6 +630,21 @@ public class QuizService(
         }
     }
 
+    private async Task EnsureOwnedFolderAsync(
+        Guid userId,
+        Guid folderId,
+        CancellationToken cancellationToken)
+    {
+        var exists = await dbContext.QuizFolders
+            .AsNoTracking()
+            .AnyAsync(f => f.QuizFolderId == folderId && f.OwnerUserId == userId, cancellationToken);
+
+        if (!exists)
+        {
+            throw new AppException("Folder not found.", 404);
+        }
+    }
+
     private static void ValidateVisibility(string visibility)
     {
         if (!ValidVisibilities.Contains(visibility))
@@ -735,6 +761,7 @@ public class QuizService(
         public required string PublicationStatus { get; init; }
         public required string Visibility { get; init; }
         public bool RandomizeQuestions { get; init; }
+        public Guid? FolderId { get; init; }
         public int QuestionCount { get; init; }
     }
 
@@ -749,6 +776,7 @@ public class QuizService(
         Visibility = row.Visibility,
         QuestionCount = row.QuestionCount,
         RandomizeQuestions = row.RandomizeQuestions,
+        FolderId = row.FolderId,
         PendingReviewImportId = pending?.ImportId,
         PendingReviewValidQuestions = pending?.ValidQuestions,
         IsOwned = true,
@@ -768,6 +796,7 @@ public class QuizService(
         Visibility = quiz.Visibility,
         QuestionCount = questionCount,
         RandomizeQuestions = quiz.RandomizeQuestions,
+        FolderId = quiz.FolderId,
         PendingReviewImportId = pendingReviewImportId,
         PendingReviewValidQuestions = pendingReviewValidQuestions,
         IsOwned = isOwned,

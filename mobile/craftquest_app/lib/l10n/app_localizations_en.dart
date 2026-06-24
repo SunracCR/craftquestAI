@@ -646,6 +646,52 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createQuizAction => 'Create quiz';
 
   @override
+  String get quizFolderNewFolderAction => 'New folder';
+
+  @override
+  String get quizFolderCreateTitle => 'New folder';
+
+  @override
+  String get quizFolderCreateSubfolderTitle => 'New subfolder';
+
+  @override
+  String get quizFolderRenameTitle => 'Rename folder';
+
+  @override
+  String get quizFolderRenameAction => 'Rename';
+
+  @override
+  String get quizFolderDeleteAction => 'Delete folder';
+
+  @override
+  String get quizFolderCreateSubfolderAction => 'Create subfolder';
+
+  @override
+  String get quizFolderMoveQuizAction => 'Move to folder';
+
+  @override
+  String get quizFolderMoveQuizTitle => 'Move quiz';
+
+  @override
+  String get quizFolderUncategorized => 'Uncategorized';
+
+  @override
+  String get quizFolderNameHint => 'Folder name';
+
+  @override
+  String get quizFolderDeleteConfirmTitle => 'Delete folder?';
+
+  @override
+  String quizFolderDeleteConfirmMessage(String folderName) {
+    return 'Folder \"$folderName\" will be deleted. Quizzes will not be deleted.';
+  }
+
+  @override
+  String quizFolderDeleteConfirmWithQuizzes(String folderName, int quizCount) {
+    return 'Folder \"$folderName\" and its subfolders will be deleted. $quizCount quizzes will become uncategorized.';
+  }
+
+  @override
   String get createQuizTitle => 'New quiz';
 
   @override

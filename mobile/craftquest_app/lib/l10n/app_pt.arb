@@ -268,6 +268,31 @@
   "quizzesEmpty": "Voce ainda nao tem questionarios",
   "quizzesLoadError": "Nao foi possivel carregar os questionarios",
   "createQuizAction": "Criar questionario",
+  "quizFolderNewFolderAction": "Nova pasta",
+  "quizFolderCreateTitle": "Nova pasta",
+  "quizFolderCreateSubfolderTitle": "Nova subpasta",
+  "quizFolderRenameTitle": "Renomear pasta",
+  "quizFolderRenameAction": "Renomear",
+  "quizFolderDeleteAction": "Excluir pasta",
+  "quizFolderCreateSubfolderAction": "Criar subpasta",
+  "quizFolderMoveQuizAction": "Mover para pasta",
+  "quizFolderMoveQuizTitle": "Mover questionario",
+  "quizFolderUncategorized": "Sem pasta",
+  "quizFolderNameHint": "Nome da pasta",
+  "quizFolderDeleteConfirmTitle": "Excluir pasta?",
+  "quizFolderDeleteConfirmMessage": "A pasta \"{folderName}\" sera excluida. Os questionarios nao serao excluidos.",
+  "@quizFolderDeleteConfirmMessage": {
+    "placeholders": {
+      "folderName": { "type": "String" }
+    }
+  },
+  "quizFolderDeleteConfirmWithQuizzes": "A pasta \"{folderName}\" e suas subpastas serao excluidas. {quizCount} questionarios ficarao sem pasta.",
+  "@quizFolderDeleteConfirmWithQuizzes": {
+    "placeholders": {
+      "folderName": { "type": "String" },
+      "quizCount": { "type": "int" }
+    }
+  },
   "createQuizTitle": "Novo questionario",
   "createQuizNextStepTitle": "Adicione perguntas ao seu quiz",
   "createQuizNextStepSubtitle": "Comece criando uma pergunta, importe de um arquivo ou gere com IA.",

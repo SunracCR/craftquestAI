@@ -9,6 +9,7 @@ public sealed class QuizDto
     public required string Visibility { get; init; }
     public int QuestionCount { get; init; }
     public bool RandomizeQuestions { get; init; }
+    public Guid? FolderId { get; init; }
     /// <summary>AI-generated import batch awaiting confirmation into this quiz.</summary>
     public Guid? PendingReviewImportId { get; init; }
     public int? PendingReviewValidQuestions { get; init; }

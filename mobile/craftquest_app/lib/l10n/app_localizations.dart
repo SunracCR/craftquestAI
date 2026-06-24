@@ -1186,6 +1186,48 @@ abstract class AppLocalizations {
   /// **'Crear cuestionario'**
   String get createQuizAction;
 
+  /// No description provided for @quizFolderNewFolderAction.
+  String get quizFolderNewFolderAction;
+
+  /// No description provided for @quizFolderCreateTitle.
+  String get quizFolderCreateTitle;
+
+  /// No description provided for @quizFolderCreateSubfolderTitle.
+  String get quizFolderCreateSubfolderTitle;
+
+  /// No description provided for @quizFolderRenameTitle.
+  String get quizFolderRenameTitle;
+
+  /// No description provided for @quizFolderRenameAction.
+  String get quizFolderRenameAction;
+
+  /// No description provided for @quizFolderDeleteAction.
+  String get quizFolderDeleteAction;
+
+  /// No description provided for @quizFolderCreateSubfolderAction.
+  String get quizFolderCreateSubfolderAction;
+
+  /// No description provided for @quizFolderMoveQuizAction.
+  String get quizFolderMoveQuizAction;
+
+  /// No description provided for @quizFolderMoveQuizTitle.
+  String get quizFolderMoveQuizTitle;
+
+  /// No description provided for @quizFolderUncategorized.
+  String get quizFolderUncategorized;
+
+  /// No description provided for @quizFolderNameHint.
+  String get quizFolderNameHint;
+
+  /// No description provided for @quizFolderDeleteConfirmTitle.
+  String get quizFolderDeleteConfirmTitle;
+
+  /// No description provided for @quizFolderDeleteConfirmMessage.
+  String quizFolderDeleteConfirmMessage(String folderName);
+
+  /// No description provided for @quizFolderDeleteConfirmWithQuizzes.
+  String quizFolderDeleteConfirmWithQuizzes(String folderName, int quizCount);
+
   /// No description provided for @createQuizTitle.
   ///
   /// In es, this message translates to:

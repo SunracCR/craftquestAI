@@ -20,6 +20,71 @@ class QuizRepository {
         .toList();
   }
 
+  Future<List<QuizFolderModel>> getFolders() async {
+    final response =
+        await _apiClient.dio.get<List<dynamic>>('/api/quiz-folders');
+    return (response.data ?? [])
+        .map((e) => QuizFolderModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<QuizFolderModel> createFolder({
+    required String name,
+    String? parentFolderId,
+  }) async {
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/api/quiz-folders',
+      data: {
+        'name': name,
+        if (parentFolderId != null) 'parentFolderId': parentFolderId,
+      },
+    );
+    return QuizFolderModel.fromJson(response.data!);
+  }
+
+  Future<QuizFolderModel> renameFolder({
+    required String folderId,
+    required String name,
+  }) async {
+    final response = await _apiClient.dio.patch<Map<String, dynamic>>(
+      '/api/quiz-folders/$folderId',
+      data: {'name': name},
+    );
+    return QuizFolderModel.fromJson(response.data!);
+  }
+
+  Future<QuizFolderModel> moveFolder({
+    required String folderId,
+    String? parentFolderId,
+    bool clearParent = false,
+  }) async {
+    final response = await _apiClient.dio.patch<Map<String, dynamic>>(
+      '/api/quiz-folders/$folderId',
+      data: {
+        if (clearParent) 'clearParentFolder': true,
+        if (!clearParent && parentFolderId != null)
+          'parentFolderId': parentFolderId,
+      },
+    );
+    return QuizFolderModel.fromJson(response.data!);
+  }
+
+  Future<void> deleteFolder(String folderId) async {
+    await _apiClient.dio.delete<void>('/api/quiz-folders/$folderId');
+  }
+
+  Future<QuizModel> moveQuizToFolder({
+    required String quizId,
+    String? folderId,
+    bool clearFolder = false,
+  }) async {
+    return updateQuiz(
+      quizId: quizId,
+      folderId: folderId,
+      clearFolder: clearFolder,
+    );
+  }
+
   Future<QuizModel> getQuiz(String quizId) async {
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
       '/api/quizzes/$quizId',
@@ -129,6 +194,8 @@ class QuizRepository {
     String? title,
     String? description,
     bool? randomizeQuestions,
+    String? folderId,
+    bool clearFolder = false,
   }) async {
     final response = await _apiClient.dio.patch<Map<String, dynamic>>(
       '/api/quizzes/$quizId',
@@ -137,6 +204,8 @@ class QuizRepository {
         if (description != null) 'description': description,
         if (randomizeQuestions != null)
           'randomizeQuestions': randomizeQuestions,
+        if (clearFolder) 'clearFolder': true,
+        if (!clearFolder && folderId != null) 'folderId': folderId,
       },
     );
     return QuizModel.fromJson(response.data!);

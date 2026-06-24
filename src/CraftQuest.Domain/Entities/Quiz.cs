@@ -13,6 +13,7 @@ public class Quiz
     public bool DefaultRandomizeAnswerOptions { get; set; } = true;
     public bool IsCurated { get; set; }
     public string? TargetCountryCode { get; set; }
+    public Guid? FolderId { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public DateTime? DeletedAt { get; set; }

@@ -14,4 +14,6 @@ public class UpdateQuizRequest
     public string? PublicationStatus { get; set; }
     public bool? RandomizeQuestions { get; set; }
     public bool? DefaultRandomizeAnswerOptions { get; set; }
+    public Guid? FolderId { get; set; }
+    public bool ClearFolder { get; set; }
 }

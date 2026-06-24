@@ -268,6 +268,31 @@
   "quizzesEmpty": "You have no quizzes yet",
   "quizzesLoadError": "Could not load quizzes",
   "createQuizAction": "Create quiz",
+  "quizFolderNewFolderAction": "New folder",
+  "quizFolderCreateTitle": "New folder",
+  "quizFolderCreateSubfolderTitle": "New subfolder",
+  "quizFolderRenameTitle": "Rename folder",
+  "quizFolderRenameAction": "Rename",
+  "quizFolderDeleteAction": "Delete folder",
+  "quizFolderCreateSubfolderAction": "Create subfolder",
+  "quizFolderMoveQuizAction": "Move to folder",
+  "quizFolderMoveQuizTitle": "Move quiz",
+  "quizFolderUncategorized": "Uncategorized",
+  "quizFolderNameHint": "Folder name",
+  "quizFolderDeleteConfirmTitle": "Delete folder?",
+  "quizFolderDeleteConfirmMessage": "Folder \"{folderName}\" will be deleted. Quizzes will not be deleted.",
+  "@quizFolderDeleteConfirmMessage": {
+    "placeholders": {
+      "folderName": { "type": "String" }
+    }
+  },
+  "quizFolderDeleteConfirmWithQuizzes": "Folder \"{folderName}\" and its subfolders will be deleted. {quizCount} quizzes will become uncategorized.",
+  "@quizFolderDeleteConfirmWithQuizzes": {
+    "placeholders": {
+      "folderName": { "type": "String" },
+      "quizCount": { "type": "int" }
+    }
+  },
   "createQuizTitle": "New quiz",
   "createQuizNextStepTitle": "Add questions to your quiz",
   "createQuizNextStepSubtitle": "Start by creating a question, importing from a file, or generating with AI.",

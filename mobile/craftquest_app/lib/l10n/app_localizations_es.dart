@@ -650,6 +650,52 @@ class AppLocalizationsEs extends AppLocalizations {
   String get createQuizAction => 'Crear cuestionario';
 
   @override
+  String get quizFolderNewFolderAction => 'Nueva carpeta';
+
+  @override
+  String get quizFolderCreateTitle => 'Nueva carpeta';
+
+  @override
+  String get quizFolderCreateSubfolderTitle => 'Nueva subcarpeta';
+
+  @override
+  String get quizFolderRenameTitle => 'Renombrar carpeta';
+
+  @override
+  String get quizFolderRenameAction => 'Renombrar';
+
+  @override
+  String get quizFolderDeleteAction => 'Eliminar carpeta';
+
+  @override
+  String get quizFolderCreateSubfolderAction => 'Crear subcarpeta';
+
+  @override
+  String get quizFolderMoveQuizAction => 'Mover a carpeta';
+
+  @override
+  String get quizFolderMoveQuizTitle => 'Mover cuestionario';
+
+  @override
+  String get quizFolderUncategorized => 'Sin carpeta';
+
+  @override
+  String get quizFolderNameHint => 'Nombre de la carpeta';
+
+  @override
+  String get quizFolderDeleteConfirmTitle => '¿Eliminar carpeta?';
+
+  @override
+  String quizFolderDeleteConfirmMessage(String folderName) {
+    return 'Se eliminará la carpeta \"$folderName\". Los cuestionarios no se borrarán.';
+  }
+
+  @override
+  String quizFolderDeleteConfirmWithQuizzes(String folderName, int quizCount) {
+    return 'Se eliminará la carpeta \"$folderName\" y sus subcarpetas. $quizCount cuestionarios quedarán sin carpeta.';
+  }
+
+  @override
   String get createQuizTitle => 'Nuevo cuestionario';
 
   @override

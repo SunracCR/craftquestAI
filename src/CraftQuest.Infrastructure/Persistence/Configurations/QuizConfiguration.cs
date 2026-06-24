@@ -17,6 +17,10 @@ public class QuizConfiguration : IEntityTypeConfiguration<Quiz>
         builder.Property(x => x.DefaultQuestionPoints).HasPrecision(10, 2);
         builder.Property(x => x.TargetCountryCode).HasMaxLength(10);
 
+        builder.HasIndex(x => x.FolderId)
+            .HasFilter("[DeletedAt] IS NULL")
+            .HasDatabaseName("IX_Quizzes_Folder");
+
         builder.HasMany(x => x.Questions)
             .WithOne(x => x.Quiz)
             .HasForeignKey(x => x.QuizId);

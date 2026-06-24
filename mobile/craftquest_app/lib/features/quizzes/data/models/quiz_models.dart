@@ -6,6 +6,7 @@ class QuizModel {
     required this.publicationStatus,
     required this.questionCount,
     this.randomizeQuestions = false,
+    this.folderId,
     this.pendingReviewImportId,
     this.pendingReviewValidQuestions,
     this.isOwned = true,
@@ -19,6 +20,7 @@ class QuizModel {
       publicationStatus: json['publicationStatus'] as String,
       questionCount: json['questionCount'] as int? ?? 0,
       randomizeQuestions: json['randomizeQuestions'] as bool? ?? false,
+      folderId: json['folderId'] as String?,
       pendingReviewImportId: json['pendingReviewImportId'] as String?,
       pendingReviewValidQuestions: json['pendingReviewValidQuestions'] as int?,
       isOwned: json['isOwned'] as bool? ?? true,
@@ -31,11 +33,43 @@ class QuizModel {
   final String publicationStatus;
   final int questionCount;
   final bool randomizeQuestions;
+  final String? folderId;
   final String? pendingReviewImportId;
   final int? pendingReviewValidQuestions;
   final bool isOwned;
 
   bool get hasPendingAiDraft => pendingReviewImportId != null;
+}
+
+class QuizFolderModel {
+  const QuizFolderModel({
+    required this.quizFolderId,
+    required this.name,
+    this.parentFolderId,
+    required this.depth,
+    required this.sortOrder,
+    required this.quizCount,
+  });
+
+  factory QuizFolderModel.fromJson(Map<String, dynamic> json) {
+    return QuizFolderModel(
+      quizFolderId: json['quizFolderId'] as String,
+      name: json['name'] as String,
+      parentFolderId: json['parentFolderId'] as String?,
+      depth: json['depth'] as int? ?? 0,
+      sortOrder: json['sortOrder'] as int? ?? 0,
+      quizCount: json['quizCount'] as int? ?? 0,
+    );
+  }
+
+  final String quizFolderId;
+  final String name;
+  final String? parentFolderId;
+  final int depth;
+  final int sortOrder;
+  final int quizCount;
+
+  bool get canHaveSubfolders => depth < 2;
 }
 
 class QuestionTypeModel {

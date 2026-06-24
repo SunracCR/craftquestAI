@@ -268,6 +268,31 @@
   "quizzesEmpty": "Aún no tienes cuestionarios",
   "quizzesLoadError": "No se pudieron cargar los cuestionarios",
   "createQuizAction": "Crear cuestionario",
+  "quizFolderNewFolderAction": "Nueva carpeta",
+  "quizFolderCreateTitle": "Nueva carpeta",
+  "quizFolderCreateSubfolderTitle": "Nueva subcarpeta",
+  "quizFolderRenameTitle": "Renombrar carpeta",
+  "quizFolderRenameAction": "Renombrar",
+  "quizFolderDeleteAction": "Eliminar carpeta",
+  "quizFolderCreateSubfolderAction": "Crear subcarpeta",
+  "quizFolderMoveQuizAction": "Mover a carpeta",
+  "quizFolderMoveQuizTitle": "Mover cuestionario",
+  "quizFolderUncategorized": "Sin carpeta",
+  "quizFolderNameHint": "Nombre de la carpeta",
+  "quizFolderDeleteConfirmTitle": "¿Eliminar carpeta?",
+  "quizFolderDeleteConfirmMessage": "Se eliminará la carpeta \"{folderName}\". Los cuestionarios no se borrarán.",
+  "@quizFolderDeleteConfirmMessage": {
+    "placeholders": {
+      "folderName": { "type": "String" }
+    }
+  },
+  "quizFolderDeleteConfirmWithQuizzes": "Se eliminará la carpeta \"{folderName}\" y sus subcarpetas. {quizCount} cuestionarios quedarán sin carpeta.",
+  "@quizFolderDeleteConfirmWithQuizzes": {
+    "placeholders": {
+      "folderName": { "type": "String" },
+      "quizCount": { "type": "int" }
+    }
+  },
   "createQuizTitle": "Nuevo cuestionario",
   "createQuizNextStepTitle": "Añade preguntas a tu cuestionario",
   "createQuizNextStepSubtitle": "Empieza creando una pregunta, importa desde un archivo o genera con IA.",

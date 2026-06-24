@@ -33,6 +33,7 @@ Antes de ejecutar, comprueba la columna **Verificación**. Si ya cumple la condi
 | 57 | `PasswordReset_Feature.sql` | Tokens de recuperación de contraseña | Tabla `core.PasswordResetTokens` | ☐ | ☐ | ☐ |
 | 58 | `AlterIndexes_Quiz_Question_AiJob.sql` | Índices listado quizzes, preguntas e imports IA pendientes | `IX_Quizzes_CreatedByUser_CreatedAt`, `IX_Questions_Quiz`, `IX_AiJobs_PendingImportByQuiz` | ☐ | ☐ | ☐ |
 | 59 | *(verificación, sin script)* | Índices login: `EmailNormalized` y OAuth `AuthProviders` | `UQ_Users_EmailNormalized` en `core.Users`; `UQ_AuthProviders_ProviderSubject` en `core.AuthProviders` (incluidos en ítem 38) | ☐ | ☐ | ☐ |
+| 60 | `AddQuizFolders.sql` | Carpetas jerárquicas para cuestionarios (`quiz.QuizFolders`, `Quizzes.FolderId`) | Tabla `quiz.QuizFolders`; `COL_LENGTH('quiz.Quizzes','FolderId')` NOT NULL | ☐ | ☐ | ☐ |
 
 ## Estrategia (ítem 58)
 

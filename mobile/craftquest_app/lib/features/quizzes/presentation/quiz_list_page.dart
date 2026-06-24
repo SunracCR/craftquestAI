@@ -18,6 +18,9 @@ import 'package:craftquest_app/features/quizzes/data/quiz_repository.dart';
 import 'package:craftquest_app/features/quizzes/presentation/quiz_flow_anchor.dart';
 import 'package:craftquest_app/features/quizzes/presentation/quiz_content_setup_flow.dart';
 import 'package:craftquest_app/features/quizzes/presentation/quiz_detail_page.dart';
+import 'package:craftquest_app/features/quizzes/presentation/utils/quiz_folder_actions.dart';
+import 'package:craftquest_app/features/quizzes/presentation/utils/quiz_folder_tree.dart';
+import 'package:craftquest_app/features/quizzes/presentation/widgets/quiz_folder_grouped_list.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
@@ -32,6 +35,7 @@ class _QuizListPageState extends State<QuizListPage> {
   late final QuizRepository _repository = getIt<QuizRepository>();
   late final PracticeRepository _practiceRepository = getIt<PracticeRepository>();
   List<QuizModel>? _quizzes;
+  List<QuizFolderModel> _folders = [];
   Map<String, PracticeActiveSessionModel> _inProgressByQuizId = {};
   String? _error;
   bool _loading = true;
@@ -48,10 +52,14 @@ class _QuizListPageState extends State<QuizListPage> {
       _error = null;
     });
     try {
-      final quizzes = await _repository.getMyQuizzes();
+      final results = await Future.wait([
+        _repository.getMyQuizzes(),
+        _repository.getFolders(),
+      ]);
       if (!mounted) return;
       setState(() {
-        _quizzes = quizzes;
+        _quizzes = results[0] as List<QuizModel>;
+        _folders = results[1] as List<QuizFolderModel>;
         _loading = false;
       });
       unawaited(_loadInProgressSessions());
@@ -92,12 +100,140 @@ class _QuizListPageState extends State<QuizListPage> {
     await _load();
   }
 
+  List<QuizFolderNode> get _folderTree => buildQuizFolderTree(
+        folders: _folders,
+        quizzes: _quizzes ?? const [],
+      );
+
+  Future<void> _createFolder({String? parentFolderId}) async {
+    await createQuizFolderFlow(
+      context: context,
+      repository: _repository,
+      parentFolderId: parentFolderId,
+      onSuccess: _load,
+    );
+  }
+
+  Future<void> _showFolderMenu(QuizFolderNode node) async {
+    await showQuizFolderOptionsSheet(
+      context: context,
+      node: node,
+      onRename: () => renameQuizFolderFlow(
+        context: context,
+        repository: _repository,
+        folder: node.folder,
+        onSuccess: _load,
+      ),
+      onDelete: () => deleteQuizFolderFlow(
+        context: context,
+        repository: _repository,
+        node: node,
+        onSuccess: _load,
+      ),
+      onCreateSubfolder: () => _createFolder(parentFolderId: node.folder.quizFolderId),
+    );
+  }
+
+  Future<void> _moveQuiz(QuizModel quiz) async {
+    await moveQuizToFolderFlow(
+      context: context,
+      repository: _repository,
+      quiz: quiz,
+      folders: _folders,
+      folderTree: _folderTree,
+      onSuccess: _load,
+    );
+  }
+
+  Widget _buildQuizCard(QuizModel quiz) {
+    final l10n = AppLocalizations.of(context)!;
+    final canPractice =
+        quiz.publicationStatus == 'published' && quiz.questionCount > 0;
+    final activePractice = _inProgressByQuizId[quiz.quizId];
+    final isPublished = quiz.publicationStatus == 'published';
+    final accent =
+        isPublished ? AppColors.accentMint : AppColors.accentGold;
+    var subtitle = l10n.quizListSubtitle(
+      quiz.publicationStatus,
+      quiz.questionCount,
+    );
+    if (quiz.hasPendingAiDraft) {
+      subtitle = '$subtitle\n${l10n.quizListPendingAiDraft}';
+    }
+    if (activePractice != null) {
+      subtitle =
+          '$subtitle\n${l10n.practiceInProgressSubtitle(activePractice.answeredCount, activePractice.totalQuestions)}';
+    }
+
+    return AppListEntryCard(
+      title: quiz.title,
+      subtitle: subtitle,
+      accentColor: accent,
+      leadingIcon:
+          isPublished ? Icons.check_circle_rounded : Icons.edit_note_rounded,
+      onTap: () async {
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => QuizDetailPage(
+              quizId: quiz.quizId,
+              quizTitle: quiz.title,
+              publicationStatus: quiz.publicationStatus,
+            ),
+          ),
+        );
+        await _load();
+      },
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_folders.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.drive_file_move_outline_rounded),
+              tooltip: l10n.quizFolderMoveQuizAction,
+              onPressed: () => _moveQuiz(quiz),
+            ),
+          if (canPractice)
+            IconButton(
+              icon: Icon(
+                activePractice != null
+                    ? Icons.play_circle_outline_rounded
+                    : Icons.play_arrow_rounded,
+              ),
+              color: AppColors.accent,
+              tooltip: activePractice != null
+                  ? l10n.practiceContinueAction
+                  : l10n.practiceQuizAction,
+              onPressed: () async {
+                await openPracticeSession(
+                  context,
+                  quizId: quiz.quizId,
+                  quizTitle: quiz.title,
+                  resumeSessionId: activePractice?.practiceSessionId,
+                );
+                if (!mounted) return;
+                await _load();
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
     return EdgeAwareScaffold(
-      appBar: craftQuestAppBar(title: l10n.quizzesTitle),
+      appBar: craftQuestAppBar(
+        title: l10n.quizzesTitle,
+        actions: [
+          IconButton(
+            onPressed: () => _createFolder(),
+            tooltip: l10n.quizFolderNewFolderAction,
+            icon: const Icon(Icons.create_new_folder_outlined),
+          ),
+        ],
+      ),
       bottomBar: _loading
           ? null
           : AppBottomActionBar(
@@ -122,86 +258,12 @@ class _QuizListPageState extends State<QuizListPage> {
                   ? AppEmptyView(message: l10n.quizzesEmpty)
                   : RefreshIndicator(
                       onRefresh: _load,
-                      child: ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppSpacing.md,
-                          AppSpacing.md,
-                          AppSpacing.md,
-                          AppSpacing.sm,
-                        ),
-                        itemCount: _quizzes!.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: AppSpacing.sm),
-                        itemBuilder: (context, index) {
-                          final quiz = _quizzes![index];
-                          final canPractice = quiz.publicationStatus ==
-                                  'published' &&
-                              quiz.questionCount > 0;
-                          final activePractice =
-                              _inProgressByQuizId[quiz.quizId];
-                          final isPublished =
-                              quiz.publicationStatus == 'published';
-                          final accent = isPublished
-                              ? AppColors.accentMint
-                              : AppColors.accentGold;
-                          var subtitle = l10n.quizListSubtitle(
-                            quiz.publicationStatus,
-                            quiz.questionCount,
-                          );
-                          if (quiz.hasPendingAiDraft) {
-                            subtitle = '$subtitle\n${l10n.quizListPendingAiDraft}';
-                          }
-                          if (activePractice != null) {
-                            subtitle =
-                                '$subtitle\n${l10n.practiceInProgressSubtitle(activePractice.answeredCount, activePractice.totalQuestions)}';
-                          }
-
-                          return AppListEntryCard(
-                            title: quiz.title,
-                            subtitle: subtitle,
-                            accentColor: accent,
-                            leadingIcon: isPublished
-                                ? Icons.check_circle_rounded
-                                : Icons.edit_note_rounded,
-                            onTap: () async {
-                              await Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (_) => QuizDetailPage(
-                                    quizId: quiz.quizId,
-                                    quizTitle: quiz.title,
-                                    publicationStatus:
-                                        quiz.publicationStatus,
-                                  ),
-                                ),
-                              );
-                              await _load();
-                            },
-                            trailing: canPractice
-                                ? IconButton(
-                                    icon: Icon(
-                                      activePractice != null
-                                          ? Icons.play_circle_outline_rounded
-                                          : Icons.play_arrow_rounded,
-                                    ),
-                                    color: AppColors.accent,
-                                    tooltip: activePractice != null
-                                        ? l10n.practiceContinueAction
-                                        : l10n.practiceQuizAction,
-                                    onPressed: () async {
-                                      await openPracticeSession(
-                                        context,
-                                        quizId: quiz.quizId,
-                                        quizTitle: quiz.title,
-                                        resumeSessionId: activePractice
-                                            ?.practiceSessionId,
-                                      );
-                                      if (!mounted) return;
-                                      await _load();
-                                    },
-                                  )
-                                : null,
-                          );
-                        },
+                      child: QuizFolderGroupedList(
+                        folders: _folders,
+                        quizzes: _quizzes!,
+                        quizBuilder: _buildQuizCard,
+                        onFolderMenu: _showFolderMenu,
+                        onQuizMove: _folders.isEmpty ? null : _moveQuiz,
                       ),
                     ),
     );

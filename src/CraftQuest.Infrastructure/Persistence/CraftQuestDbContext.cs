@@ -13,6 +13,7 @@ public class CraftQuestDbContext(DbContextOptions<CraftQuestDbContext> options) 
     public DbSet<QuestionType> QuestionTypes => Set<QuestionType>();
     public DbSet<Plan> Plans => Set<Plan>();
     public DbSet<Quiz> Quizzes => Set<Quiz>();
+    public DbSet<QuizFolder> QuizFolders => Set<QuizFolder>();
     public DbSet<Question> Questions => Set<Question>();
     public DbSet<QuestionAnswerOption> QuestionAnswerOptions => Set<QuestionAnswerOption>();
     public DbSet<QuestionCorrectAnswerOption> QuestionCorrectAnswerOptions => Set<QuestionCorrectAnswerOption>();
