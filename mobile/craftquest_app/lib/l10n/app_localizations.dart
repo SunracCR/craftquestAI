@@ -1390,6 +1390,30 @@ abstract class AppLocalizations {
   /// **'Ver preguntas'**
   String get viewQuizQuestionsAction;
 
+  /// No description provided for @exportQuizPdfAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Exportar PDF'**
+  String get exportQuizPdfAction;
+
+  /// No description provided for @exportQuizPdfReady.
+  ///
+  /// In es, this message translates to:
+  /// **'PDF listo'**
+  String get exportQuizPdfReady;
+
+  /// No description provided for @exportQuizPdfFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo generar el PDF'**
+  String get exportQuizPdfFailed;
+
+  /// No description provided for @exportQuizPdfEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Agrega preguntas antes de exportar'**
+  String get exportQuizPdfEmpty;
+
   /// No description provided for @publishQuizAction.
   ///
   /// In es, this message translates to:

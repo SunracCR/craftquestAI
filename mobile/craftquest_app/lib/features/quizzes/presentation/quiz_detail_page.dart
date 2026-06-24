@@ -39,8 +39,12 @@ import 'package:craftquest_app/features/sharing/presentation/create_share_code_s
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:craftquest_app/features/quizzes/presentation/quiz_questions_page.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
+import 'package:cross_file/cross_file.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 class QuizDetailPage extends StatefulWidget {
   const QuizDetailPage({
@@ -82,6 +86,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
   late final FocusNode _titleFocusNode;
   bool _isEditingTitle = false;
   bool _savingTitle = false;
+  bool _exportingPdf = false;
   PracticeActiveSessionModel? _activePractice;
   bool _canInviteDirect = false;
   bool _quizModificationLocked = false;
@@ -499,6 +504,64 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
     );
     if (!mounted || newCount == null) return;
     setState(() => _questionCount = newCount);
+  }
+
+  String _pdfFileName() {
+    final sanitized = _quizTitle
+        .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
+        .trim();
+    final base = sanitized.isEmpty ? 'quiz' : sanitized;
+    return base.length > 120 ? '${base.substring(0, 120)}.pdf' : '$base.pdf';
+  }
+
+  Future<void> _exportQuizPdf() async {
+    if (_exportingPdf) return;
+
+    final l10n = AppLocalizations.of(context)!;
+    if (_questionCount == 0) {
+      context.showErrorSnackBar(l10n.exportQuizPdfEmpty);
+      return;
+    }
+
+    setState(() => _exportingPdf = true);
+    try {
+      final languageCode = Localizations.localeOf(context).languageCode;
+      final bytes = await _repository.downloadQuizPdf(
+        widget.quizId,
+        languageCode: languageCode,
+      );
+      if (!mounted) return;
+
+      final fileName = _pdfFileName();
+      final file = XFile.fromData(
+        bytes,
+        name: fileName,
+        mimeType: 'application/pdf',
+      );
+
+      if (kIsWeb) {
+        await Share.shareXFiles([file], text: l10n.exportQuizPdfReady);
+      } else {
+        final dir = await getTemporaryDirectory();
+        final path = '${dir.path}/$fileName';
+        await file.saveTo(path);
+        await Share.shareXFiles(
+          [XFile(path)],
+          text: l10n.exportQuizPdfReady,
+        );
+      }
+
+      if (!mounted) return;
+      context.showSuccessSnackBar(l10n.exportQuizPdfReady);
+    } on DioException catch (e) {
+      if (!mounted) return;
+      context.showDioErrorSnackBar(e);
+    } catch (_) {
+      if (!mounted) return;
+      context.showErrorSnackBar(l10n.exportQuizPdfFailed);
+    } finally {
+      if (mounted) setState(() => _exportingPdf = false);
+    }
   }
 
   Future<void> _viewAnalytics() async {
@@ -1121,6 +1184,15 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
                                       iconBackgroundColor: AppColors.accent
                                           .withValues(alpha: 0.2),
                                       onTap: _viewQuestions,
+                                    ),
+                                    _menuDivider(),
+                                    AppActionTile(
+                                      icon: Icons.picture_as_pdf_outlined,
+                                      label: l10n.exportQuizPdfAction,
+                                      iconColor: AppColors.accentGold,
+                                      iconBackgroundColor: AppColors.accentGold
+                                          .withValues(alpha: 0.22),
+                                      onTap: _exportQuizPdf,
                                     ),
                                   ],
                                 ],

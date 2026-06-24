@@ -7,8 +7,11 @@ using CraftQuest.Infrastructure;
 using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.Services.Ai;
 using Microsoft.Extensions.Options;
+using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+
+QuestPDF.Settings.License = LicenseType.Community;
 
 if (builder.Environment.IsDevelopment())
 {

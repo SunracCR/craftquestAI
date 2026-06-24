@@ -8,7 +8,9 @@ namespace CraftQuest.Api.Controllers;
 [ApiController]
 [Route("api/quizzes")]
 [Authorize]
-public class QuizzesController(IQuizService quizService) : ApiControllerBase
+public class QuizzesController(
+    IQuizService quizService,
+    IQuizPdfExportService pdfExportService) : ApiControllerBase
 {
     [HttpPost]
     [ProducesResponseType(typeof(QuizDto), StatusCodes.Status201Created)]
@@ -115,6 +117,22 @@ public class QuizzesController(IQuizService quizService) : ApiControllerBase
             cancellationToken);
 
         return Ok(questions);
+    }
+
+    [HttpGet("{quizId:guid}/export/pdf")]
+    [Produces("application/pdf")]
+    public async Task<IActionResult> ExportPdf(
+        Guid quizId,
+        [FromQuery] string? language,
+        CancellationToken cancellationToken)
+    {
+        var (bytes, fileName) = await pdfExportService.GenerateQuizPdfAsync(
+            GetUserId(),
+            quizId,
+            language,
+            cancellationToken);
+
+        return File(bytes, "application/pdf", fileName);
     }
 
 }

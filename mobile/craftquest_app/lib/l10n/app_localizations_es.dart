@@ -774,6 +774,18 @@ class AppLocalizationsEs extends AppLocalizations {
   String get viewQuizQuestionsAction => 'Ver preguntas';
 
   @override
+  String get exportQuizPdfAction => 'Exportar PDF';
+
+  @override
+  String get exportQuizPdfReady => 'PDF listo';
+
+  @override
+  String get exportQuizPdfFailed => 'No se pudo generar el PDF';
+
+  @override
+  String get exportQuizPdfEmpty => 'Agrega preguntas antes de exportar';
+
+  @override
   String get publishQuizAction => 'Publicar';
 
   @override

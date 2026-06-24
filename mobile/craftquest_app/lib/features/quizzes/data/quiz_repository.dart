@@ -2,6 +2,7 @@ import 'package:craftquest_app/core/network/api_client.dart';
 import 'package:craftquest_app/features/quizzes/data/models/quiz_models.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:dio/dio.dart';
+import 'dart:typed_data';
 
 class QuizRepository {
   QuizRepository(this._apiClient);
@@ -187,6 +188,25 @@ class QuizRepository {
     return (response.data ?? [])
         .map((e) => QuestionModel.fromJson(e as Map<String, dynamic>))
         .toList();
+  }
+
+  Future<Uint8List> downloadQuizPdf(
+    String quizId, {
+    required String languageCode,
+  }) async {
+    final response = await _apiClient.dio.get<List<int>>(
+      '/api/quizzes/$quizId/export/pdf',
+      queryParameters: {'language': languageCode},
+      options: Options(responseType: ResponseType.bytes),
+    );
+    final data = response.data;
+    if (data == null || data.isEmpty) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        message: 'Empty PDF response',
+      );
+    }
+    return Uint8List.fromList(data);
   }
 
   Future<QuizModel> updateQuiz({

@@ -73,6 +73,7 @@ public static class DependencyInjection
         services.AddScoped<IAppStatusService, AppStatusService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IQuizService, QuizService>();
+        services.AddScoped<IQuizPdfExportService, QuizPdfExportService>();
         services.AddScoped<IQuizFolderService, QuizFolderService>();
         services.AddScoped<IPracticeService, PracticeService>();
         services.AddScoped<IQuizPracticePreferenceService, QuizPracticePreferenceService>();
