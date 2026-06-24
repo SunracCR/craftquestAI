@@ -1187,45 +1187,87 @@ abstract class AppLocalizations {
   String get createQuizAction;
 
   /// No description provided for @quizFolderNewFolderAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Nueva carpeta'**
   String get quizFolderNewFolderAction;
 
   /// No description provided for @quizFolderCreateTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Nueva carpeta'**
   String get quizFolderCreateTitle;
 
   /// No description provided for @quizFolderCreateSubfolderTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Nueva subcarpeta'**
   String get quizFolderCreateSubfolderTitle;
 
   /// No description provided for @quizFolderRenameTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Renombrar carpeta'**
   String get quizFolderRenameTitle;
 
   /// No description provided for @quizFolderRenameAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Renombrar'**
   String get quizFolderRenameAction;
 
   /// No description provided for @quizFolderDeleteAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar carpeta'**
   String get quizFolderDeleteAction;
 
   /// No description provided for @quizFolderCreateSubfolderAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear subcarpeta'**
   String get quizFolderCreateSubfolderAction;
 
   /// No description provided for @quizFolderMoveQuizAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Mover a carpeta'**
   String get quizFolderMoveQuizAction;
 
   /// No description provided for @quizFolderMoveQuizTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Mover cuestionario'**
   String get quizFolderMoveQuizTitle;
 
   /// No description provided for @quizFolderUncategorized.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin carpeta'**
   String get quizFolderUncategorized;
 
   /// No description provided for @quizFolderNameHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre de la carpeta'**
   String get quizFolderNameHint;
 
   /// No description provided for @quizFolderDeleteConfirmTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Eliminar carpeta?'**
   String get quizFolderDeleteConfirmTitle;
 
   /// No description provided for @quizFolderDeleteConfirmMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Se eliminará la carpeta \"{folderName}\". Los cuestionarios no se borrarán.'**
   String quizFolderDeleteConfirmMessage(String folderName);
 
   /// No description provided for @quizFolderDeleteConfirmWithQuizzes.
+  ///
+  /// In es, this message translates to:
+  /// **'Se eliminará la carpeta \"{folderName}\" y sus subcarpetas. {quizCount} cuestionarios quedarán sin carpeta.'**
   String quizFolderDeleteConfirmWithQuizzes(String folderName, int quizCount);
 
   /// No description provided for @createQuizTitle.

@@ -188,7 +188,7 @@ class _QuizListPageState extends State<QuizListPage> {
         children: [
           if (_folders.isNotEmpty)
             IconButton(
-              icon: const Icon(Icons.drive_file_move_outline_rounded),
+              icon: const Icon(Icons.drive_file_move_outlined),
               tooltip: l10n.quizFolderMoveQuizAction,
               onPressed: () => _moveQuiz(quiz),
             ),
