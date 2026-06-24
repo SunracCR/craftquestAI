@@ -25,6 +25,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthSessionExpired>(_onSessionExpired);
     on<AuthProfileUpdated>(_onProfileUpdated);
     on<AuthProfileRefreshRequested>(_onProfileRefreshRequested);
+    on<AuthEmailVerified>(_onEmailVerified);
+    on<AuthResendVerificationRequested>(_onResendVerificationRequested);
   }
 
   final AuthRepository _repository;
@@ -73,16 +75,33 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       _resetSessionExpiredFlag();
       unawaited(_persistLoginCredentials(event));
     } on DioException catch (e) {
-      emit(_loginFailure(_repository.mapError(e), attemptId: event.attemptId));
+      emit(_loginFailure(_repository.mapError(e), attemptId: event.attemptId, errorCode: _errorCodeFrom(e)));
     } catch (_) {
       emit(_loginFailure(DioErrorMapper.genericMessage(), attemptId: event.attemptId));
     }
   }
 
-  AuthFailure _loginFailure(String message, {int? attemptId}) => AuthFailure(
+  AuthFailure _loginFailure(
+    String message, {
+    int? attemptId,
+    String? errorCode,
+  }) =>
+      AuthFailure(
         message,
         attemptId: attemptId ?? DateTime.now().millisecondsSinceEpoch,
+        errorCode: errorCode,
       );
+
+  String? _errorCodeFrom(DioException error) {
+    final data = error.response?.data;
+    if (data is Map<String, dynamic>) {
+      final code = data['errorCode'];
+      if (code is String && code.isNotEmpty) {
+        return code;
+      }
+    }
+    return null;
+  }
 
   Future<void> _persistLoginCredentials(AuthLoginRequested event) async {
     try {
@@ -139,13 +158,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
 
     try {
-      final response = await _repository.register(
+      final result = await _repository.register(
         email: event.email,
         password: event.password,
         displayName: event.displayName,
       );
-      emit(AuthAuthenticated(response.user));
-      _resetSessionExpiredFlag();
+      emit(AuthEmailVerificationPending(result.email));
     } on DioException catch (e) {
       emit(_loginFailure(_repository.mapError(e)));
     } catch (_) {
@@ -209,6 +227,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       } catch (_) {
         // Mantener el estado actual.
       }
+    }
+  }
+
+  void _onEmailVerified(
+    AuthEmailVerified event,
+    Emitter<AuthState> emit,
+  ) {
+    emit(AuthAuthenticated(event.user));
+    _resetSessionExpiredFlag();
+  }
+
+  Future<void> _onResendVerificationRequested(
+    AuthResendVerificationRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    try {
+      await _repository.resendVerification(email: event.email);
+    } catch (_) {
+      // La UI muestra el resultado del reenvío directamente cuando aplica.
     }
   }
 }

@@ -119,7 +119,14 @@ public class JoinController(
                 details = options.IosAppIds.Select(appId => new
                 {
                     appID = appId,
-                    paths = new[] { "/join", "/join/*" },
+                    paths = new[]
+                    {
+                        "/join",
+                        "/join/*",
+                        "/verify-email/*",
+                        "/reset-password/*",
+                        "/confirm-password-change/*",
+                    },
                 }).ToArray(),
             },
         };

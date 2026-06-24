@@ -2,13 +2,11 @@ using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Models.Auth;
 using CraftQuest.Application.Options;
 using CraftQuest.Domain.Entities;
-using CraftQuest.Infrastructure.Email;
 using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.Security;
 using CraftQuest.Infrastructure.Services;
 using CraftQuest.UnitTests.Billing;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
 namespace CraftQuest.UnitTests.Auth;
@@ -94,12 +92,17 @@ public class AuthServicePasswordResetTests
             Issuer = "test",
             Audience = "test",
         }));
-        var email = new LoggingEmailSender(NullLogger<LoggingEmailSender>.Instance);
+        var email = new CapturingEmailSender();
         var resetOptions = Options.Create(new PasswordResetOptions
         {
             Pepper = pepper,
             TokenLifetimeMinutes = 60,
             AppResetUrlBase = "http://localhost/reset-password",
+        });
+        var joinLinkOptions = Options.Create(new JoinLinkOptions
+        {
+            LinkBaseUrl = "https://api.craftquestai.com",
+            WebAppUrl = "https://app.craftquestai.com",
         });
         var externalAuthOptions = Options.Create(new ExternalAuthOptions());
 
@@ -111,6 +114,7 @@ public class AuthServicePasswordResetTests
             new StubGoogleIdTokenValidator(),
             new StubAppleIdTokenValidator(),
             resetOptions,
+            joinLinkOptions,
             externalAuthOptions);
     }
 

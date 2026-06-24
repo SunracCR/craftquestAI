@@ -7,9 +7,11 @@ namespace CraftQuest.IntegrationTests;
 public class ApiSmokeTests : IClassFixture<CraftQuestWebApplicationFactory>
 {
     private readonly HttpClient _client;
+    private readonly CraftQuestWebApplicationFactory _factory;
 
     public ApiSmokeTests(CraftQuestWebApplicationFactory factory)
     {
+        _factory = factory;
         _client = factory.CreateClient();
     }
 
@@ -48,19 +50,8 @@ public class ApiSmokeTests : IClassFixture<CraftQuestWebApplicationFactory>
     public async Task Auth_Refresh_ReturnsNewTokens_AndMeAcceptsNewAccessToken()
     {
         var email = $"refresh-{Guid.NewGuid():N}@craftquest.test";
-        var registerResponse = await _client.PostAsJsonAsync(
-            "/api/auth/register",
-            new
-            {
-                email,
-                password = "TestPass123!",
-                displayName = "Refresh Test",
-            });
-
-        Assert.Equal(HttpStatusCode.Created, registerResponse.StatusCode);
-
-        var registerBody = await registerResponse.Content.ReadFromJsonAsync<JsonElement>();
-        var initialRefresh = registerBody.GetProperty("tokens").GetProperty("refreshToken").GetString();
+        var authBody = await RegisterAndVerifyAsync(email, "TestPass123!", "Refresh Test");
+        var initialRefresh = authBody.GetProperty("tokens").GetProperty("refreshToken").GetString();
         Assert.False(string.IsNullOrWhiteSpace(initialRefresh));
 
         var refreshResponse = await _client.PostAsJsonAsync(
@@ -82,5 +73,32 @@ public class ApiSmokeTests : IClassFixture<CraftQuestWebApplicationFactory>
         var meResponse = await _client.SendAsync(meRequest);
 
         Assert.Equal(HttpStatusCode.OK, meResponse.StatusCode);
+    }
+
+    private async Task<JsonElement> RegisterAndVerifyAsync(
+        string email,
+        string password,
+        string displayName)
+    {
+        _factory.EmailSender.Reset();
+
+        var registerResponse = await _client.PostAsJsonAsync(
+            "/api/auth/register",
+            new { email, password, displayName });
+
+        Assert.Equal(HttpStatusCode.Created, registerResponse.StatusCode);
+
+        var registerBody = await registerResponse.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.True(registerBody.GetProperty("requiresEmailVerification").GetBoolean());
+
+        var token = _factory.EmailSender.ExtractTokenFromLastEmail();
+        Assert.False(string.IsNullOrWhiteSpace(token));
+
+        var verifyResponse = await _client.PostAsJsonAsync(
+            "/api/auth/verify-email",
+            new { token });
+
+        Assert.Equal(HttpStatusCode.OK, verifyResponse.StatusCode);
+        return (await verifyResponse.Content.ReadFromJsonAsync<JsonElement>())!;
     }
 }

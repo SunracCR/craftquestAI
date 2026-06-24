@@ -200,6 +200,68 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resetPasswordHaveCode => 'I already have a recovery code';
 
   @override
+  String get verifyEmailPendingTitle => 'Confirm your email';
+
+  @override
+  String verifyEmailPendingMessage(String email) =>
+      'We sent an activation link to $email. Check your inbox and spam folder.';
+
+  @override
+  String get verifyEmailResendAction => 'Resend email';
+
+  @override
+  String get verifyEmailResentMessage => 'Activation email resent.';
+
+  @override
+  String get verifyEmailTitle => 'Activate account';
+
+  @override
+  String get verifyEmailInProgress => 'Verifying your email…';
+
+  @override
+  String get verifyEmailSuccess => 'Account activated! Signing you in…';
+
+  @override
+  String get verifyEmailRetryAction => 'Retry activation';
+
+  @override
+  String get errorEmailNotVerifiedTitle => 'Email not verified';
+
+  @override
+  String get errorEmailNotVerifiedMessage =>
+      'Activate your account using the link we emailed you before signing in.';
+
+  @override
+  String get errorEmailNotVerified =>
+      'Your email is not verified yet. Check your inbox or resend the link.';
+
+  @override
+  String get confirmPasswordChangeTitle => 'Confirm password change';
+
+  @override
+  String get confirmPasswordChangeInProgress =>
+      'Confirming your new password…';
+
+  @override
+  String get confirmPasswordChangeSuccess =>
+      'Password updated successfully.';
+
+  @override
+  String get confirmPasswordChangeRetryAction => 'Retry confirmation';
+
+  @override
+  String get passwordChangePendingMessage =>
+      'Check your email to confirm the password change.';
+
+  @override
+  String get errorInvalidVerificationToken =>
+      'The activation link is invalid or has expired.';
+
+  @override
+  String get errorInvalidPasswordChangeToken =>
+      'The confirmation link is invalid or has expired.';
+
+  @override
   String get oauthDividerLabel => 'or continue with';
 
   @override
@@ -772,7 +834,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exportQuizPdfAction => 'Export PDF';
 
   @override
+  String get exportQuizPdfGenerating => 'Generating PDF…';
+
+  @override
   String get exportQuizPdfReady => 'PDF ready';
+
+  @override
+  String get exportQuizPdfDownloadHint =>
+      'If you don\'t see the file, check your browser\'s download window';
 
   @override
   String get exportQuizPdfFailed => 'Could not generate the PDF';
@@ -1473,6 +1542,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get redeemCodeSubtitle =>
       'Enter the code shared by your teacher or classmate';
+
+  @override
+  String get redeemCodeOpeningQuiz => 'Opening quiz…';
 
   @override
   String get redeemCodeLabel => 'Code';

@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\CraftQuest.Api\CraftQuest.Api.csproj" />
+    <ProjectReference Include="..\CraftQuest.UnitTests\CraftQuest.UnitTests.csproj" />
   </ItemGroup>
 
 </Project>

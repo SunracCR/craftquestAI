@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/utils/publication_status_labels.dart';
@@ -524,6 +526,38 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
     }
 
     setState(() => _exportingPdf = true);
+    var loadingDialogVisible = false;
+    if (mounted) {
+      loadingDialogVisible = true;
+      unawaited(
+        showDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          builder: (dialogContext) => PopScope(
+            canPop: false,
+            child: AlertDialog(
+              content: Row(
+                children: [
+                  const SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: CircularProgressIndicator(strokeWidth: 2.5),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Text(
+                      l10n.exportQuizPdfGenerating,
+                      style: Theme.of(dialogContext).textTheme.bodyLarge,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     try {
       final languageCode = Localizations.localeOf(context).languageCode;
       final bytes = await _repository.downloadQuizPdf(
@@ -531,6 +565,11 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
         languageCode: languageCode,
       );
       if (!mounted) return;
+
+      if (loadingDialogVisible) {
+        Navigator.of(context, rootNavigator: true).pop();
+        loadingDialogVisible = false;
+      }
 
       final fileName = _pdfFileName();
       final file = XFile.fromData(
@@ -552,7 +591,9 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
       }
 
       if (!mounted) return;
-      context.showSuccessSnackBar(l10n.exportQuizPdfReady);
+      context.showSuccessSnackBar(
+        kIsWeb ? l10n.exportQuizPdfDownloadHint : l10n.exportQuizPdfReady,
+      );
     } on DioException catch (e) {
       if (!mounted) return;
       context.showDioErrorSnackBar(e);
@@ -560,7 +601,12 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
       if (!mounted) return;
       context.showErrorSnackBar(l10n.exportQuizPdfFailed);
     } finally {
-      if (mounted) setState(() => _exportingPdf = false);
+      if (mounted) {
+        if (loadingDialogVisible) {
+          Navigator.of(context, rootNavigator: true).pop();
+        }
+        setState(() => _exportingPdf = false);
+      }
     }
   }
 
@@ -1196,10 +1242,13 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
                                     _menuDivider(),
                                     AppActionTile(
                                       icon: Icons.picture_as_pdf_outlined,
-                                      label: l10n.exportQuizPdfAction,
+                                      label: _exportingPdf
+                                          ? l10n.exportQuizPdfGenerating
+                                          : l10n.exportQuizPdfAction,
                                       iconColor: AppColors.accentGold,
                                       iconBackgroundColor: AppColors.accentGold
                                           .withValues(alpha: 0.22),
+                                      isLoading: _exportingPdf,
                                       onTap: _exportQuizPdf,
                                     ),
                                   ],

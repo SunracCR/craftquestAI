@@ -9,12 +9,14 @@ public sealed class LoggingEmailSender(ILogger<LoggingEmailSender> logger) : IEm
         string toEmail,
         string subject,
         string plainTextBody,
+        string? htmlBody = null,
         CancellationToken cancellationToken = default)
     {
         logger.LogWarning(
-            "Email (dev log) To={ToEmail} Subject={Subject}\n{Body}",
+            "Email (dev log) To={ToEmail} Subject={Subject} HasHtml={HasHtml}\n{Body}",
             toEmail,
             subject,
+            htmlBody is not null,
             plainTextBody);
         return Task.CompletedTask;
     }

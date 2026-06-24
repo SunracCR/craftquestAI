@@ -4,6 +4,7 @@ import 'package:craftquest_app/core/widgets/app_buttons.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/features/auth/presentation/auth_bloc.dart';
+import 'package:craftquest_app/features/auth/presentation/verify_email_pending_page.dart';
 import 'package:craftquest_app/features/auth/presentation/widgets/oauth_sign_in_buttons.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -40,7 +41,8 @@ class _RegisterPageState extends State<RegisterPage> {
     setState(() => _isSubmitting = true);
 
     final resultFuture = bloc.stream.firstWhere(
-      (state) => state is AuthAuthenticated || state is AuthFailure,
+      (state) =>
+          state is AuthEmailVerificationPending || state is AuthFailure,
     );
 
     bloc.add(
@@ -57,6 +59,15 @@ class _RegisterPageState extends State<RegisterPage> {
 
     if (result is AuthFailure) {
       AppSnackBars.showError(result.message);
+      return;
+    }
+
+    if (result is AuthEmailVerificationPending) {
+      await Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(
+          builder: (_) => VerifyEmailPendingPage(email: result.email),
+        ),
+      );
     }
   }
 

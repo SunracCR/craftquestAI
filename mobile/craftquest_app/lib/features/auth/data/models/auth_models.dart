@@ -75,3 +75,21 @@ class AuthResponseModel {
   final AuthTokensModel tokens;
   final UserProfileModel user;
 }
+
+class RegisterResultModel {
+  const RegisterResultModel({
+    required this.requiresEmailVerification,
+    required this.email,
+  });
+
+  factory RegisterResultModel.fromJson(Map<String, dynamic> json) {
+    return RegisterResultModel(
+      requiresEmailVerification:
+          json['requiresEmailVerification'] as bool? ?? true,
+      email: json['email'] as String,
+    );
+  }
+
+  final bool requiresEmailVerification;
+  final String email;
+}

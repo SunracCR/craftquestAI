@@ -6,6 +6,13 @@ using CraftQuest.Application.Options;
 
 namespace CraftQuest.Api.Services;
 
+public enum AccountLinkKind
+{
+    VerifyEmail,
+    ResetPassword,
+    ConfirmPasswordChange,
+}
+
 public enum JoinDeviceKind
 {
     Android,
@@ -143,6 +150,146 @@ public static class JoinLandingPageRenderer
             labels: labels,
             initialShowFallback: device == JoinDeviceKind.Desktop);
     }
+
+    public static string RenderAccountLinkLanding(
+        JoinLinkOptions options,
+        AccountLinkKind kind,
+        string token,
+        JoinDeviceKind device,
+        string? acceptLanguage)
+    {
+        var labels = ResolveAccountLinkLabels(acceptLanguage, kind);
+        var action = kind switch
+        {
+            AccountLinkKind.VerifyEmail => AccountLinkUrlBuilder.VerifyEmail,
+            AccountLinkKind.ResetPassword => AccountLinkUrlBuilder.ResetPassword,
+            _ => AccountLinkUrlBuilder.ConfirmPasswordChange,
+        };
+
+        var encodedToken = WebUtility.HtmlEncode(token);
+        var deepLink = AccountLinkUrlBuilder.BuildDeepLink(action, token);
+        var webUrl = AccountLinkUrlBuilder.BuildWebUrl(options, action, token);
+        var storeUrl = device switch
+        {
+            JoinDeviceKind.Android => options.PlayStoreUrl,
+            JoinDeviceKind.Ios => options.AppStoreUrl,
+            _ => webUrl,
+        };
+
+        var storeButton = device switch
+        {
+            JoinDeviceKind.Android => $"""
+                <a class="btn store" href="{WebUtility.HtmlEncode(storeUrl)}">{WebUtility.HtmlEncode(labels.GetAndroid)}</a>
+                """,
+            JoinDeviceKind.Ios => $"""
+                <a class="btn store" href="{WebUtility.HtmlEncode(storeUrl)}">{WebUtility.HtmlEncode(labels.GetIos)}</a>
+                """,
+            _ => string.Empty,
+        };
+
+        var mobileScript = device is JoinDeviceKind.Android or JoinDeviceKind.Ios
+            ? $"<script>(function(){{var d='{WebUtility.HtmlEncode(deepLink)}';window.location.href=d;setTimeout(function(){{document.body.classList.add('show-fallback');}},1200);}})();</script>"
+            : string.Empty;
+
+        var body = $"""
+            <main class="card">
+              <p class="brand">CraftQuestAI</p>
+              <h1>{WebUtility.HtmlEncode(labels.Title)}</h1>
+              <p class="subtitle">{WebUtility.HtmlEncode(labels.Subtitle)}</p>
+              <div class="actions">
+                {storeButton}
+                <a class="btn primary" href="{WebUtility.HtmlEncode(webUrl)}">{WebUtility.HtmlEncode(labels.ContinueWeb)}</a>
+              </div>
+              <p class="footer-note">{WebUtility.HtmlEncode(labels.FooterNote)} · www.CraftQuestAI.com</p>
+            </main>
+            {mobileScript}
+            """;
+
+        return BuildDocument(
+            title: $"{labels.Title} · CraftQuestAI",
+            body: body,
+            labels: new LandingLabels(
+                Lang: labels.Lang,
+                PageTitle: labels.Title,
+                JoinTitle: labels.Title,
+                EnterCodeTitle: labels.Title,
+                EnterCodeSubtitle: labels.Subtitle,
+                CodeLabel: string.Empty,
+                CopyCode: string.Empty,
+                ContinueWeb: labels.ContinueWeb,
+                GetAndroid: labels.GetAndroid,
+                GetIos: labels.GetIos,
+                GuestOpenHint: labels.Subtitle,
+                GroupOnlyHint: labels.Subtitle,
+                OpenHint: labels.Subtitle,
+                FooterNote: labels.FooterNote),
+            initialShowFallback: device == JoinDeviceKind.Desktop);
+    }
+
+    private static AccountLinkLabels ResolveAccountLinkLabels(string? acceptLanguage, AccountLinkKind kind)
+    {
+        var lang = acceptLanguage?.Split(',').FirstOrDefault()?.Trim().ToLowerInvariant() ?? "es";
+        var isEn = lang.StartsWith("en", StringComparison.Ordinal);
+        var isPt = lang.StartsWith("pt", StringComparison.Ordinal);
+
+        return kind switch
+        {
+            AccountLinkKind.VerifyEmail when isEn => new AccountLinkLabels(
+                "en", "Activate your account",
+                "Open the app or continue in the browser to verify your email.",
+                "Continue on web", "Get on Google Play", "Get on App Store",
+                "CraftQuestAI account activation"),
+            AccountLinkKind.VerifyEmail when isPt => new AccountLinkLabels(
+                "pt", "Ative sua conta",
+                "Abra o app ou continue no navegador para verificar seu e-mail.",
+                "Continuar na web", "Baixar no Google Play", "Baixar na App Store",
+                "Ativacao de conta CraftQuestAI"),
+            AccountLinkKind.VerifyEmail => new AccountLinkLabels(
+                "es", "Activa tu cuenta",
+                "Abre la app o continua en el navegador para verificar tu correo.",
+                "Continuar en la web", "Descargar en Google Play", "Descargar en App Store",
+                "Activacion de cuenta CraftQuestAI"),
+            AccountLinkKind.ResetPassword when isEn => new AccountLinkLabels(
+                "en", "Reset your password",
+                "Open the app or continue in the browser to choose a new password.",
+                "Continue on web", "Get on Google Play", "Get on App Store",
+                "CraftQuestAI password reset"),
+            AccountLinkKind.ResetPassword when isPt => new AccountLinkLabels(
+                "pt", "Redefinir sua senha",
+                "Abra o app ou continue no navegador para escolher uma nova senha.",
+                "Continuar na web", "Baixar no Google Play", "Baixar na App Store",
+                "Redefinicao de senha CraftQuestAI"),
+            AccountLinkKind.ResetPassword => new AccountLinkLabels(
+                "es", "Restablecer contrasena",
+                "Abre la app o continua en el navegador para elegir una nueva contrasena.",
+                "Continuar en la web", "Descargar en Google Play", "Descargar en App Store",
+                "Restablecimiento de contrasena CraftQuestAI"),
+            AccountLinkKind.ConfirmPasswordChange when isEn => new AccountLinkLabels(
+                "en", "Confirm password change",
+                "Open the app or continue in the browser to confirm your new password.",
+                "Continue on web", "Get on Google Play", "Get on App Store",
+                "CraftQuestAI password change"),
+            AccountLinkKind.ConfirmPasswordChange when isPt => new AccountLinkLabels(
+                "pt", "Confirmar alteracao de senha",
+                "Abra o app ou continue no navegador para confirmar sua nova senha.",
+                "Continuar na web", "Baixar no Google Play", "Baixar na App Store",
+                "Alteracao de senha CraftQuestAI"),
+            _ => new AccountLinkLabels(
+                "es", "Confirmar cambio de contrasena",
+                "Abre la app o continua en el navegador para confirmar tu nueva contrasena.",
+                "Continuar en la web", "Descargar en Google Play", "Descargar en App Store",
+                "Cambio de contrasena CraftQuestAI"),
+        };
+    }
+
+    private sealed record AccountLinkLabels(
+        string Lang,
+        string Title,
+        string Subtitle,
+        string ContinueWeb,
+        string GetAndroid,
+        string GetIos,
+        string FooterNote);
 
     private static string BuildDocument(
         string title,

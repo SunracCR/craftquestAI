@@ -388,6 +388,12 @@ abstract final class ApiErrorMapper {
         return l10n.errorActivePracticeSession;
       case 'CURRENT_PASSWORD_INCORRECT':
         return l10n.currentPasswordIncorrectError;
+      case 'EMAIL_NOT_VERIFIED':
+        return l10n.errorEmailNotVerified;
+      case 'INVALID_VERIFICATION_TOKEN':
+        return l10n.errorInvalidVerificationToken;
+      case 'INVALID_PASSWORD_CHANGE_TOKEN':
+        return l10n.errorInvalidPasswordChangeToken;
       case 'PASSWORD_CHANGE_UNAVAILABLE':
         return l10n.passwordChangeUnavailableError;
       case 'INVALID_EMAIL':

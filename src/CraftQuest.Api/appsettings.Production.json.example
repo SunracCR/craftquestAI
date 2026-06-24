@@ -26,5 +26,15 @@
     "AndroidPackageName": "com.craftquestai.craftquestai_app",
     "AndroidSha256Fingerprints": [],
     "IosAppIds": []
+  },
+  "Email": {
+    "Enabled": true,
+    "Host": "smtp.example.com",
+    "Port": 587,
+    "UseSsl": true,
+    "User": "",
+    "Password": "",
+    "FromEmail": "noreply@craftquestai.com",
+    "FromDisplayName": "CraftQuestAI"
   }
 }

@@ -217,6 +217,7 @@ class AppActionTile extends StatelessWidget {
     required this.onTap,
     this.iconColor,
     this.iconBackgroundColor,
+    this.isLoading = false,
   });
 
   final IconData icon;
@@ -224,6 +225,7 @@ class AppActionTile extends StatelessWidget {
   final VoidCallback onTap;
   final Color? iconColor;
   final Color? iconBackgroundColor;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -233,38 +235,51 @@ class AppActionTile extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: onTap,
+        onTap: isLoading ? null : onTap,
         borderRadius: BorderRadius.circular(AppColors.radiusSm),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
-          ),
-          child: Row(
-            children: [
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  color: bg,
-                  borderRadius: BorderRadius.circular(10),
+        child: Opacity(
+          opacity: isLoading ? 0.72 : 1,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            child: Row(
+              children: [
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: bg,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: isLoading
+                        ? SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: tint,
+                            ),
+                          )
+                        : Icon(icon, size: 22, color: tint),
+                  ),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Icon(icon, size: 22, color: tint),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
                 ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Text(
-                  label,
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-              ),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: tint.withValues(alpha: 0.85),
-                size: 24,
-              ),
-            ],
+                if (!isLoading)
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: tint.withValues(alpha: 0.85),
+                    size: 24,
+                  ),
+              ],
+            ),
           ),
         ),
       ),

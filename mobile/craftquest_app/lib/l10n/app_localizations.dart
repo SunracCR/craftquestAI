@@ -430,6 +430,42 @@ abstract class AppLocalizations {
   /// **'Ya tengo el código de recuperación'**
   String get resetPasswordHaveCode;
 
+  String get verifyEmailPendingTitle;
+
+  String verifyEmailPendingMessage(String email);
+
+  String get verifyEmailResendAction;
+
+  String get verifyEmailResentMessage;
+
+  String get verifyEmailTitle;
+
+  String get verifyEmailInProgress;
+
+  String get verifyEmailSuccess;
+
+  String get verifyEmailRetryAction;
+
+  String get errorEmailNotVerifiedTitle;
+
+  String get errorEmailNotVerifiedMessage;
+
+  String get errorEmailNotVerified;
+
+  String get confirmPasswordChangeTitle;
+
+  String get confirmPasswordChangeInProgress;
+
+  String get confirmPasswordChangeSuccess;
+
+  String get confirmPasswordChangeRetryAction;
+
+  String get passwordChangePendingMessage;
+
+  String get errorInvalidVerificationToken;
+
+  String get errorInvalidPasswordChangeToken;
+
   /// No description provided for @oauthDividerLabel.
   ///
   /// In es, this message translates to:
@@ -1396,11 +1432,23 @@ abstract class AppLocalizations {
   /// **'Exportar PDF'**
   String get exportQuizPdfAction;
 
+  /// No description provided for @exportQuizPdfGenerating.
+  ///
+  /// In es, this message translates to:
+  /// **'Generando PDF…'**
+  String get exportQuizPdfGenerating;
+
   /// No description provided for @exportQuizPdfReady.
   ///
   /// In es, this message translates to:
   /// **'PDF listo'**
   String get exportQuizPdfReady;
+
+  /// No description provided for @exportQuizPdfDownloadHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Si no ves el archivo, revisa la ventana de descarga de tu navegador'**
+  String get exportQuizPdfDownloadHint;
 
   /// No description provided for @exportQuizPdfFailed.
   ///
@@ -2549,6 +2597,8 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Introduce el código compartido por tu profesor o compañero'**
   String get redeemCodeSubtitle;
+
+  String get redeemCodeOpeningQuiz;
 
   /// No description provided for @redeemCodeLabel.
   ///

@@ -200,6 +200,68 @@ class AppLocalizationsPt extends AppLocalizations {
   String get resetPasswordHaveCode => 'Ja tenho o codigo de recuperacao';
 
   @override
+  String get verifyEmailPendingTitle => 'Confirme seu e-mail';
+
+  @override
+  String verifyEmailPendingMessage(String email) =>
+      'Enviamos um link de ativacao para $email. Verifique a caixa de entrada e o spam.';
+
+  @override
+  String get verifyEmailResendAction => 'Reenviar e-mail';
+
+  @override
+  String get verifyEmailResentMessage => 'E-mail de ativacao reenviado.';
+
+  @override
+  String get verifyEmailTitle => 'Ativar conta';
+
+  @override
+  String get verifyEmailInProgress => 'Verificando seu e-mail…';
+
+  @override
+  String get verifyEmailSuccess => 'Conta ativada! Entrando…';
+
+  @override
+  String get verifyEmailRetryAction => 'Tentar ativacao novamente';
+
+  @override
+  String get errorEmailNotVerifiedTitle => 'E-mail nao verificado';
+
+  @override
+  String get errorEmailNotVerifiedMessage =>
+      'Ative sua conta pelo link enviado por e-mail antes de entrar.';
+
+  @override
+  String get errorEmailNotVerified =>
+      'Seu e-mail ainda nao foi verificado. Verifique a caixa de entrada ou reenvie o link.';
+
+  @override
+  String get confirmPasswordChangeTitle => 'Confirmar alteracao de senha';
+
+  @override
+  String get confirmPasswordChangeInProgress =>
+      'Confirmando sua nova senha…';
+
+  @override
+  String get confirmPasswordChangeSuccess =>
+      'Senha atualizada com sucesso.';
+
+  @override
+  String get confirmPasswordChangeRetryAction => 'Tentar confirmacao novamente';
+
+  @override
+  String get passwordChangePendingMessage =>
+      'Verifique seu e-mail para confirmar a alteracao de senha.';
+
+  @override
+  String get errorInvalidVerificationToken =>
+      'O link de ativacao e invalido ou expirou.';
+
+  @override
+  String get errorInvalidPasswordChangeToken =>
+      'O link de confirmacao e invalido ou expirou.';
+
+  @override
   String get oauthDividerLabel => 'ou continue com';
 
   @override
@@ -775,7 +837,14 @@ class AppLocalizationsPt extends AppLocalizations {
   String get exportQuizPdfAction => 'Exportar PDF';
 
   @override
+  String get exportQuizPdfGenerating => 'Gerando PDF…';
+
+  @override
   String get exportQuizPdfReady => 'PDF pronto';
+
+  @override
+  String get exportQuizPdfDownloadHint =>
+      'Se nao vir o arquivo, verifique a janela de download do navegador';
 
   @override
   String get exportQuizPdfFailed => 'Nao foi possivel gerar o PDF';
@@ -1485,6 +1554,9 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get redeemCodeSubtitle =>
       'Digite o codigo compartilhado pelo professor ou colega';
+
+  @override
+  String get redeemCodeOpeningQuiz => 'Abrindo questionario…';
 
   @override
   String get redeemCodeLabel => 'Codigo';

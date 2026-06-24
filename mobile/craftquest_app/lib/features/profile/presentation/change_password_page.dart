@@ -47,7 +47,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         newPassword: _newController.text,
       );
       if (!mounted) return;
-      context.showSuccessSnackBar(l10n.passwordChangedMessage);
+      context.showSuccessSnackBar(l10n.passwordChangePendingMessage);
       Navigator.of(context).pop();
     } on DioException catch (e) {
       if (!mounted) return;

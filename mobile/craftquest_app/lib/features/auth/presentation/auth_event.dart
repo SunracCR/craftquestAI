@@ -82,3 +82,21 @@ class AuthProfileUpdated extends AuthEvent {
 class AuthProfileRefreshRequested extends AuthEvent {
   const AuthProfileRefreshRequested();
 }
+
+class AuthEmailVerified extends AuthEvent {
+  const AuthEmailVerified(this.user);
+
+  final UserProfileModel user;
+
+  @override
+  List<Object?> get props => [user];
+}
+
+class AuthResendVerificationRequested extends AuthEvent {
+  const AuthResendVerificationRequested(this.email);
+
+  final String email;
+
+  @override
+  List<Object?> get props => [email];
+}

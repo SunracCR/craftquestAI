@@ -9,7 +9,7 @@ class AuthRepository {
 
   final ApiClient _apiClient;
 
-  Future<AuthResponseModel> register({
+  Future<RegisterResultModel> register({
     required String email,
     required String password,
     String? displayName,
@@ -23,7 +23,29 @@ class AuthRepository {
           'displayName': displayName,
       },
     );
+    return RegisterResultModel.fromJson(response.data!);
+  }
+
+  Future<AuthResponseModel> verifyEmail({required String token}) async {
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/api/auth/verify-email',
+      data: {'token': token},
+    );
     return _persistAndMap(response.data!);
+  }
+
+  Future<void> resendVerification({required String email}) async {
+    await _apiClient.dio.post<void>(
+      '/api/auth/resend-verification',
+      data: {'email': email},
+    );
+  }
+
+  Future<void> confirmPasswordChange({required String token}) async {
+    await _apiClient.dio.post<void>(
+      '/api/auth/confirm-password-change',
+      data: {'token': token},
+    );
   }
 
   Future<OAuthConfigModel> getOAuthConfig() async {
@@ -130,7 +152,7 @@ class AuthRepository {
     required String currentPassword,
     required String newPassword,
   }) async {
-    await _apiClient.dio.post<void>(
+    await _apiClient.dio.post<Map<String, dynamic>>(
       '/api/auth/change-password',
       data: {
         'currentPassword': currentPassword,

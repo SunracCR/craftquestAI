@@ -1,15 +1,20 @@
+using CraftQuest.Application.Contracts;
 using CraftQuest.Infrastructure.Persistence;
+using CraftQuest.UnitTests.Auth;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 
 namespace CraftQuest.IntegrationTests;
 
 public sealed class CraftQuestWebApplicationFactory : WebApplicationFactory<Program>
 {
+    public CapturingEmailSender EmailSender { get; } = new();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
@@ -20,6 +25,13 @@ public sealed class CraftQuestWebApplicationFactory : WebApplicationFactory<Prog
             {
                 ["Testing:UseInMemoryDatabase"] = "true",
             });
+        });
+
+        builder.ConfigureServices(services =>
+        {
+            services.RemoveAll<IEmailSender>();
+            services.AddSingleton(EmailSender);
+            services.AddSingleton<IEmailSender>(sp => sp.GetRequiredService<CapturingEmailSender>());
         });
     }
 

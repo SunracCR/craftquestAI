@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using CraftQuest.Application;
 using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Exceptions;
 using CraftQuest.Application.Models.Auth;
@@ -6,6 +7,7 @@ using CraftQuest.Application.Options;
 using CraftQuest.Application.Services;
 using CraftQuest.Domain.Constants;
 using CraftQuest.Domain.Entities;
+using CraftQuest.Infrastructure.Email;
 using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
@@ -21,9 +23,11 @@ public class AuthService(
     IGoogleIdTokenValidator googleIdTokenValidator,
     IAppleIdTokenValidator appleIdTokenValidator,
     IOptions<PasswordResetOptions> passwordResetOptions,
+    IOptions<JoinLinkOptions> joinLinkOptions,
     IOptions<ExternalAuthOptions> externalAuthOptions) : IAuthService
 {
     private readonly PasswordResetOptions _resetOptions = passwordResetOptions.Value;
+    private readonly JoinLinkOptions _joinLinkOptions = joinLinkOptions.Value;
     private readonly ExternalAuthOptions _externalAuth = externalAuthOptions.Value;
 
     public OAuthPublicConfigDto GetOAuthPublicConfig()
@@ -45,10 +49,13 @@ public class AuthService(
                 && !string.IsNullOrEmpty(appleWebRedirect),
         };
     }
-    public async Task<AuthResponseDto> RegisterAsync(
+
+    public async Task<RegisterResultDto> RegisterAsync(
         RegisterRequest request,
         CancellationToken cancellationToken = default)
     {
+        EnsureTokenSecurityConfigured();
+
         var normalizedEmail = request.Email.Trim().ToUpperInvariant();
 
         var emailExists = await dbContext.Users
@@ -75,7 +82,7 @@ public class AuthService(
             DisplayName = displayName,
             AvatarId = "craft_01",
             PasswordHash = PasswordHasher.HashPassword(request.Password),
-            Status = "active",
+            Status = "pending",
             CreatedAt = DateTime.UtcNow,
         };
 
@@ -98,9 +105,14 @@ public class AuthService(
 
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync(cancellationToken);
-        await billingService.AssignFreePlanAsync(userId, cancellationToken);
 
-        return BuildAuthResponse(user);
+        await SendVerificationEmailAsync(user, cancellationToken);
+
+        return new RegisterResultDto
+        {
+            RequiresEmailVerification = true,
+            Email = user.Email,
+        };
     }
 
     public async Task<AuthResponseDto> LoginAsync(
@@ -116,7 +128,20 @@ public class AuthService(
                 u => u.EmailNormalized == normalizedEmail,
                 cancellationToken);
 
-        if (user is null || user.PasswordHash is null || user.Status != "active")
+        if (user is null || user.PasswordHash is null)
+        {
+            throw new AuthException("Invalid email or password.", 401);
+        }
+
+        if (user.Status == "pending")
+        {
+            throw new AuthException(
+                "Email address is not verified.",
+                403,
+                "EMAIL_NOT_VERIFIED");
+        }
+
+        if (user.Status != "active")
         {
             throw new AuthException("Invalid email or password.", 401);
         }
@@ -127,6 +152,64 @@ public class AuthService(
         }
 
         return BuildAuthResponse(user);
+    }
+
+    public async Task<AuthResponseDto> VerifyEmailAsync(
+        VerifyEmailRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        EnsureTokenSecurityConfigured();
+
+        if (string.IsNullOrWhiteSpace(request.Token))
+        {
+            throw new AuthException("Verification token is required.", 400);
+        }
+
+        var tokenHash = PasswordResetTokenHasher.Hash(request.Token.Trim(), _resetOptions.Pepper);
+        var now = DateTime.UtcNow;
+
+        var verificationToken = await dbContext.EmailVerificationTokens
+            .Include(t => t.User)
+            .ThenInclude(u => u.UserRoles)
+            .ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(
+                t => t.TokenHash == tokenHash && t.UsedAt == null && t.ExpiresAt > now,
+                cancellationToken);
+
+        if (verificationToken?.User is null || verificationToken.User.Status != "pending")
+        {
+            throw new AuthException("Invalid or expired verification token.", 400, "INVALID_VERIFICATION_TOKEN");
+        }
+
+        verificationToken.User.Status = "active";
+        verificationToken.User.EmailVerifiedAt = now;
+        verificationToken.User.UpdatedAt = now;
+        verificationToken.UsedAt = now;
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await billingService.AssignFreePlanAsync(verificationToken.User.UserId, cancellationToken);
+
+        return BuildAuthResponse(verificationToken.User);
+    }
+
+    public async Task ResendVerificationAsync(
+        ResendVerificationRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        EnsureTokenSecurityConfigured();
+
+        var normalizedEmail = request.Email.Trim().ToUpperInvariant();
+        var user = await dbContext.Users
+            .FirstOrDefaultAsync(
+                u => u.EmailNormalized == normalizedEmail && u.Status == "pending",
+                cancellationToken);
+
+        if (user is null)
+        {
+            return;
+        }
+
+        await SendVerificationEmailAsync(user, cancellationToken);
     }
 
     public async Task<AuthResponseDto> LoginWithGoogleAsync(
@@ -162,7 +245,7 @@ public class AuthService(
         var principal = jwtTokenService.ValidateToken(request.RefreshToken, "refresh")
             ?? throw new AuthException("Invalid refresh token.", 401);
 
-        var userIdValue = principal.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier)
+        var userIdValue = principal.FindFirstValue(ClaimTypes.NameIdentifier)
             ?? principal.FindFirstValue("sub");
 
         if (!Guid.TryParse(userIdValue, out var userId))
@@ -278,11 +361,13 @@ public class AuthService(
         };
     }
 
-    public async Task ChangePasswordAsync(
+    public async Task<ChangePasswordResultDto> ChangePasswordAsync(
         Guid userId,
         ChangePasswordRequest request,
         CancellationToken cancellationToken = default)
     {
+        EnsureTokenSecurityConfigured();
+
         if (string.IsNullOrWhiteSpace(request.CurrentPassword)
             || string.IsNullOrWhiteSpace(request.NewPassword))
         {
@@ -314,8 +399,76 @@ public class AuthService(
                 "CURRENT_PASSWORD_INCORRECT");
         }
 
-        user.PasswordHash = PasswordHasher.HashPassword(request.NewPassword);
-        user.UpdatedAt = DateTime.UtcNow;
+        var rawToken = PasswordResetTokenHasher.GenerateToken();
+        var tokenHash = PasswordResetTokenHasher.Hash(rawToken, _resetOptions.Pepper);
+        var now = DateTime.UtcNow;
+        var newPasswordHash = PasswordHasher.HashPassword(request.NewPassword);
+
+        var activeTokens = await dbContext.PasswordChangeTokens
+            .Where(t => t.UserId == userId && t.UsedAt == null && t.ExpiresAt > now)
+            .ToListAsync(cancellationToken);
+
+        foreach (var existing in activeTokens)
+        {
+            existing.UsedAt = now;
+        }
+
+        dbContext.PasswordChangeTokens.Add(new PasswordChangeToken
+        {
+            PasswordChangeTokenId = Guid.NewGuid(),
+            UserId = userId,
+            TokenHash = tokenHash,
+            NewPasswordHash = newPasswordHash,
+            ExpiresAt = now.AddMinutes(_resetOptions.TokenLifetimeMinutes),
+            CreatedAt = now,
+        });
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        var actionUrl = AccountLinkUrlBuilder.BuildLandingUrl(
+            _joinLinkOptions,
+            AccountLinkUrlBuilder.ConfirmPasswordChange,
+            rawToken);
+        var language = user.PreferredLanguage ?? "es";
+        var (subject, plainText, html) = EmailTemplateBuilder.BuildConfirmPasswordChange(
+            language,
+            actionUrl,
+            _resetOptions.TokenLifetimeMinutes);
+
+        await emailSender.SendAsync(user.Email, subject, plainText, html, cancellationToken);
+
+        return new ChangePasswordResultDto { RequiresEmailConfirmation = true };
+    }
+
+    public async Task ConfirmPasswordChangeAsync(
+        ConfirmPasswordChangeRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        EnsureTokenSecurityConfigured();
+
+        if (string.IsNullOrWhiteSpace(request.Token))
+        {
+            throw new AuthException("Confirmation token is required.", 400);
+        }
+
+        var tokenHash = PasswordResetTokenHasher.Hash(request.Token.Trim(), _resetOptions.Pepper);
+        var now = DateTime.UtcNow;
+
+        var changeToken = await dbContext.PasswordChangeTokens
+            .Include(t => t.User)
+            .FirstOrDefaultAsync(
+                t => t.TokenHash == tokenHash && t.UsedAt == null && t.ExpiresAt > now,
+                cancellationToken);
+
+        if (changeToken?.User is null || changeToken.User.Status != "active")
+        {
+            throw new AuthException("Invalid or expired confirmation token.", 400, "INVALID_PASSWORD_CHANGE_TOKEN");
+        }
+
+        changeToken.User.PasswordHash = changeToken.NewPasswordHash;
+        changeToken.User.UpdatedAt = now;
+        changeToken.UsedAt = now;
+
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
@@ -323,10 +476,7 @@ public class AuthService(
         ForgotPasswordRequest request,
         CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(_resetOptions.Pepper))
-        {
-            throw new AuthException("Password reset is not configured.", 503, "PASSWORD_RESET_DISABLED");
-        }
+        EnsureTokenSecurityConfigured();
 
         var normalizedEmail = request.Email.Trim().ToUpperInvariant();
         var user = await dbContext.Users
@@ -366,21 +516,24 @@ public class AuthService(
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        var resetUrl = BuildResetUrl(rawToken);
+        var resetUrl = AccountLinkUrlBuilder.BuildLandingUrl(
+            _joinLinkOptions,
+            AccountLinkUrlBuilder.ResetPassword,
+            rawToken);
         var language = user.PreferredLanguage ?? "es";
-        var (subject, body) = BuildResetEmailContent(language, resetUrl, _resetOptions.TokenLifetimeMinutes);
+        var (subject, plainText, html) = EmailTemplateBuilder.BuildPasswordReset(
+            language,
+            resetUrl,
+            _resetOptions.TokenLifetimeMinutes);
 
-        await emailSender.SendAsync(user.Email, subject, body, cancellationToken);
+        await emailSender.SendAsync(user.Email, subject, plainText, html, cancellationToken);
     }
 
     public async Task ResetPasswordAsync(
         ResetPasswordRequest request,
         CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(_resetOptions.Pepper))
-        {
-            throw new AuthException("Password reset is not configured.", 503, "PASSWORD_RESET_DISABLED");
-        }
+        EnsureTokenSecurityConfigured();
 
         if (request.NewPassword.Length < 8)
         {
@@ -408,29 +561,51 @@ public class AuthService(
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    private string BuildResetUrl(string rawToken)
+    private async Task SendVerificationEmailAsync(User user, CancellationToken cancellationToken)
     {
-        var baseUrl = _resetOptions.AppResetUrlBase.TrimEnd('/');
-        return $"{baseUrl}?token={Uri.EscapeDataString(rawToken)}";
+        var rawToken = PasswordResetTokenHasher.GenerateToken();
+        var tokenHash = PasswordResetTokenHasher.Hash(rawToken, _resetOptions.Pepper);
+        var now = DateTime.UtcNow;
+
+        var activeTokens = await dbContext.EmailVerificationTokens
+            .Where(t => t.UserId == user.UserId && t.UsedAt == null && t.ExpiresAt > now)
+            .ToListAsync(cancellationToken);
+
+        foreach (var existing in activeTokens)
+        {
+            existing.UsedAt = now;
+        }
+
+        dbContext.EmailVerificationTokens.Add(new EmailVerificationToken
+        {
+            EmailVerificationTokenId = Guid.NewGuid(),
+            UserId = user.UserId,
+            TokenHash = tokenHash,
+            ExpiresAt = now.AddMinutes(_resetOptions.TokenLifetimeMinutes),
+            CreatedAt = now,
+        });
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        var actionUrl = AccountLinkUrlBuilder.BuildLandingUrl(
+            _joinLinkOptions,
+            AccountLinkUrlBuilder.VerifyEmail,
+            rawToken);
+        var language = user.PreferredLanguage ?? "es";
+        var (subject, plainText, html) = EmailTemplateBuilder.BuildVerifyEmail(
+            language,
+            actionUrl,
+            _resetOptions.TokenLifetimeMinutes);
+
+        await emailSender.SendAsync(user.Email, subject, plainText, html, cancellationToken);
     }
 
-    private static (string Subject, string Body) BuildResetEmailContent(
-        string language,
-        string resetUrl,
-        int lifetimeMinutes)
+    private void EnsureTokenSecurityConfigured()
     {
-        return language switch
+        if (string.IsNullOrWhiteSpace(_resetOptions.Pepper))
         {
-            "en" => (
-                "Reset your CraftQuest password",
-                $"Use this link to choose a new password (valid for {lifetimeMinutes} minutes):\n\n{resetUrl}\n\nIf you did not request this, you can ignore this email."),
-            "pt" => (
-                "Redefinir sua senha CraftQuest",
-                $"Use este link para escolher uma nova senha (valido por {lifetimeMinutes} minutos):\n\n{resetUrl}\n\nSe voce nao solicitou isso, ignore este e-mail."),
-            _ => (
-                "Restablecer tu contraseña de CraftQuest",
-                $"Usa este enlace para elegir una nueva contraseña (válido {lifetimeMinutes} minutos):\n\n{resetUrl}\n\nSi no lo solicitaste, ignora este correo."),
-        };
+            throw new AuthException("Email token security is not configured.", 503, "EMAIL_TOKENS_DISABLED");
+        }
     }
 
     private async Task<AuthTokensDto> RefreshTokensForUserAsync(
@@ -500,6 +675,14 @@ public class AuthService(
 
         if (userByEmail is not null)
         {
+            if (userByEmail.Status == "pending")
+            {
+                throw new AuthException(
+                    "Email address is not verified.",
+                    403,
+                    "EMAIL_NOT_VERIFIED");
+            }
+
             if (userByEmail.Status != "active")
             {
                 throw new AuthException("User account is not active.", 403);
@@ -519,6 +702,7 @@ public class AuthService(
 
         var userId = Guid.NewGuid();
         var displayName = ResolveExternalDisplayName(identity, clientDisplayName, email);
+        var now = DateTime.UtcNow;
 
         var newUser = new User
         {
@@ -528,14 +712,15 @@ public class AuthService(
             AvatarId = "craft_01",
             PasswordHash = null,
             Status = "active",
-            CreatedAt = DateTime.UtcNow,
+            EmailVerifiedAt = now,
+            CreatedAt = now,
         };
 
         newUser.UserRoles.Add(new UserRole
         {
             UserId = userId,
             RoleId = studentRole.RoleId,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = now,
             Role = studentRole,
         });
 
@@ -545,7 +730,7 @@ public class AuthService(
             UserId = userId,
             ProviderCode = providerCode,
             ProviderSubject = subject,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = now,
         });
 
         dbContext.Users.Add(newUser);

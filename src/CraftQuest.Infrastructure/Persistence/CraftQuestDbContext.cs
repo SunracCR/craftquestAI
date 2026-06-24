@@ -10,6 +10,8 @@ public class CraftQuestDbContext(DbContextOptions<CraftQuestDbContext> options) 
     public DbSet<UserRole> UserRoles => Set<UserRole>();
     public DbSet<AuthProvider> AuthProviders => Set<AuthProvider>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
+    public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
+    public DbSet<PasswordChangeToken> PasswordChangeTokens => Set<PasswordChangeToken>();
     public DbSet<QuestionType> QuestionTypes => Set<QuestionType>();
     public DbSet<Plan> Plans => Set<Plan>();
     public DbSet<Quiz> Quizzes => Set<Quiz>();

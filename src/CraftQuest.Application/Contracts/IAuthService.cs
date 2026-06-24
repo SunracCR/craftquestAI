@@ -6,7 +6,7 @@ public interface IAuthService
 {
     OAuthPublicConfigDto GetOAuthPublicConfig();
 
-    Task<AuthResponseDto> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default);
+    Task<RegisterResultDto> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default);
     Task<AuthResponseDto> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default);
     Task<AuthResponseDto> LoginWithGoogleAsync(
         ExternalLoginRequest request,
@@ -20,9 +20,13 @@ public interface IAuthService
         Guid userId,
         UpdateProfileRequest request,
         CancellationToken cancellationToken = default);
-    Task ChangePasswordAsync(
+    Task<ChangePasswordResultDto> ChangePasswordAsync(
         Guid userId,
         ChangePasswordRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task ConfirmPasswordChangeAsync(
+        ConfirmPasswordChangeRequest request,
         CancellationToken cancellationToken = default);
 
     /// <summary>Always completes without revealing whether the email exists.</summary>
@@ -32,5 +36,13 @@ public interface IAuthService
 
     Task ResetPasswordAsync(
         ResetPasswordRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<AuthResponseDto> VerifyEmailAsync(
+        VerifyEmailRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task ResendVerificationAsync(
+        ResendVerificationRequest request,
         CancellationToken cancellationToken = default);
 }

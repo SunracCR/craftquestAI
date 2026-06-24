@@ -29,13 +29,24 @@ class AuthAuthenticated extends AuthState {
 }
 
 class AuthFailure extends AuthState {
-  const AuthFailure(this.message, {required this.attemptId});
+  const AuthFailure(this.message, {required this.attemptId, this.errorCode});
 
   final String message;
 
   /// Evita que Bloc ignore fallos repetidos con el mismo mensaje.
   final int attemptId;
 
+  final String? errorCode;
+
   @override
-  List<Object?> get props => [message, attemptId];
+  List<Object?> get props => [message, attemptId, errorCode];
+}
+
+class AuthEmailVerificationPending extends AuthState {
+  const AuthEmailVerificationPending(this.email);
+
+  final String email;
+
+  @override
+  List<Object?> get props => [email];
 }

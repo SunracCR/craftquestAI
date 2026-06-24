@@ -8,9 +8,11 @@ namespace CraftQuest.IntegrationTests;
 public class QuizDeleteTests : IClassFixture<CraftQuestWebApplicationFactory>
 {
     private readonly HttpClient _client;
+    private readonly CraftQuestWebApplicationFactory _factory;
 
     public QuizDeleteTests(CraftQuestWebApplicationFactory factory)
     {
+        _factory = factory;
         _client = factory.CreateClient();
     }
 
@@ -18,6 +20,8 @@ public class QuizDeleteTests : IClassFixture<CraftQuestWebApplicationFactory>
     public async Task DeleteQuiz_AfterPracticeSession_ReturnsNoContent()
     {
         var email = $"delete-quiz-{Guid.NewGuid():N}@craftquest.test";
+        _factory.EmailSender.Reset();
+
         var registerResponse = await _client.PostAsJsonAsync(
             "/api/auth/register",
             new
@@ -29,8 +33,16 @@ public class QuizDeleteTests : IClassFixture<CraftQuestWebApplicationFactory>
 
         Assert.Equal(HttpStatusCode.Created, registerResponse.StatusCode);
 
-        var registerBody = await registerResponse.Content.ReadFromJsonAsync<JsonElement>();
-        var accessToken = registerBody.GetProperty("tokens").GetProperty("accessToken").GetString();
+        var token = _factory.EmailSender.ExtractTokenFromLastEmail();
+        Assert.False(string.IsNullOrWhiteSpace(token));
+
+        var verifyResponse = await _client.PostAsJsonAsync(
+            "/api/auth/verify-email",
+            new { token });
+        Assert.Equal(HttpStatusCode.OK, verifyResponse.StatusCode);
+
+        var authBody = await verifyResponse.Content.ReadFromJsonAsync<JsonElement>();
+        var accessToken = authBody.GetProperty("tokens").GetProperty("accessToken").GetString();
         Assert.False(string.IsNullOrWhiteSpace(accessToken));
 
         using var authed = new HttpRequestMessage(HttpMethod.Post, "/api/quizzes");

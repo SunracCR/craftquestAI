@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Models.Auth;
 using Microsoft.AspNetCore.Authorization;
@@ -17,13 +16,13 @@ public class AuthController(IAuthService authService) : ApiControllerBase
 
     [HttpPost("register")]
     [AllowAnonymous]
-    [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(RegisterResultDto), StatusCodes.Status201Created)]
     public async Task<IActionResult> Register(
         [FromBody] RegisterRequest request,
         CancellationToken cancellationToken)
     {
         var result = await authService.RegisterAsync(request, cancellationToken);
-        return CreatedAtAction(nameof(Me), result);
+        return Created(string.Empty, result);
     }
 
     [HttpPost("login")]
@@ -35,6 +34,28 @@ public class AuthController(IAuthService authService) : ApiControllerBase
     {
         var result = await authService.LoginAsync(request, cancellationToken);
         return Ok(result);
+    }
+
+    [HttpPost("verify-email")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> VerifyEmail(
+        [FromBody] VerifyEmailRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await authService.VerifyEmailAsync(request, cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost("resend-verification")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> ResendVerification(
+        [FromBody] ResendVerificationRequest request,
+        CancellationToken cancellationToken)
+    {
+        await authService.ResendVerificationAsync(request, cancellationToken);
+        return NoContent();
     }
 
     [HttpPost("refresh")]
@@ -73,12 +94,23 @@ public class AuthController(IAuthService authService) : ApiControllerBase
 
     [HttpPost("change-password")]
     [Authorize]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ChangePasswordResultDto), StatusCodes.Status202Accepted)]
     public async Task<IActionResult> ChangePassword(
         [FromBody] ChangePasswordRequest request,
         CancellationToken cancellationToken)
     {
-        await authService.ChangePasswordAsync(GetUserId(), request, cancellationToken);
+        var result = await authService.ChangePasswordAsync(GetUserId(), request, cancellationToken);
+        return Accepted(result);
+    }
+
+    [HttpPost("confirm-password-change")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> ConfirmPasswordChange(
+        [FromBody] ConfirmPasswordChangeRequest request,
+        CancellationToken cancellationToken)
+    {
+        await authService.ConfirmPasswordChangeAsync(request, cancellationToken);
         return NoContent();
     }
 

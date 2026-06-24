@@ -4,7 +4,9 @@ import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_buttons.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
+import 'package:craftquest_app/features/auth/data/auth_repository.dart';
 import 'package:craftquest_app/features/auth/presentation/auth_bloc.dart';
+import 'package:craftquest_app/features/auth/presentation/verify_email_pending_page.dart';
 import 'package:craftquest_app/features/auth/presentation/forgot_password_page.dart';
 import 'package:craftquest_app/features/auth/presentation/widgets/oauth_sign_in_buttons.dart';
 import 'package:craftquest_app/features/auth/presentation/register_page.dart';
@@ -12,6 +14,7 @@ import 'package:craftquest_app/features/auth/presentation/widgets/auth_premium_b
 import 'package:craftquest_app/features/auth/presentation/widgets/auth_premium_header.dart';
 import 'package:craftquest_app/features/auth/presentation/widgets/guest_practice_promo_card.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -88,9 +91,64 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isSubmitting = false);
 
     if (result is AuthFailure) {
-      context.showErrorSnackBar(result.message);
+      if (result.errorCode == 'EMAIL_NOT_VERIFIED') {
+        await _showEmailNotVerifiedDialog(_emailController.text.trim());
+      } else {
+        context.showErrorSnackBar(result.message);
+      }
     }
   }
+
+  Future<void> _showEmailNotVerifiedDialog(String email) async {
+    final l10n = AppLocalizations.of(context)!;
+    final repository = getIt<AuthRepository>();
+
+    if (!mounted) {
+      return;
+    }
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.errorEmailNotVerifiedTitle),
+        content: Text(l10n.errorEmailNotVerifiedMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(dialogContext).pop();
+              try {
+                await repository.resendVerification(email: email);
+                if (!mounted) {
+                  return;
+                }
+                context.showSuccessSnackBar(l10n.verifyEmailResentMessage);
+              } on DioException catch (e) {
+                if (!mounted) {
+                  return;
+                }
+                context.showErrorSnackBar(repository.mapError(e));
+              }
+            },
+            child: Text(l10n.verifyEmailResendAction),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => VerifyEmailPendingPage(email: email),
+                ),
+              );
+            },
+            child: Text(l10n.verifyEmailPendingTitle),
+          ),
+        ],
+      ),
+    );
 
   InputDecoration _fieldDecoration({
     required String label,

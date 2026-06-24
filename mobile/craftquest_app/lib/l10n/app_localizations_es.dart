@@ -201,6 +201,68 @@ class AppLocalizationsEs extends AppLocalizations {
   String get resetPasswordHaveCode => 'Ya tengo el código de recuperación';
 
   @override
+  String get verifyEmailPendingTitle => 'Confirma tu correo';
+
+  @override
+  String verifyEmailPendingMessage(String email) =>
+      'Te enviamos un enlace de activación a $email. Revisa tu bandeja de entrada y la carpeta de spam.';
+
+  @override
+  String get verifyEmailResendAction => 'Reenviar correo';
+
+  @override
+  String get verifyEmailResentMessage => 'Correo de activación reenviado.';
+
+  @override
+  String get verifyEmailTitle => 'Activar cuenta';
+
+  @override
+  String get verifyEmailInProgress => 'Estamos verificando tu correo…';
+
+  @override
+  String get verifyEmailSuccess => '¡Cuenta activada! Entrando…';
+
+  @override
+  String get verifyEmailRetryAction => 'Reintentar activación';
+
+  @override
+  String get errorEmailNotVerifiedTitle => 'Correo no verificado';
+
+  @override
+  String get errorEmailNotVerifiedMessage =>
+      'Debes activar tu cuenta desde el enlace que te enviamos por correo antes de iniciar sesión.';
+
+  @override
+  String get errorEmailNotVerified =>
+      'Tu correo aún no está verificado. Revisa tu bandeja o reenvía el enlace.';
+
+  @override
+  String get confirmPasswordChangeTitle => 'Confirmar cambio de contraseña';
+
+  @override
+  String get confirmPasswordChangeInProgress =>
+      'Confirmando tu nueva contraseña…';
+
+  @override
+  String get confirmPasswordChangeSuccess =>
+      'Contraseña actualizada correctamente.';
+
+  @override
+  String get confirmPasswordChangeRetryAction => 'Reintentar confirmación';
+
+  @override
+  String get passwordChangePendingMessage =>
+      'Revisa tu correo para confirmar el cambio de contraseña.';
+
+  @override
+  String get errorInvalidVerificationToken =>
+      'El enlace de activación no es válido o ha caducado.';
+
+  @override
+  String get errorInvalidPasswordChangeToken =>
+      'El enlace de confirmación no es válido o ha caducado.';
+
+  @override
   String get oauthDividerLabel => 'o continúa con';
 
   @override
@@ -777,7 +839,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get exportQuizPdfAction => 'Exportar PDF';
 
   @override
+  String get exportQuizPdfGenerating => 'Generando PDF…';
+
+  @override
   String get exportQuizPdfReady => 'PDF listo';
+
+  @override
+  String get exportQuizPdfDownloadHint =>
+      'Si no ves el archivo, revisa la ventana de descarga de tu navegador';
 
   @override
   String get exportQuizPdfFailed => 'No se pudo generar el PDF';
@@ -1485,6 +1554,9 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get redeemCodeSubtitle =>
       'Introduce el código compartido por tu profesor o compañero';
+
+  @override
+  String get redeemCodeOpeningQuiz => 'Abriendo cuestionario…';
 
   @override
   String get redeemCodeLabel => 'Código';

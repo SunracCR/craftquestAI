@@ -11,9 +11,11 @@ import 'package:craftquest_app/core/theme/app_theme.dart';
 import 'package:craftquest_app/core/widgets/app_connectivity_overlay.dart';
 import 'package:craftquest_app/features/auth/presentation/auth_bloc.dart';
 import 'package:craftquest_app/features/auth/presentation/join_launch.dart';
+import 'package:craftquest_app/features/auth/presentation/account_link_launch.dart';
 import 'package:craftquest_app/features/auth/presentation/login_page.dart';
-import 'package:craftquest_app/features/auth/presentation/password_reset_launch.dart';
 import 'package:craftquest_app/features/auth/presentation/reset_password_page.dart';
+import 'package:craftquest_app/features/auth/presentation/verify_email_page.dart';
+import 'package:craftquest_app/features/profile/presentation/confirm_password_change_page.dart';
 import 'package:craftquest_app/features/guest/data/guest_repository.dart';
 import 'package:craftquest_app/features/guest/data/guest_token_storage.dart';
 import 'package:craftquest_app/features/guest/presentation/bloc/guest_session_cubit.dart';
@@ -135,38 +137,56 @@ class _AuthGate extends StatefulWidget {
 
 class _AuthGateState extends State<_AuthGate> {
   final _handledJoinCodes = <String>{};
+  final _handledAccountLinks = <String>{};
 
   @override
   void initState() {
     super.initState();
     unawaited(
       getIt<DeepLinkService>().initialize(
-        onJoinCode: (_) => _scheduleJoinRoute(),
+        onJoinCode: (_) => _scheduleDeepLinkRoute(),
+        onAccountLink: (_) => _scheduleDeepLinkRoute(),
       ),
     );
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scheduleJoinRoute());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scheduleDeepLinkRoute());
   }
 
-  void _scheduleJoinRoute() {
+  void _scheduleDeepLinkRoute() {
     if (!mounted) {
       return;
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        _routePendingJoinIfReady();
+        _routePendingDeepLinksIfReady();
       }
     });
   }
 
-  void _routePendingJoinIfReady() {
+  void _routePendingDeepLinksIfReady() {
     final deepLinkService = getIt<DeepLinkService>();
-    final code = deepLinkService.pendingJoinCode ?? readWebJoinCode();
-    if (code == null || _handledJoinCodes.contains(code)) {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthInitial || authState is AuthLoading) {
       return;
     }
 
-    final authState = context.read<AuthBloc>().state;
-    if (authState is AuthInitial || authState is AuthLoading) {
+    final accountLink =
+        deepLinkService.pendingAccountLink ?? readWebAccountLink();
+    if (accountLink != null) {
+      final linkKey = '${accountLink.kind.name}:${accountLink.token}';
+      if (!_handledAccountLinks.contains(linkKey)) {
+        _handledAccountLinks.add(linkKey);
+        deepLinkService.consumePendingAccountLink();
+        rootNavigatorKey.currentState?.push(
+          MaterialPageRoute<void>(
+            builder: (_) => _accountLinkPage(accountLink),
+          ),
+        );
+        return;
+      }
+    }
+
+    final code = deepLinkService.pendingJoinCode ?? readWebJoinCode();
+    if (code == null || _handledJoinCodes.contains(code)) {
       return;
     }
 
@@ -181,7 +201,10 @@ class _AuthGateState extends State<_AuthGate> {
     if (authState is AuthAuthenticated) {
       rootNavigatorKey.currentState?.push(
         MaterialPageRoute<void>(
-          builder: (_) => RedeemCodePage(initialCode: code),
+          builder: (_) => RedeemCodePage(
+            initialCode: code,
+            autoRedeem: true,
+          ),
         ),
       );
       return;
@@ -199,6 +222,17 @@ class _AuthGateState extends State<_AuthGate> {
     );
   }
 
+  Widget _accountLinkPage(PendingAccountLink link) {
+    switch (link.kind) {
+      case AccountLinkKind.verifyEmail:
+        return VerifyEmailPage(initialToken: link.token);
+      case AccountLinkKind.resetPassword:
+        return ResetPasswordPage(initialToken: link.token);
+      case AccountLinkKind.confirmPasswordChange:
+        return ConfirmPasswordChangePage(initialToken: link.token);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MultiBlocListener(
@@ -206,12 +240,12 @@ class _AuthGateState extends State<_AuthGate> {
         BlocListener<AuthBloc, AuthState>(
           listenWhen: (_, current) =>
               current is AuthAuthenticated || current is AuthUnauthenticated,
-          listener: (context, _) => _scheduleJoinRoute(),
+          listener: (context, _) => _scheduleDeepLinkRoute(),
         ),
         BlocListener<GuestSessionCubit, GuestSessionState>(
           listenWhen: (previous, current) =>
               previous.isActive != current.isActive,
-          listener: (context, _) => _scheduleJoinRoute(),
+          listener: (context, _) => _scheduleDeepLinkRoute(),
         ),
         BlocListener<AuthBloc, AuthState>(
           listenWhen: (_, current) => current is AuthAuthenticated,
@@ -260,6 +294,11 @@ class _AuthGateState extends State<_AuthGate> {
 
           if (authState is AuthAuthenticated) {
             return MainShellPage(user: authState.user);
+          }
+
+          final accountLink = readWebAccountLink();
+          if (accountLink != null) {
+            return _accountLinkPage(accountLink);
           }
 
           final resetToken = readWebPasswordResetToken();
