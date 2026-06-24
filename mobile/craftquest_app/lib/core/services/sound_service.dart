@@ -10,17 +10,27 @@ import 'package:flutter/services.dart';
 class SoundService {
   final Map<String, AudioPlayer> _players = {};
   final Map<String, Future<AudioPlayer>> _loadingPlayers = {};
-  static final Map<String, Uint8List> _webBytesCache = {};
+  static final Map<String, Uint8List> _bytesCache = {};
   Future<void>? _warmUpFuture;
+  Future<void>? _audioContextFuture;
 
   /// Preloads SFX sources so the first tap plays without asset decode delay.
   Future<void> warmUp() {
-    return _warmUpFuture ??= Future.wait([
+    return _warmUpFuture ??= _warmUp();
+  }
+
+  Future<void> _warmUp() async {
+    await _ensureAudioContext();
+    await Future.wait([
+      _preloadBytes(AudioAssets.sfxStart),
+      _preloadBytes(AudioAssets.sfxNav),
+      _preloadBytes(AudioAssets.sfxSelect),
+      _preloadBytes(AudioAssets.sfxFinish),
       _ensurePlayer(AudioAssets.sfxStart),
       _ensurePlayer(AudioAssets.sfxNav),
       _ensurePlayer(AudioAssets.sfxSelect),
       _ensurePlayer(AudioAssets.sfxFinish),
-    ]).then((_) {});
+    ]);
   }
 
   void playStartSfx() => playSfx(AudioAssets.sfxStart);
@@ -66,6 +76,7 @@ class SoundService {
     _players.clear();
     _loadingPlayers.clear();
     _warmUpFuture = null;
+    _audioContextFuture = null;
     await Future.wait(players.map((player) => player.dispose()));
   }
 
@@ -75,10 +86,15 @@ class SoundService {
     double playbackRate = 1,
   }) async {
     try {
+      await warmUp();
       final player = await _ensurePlayer(assetPath);
       unawaited(player.stop());
-      await player.setVolume(volume.clamp(0, 1));
-      await player.setPlaybackRate(playbackRate.clamp(0.5, 2));
+      if (volume != 1) {
+        await player.setVolume(volume.clamp(0, 1));
+      }
+      if (playbackRate != 1) {
+        await player.setPlaybackRate(playbackRate.clamp(0.5, 2));
+      }
       await player.seek(Duration.zero);
       await player.resume();
     } catch (e, st) {
@@ -113,19 +129,13 @@ class SoundService {
   Future<AudioPlayer> _createPlayer(String assetPath) async {
     final player = AudioPlayer();
     await player.setReleaseMode(ReleaseMode.stop);
-    if (kIsWeb) {
-      final bytes = await _loadWebBytes(assetPath);
-      await player.setSource(BytesSource(bytes, mimeType: 'audio/mpeg'));
-    } else {
-      await player.setSource(
-        AssetSource(_assetKey(assetPath), mimeType: 'audio/mpeg'),
-      );
-    }
+    final bytes = await _preloadBytes(assetPath);
+    await player.setSource(BytesSource(bytes, mimeType: 'audio/mpeg'));
     return player;
   }
 
-  Future<Uint8List> _loadWebBytes(String assetPath) async {
-    final cached = _webBytesCache[assetPath];
+  Future<Uint8List> _preloadBytes(String assetPath) async {
+    final cached = _bytesCache[assetPath];
     if (cached != null) {
       return cached;
     }
@@ -134,10 +144,24 @@ class SoundService {
       data.offsetInBytes,
       data.lengthInBytes,
     );
-    _webBytesCache[assetPath] = bytes;
+    _bytesCache[assetPath] = bytes;
     return bytes;
   }
 
-  static String _assetKey(String assetPath) =>
-      assetPath.replaceFirst('assets/', '');
+  Future<void> _ensureAudioContext() {
+    return _audioContextFuture ??= AudioPlayer.global.setAudioContext(
+      AudioContext(
+        android: const AudioContextAndroid(
+          isSpeakerphoneOn: false,
+          stayAwake: false,
+          contentType: AndroidContentType.sonification,
+          usageType: AndroidUsageType.assistanceSonification,
+          audioFocus: AndroidAudioFocus.gainTransientMayDuck,
+        ),
+        iOS: const AudioContextIOS(
+          category: AVAudioSessionCategory.ambient,
+        ),
+      ),
+    );
+  }
 }

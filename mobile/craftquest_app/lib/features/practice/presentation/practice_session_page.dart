@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/api_client.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
+import 'package:craftquest_app/core/services/app_warmup_service.dart';
 import 'package:craftquest_app/core/services/sound_service.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_media_display.dart';
@@ -85,7 +86,7 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
       _soundService,
       enabled: widget.options.enableSoundEffects,
     );
-    unawaited(_soundService.warmUp());
+    unawaited(getIt<AppWarmupService>().warmSoundOnly());
     _launchOptions = widget.options;
     _showTimer = widget.options.showTimer;
     if (widget.resumeSessionId != null) {
@@ -104,10 +105,19 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
     });
 
     try {
-      final active = await _repository.getActiveSessionForQuiz(
-        widget.quizId,
-        assignmentId: widget.assignmentId,
-      );
+      Future<PracticeLaunchOptions>? launchOptionsFuture;
+      if (widget.assignmentId == null) {
+        launchOptionsFuture = getIt<PracticePreferencesRepository>()
+            .loadLaunchOptions(widget.quizId)
+            .then(
+              (options) => options.copyWith(
+                enableSoundEffects: widget.options.enableSoundEffects,
+              ),
+            )
+            .catchError((_) => widget.options);
+      }
+
+      final active = await _resolveActiveSession();
 
       if (!mounted) {
         return;
@@ -129,14 +139,9 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
         await _repository.abandonSession(active.practiceSessionId);
       }
 
-      if (widget.assignmentId == null) {
+      if (launchOptionsFuture != null) {
         try {
-          final preferencesRepository = getIt<PracticePreferencesRepository>();
-          final apiOptions =
-              await preferencesRepository.loadLaunchOptions(widget.quizId);
-          _launchOptions = apiOptions.copyWith(
-            enableSoundEffects: widget.options.enableSoundEffects,
-          );
+          _launchOptions = await launchOptionsFuture;
         } catch (_) {
           _launchOptions = widget.options;
         }
@@ -179,6 +184,17 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
       timer.cancel();
     }
     super.dispose();
+  }
+
+  Future<PracticeActiveSessionModel?> _resolveActiveSession() {
+    final prefetch = widget.activeSessionPrefetch;
+    if (prefetch != null) {
+      return prefetch;
+    }
+    return _repository.getActiveSessionForQuiz(
+      widget.quizId,
+      assignmentId: widget.assignmentId,
+    );
   }
 
   Future<void> _awaitPendingPersists() async {

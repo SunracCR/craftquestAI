@@ -1,3 +1,5 @@
+import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/services/app_warmup_service.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/widgets/user_avatar.dart';
 import 'package:craftquest_app/features/auth/data/models/auth_models.dart';
@@ -23,12 +25,30 @@ class _MainShellPageState extends State<MainShellPage> {
   final Map<int, Widget> _pageCache = {};
 
   static const int _prepTabIndex = 1;
+  static const int _teacherTabIndex = 2;
 
   bool get _isTeacher => widget.user.roles.contains('teacher');
 
   int get _pageCount => _isTeacher ? 4 : 3;
 
   int get _profileTabIndex => _isTeacher ? 3 : 2;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      getIt<AppWarmupService>().start(
+        prefetchTeacherDashboard: _isTeacher,
+      );
+      if (_isTeacher) {
+        setState(() => _visitedTabs.add(_teacherTabIndex));
+        _pageFor(_teacherTabIndex);
+      }
+    });
+  }
 
   @override
   void didUpdateWidget(covariant MainShellPage oldWidget) {

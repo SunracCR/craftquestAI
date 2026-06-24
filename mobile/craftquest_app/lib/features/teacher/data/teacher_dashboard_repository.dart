@@ -6,8 +6,41 @@ class TeacherDashboardRepository {
   TeacherDashboardRepository(this._apiClient);
 
   final ApiClient _apiClient;
+  TeacherDashboardModel? _cachedDashboard;
+  Future<TeacherDashboardModel>? _dashboardInFlight;
 
-  Future<TeacherDashboardModel> getDashboard() async {
+  Future<void> prefetchDashboard() async {
+    try {
+      await getDashboard();
+    } catch (_) {}
+  }
+
+  Future<TeacherDashboardModel> getDashboard({bool forceRefresh = false}) async {
+    if (!forceRefresh && _cachedDashboard != null) {
+      return _cachedDashboard!;
+    }
+    if (!forceRefresh && _dashboardInFlight != null) {
+      return _dashboardInFlight!;
+    }
+
+    final request = _fetchDashboard();
+    _dashboardInFlight = request;
+    try {
+      final dashboard = await request;
+      _cachedDashboard = dashboard;
+      return dashboard;
+    } finally {
+      if (identical(_dashboardInFlight, request)) {
+        _dashboardInFlight = null;
+      }
+    }
+  }
+
+  void invalidateDashboardCache() {
+    _cachedDashboard = null;
+  }
+
+  Future<TeacherDashboardModel> _fetchDashboard() async {
     final response = await _apiClient.dio
         .get<Map<String, dynamic>>('/api/teacher/dashboard');
     return TeacherDashboardModel.fromJson(response.data!);

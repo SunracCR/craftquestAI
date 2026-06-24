@@ -13,7 +13,9 @@ import 'package:craftquest_app/features/guest/data/guest_models.dart';
 import 'package:craftquest_app/features/guest/data/guest_repository.dart';
 import 'package:craftquest_app/features/guest/presentation/guest_practice_navigation.dart';
 import 'package:craftquest_app/features/guest/presentation/guest_session_navigation.dart';
+import 'package:craftquest_app/core/services/app_warmup_service.dart';
 import 'package:craftquest_app/core/services/sound_service.dart';
+import 'package:craftquest_app/features/practice/data/models/practice_models.dart';
 import 'package:craftquest_app/features/practice/data/practice_sound_preference_store.dart';
 import 'package:craftquest_app/features/practice/domain/practice_launch_options.dart';
 import 'package:craftquest_app/features/practice/presentation/practice_session_feedback.dart';
@@ -40,6 +42,7 @@ class _GuestShellPageState extends State<GuestShellPage>
   bool _randomize = false;
   bool _enableSoundEffects = PracticeLaunchOptions.defaults.enableSoundEffects;
   final _soundPreferenceStore = getIt<PracticeSoundPreferenceStore>();
+  Future<PracticeActiveSessionModel?>? _activeSessionPrefetch;
 
   static const _heroGradient = LinearGradient(
     begin: Alignment.topLeft,
@@ -63,6 +66,11 @@ class _GuestShellPageState extends State<GuestShellPage>
     super.initState();
     _visit = widget.visit;
     WidgetsBinding.instance.addObserver(this);
+    getIt<AppWarmupService>().warmSoundOnly();
+    _activeSessionPrefetch = getIt<GuestRepository>().getActiveSession(
+      visitId: _visit.guestVisitId,
+      token: _visit.token,
+    );
     _loadAttempts();
     _loadSoundPreferences();
   }
@@ -129,8 +137,15 @@ class _GuestShellPageState extends State<GuestShellPage>
         randomizeQuestions: _randomize ? true : null,
         showElapsedTimer: false,
         enableSoundEffects: _enableSoundEffects,
+        activeSessionPrefetch: _activeSessionPrefetch,
       );
-      if (mounted) await _loadAttempts();
+      if (mounted) {
+        _activeSessionPrefetch = getIt<GuestRepository>().getActiveSession(
+          visitId: _visit.guestVisitId,
+          token: _visit.token,
+        );
+        await _loadAttempts();
+      }
     } finally {
       if (mounted) setState(() => _startingPractice = false);
     }

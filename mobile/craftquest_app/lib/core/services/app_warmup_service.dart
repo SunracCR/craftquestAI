@@ -1,0 +1,28 @@
+import 'dart:async';
+
+import 'package:craftquest_app/core/services/sound_service.dart';
+import 'package:craftquest_app/features/teacher/data/teacher_dashboard_repository.dart';
+
+/// Background warm-up for first-interaction latency (audio, teacher data).
+class AppWarmupService {
+  AppWarmupService(this._soundService, this._teacherDashboardRepository);
+
+  final SoundService _soundService;
+  final TeacherDashboardRepository _teacherDashboardRepository;
+  bool _started = false;
+
+  void start({required bool prefetchTeacherDashboard}) {
+    if (_started) {
+      return;
+    }
+    _started = true;
+    unawaited(_soundService.warmUp());
+    if (prefetchTeacherDashboard) {
+      unawaited(_teacherDashboardRepository.prefetchDashboard());
+    }
+  }
+
+  void warmSoundOnly() {
+    unawaited(_soundService.warmUp());
+  }
+}

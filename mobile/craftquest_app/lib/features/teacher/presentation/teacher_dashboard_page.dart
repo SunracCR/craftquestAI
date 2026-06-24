@@ -49,19 +49,19 @@ class _TeacherDashboardPageState extends State<TeacherDashboardPage> {
 
   void _refresh() {
     setState(() {
-      _future = _loadDashboard();
+      _future = _loadDashboard(forceRefresh: true);
       _isExpiring = false;
     });
     _checkExpiring();
   }
 
-  Future<TeacherDashboardModel> _loadDashboard() async {
+  Future<TeacherDashboardModel> _loadDashboard({bool forceRefresh = false}) async {
     try {
-      return await _repo.getDashboard();
+      return await _repo.getDashboard(forceRefresh: forceRefresh);
     } on DioException catch (e) {
       if (e.response?.statusCode == 403 &&
           await getIt<ApiClient>().refreshTokens()) {
-        return _repo.getDashboard();
+        return _repo.getDashboard(forceRefresh: true);
       }
       rethrow;
     }

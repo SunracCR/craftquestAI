@@ -25,6 +25,7 @@ import 'package:craftquest_app/features/practice/data/practice_preferences_repos
 import 'package:craftquest_app/features/practice/data/practice_repository.dart';
 import 'package:craftquest_app/features/practice/data/practice_sound_preference_store.dart';
 import 'package:craftquest_app/features/practice/domain/practice_launch_options.dart';
+import 'package:craftquest_app/core/services/app_warmup_service.dart';
 import 'package:craftquest_app/core/services/sound_service.dart';
 import 'package:craftquest_app/features/practice/presentation/practice_navigation.dart';
 import 'package:craftquest_app/features/practice/presentation/practice_session_feedback.dart';
@@ -425,11 +426,22 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
       }
       return;
     }
+    getIt<AppWarmupService>().warmSoundOnly();
     await Future.wait([
       _loadPracticePreferences(),
       _loadSoundPreferences(),
       _loadActivePractice(),
     ]);
+  }
+
+  Future<PracticeActiveSessionModel?> _prefetchActiveSessionForPractice() {
+    if (!_canPractice) {
+      return Future.value(null);
+    }
+    if (_activePractice != null) {
+      return Future.value(_activePractice);
+    }
+    return _practiceRepository.getActiveSessionForQuiz(widget.quizId);
   }
 
   Future<void> _loadActivePractice() async {
@@ -608,6 +620,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
       quizTitle: _quizTitle,
       resumeSessionId: _activePractice?.practiceSessionId,
       launchOptions: _currentLaunchOptions,
+      activeSessionPrefetch: _prefetchActiveSessionForPractice(),
     );
     if (!mounted) return;
     await _loadActivePractice();
@@ -619,6 +632,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
       quizId: widget.quizId,
       quizTitle: _quizTitle,
       launchOptions: _currentLaunchOptions,
+      activeSessionPrefetch: _prefetchActiveSessionForPractice(),
     );
     if (!mounted) return;
     await _loadActivePractice();

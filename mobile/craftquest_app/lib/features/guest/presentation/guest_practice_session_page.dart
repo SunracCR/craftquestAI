@@ -81,7 +81,6 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
       _soundService,
       enabled: widget.enableSoundEffects,
     );
-    unawaited(_soundService.warmUp());
     _repository = getIt<GuestRepository>();
     _showTimer = widget.showElapsedTimer;
     _initializeSession();
@@ -94,6 +93,17 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
       timer.cancel();
     }
     super.dispose();
+  }
+
+  Future<PracticeActiveSessionModel?> _resolveActiveSession() {
+    final prefetch = widget.activeSessionPrefetch;
+    if (prefetch != null) {
+      return prefetch;
+    }
+    return _repository.getActiveSession(
+      visitId: widget.visitId,
+      token: widget.token,
+    );
   }
 
   Future<void> _awaitPendingPersists() async {
@@ -115,10 +125,7 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
     });
 
     try {
-      final active = await _repository.getActiveSession(
-        visitId: widget.visitId,
-        token: widget.token,
-      );
+      final active = await _resolveActiveSession();
 
       if (!mounted) return;
 
