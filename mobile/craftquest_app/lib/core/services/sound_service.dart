@@ -24,10 +24,12 @@ class SoundService {
     await Future.wait([
       _preloadBytes(AudioAssets.sfxStart),
       _preloadBytes(AudioAssets.sfxNav),
+      _preloadBytes(AudioAssets.sfxNavNext),
       _preloadBytes(AudioAssets.sfxSelect),
       _preloadBytes(AudioAssets.sfxFinish),
       _ensurePlayer(AudioAssets.sfxStart),
       _ensurePlayer(AudioAssets.sfxNav),
+      _ensurePlayer(AudioAssets.sfxNavNext),
       _ensurePlayer(AudioAssets.sfxSelect),
       _ensurePlayer(AudioAssets.sfxFinish),
     ]);
@@ -36,6 +38,8 @@ class SoundService {
   void playStartSfx() => playSfx(AudioAssets.sfxStart);
 
   void playNavSfx() => playSfx(AudioAssets.sfxNav);
+
+  void playNavNextSfx() => playSfx(AudioAssets.sfxNavNext);
 
   void playSelectSfx() => playSfx(AudioAssets.sfxSelect);
 

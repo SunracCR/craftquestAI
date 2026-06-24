@@ -26,7 +26,7 @@ class PracticeSessionFeedback {
 
   void onNextQuestion() {
     if (_enabled) {
-      _soundService.playNavSfx();
+      _soundService.playNavNextSfx();
     }
     HapticFeedback.lightImpact();
   }
