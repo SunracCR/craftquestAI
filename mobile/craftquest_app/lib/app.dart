@@ -144,7 +144,10 @@ class _AuthGateState extends State<_AuthGate> {
     super.initState();
     unawaited(
       getIt<DeepLinkService>().initialize(
-        onJoinCode: (_) => _scheduleDeepLinkRoute(),
+        onJoinCode: (code) {
+          _handledJoinCodes.remove(code);
+          _scheduleDeepLinkRoute();
+        },
         onAccountLink: (_) => _scheduleDeepLinkRoute(),
       ),
     );
@@ -238,8 +241,9 @@ class _AuthGateState extends State<_AuthGate> {
     return MultiBlocListener(
       listeners: [
         BlocListener<AuthBloc, AuthState>(
-          listenWhen: (_, current) =>
-              current is AuthAuthenticated || current is AuthUnauthenticated,
+          listenWhen: (previous, current) =>
+              current is AuthUnauthenticated ||
+              (current is AuthAuthenticated && previous is AuthLoading),
           listener: (context, _) => _scheduleDeepLinkRoute(),
         ),
         BlocListener<GuestSessionCubit, GuestSessionState>(
@@ -248,7 +252,11 @@ class _AuthGateState extends State<_AuthGate> {
           listener: (context, _) => _scheduleDeepLinkRoute(),
         ),
         BlocListener<AuthBloc, AuthState>(
-          listenWhen: (_, current) => current is AuthAuthenticated,
+          listenWhen: (previous, current) =>
+              current is AuthAuthenticated &&
+              (previous is AuthUnauthenticated ||
+                  previous is AuthFailure ||
+                  previous is AuthEmailVerificationPending),
           listener: (context, state) {
             if (state is! AuthAuthenticated) {
               return;
@@ -269,6 +277,8 @@ class _AuthGateState extends State<_AuthGate> {
                   user.preferredLanguage,
                 ),
               );
+              // Tras limpiar la pila de login, abrir join links pendientes.
+              _scheduleDeepLinkRoute();
             });
           },
         ),
