@@ -16,6 +16,7 @@ final class NotificationsLoaded extends NotificationsState {
     this.items = const [],
     this.nextCursor,
     this.loadingMore = false,
+    this.isListRefreshing = false,
     this.listError,
   });
 
@@ -23,6 +24,7 @@ final class NotificationsLoaded extends NotificationsState {
   final List<NotificationModel> items;
   final String? nextCursor;
   final bool loadingMore;
+  final bool isListRefreshing;
   final String? listError;
 
   NotificationsLoaded copyWith({
@@ -30,6 +32,7 @@ final class NotificationsLoaded extends NotificationsState {
     List<NotificationModel>? items,
     String? nextCursor,
     bool? loadingMore,
+    bool? isListRefreshing,
     String? listError,
     bool clearListError = false,
   }) {
@@ -38,6 +41,7 @@ final class NotificationsLoaded extends NotificationsState {
       items: items ?? this.items,
       nextCursor: nextCursor ?? this.nextCursor,
       loadingMore: loadingMore ?? this.loadingMore,
+      isListRefreshing: isListRefreshing ?? this.isListRefreshing,
       listError: clearListError ? null : (listError ?? this.listError),
     );
   }

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
@@ -23,12 +21,20 @@ class _NotificationsPageState extends State<NotificationsPage> {
   @override
   void initState() {
     super.initState();
-    // Siempre refrescar al abrir: el badge puede tener contador sin lista cargada.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        context.read<NotificationsCubit>().refreshList();
-      }
-    });
+    context.read<NotificationsCubit>().openInbox();
+  }
+
+  bool _shouldShowLoading(NotificationsState state) {
+    if (state is NotificationsInitial) {
+      return true;
+    }
+    if (state is! NotificationsLoaded) {
+      return false;
+    }
+    if (state.isListRefreshing && state.items.isEmpty) {
+      return true;
+    }
+    return false;
   }
 
   @override
@@ -42,7 +48,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
           BlocBuilder<NotificationsCubit, NotificationsState>(
             builder: (context, state) {
               final hasUnread = state is NotificationsLoaded &&
-                  state.unreadCount > 0;
+                  state.unreadCount > 0 &&
+                  !state.isListRefreshing;
               if (!hasUnread) {
                 return const SizedBox.shrink();
               }
@@ -61,32 +68,27 @@ class _NotificationsPageState extends State<NotificationsPage> {
             return AppErrorView(
               message: state.message,
               retryLabel: l10n.retry,
-              onRetry: () => context.read<NotificationsCubit>().loadInitial(),
+              onRetry: () => context.read<NotificationsCubit>().openInbox(),
             );
           }
 
-          if (state is NotificationsInitial) {
+          if (_shouldShowLoading(state)) {
             return const AppLoadingView();
           }
 
           final loaded = state as NotificationsLoaded;
-          if (loaded.items.isEmpty &&
-              loaded.unreadCount > 0 &&
-              loaded.listError == null) {
-            return const AppLoadingView();
-          }
 
           if (loaded.listError != null && loaded.items.isEmpty) {
             return AppErrorView(
               message: loaded.listError!,
               retryLabel: l10n.retry,
-              onRetry: () => context.read<NotificationsCubit>().refreshList(),
+              onRetry: () => context.read<NotificationsCubit>().openInbox(),
             );
           }
 
           if (loaded.items.isEmpty) {
             return RefreshIndicator(
-              onRefresh: () => context.read<NotificationsCubit>().refreshList(),
+              onRefresh: () => context.read<NotificationsCubit>().openInbox(),
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 children: [
@@ -106,13 +108,14 @@ class _NotificationsPageState extends State<NotificationsPage> {
           }
 
           return RefreshIndicator(
-            onRefresh: () => context.read<NotificationsCubit>().refreshList(),
+            onRefresh: () => context.read<NotificationsCubit>().openInbox(),
             child: NotificationListener<ScrollNotification>(
               onNotification: (notification) {
                 if (notification is ScrollEndNotification &&
                     notification.metrics.extentAfter < 120 &&
                     loaded.nextCursor != null &&
-                    !loaded.loadingMore) {
+                    !loaded.loadingMore &&
+                    !loaded.isListRefreshing) {
                   context.read<NotificationsCubit>().loadMore();
                 }
                 return false;
@@ -173,7 +176,6 @@ class NotificationBellAction extends StatelessWidget {
         return IconButton(
           tooltip: l10n.notificationsTitle,
           onPressed: () {
-            unawaited(getIt<NotificationsCubit>().refreshList());
             Navigator.of(context).push<void>(
               MaterialPageRoute<void>(
                 builder: (_) => BlocProvider.value(
