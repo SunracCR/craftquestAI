@@ -122,14 +122,18 @@ public class TeacherController(
 
     [HttpPost("classes/{classId:guid}/members")]
     [Authorize(Policy = "Teacher")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ClassMemberDto), StatusCodes.Status201Created)]
     public async Task<IActionResult> AddMember(
         Guid classId,
         [FromBody] AddMemberRequest request,
         CancellationToken cancellationToken)
     {
-        await classService.AddMemberByEmailAsync(GetUserId(), classId, request.Email, cancellationToken);
-        return NoContent();
+        var member = await classService.AddMemberByEmailAsync(
+            GetUserId(),
+            classId,
+            request.Email,
+            cancellationToken);
+        return CreatedAtAction(nameof(GetClassDetail), new { classId }, member);
     }
 
     [HttpPatch("classes/{classId:guid}/members/{userId:guid}")]

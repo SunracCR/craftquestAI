@@ -1,3 +1,4 @@
+using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Models.Notifications;
 using CraftQuest.Domain.Constants;
 using CraftQuest.Domain.Entities;
@@ -5,6 +6,7 @@ using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.Services;
 using CraftQuest.UnitTests.Auth;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace CraftQuest.UnitTests.Notifications;
@@ -104,12 +106,17 @@ public class NotificationServiceTests
         Assert.Equal(1, count);
     }
 
-    private static NotificationService CreateService(CraftQuestDbContext db) =>
-        new(
-            db,
-            new CapturingEmailSender(),
-            new NoOpPushSender(),
-            NullLogger<NotificationService>.Instance);
+    private static NotificationService CreateService(CraftQuestDbContext db)
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddScoped(_ => db);
+        services.AddSingleton<IEmailSender, CapturingEmailSender>();
+        services.AddSingleton<IPushSender, NoOpPushSender>();
+        services.AddScoped<NotificationService>();
+        var provider = services.BuildServiceProvider();
+        return provider.GetRequiredService<NotificationService>();
+    }
 
     private static CraftQuestDbContext CreateDb() =>
         new(new DbContextOptionsBuilder<CraftQuestDbContext>()

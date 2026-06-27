@@ -80,6 +80,107 @@ class _TeacherClassDetailPageState extends State<TeacherClassDetailPage>
     }
   }
 
+  void _applyMemberAdded(ClassMemberModel member) {
+    final detail = _detail;
+    if (detail == null) return;
+
+    final existingIndex =
+        detail.members.indexWhere((m) => m.userId == member.userId);
+    final members = List<ClassMemberModel>.from(detail.members);
+    var activeDelta = 0;
+    var pendingDelta = 0;
+
+    if (existingIndex >= 0) {
+      final previous = members[existingIndex];
+      members[existingIndex] = member;
+      if (previous.status == 'pending' && member.status == 'active') {
+        pendingDelta = -1;
+        activeDelta = 1;
+      }
+    } else {
+      members.add(member);
+      if (member.status == 'active') {
+        activeDelta = 1;
+      } else if (member.status == 'pending') {
+        pendingDelta = 1;
+      }
+    }
+
+    setState(() {
+      _detail = _withMemberCountDelta(
+        detail.copyWith(members: members),
+        activeDelta: activeDelta,
+        pendingDelta: pendingDelta,
+      );
+    });
+  }
+
+  void _applyMemberApproved(String userId) {
+    final detail = _detail;
+    if (detail == null) return;
+
+    final index = detail.members.indexWhere((m) => m.userId == userId);
+    if (index < 0) return;
+
+    final previous = detail.members[index];
+    if (previous.status != 'pending') return;
+
+    final members = List<ClassMemberModel>.from(detail.members);
+    members[index] = previous.copyWith(status: 'active');
+
+    setState(() {
+      _detail = _withMemberCountDelta(
+        detail.copyWith(members: members),
+        activeDelta: 1,
+        pendingDelta: -1,
+      );
+    });
+  }
+
+  void _applyMemberRemoved(String userId) {
+    final detail = _detail;
+    if (detail == null) return;
+
+    final index = detail.members.indexWhere((m) => m.userId == userId);
+    if (index < 0) return;
+
+    final removed = detail.members[index];
+    final members = List<ClassMemberModel>.from(detail.members)..removeAt(index);
+    final activeDelta = removed.status == 'active' ? -1 : 0;
+    final pendingDelta = removed.status == 'pending' ? -1 : 0;
+
+    setState(() {
+      _detail = _withMemberCountDelta(
+        detail.copyWith(members: members),
+        activeDelta: activeDelta,
+        pendingDelta: pendingDelta,
+      );
+    });
+  }
+
+  ClassDetailModel _withMemberCountDelta(
+    ClassDetailModel detail, {
+    required int activeDelta,
+    required int pendingDelta,
+  }) {
+    final updatedAssignments = activeDelta == 0
+        ? detail.assignments
+        : detail.assignments
+            .map(
+              (assignment) => assignment.copyWith(
+                totalMembers: (assignment.totalMembers + activeDelta)
+                    .clamp(0, 999999),
+              ),
+            )
+            .toList();
+
+    return detail.copyWith(
+      activeMemberCount: detail.activeMemberCount + activeDelta,
+      pendingMemberCount: detail.pendingMemberCount + pendingDelta,
+      assignments: updatedAssignments,
+    );
+  }
+
   Future<void> _archive(AppLocalizations l10n) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -314,7 +415,9 @@ class _TeacherClassDetailPageState extends State<TeacherClassDetailPage>
                   classId: widget.classId,
                   detail: detail,
                   readOnly: isArchived,
-                  onChanged: _load,
+                  onMemberAdded: _applyMemberAdded,
+                  onMemberApproved: _applyMemberApproved,
+                  onMemberRemoved: _applyMemberRemoved,
                 ),
                 _AssignmentsTab(
                   classId: widget.classId,
@@ -351,13 +454,17 @@ class _MembersTab extends StatefulWidget {
     required this.classId,
     required this.detail,
     required this.readOnly,
-    required this.onChanged,
+    required this.onMemberAdded,
+    required this.onMemberApproved,
+    required this.onMemberRemoved,
   });
 
   final String classId;
   final ClassDetailModel detail;
   final bool readOnly;
-  final VoidCallback onChanged;
+  final ValueChanged<ClassMemberModel> onMemberAdded;
+  final ValueChanged<String> onMemberApproved;
+  final ValueChanged<String> onMemberRemoved;
 
   @override
   State<_MembersTab> createState() => _MembersTabState();
@@ -388,9 +495,10 @@ class _MembersTabState extends State<_MembersTab>
     }
     setState(() => _addLoading = true);
     try {
-      await _repo.addMemberByEmail(classId: widget.classId, email: email);
+      final member =
+          await _repo.addMemberByEmail(classId: widget.classId, email: email);
       _emailCtrl.clear();
-      widget.onChanged();
+      widget.onMemberAdded(member);
     } on DioException catch (e) {
       if (mounted) context.showDioErrorSnackBar(e);
     } finally {
@@ -423,7 +531,8 @@ class _MembersTabState extends State<_MembersTab>
                         member: m,
                         classId: widget.classId,
                         readOnly: widget.readOnly,
-                        onChanged: widget.onChanged,
+                        onMemberApproved: widget.onMemberApproved,
+                        onMemberRemoved: widget.onMemberRemoved,
                       )),
                 ],
                 SizedBox(height: widget.readOnly ? 0 : 20),
@@ -443,7 +552,8 @@ class _MembersTabState extends State<_MembersTab>
                         member: m,
                         classId: widget.classId,
                         readOnly: widget.readOnly,
-                        onChanged: widget.onChanged,
+                        onMemberApproved: widget.onMemberApproved,
+                        onMemberRemoved: widget.onMemberRemoved,
                       )),
               ],
             ),
@@ -531,24 +641,64 @@ class _MembersTabState extends State<_MembersTab>
   }
 }
 
-class _MemberTile extends StatelessWidget {
+class _MemberTile extends StatefulWidget {
   const _MemberTile({
     required this.member,
     required this.classId,
     required this.readOnly,
-    required this.onChanged,
+    required this.onMemberApproved,
+    required this.onMemberRemoved,
   });
 
   final ClassMemberModel member;
   final String classId;
   final bool readOnly;
-  final VoidCallback onChanged;
+  final ValueChanged<String> onMemberApproved;
+  final ValueChanged<String> onMemberRemoved;
+
+  @override
+  State<_MemberTile> createState() => _MemberTileState();
+}
+
+class _MemberTileState extends State<_MemberTile> {
+  bool _actionLoading = false;
+
+  Future<void> _approve() async {
+    if (_actionLoading) return;
+    setState(() => _actionLoading = true);
+    try {
+      await getIt<TeacherClassRepository>().approveMember(
+        classId: widget.classId,
+        userId: widget.member.userId,
+      );
+      widget.onMemberApproved(widget.member.userId);
+    } on DioException catch (e) {
+      if (mounted) context.showDioErrorSnackBar(e);
+    } finally {
+      if (mounted) setState(() => _actionLoading = false);
+    }
+  }
+
+  Future<void> _remove() async {
+    if (_actionLoading) return;
+    setState(() => _actionLoading = true);
+    try {
+      await getIt<TeacherClassRepository>().removeMember(
+        classId: widget.classId,
+        userId: widget.member.userId,
+      );
+      widget.onMemberRemoved(widget.member.userId);
+    } on DioException catch (e) {
+      if (mounted) context.showDioErrorSnackBar(e);
+    } finally {
+      if (mounted) setState(() => _actionLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final repo = getIt<TeacherClassRepository>();
-    final isPending = member.status == 'pending';
+    final isPending = widget.member.status == 'pending';
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -561,8 +711,8 @@ class _MemberTile extends StatelessWidget {
         child: Row(
           children: [
             MemberAvatar(
-              avatarId: member.avatarId,
-              displayName: member.displayName,
+              avatarId: widget.member.avatarId,
+              displayName: widget.member.displayName,
               size: 36,
               accentColor: isPending ? AppColors.warning : AppColors.teacherAccent,
             ),
@@ -571,20 +721,23 @@ class _MemberTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(member.displayName,
+                  Text(widget.member.displayName,
                       style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
-                  Text(member.email,
+                  Text(widget.member.email,
                       style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
                 ],
               ),
             ),
-            if (!readOnly)
-              if (isPending)
+            if (!widget.readOnly)
+              if (_actionLoading)
+                const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              else if (isPending)
                 TextButton(
-                  onPressed: () async {
-                    await repo.approveMember(classId: classId, userId: member.userId);
-                    onChanged();
-                  },
+                  onPressed: _approve,
                   style: TextButton.styleFrom(foregroundColor: AppColors.accentMint),
                   child: Text(l10n.teacherClassApproveAction),
                 )
@@ -592,10 +745,7 @@ class _MemberTile extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.person_remove_outlined, size: 18),
                   color: AppColors.textSecondary,
-                  onPressed: () async {
-                    await repo.removeMember(classId: classId, userId: member.userId);
-                    onChanged();
-                  },
+                  onPressed: _remove,
                 ),
           ],
         ),

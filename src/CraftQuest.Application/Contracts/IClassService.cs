@@ -40,7 +40,7 @@ public interface IClassService
         Guid classId,
         CancellationToken cancellationToken = default);
 
-    Task AddMemberByEmailAsync(
+    Task<ClassMemberDto> AddMemberByEmailAsync(
         Guid teacherUserId,
         Guid classId,
         string email,

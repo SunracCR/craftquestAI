@@ -9,13 +9,14 @@ using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.Services.Quizzes;
 using CraftQuest.Infrastructure.Services.Teacher;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace CraftQuest.Infrastructure.Services;
 
 public class ClassService(
     CraftQuestDbContext dbContext,
-    INotificationService notificationService,
+    IServiceScopeFactory scopeFactory,
     ILogger<ClassService> logger) : IClassService
 {
     public async Task<IReadOnlyList<TeacherClassSummaryDto>> ListTeacherClassesAsync(
@@ -263,7 +264,7 @@ public class ClassService(
         };
     }
 
-    public async Task AddMemberByEmailAsync(
+    public async Task<ClassMemberDto> AddMemberByEmailAsync(
         Guid teacherUserId,
         Guid classId,
         string email,
@@ -300,11 +301,11 @@ public class ClassService(
             existing.Status = "active";
             existing.JoinedAt = DateTime.UtcNow;
             await dbContext.SaveChangesAsync(cancellationToken);
-            await NotifyClassJoinedAsync(classId, user.UserId, cancellationToken);
-            return;
+            ScheduleClassJoinedNotification(classId, user.UserId);
+            return MapMemberDto(user, existing);
         }
 
-        dbContext.ClassMembers.Add(new ClassMember
+        var member = new ClassMember
         {
             ClassMemberId = Guid.NewGuid(),
             ClassId = classId,
@@ -312,39 +313,44 @@ public class ClassService(
             MemberRole = "student",
             Status = "active",
             JoinedAt = DateTime.UtcNow,
-        });
+        };
 
+        dbContext.ClassMembers.Add(member);
         await dbContext.SaveChangesAsync(cancellationToken);
-        await NotifyClassJoinedAsync(classId, user.UserId, cancellationToken);
+        ScheduleClassJoinedNotification(classId, user.UserId);
+        return MapMemberDto(user, member);
     }
 
-    private async Task NotifyClassJoinedAsync(
-        Guid classId,
-        Guid userId,
-        CancellationToken cancellationToken)
+    private void ScheduleClassJoinedNotification(Guid classId, Guid userId)
     {
-        var classInfo = await dbContext.TeacherClasses
-            .AsNoTracking()
-            .Where(c => c.ClassId == classId)
-            .Select(c => new { c.ClassId, c.Name })
-            .FirstOrDefaultAsync(cancellationToken);
-        if (classInfo is null)
-        {
-            return;
-        }
-
-        await NotificationPublisher.TryNotifyAsync(
-            () => notificationService.NotifyAsync(
-                userId,
-                NotificationTypes.ClassJoined,
-                new NotificationPayload
+        NotificationPublisher.TryNotifyInBackground(
+            scopeFactory,
+            async (services, ct) =>
+            {
+                var db = services.GetRequiredService<CraftQuestDbContext>();
+                var notificationService = services.GetRequiredService<INotificationService>();
+                var classInfo = await db.TeacherClasses
+                    .AsNoTracking()
+                    .Where(c => c.ClassId == classId)
+                    .Select(c => new { c.ClassId, c.Name })
+                    .FirstOrDefaultAsync(ct);
+                if (classInfo is null)
                 {
-                    ClassId = classInfo.ClassId,
-                    ClassName = classInfo.Name,
-                    Route = $"student/classes/{classInfo.ClassId}",
-                },
-                $"class_joined:{classId}:{userId}",
-                cancellationToken),
+                    return;
+                }
+
+                await notificationService.NotifyAsync(
+                    userId,
+                    NotificationTypes.ClassJoined,
+                    new NotificationPayload
+                    {
+                        ClassId = classInfo.ClassId,
+                        ClassName = classInfo.Name,
+                        Route = $"student/classes/{classInfo.ClassId}",
+                    },
+                    $"class_joined:{classId}:{userId}",
+                    ct);
+            },
             logger,
             "class_joined");
     }
@@ -431,6 +437,18 @@ public class ClassService(
             ?? throw new AppException("Class not found or you do not own it.", 404);
         return entity;
     }
+
+    private static ClassMemberDto MapMemberDto(User user, ClassMember member) =>
+        new()
+        {
+            UserId = user.UserId,
+            DisplayName = user.DisplayName ?? user.Email,
+            Email = user.Email,
+            MemberRole = member.MemberRole,
+            Status = member.Status,
+            JoinedAt = member.JoinedAt,
+            AvatarId = user.AvatarId,
+        };
 
     private static bool IsValidEmail(string email)
     {

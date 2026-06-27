@@ -8,6 +8,7 @@ using CraftQuest.Infrastructure.Email;
 using CraftQuest.Infrastructure.Notifications;
 using CraftQuest.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace CraftQuest.Infrastructure.Services;
@@ -15,9 +16,20 @@ namespace CraftQuest.Infrastructure.Services;
 public class NotificationService(
     CraftQuestDbContext dbContext,
     IEmailSender emailSender,
-    IPushSender pushSender,
+    IServiceScopeFactory scopeFactory,
     ILogger<NotificationService> logger) : INotificationService
 {
+    private sealed record PushDelivery(
+        Guid UserId,
+        string Title,
+        string Body,
+        IReadOnlyDictionary<string, string>? Data);
+
+    private sealed record EmailDelivery(
+        string Email,
+        string Language,
+        string Type,
+        NotificationPayload Payload);
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -66,8 +78,14 @@ public class NotificationService(
             .ToDictionaryAsync(u => u.UserId, cancellationToken);
 
         var preferences = await LoadPreferencesMapAsync(distinctUserIds, type, cancellationToken);
+        var existingDedupKeys = await LoadExistingDedupKeysAsync(
+            distinctUserIds,
+            dedupKeyFactory,
+            cancellationToken);
         var now = DateTime.UtcNow;
         var entities = new List<Notification>();
+        var pushDeliveries = new List<PushDelivery>();
+        var emailDeliveries = new List<EmailDelivery>();
 
         foreach (var userId in distinctUserIds)
         {
@@ -83,10 +101,7 @@ public class NotificationService(
             }
 
             var dedupKey = dedupKeyFactory?.Invoke(userId);
-            if (dedupKey is not null
-                && await dbContext.Notifications.AnyAsync(
-                    n => n.UserId == userId && n.DedupKey == dedupKey,
-                    cancellationToken))
+            if (dedupKey is not null && existingDedupKeys.Contains((userId, dedupKey)))
             {
                 continue;
             }
@@ -114,53 +129,137 @@ public class NotificationService(
 
             if (pref?.PushEnabled != false)
             {
-                try
-                {
-                    await pushSender.SendAsync(
-                        userId,
-                        title,
-                        body,
-                        BuildPushData(type, payload),
-                        cancellationToken);
-                }
-                catch (Exception ex)
-                {
-                    logger.LogWarning(ex, "Push failed for user {UserId}, type {Type}", userId, type);
-                }
+                pushDeliveries.Add(new PushDelivery(
+                    userId,
+                    title,
+                    body,
+                    BuildPushData(type, payload)));
             }
 
             if (pref?.EmailEnabled != false && EmailEligibleTypes.Contains(type))
             {
-                try
-                {
-                    await SendNotificationEmailAsync(
-                        user.Email,
-                        user.PreferredLanguage ?? "es",
-                        type,
-                        payload,
-                        cancellationToken);
-                }
-                catch (Exception ex)
-                {
-                    logger.LogWarning(ex, "Email failed for user {UserId}, type {Type}", userId, type);
-                }
+                emailDeliveries.Add(new EmailDelivery(
+                    user.Email,
+                    user.PreferredLanguage ?? "es",
+                    type,
+                    payload));
             }
         }
 
-        if (entities.Count == 0)
+        if (entities.Count > 0)
+        {
+            dbContext.Notifications.AddRange(entities);
+            try
+            {
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateException ex) when (dedupKeyFactory is not null)
+            {
+                logger.LogDebug(ex, "Skipped duplicate notifications for type {Type}", type);
+            }
+        }
+
+        QueueDeliveriesInBackground(pushDeliveries, emailDeliveries);
+    }
+
+    private async Task<HashSet<(Guid UserId, string DedupKey)>> LoadExistingDedupKeysAsync(
+        IReadOnlyList<Guid> userIds,
+        Func<Guid, string?>? dedupKeyFactory,
+        CancellationToken cancellationToken)
+    {
+        if (dedupKeyFactory is null)
+        {
+            return [];
+        }
+
+        var pairs = userIds
+            .Select(userId => (UserId: userId, Key: dedupKeyFactory(userId)))
+            .Where(pair => pair.Key is not null)
+            .ToList();
+
+        if (pairs.Count == 0)
+        {
+            return [];
+        }
+
+        var dedupKeys = pairs.Select(pair => pair.Key!).Distinct().ToList();
+        var existing = await dbContext.Notifications
+            .AsNoTracking()
+            .Where(n => userIds.Contains(n.UserId)
+                && n.DedupKey != null
+                && dedupKeys.Contains(n.DedupKey))
+            .Select(n => new { n.UserId, n.DedupKey })
+            .ToListAsync(cancellationToken);
+
+        return existing
+            .Select(row => (row.UserId, row.DedupKey!))
+            .ToHashSet();
+    }
+
+    private void QueueDeliveriesInBackground(
+        IReadOnlyList<PushDelivery> pushDeliveries,
+        IReadOnlyList<EmailDelivery> emailDeliveries)
+    {
+        if (pushDeliveries.Count == 0 && emailDeliveries.Count == 0)
         {
             return;
         }
 
-        dbContext.Notifications.AddRange(entities);
-        try
+        _ = Task.Run(async () =>
         {
-            await dbContext.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateException ex) when (dedupKeyFactory is not null)
-        {
-            logger.LogDebug(ex, "Skipped duplicate notifications for type {Type}", type);
-        }
+            try
+            {
+                await using var scope = scopeFactory.CreateAsyncScope();
+                var scopedPush = scope.ServiceProvider.GetRequiredService<IPushSender>();
+                var scopedEmail = scope.ServiceProvider.GetRequiredService<IEmailSender>();
+
+                foreach (var push in pushDeliveries)
+                {
+                    try
+                    {
+                        await scopedPush.SendAsync(
+                            push.UserId,
+                            push.Title,
+                            push.Body,
+                            push.Data,
+                            CancellationToken.None);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogWarning(
+                            ex,
+                            "Push failed for user {UserId}",
+                            push.UserId);
+                    }
+                }
+
+                foreach (var email in emailDeliveries)
+                {
+                    try
+                    {
+                        await SendNotificationEmailAsync(
+                            scopedEmail,
+                            email.Email,
+                            email.Language,
+                            email.Type,
+                            email.Payload,
+                            CancellationToken.None);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogWarning(
+                            ex,
+                            "Email failed for {Email}, type {Type}",
+                            email.Email,
+                            email.Type);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Background notification delivery failed");
+            }
+        });
     }
 
     public async Task EnqueueFanOutAsync(
@@ -458,6 +557,7 @@ public class NotificationService(
     }
 
     private async Task SendNotificationEmailAsync(
+        IEmailSender sender,
         string email,
         string language,
         string type,
@@ -480,8 +580,16 @@ public class NotificationService(
             return;
         }
 
-        await emailSender.SendAsync(email, subject, plain, html, cancellationToken);
+        await sender.SendAsync(email, subject, plain, html, cancellationToken);
     }
+
+    private Task SendNotificationEmailAsync(
+        string email,
+        string language,
+        string type,
+        NotificationPayload payload,
+        CancellationToken cancellationToken) =>
+        SendNotificationEmailAsync(emailSender, email, language, type, payload, cancellationToken);
 
     private static IReadOnlyList<string> GetAllPreferenceTypes() =>
     [

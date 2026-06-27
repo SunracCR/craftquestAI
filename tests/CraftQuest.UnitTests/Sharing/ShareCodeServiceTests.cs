@@ -478,7 +478,7 @@ public class ShareCodeServiceTests
             CancellationToken cancellationToken = default) =>
             throw new NotImplementedException();
 
-        public Task AddMemberByEmailAsync(
+        public Task<CraftQuest.Application.Models.Teacher.ClassMemberDto> AddMemberByEmailAsync(
             Guid teacherUserId,
             Guid classId,
             string email,

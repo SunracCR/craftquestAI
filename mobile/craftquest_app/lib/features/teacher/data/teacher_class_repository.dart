@@ -70,14 +70,15 @@ class TeacherClassRepository {
     await _apiClient.dio.delete<void>('/api/teacher/classes/$classId');
   }
 
-  Future<void> addMemberByEmail({
+  Future<ClassMemberModel> addMemberByEmail({
     required String classId,
     required String email,
   }) async {
-    await _apiClient.dio.post<void>(
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/api/teacher/classes/$classId/members',
       data: {'email': email},
     );
+    return ClassMemberModel.fromJson(response.data!);
   }
 
   Future<void> approveMember({

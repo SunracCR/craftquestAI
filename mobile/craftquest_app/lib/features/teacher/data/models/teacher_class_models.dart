@@ -62,6 +62,20 @@ class ClassMemberModel {
   final String status;
   final DateTime joinedAt;
   final String? avatarId;
+
+  ClassMemberModel copyWith({
+    String? status,
+    DateTime? joinedAt,
+  }) =>
+      ClassMemberModel(
+        userId: userId,
+        displayName: displayName,
+        email: email,
+        memberRole: memberRole,
+        status: status ?? this.status,
+        joinedAt: joinedAt ?? this.joinedAt,
+        avatarId: avatarId,
+      );
 }
 
 class ClassDetailModel {
@@ -101,6 +115,23 @@ class ClassDetailModel {
   final int pendingMemberCount;
   final List<ClassMemberModel> members;
   final List<AssignmentSummaryModel> assignments;
+
+  ClassDetailModel copyWith({
+    int? activeMemberCount,
+    int? pendingMemberCount,
+    List<ClassMemberModel>? members,
+    List<AssignmentSummaryModel>? assignments,
+  }) =>
+      ClassDetailModel(
+        classId: classId,
+        name: name,
+        description: description,
+        status: status,
+        activeMemberCount: activeMemberCount ?? this.activeMemberCount,
+        pendingMemberCount: pendingMemberCount ?? this.pendingMemberCount,
+        members: members ?? this.members,
+        assignments: assignments ?? this.assignments,
+      );
 }
 
 class AssignmentSummaryModel {
@@ -170,4 +201,27 @@ class AssignmentSummaryModel {
 
   double get completionRate =>
       totalMembers > 0 ? completedCount / totalMembers : 0.0;
+
+  AssignmentSummaryModel copyWith({
+    int? totalMembers,
+    int? completedCount,
+  }) =>
+      AssignmentSummaryModel(
+        assignmentId: assignmentId,
+        classId: classId,
+        quizId: quizId,
+        title: title,
+        quizTitle: quizTitle,
+        status: status,
+        showCorrectAnswersMode: showCorrectAnswersMode,
+        startsAt: startsAt,
+        dueAt: dueAt,
+        maxAttempts: maxAttempts,
+        randomizeQuestions: randomizeQuestions,
+        allowStudentRandomizeQuestions: allowStudentRandomizeQuestions,
+        forfeitExitCountsAsAttempt: forfeitExitCountsAsAttempt,
+        completedCount: completedCount ?? this.completedCount,
+        totalMembers: totalMembers ?? this.totalMembers,
+        createdAt: createdAt,
+      );
 }
