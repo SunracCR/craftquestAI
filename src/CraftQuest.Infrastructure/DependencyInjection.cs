@@ -1,6 +1,7 @@
 using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Options;
 using CraftQuest.Infrastructure.Email;
+using CraftQuest.Infrastructure.Notifications;
 using CraftQuest.Infrastructure.Media;
 using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.HostedServices;
@@ -45,6 +46,7 @@ public static class DependencyInjection
         services.Configure<PasswordResetOptions>(configuration.GetSection(PasswordResetOptions.SectionName));
         services.Configure<ExternalAuthOptions>(configuration.GetSection(ExternalAuthOptions.SectionName));
         services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
+        services.Configure<PushOptions>(configuration.GetSection(PushOptions.SectionName));
         services.AddMemoryCache();
         services.AddHttpClient(nameof(AppleIdTokenValidator));
         services.AddScoped<IGoogleIdTokenValidator, GoogleIdTokenValidator>();
@@ -59,6 +61,18 @@ public static class DependencyInjection
         {
             services.AddSingleton<IEmailSender, LoggingEmailSender>();
         }
+
+        var pushOptions = configuration.GetSection(PushOptions.SectionName).Get<PushOptions>() ?? new PushOptions();
+        if (pushOptions.Enabled && !string.IsNullOrWhiteSpace(pushOptions.CredentialsPath))
+        {
+            services.AddScoped<IPushSender, FirebasePushSender>();
+        }
+        else
+        {
+            services.AddSingleton<IPushSender, LoggingPushSender>();
+        }
+
+        services.AddScoped<INotificationService, NotificationService>();
         services.Configure<AiOptions>(configuration.GetSection(AiOptions.SectionName));
         services.Configure<AiGenerationOptions>(configuration.GetSection(AiGenerationOptions.SectionName));
         services.Configure<MediaOptions>(configuration.GetSection(MediaOptions.SectionName));
@@ -99,6 +113,7 @@ public static class DependencyInjection
         services.AddScoped<IGuestService, GuestService>();
         services.AddHostedService<GuestCleanupHostedService>();
         services.AddHostedService<SubscriptionRenewalHostedService>();
+        services.AddHostedService<NotificationReminderHostedService>();
         services.AddScoped<IAnalyticsService, AnalyticsService>();
         services.AddSingleton<LocalMediaStorageProvider>();
         services.AddSingleton<AzureBlobMediaStorageProvider>();

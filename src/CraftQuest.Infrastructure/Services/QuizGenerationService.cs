@@ -2,11 +2,14 @@ using System.Text.Json;
 using CraftQuest.Application;
 using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Exceptions;
+using CraftQuest.Application.Models.Notifications;
 using CraftQuest.Application.Models.Quizzes;
 using CraftQuest.Application.Models.StudyMaterials;
 using CraftQuest.Application.Options;
 using CraftQuest.Application.Services.StudyMaterials;
+using CraftQuest.Domain.Constants;
 using CraftQuest.Domain.Entities;
+using CraftQuest.Infrastructure.Notifications;
 using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.Services.Ai;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +24,7 @@ public class QuizGenerationService(
     IQuestionImportService questionImportService,
     IQuizService quizService,
     IBillingService billingService,
+    INotificationService notificationService,
     IOptions<AiOptions> aiOptions,
     IOptions<AiGenerationOptions> generationOptions,
     AiGenerationTraceContext trace,
@@ -532,6 +536,7 @@ public class QuizGenerationService(
         try
         {
             await dbContext.SaveChangesAsync(cancellationToken);
+            await NotifyAiJobOutcomeAsync(job, cancellationToken);
         }
         catch (Exception saveEx)
         {
@@ -541,6 +546,46 @@ public class QuizGenerationService(
                 job.AiJobId,
                 job.Status);
         }
+    }
+
+    private async Task NotifyAiJobOutcomeAsync(AiJob job, CancellationToken cancellationToken)
+    {
+        if (job.Status is not ("completed" or "failed"))
+        {
+            return;
+        }
+
+        string? quizTitle = null;
+        if (job.TargetQuizId is Guid quizId)
+        {
+            quizTitle = await dbContext.Quizzes
+                .AsNoTracking()
+                .Where(q => q.QuizId == quizId)
+                .Select(q => q.Title)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        var type = job.Status == "completed"
+            ? NotificationTypes.AiJobCompleted
+            : NotificationTypes.AiJobFailed;
+
+        var payload = new NotificationPayload
+        {
+            AiJobId = job.AiJobId,
+            QuizId = job.TargetQuizId,
+            QuizTitle = quizTitle ?? "Quiz",
+            Route = job.TargetQuizId is Guid id ? $"quizzes/{id}" : "ai/jobs",
+        };
+
+        await NotificationPublisher.TryNotifyAsync(
+            () => notificationService.NotifyAsync(
+                job.RequestedByUserId,
+                type,
+                payload,
+                $"{type}:{job.AiJobId}",
+                cancellationToken),
+            logger,
+            "ai_job_outcome");
     }
 
     private async Task RecoverAbandonedGenerationJobsForMaterialAsync(

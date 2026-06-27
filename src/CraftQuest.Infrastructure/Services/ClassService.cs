@@ -1,16 +1,22 @@
 using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Exceptions;
+using CraftQuest.Application.Models.Notifications;
 using CraftQuest.Application.Models.Teacher;
+using CraftQuest.Domain.Constants;
 using CraftQuest.Domain.Entities;
+using CraftQuest.Infrastructure.Notifications;
 using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.Services.Quizzes;
 using CraftQuest.Infrastructure.Services.Teacher;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace CraftQuest.Infrastructure.Services;
 
 public class ClassService(
-    CraftQuestDbContext dbContext) : IClassService
+    CraftQuestDbContext dbContext,
+    INotificationService notificationService,
+    ILogger<ClassService> logger) : IClassService
 {
     public async Task<IReadOnlyList<TeacherClassSummaryDto>> ListTeacherClassesAsync(
         Guid teacherUserId,
@@ -294,6 +300,7 @@ public class ClassService(
             existing.Status = "active";
             existing.JoinedAt = DateTime.UtcNow;
             await dbContext.SaveChangesAsync(cancellationToken);
+            await NotifyClassJoinedAsync(classId, user.UserId, cancellationToken);
             return;
         }
 
@@ -308,6 +315,38 @@ public class ClassService(
         });
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await NotifyClassJoinedAsync(classId, user.UserId, cancellationToken);
+    }
+
+    private async Task NotifyClassJoinedAsync(
+        Guid classId,
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        var classInfo = await dbContext.TeacherClasses
+            .AsNoTracking()
+            .Where(c => c.ClassId == classId)
+            .Select(c => new { c.ClassId, c.Name })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (classInfo is null)
+        {
+            return;
+        }
+
+        await NotificationPublisher.TryNotifyAsync(
+            () => notificationService.NotifyAsync(
+                userId,
+                NotificationTypes.ClassJoined,
+                new NotificationPayload
+                {
+                    ClassId = classInfo.ClassId,
+                    ClassName = classInfo.Name,
+                    Route = $"student/classes/{classInfo.ClassId}",
+                },
+                $"class_joined:{classId}:{userId}",
+                cancellationToken),
+            logger,
+            "class_joined");
     }
 
     public async Task ApproveMemberAsync(

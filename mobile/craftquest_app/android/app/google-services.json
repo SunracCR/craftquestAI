@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1026593204118",
+    "project_id": "craftquestai-6f3f4",
+    "storage_bucket": "craftquestai-6f3f4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1026593204118:android:d067c7f0495ad1b1655fb7",
+        "android_client_info": {
+          "package_name": "com.craftquestai.craftquestai_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDRd5xadzQDUpTQdS5f0wT2PKvaFRn4vfo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

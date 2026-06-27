@@ -23,6 +23,8 @@ import 'package:craftquest_app/features/quizzes/presentation/quiz_list_page.dart
 import 'package:craftquest_app/features/sharing/presentation/accessible_quizzes_page.dart';
 import 'package:craftquest_app/features/sharing/presentation/redeem_code_page.dart';
 import 'package:craftquest_app/features/student/presentation/student_assignments_page.dart';
+import 'package:craftquest_app/features/notifications/presentation/notifications_cubit.dart';
+import 'package:craftquest_app/features/notifications/presentation/notifications_page.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 class HomePage extends StatefulWidget {
@@ -122,11 +124,17 @@ class _HomePageState extends State<HomePage> {
           );
 
     return EdgeAwareScaffold(
-      appBar: craftQuestAppBar(title: l10n.appTitle),
+      appBar: craftQuestAppBar(
+        title: l10n.appTitle,
+        actions: const [NotificationBellAction()],
+      ),
       body: RefreshIndicator(
         onRefresh: () async {
           await _load();
           await _refreshBannerVisibility(markShownIfVisible: true);
+          if (mounted) {
+            await getIt<NotificationsCubit>().refreshUnreadCount();
+          }
         },
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),

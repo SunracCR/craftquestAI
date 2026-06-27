@@ -25,6 +25,7 @@ import 'package:craftquest_app/features/profile/presentation/payment_history_pag
 import 'package:craftquest_app/features/profile/presentation/widgets/avatar_picker_sheet.dart';
 import 'package:craftquest_app/features/profile/presentation/widgets/edit_display_name_dialog.dart';
 import 'package:craftquest_app/features/prep_plus/presentation/admin/prep_plus_admin_hub_page.dart';
+import 'package:craftquest_app/features/notifications/presentation/notification_preferences_page.dart';
 import 'package:craftquest_app/features/profile/presentation/widgets/profile_language_selector.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
@@ -367,6 +368,44 @@ class _ProfilePageState extends State<ProfilePage> {
           ProfileLanguageSelector(
             currentLanguageCode: currentLanguage,
             onLanguageSelected: _changeLanguage,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          AppSectionTitle(title: l10n.notificationsPreferencesTitle),
+          const SizedBox(height: AppSpacing.xs),
+          AppSectionCard(
+            padding: EdgeInsets.zero,
+            child: ListTile(
+              leading: const Icon(
+                Icons.notifications_active_outlined,
+                color: AppColors.accentMint,
+              ),
+              title: Text(
+                l10n.notificationsPreferencesTitle,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+              subtitle: Text(
+                l10n.notificationsPreferencesSubtitle,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 11,
+                ),
+              ),
+              trailing: const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textSecondary,
+              ),
+              onTap: () {
+                Navigator.of(context).push<void>(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const NotificationPreferencesPage(),
+                  ),
+                );
+              },
+            ),
           ),
           if (_canManagePrepPlus) ...[
             const SizedBox(height: AppSpacing.lg),

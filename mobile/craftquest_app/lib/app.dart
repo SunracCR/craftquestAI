@@ -5,12 +5,14 @@ import 'package:craftquest_app/core/auth/session_expired_notifier.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/l10n/localized_message_holder.dart';
 import 'package:craftquest_app/core/navigation/app_keys.dart';
+import 'package:craftquest_app/core/navigation/web_entry_url_cleanup.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/locale/locale_controller.dart';
 import 'package:craftquest_app/core/theme/app_theme.dart';
 import 'package:craftquest_app/core/widgets/app_connectivity_overlay.dart';
 import 'package:craftquest_app/features/auth/presentation/auth_bloc.dart';
 import 'package:craftquest_app/features/auth/presentation/join_launch.dart';
+import 'package:craftquest_app/features/auth/data/models/auth_models.dart';
 import 'package:craftquest_app/features/auth/presentation/account_link_launch.dart';
 import 'package:craftquest_app/features/auth/presentation/login_page.dart';
 import 'package:craftquest_app/features/auth/presentation/reset_password_page.dart';
@@ -21,6 +23,8 @@ import 'package:craftquest_app/features/guest/data/guest_token_storage.dart';
 import 'package:craftquest_app/features/guest/presentation/bloc/guest_session_cubit.dart';
 import 'package:craftquest_app/features/guest/presentation/guest_code_page.dart';
 import 'package:craftquest_app/features/guest/presentation/guest_shell_page.dart';
+import 'package:craftquest_app/core/services/push_notification_service.dart';
+import 'package:craftquest_app/features/notifications/presentation/notifications_cubit.dart';
 import 'package:craftquest_app/features/sharing/presentation/redeem_code_page.dart';
 import 'package:craftquest_app/features/shell/presentation/main_shell_page.dart';
 import 'package:craftquest_app/core/services/deep_link_service.dart';
@@ -46,6 +50,9 @@ class CraftQuestApp extends StatelessWidget {
             repository: getIt<GuestRepository>(),
             tokenStorage: getIt<GuestTokenStorage>(),
           )..tryRestore(),
+        ),
+        BlocProvider.value(
+          value: getIt<NotificationsCubit>(),
         ),
       ],
       child: ListenableBuilder(
@@ -154,6 +161,13 @@ class _AuthGateState extends State<_AuthGate> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _scheduleDeepLinkRoute());
   }
 
+  void _resetEntryDeepLinkState() {
+    _handledJoinCodes.clear();
+    _handledAccountLinks.clear();
+    getIt<DeepLinkService>().clearPendingLinks();
+    clearWebEntryDeepLinkUrl();
+  }
+
   void _scheduleDeepLinkRoute() {
     if (!mounted) {
       return;
@@ -242,7 +256,8 @@ class _AuthGateState extends State<_AuthGate> {
       listeners: [
         BlocListener<AuthBloc, AuthState>(
           listenWhen: (previous, current) =>
-              current is AuthUnauthenticated ||
+              (current is AuthUnauthenticated &&
+                  previous is! AuthAuthenticated) ||
               (current is AuthAuthenticated && previous is AuthLoading),
           listener: (context, _) => _scheduleDeepLinkRoute(),
         ),
@@ -277,6 +292,8 @@ class _AuthGateState extends State<_AuthGate> {
                   user.preferredLanguage,
                 ),
               );
+              unawaited(getIt<NotificationsCubit>().refreshUnreadCount());
+              unawaited(getIt<PushNotificationService>().onAuthenticated());
               // Tras limpiar la pila de login, abrir join links pendientes.
               _scheduleDeepLinkRoute();
             });
@@ -287,9 +304,15 @@ class _AuthGateState extends State<_AuthGate> {
               previous is AuthAuthenticated &&
               current is AuthUnauthenticated,
           listener: (context, _) {
+            _resetEntryDeepLinkState();
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              rootNavigatorKey.currentState?.popUntil((route) => route.isFirst);
+            });
             unawaited(
               context.read<GuestSessionCubit>().clearLocalSession(),
             );
+            unawaited(getIt<NotificationsCubit>().reset());
+            unawaited(getIt<PushNotificationService>().onLogout());
           },
         ),
       ],
@@ -303,7 +326,7 @@ class _AuthGateState extends State<_AuthGate> {
           }
 
           if (authState is AuthAuthenticated) {
-            return MainShellPage(user: authState.user);
+            return _AuthenticatedShell(user: authState.user);
           }
 
           final accountLink = readWebAccountLink();
@@ -328,6 +351,46 @@ class _AuthGateState extends State<_AuthGate> {
         },
       ),
     );
+  }
+}
+
+class _AuthenticatedShell extends StatefulWidget {
+  const _AuthenticatedShell({required this.user});
+
+  final UserProfileModel user;
+
+  @override
+  State<_AuthenticatedShell> createState() => _AuthenticatedShellState();
+}
+
+class _AuthenticatedShellState extends State<_AuthenticatedShell>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(getIt<NotificationsCubit>().refreshUnreadCount());
+      unawaited(getIt<PushNotificationService>().onAuthenticated());
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(getIt<NotificationsCubit>().refreshUnreadCount());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MainShellPage(user: widget.user);
   }
 }
 

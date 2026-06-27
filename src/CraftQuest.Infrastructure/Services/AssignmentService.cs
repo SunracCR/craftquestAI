@@ -1,19 +1,26 @@
+using System.Text.Json;
 using CraftQuest.Application.Analytics;
 using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Exceptions;
 using CraftQuest.Application.Models.Analytics;
+using CraftQuest.Application.Models.Notifications;
 using CraftQuest.Application.Models.Teacher;
 using CraftQuest.Application.Services;
+using CraftQuest.Domain.Constants;
 using CraftQuest.Domain.Entities;
+using CraftQuest.Infrastructure.Notifications;
 using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.Services.Quizzes;
 using CraftQuest.Infrastructure.Services.Teacher;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace CraftQuest.Infrastructure.Services;
 
 public class AssignmentService(
-    CraftQuestDbContext dbContext) : IAssignmentService
+    CraftQuestDbContext dbContext,
+    INotificationService notificationService,
+    ILogger<AssignmentService> logger) : IAssignmentService
 {
     public async Task<AssignmentSummaryDto> CreateAsync(
         Guid teacherUserId,
@@ -62,6 +69,18 @@ public class AssignmentService(
 
         dbContext.Assignments.Add(entity);
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        await NotificationPublisher.TryNotifyAsync(
+            () => notificationService.EnqueueFanOutAsync(
+                NotificationOutboxEventTypes.AssignmentCreated,
+                JsonSerializer.Serialize(new AssignmentCreatedOutboxPayload
+                {
+                    AssignmentId = entity.AssignmentId,
+                    ClassId = classId,
+                }),
+                cancellationToken),
+            logger,
+            "assignment_created_fanout");
 
         var memberCount = await dbContext.ClassMembers
             .CountAsync(m => m.ClassId == classId && m.Status == "active", cancellationToken);

@@ -1525,6 +1525,16 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get teacherReviewLegend =>
+      'Vermelho = resposta marcada incorreta · Verde = resposta marcada correta · Lampada = resposta correta nao marcada';
+
+  @override
+  String get teacherReviewYourAnswerTag => 'Sua resposta';
+
+  @override
+  String get teacherReviewCorrectAnswerTag => 'Resposta correta';
+
+  @override
   String billingPlanLabel(String plan) {
     return 'Plano: $plan';
   }
@@ -4238,4 +4248,61 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get errorPrepAppStoreNotConfigured =>
       'App Store não está configurado. Use pagamentos mock em desenvolvimento.';
+
+  @override
+  String get notificationsTitle => 'Notificações';
+
+  @override
+  String get notificationsEmpty => 'Você ainda não tem notificações.';
+
+  @override
+  String get notificationsMarkAllRead => 'Marcar tudo como lido';
+
+  @override
+  String get notificationsUnreadBadge => 'Não lida';
+
+  @override
+  String get notificationsPreferencesTitle =>
+      'Configurações de notificações';
+
+  @override
+  String get notificationsPreferencesSubtitle =>
+      'Escolha quais alertas receber e por qual canal.';
+
+  @override
+  String get notificationsPreferencesSaved =>
+      'Preferências de notificações salvas.';
+
+  @override
+  String get notificationsChannelInApp => 'No app';
+
+  @override
+  String get notificationsChannelPush => 'Push';
+
+  @override
+  String get notificationsChannelEmail => 'E-mail';
+
+  @override
+  String get notificationTypeQuizShared => 'Questionário compartilhado';
+
+  @override
+  String get notificationTypeClassJoined => 'Adicionado a uma turma';
+
+  @override
+  String get notificationTypeAssignmentCreated => 'Nova tarefa';
+
+  @override
+  String get notificationTypeAssignmentDueSoon => 'Tarefa perto do prazo';
+
+  @override
+  String get notificationTypeAiJobCompleted => 'Questionário IA pronto';
+
+  @override
+  String get notificationTypeAiJobFailed => 'Falha no questionário IA';
+
+  @override
+  String get notificationTypeMembershipExpiring => 'Assinatura expirando';
+
+  @override
+  String get notificationTypeMembershipExpired => 'Assinatura expirada';
 }

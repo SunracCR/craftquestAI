@@ -2550,6 +2550,15 @@ abstract class AppLocalizations {
     double possible,
   );
 
+  /// No description provided for @teacherReviewLegend.
+  String get teacherReviewLegend;
+
+  /// No description provided for @teacherReviewYourAnswerTag.
+  String get teacherReviewYourAnswerTag;
+
+  /// No description provided for @teacherReviewCorrectAnswerTag.
+  String get teacherReviewCorrectAnswerTag;
+
   /// No description provided for @billingPlanLabel.
   ///
   /// In es, this message translates to:
@@ -7017,6 +7026,60 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'App Store no está configurado. Usa pagos mock en desarrollo.'**
   String get errorPrepAppStoreNotConfigured;
+
+  /// No description provided for @notificationsTitle.
+  String get notificationsTitle;
+
+  /// No description provided for @notificationsEmpty.
+  String get notificationsEmpty;
+
+  /// No description provided for @notificationsMarkAllRead.
+  String get notificationsMarkAllRead;
+
+  /// No description provided for @notificationsUnreadBadge.
+  String get notificationsUnreadBadge;
+
+  /// No description provided for @notificationsPreferencesTitle.
+  String get notificationsPreferencesTitle;
+
+  /// No description provided for @notificationsPreferencesSubtitle.
+  String get notificationsPreferencesSubtitle;
+
+  /// No description provided for @notificationsPreferencesSaved.
+  String get notificationsPreferencesSaved;
+
+  /// No description provided for @notificationsChannelInApp.
+  String get notificationsChannelInApp;
+
+  /// No description provided for @notificationsChannelPush.
+  String get notificationsChannelPush;
+
+  /// No description provided for @notificationsChannelEmail.
+  String get notificationsChannelEmail;
+
+  /// No description provided for @notificationTypeQuizShared.
+  String get notificationTypeQuizShared;
+
+  /// No description provided for @notificationTypeClassJoined.
+  String get notificationTypeClassJoined;
+
+  /// No description provided for @notificationTypeAssignmentCreated.
+  String get notificationTypeAssignmentCreated;
+
+  /// No description provided for @notificationTypeAssignmentDueSoon.
+  String get notificationTypeAssignmentDueSoon;
+
+  /// No description provided for @notificationTypeAiJobCompleted.
+  String get notificationTypeAiJobCompleted;
+
+  /// No description provided for @notificationTypeAiJobFailed.
+  String get notificationTypeAiJobFailed;
+
+  /// No description provided for @notificationTypeMembershipExpiring.
+  String get notificationTypeMembershipExpiring;
+
+  /// No description provided for @notificationTypeMembershipExpired.
+  String get notificationTypeMembershipExpired;
 }
 
 class _AppLocalizationsDelegate

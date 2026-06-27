@@ -1513,6 +1513,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get teacherReviewLegend =>
+      'Red = incorrect selected answer · Green = correct selected answer · Light bulb = correct answer not selected';
+
+  @override
+  String get teacherReviewYourAnswerTag => 'Your answer';
+
+  @override
+  String get teacherReviewCorrectAnswerTag => 'Correct answer';
+
+  @override
   String billingPlanLabel(String plan) {
     return 'Plan: $plan';
   }
@@ -4209,4 +4219,59 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorPrepAppStoreNotConfigured =>
       'App Store is not configured. Use mock payments in development.';
+
+  @override
+  String get notificationsTitle => 'Notifications';
+
+  @override
+  String get notificationsEmpty => 'You have no notifications yet.';
+
+  @override
+  String get notificationsMarkAllRead => 'Mark all read';
+
+  @override
+  String get notificationsUnreadBadge => 'Unread';
+
+  @override
+  String get notificationsPreferencesTitle => 'Notification settings';
+
+  @override
+  String get notificationsPreferencesSubtitle =>
+      'Choose which alerts you receive and through which channels.';
+
+  @override
+  String get notificationsPreferencesSaved => 'Notification preferences saved.';
+
+  @override
+  String get notificationsChannelInApp => 'In-app';
+
+  @override
+  String get notificationsChannelPush => 'Push';
+
+  @override
+  String get notificationsChannelEmail => 'Email';
+
+  @override
+  String get notificationTypeQuizShared => 'Quiz shared with you';
+
+  @override
+  String get notificationTypeClassJoined => 'Added to a class';
+
+  @override
+  String get notificationTypeAssignmentCreated => 'New assignment';
+
+  @override
+  String get notificationTypeAssignmentDueSoon => 'Assignment due soon';
+
+  @override
+  String get notificationTypeAiJobCompleted => 'AI quiz ready';
+
+  @override
+  String get notificationTypeAiJobFailed => 'AI quiz failed';
+
+  @override
+  String get notificationTypeMembershipExpiring => 'Membership expiring';
+
+  @override
+  String get notificationTypeMembershipExpired => 'Membership expired';
 }

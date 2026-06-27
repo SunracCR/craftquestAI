@@ -104,19 +104,23 @@ class _TeacherSessionReviewPageState extends State<TeacherSessionReviewPage> {
     }
   }
 
-  bool _showCorrectAnswerHighlight(
+  bool _showStudentCorrectSelection(TeacherAnswerReviewModel answer) {
+    if (_review?.revealCorrectAnswers == false) return false;
+    return answer.wasSelected && answer.isCorrect;
+  }
+
+  bool _showStudentWrongSelection(TeacherAnswerReviewModel answer) {
+    if (_review?.revealCorrectAnswers == false) return false;
+    return answer.wasSelected && !answer.isCorrect;
+  }
+
+  bool _showRevealedCorrectAnswer(
     TeacherQuestionReviewModel question,
     TeacherAnswerReviewModel answer,
   ) {
     if (_review?.revealCorrectAnswers == false) return false;
-    if (!answer.isCorrect) return false;
-    if (answer.wasSelected) return true;
+    if (!answer.isCorrect || answer.wasSelected) return false;
     return question.isCorrect != true;
-  }
-
-  bool _showIncorrectSelection(TeacherAnswerReviewModel answer) {
-    if (_review?.revealCorrectAnswers == false) return false;
-    return answer.wasSelected && !answer.isCorrect;
   }
 
   bool _showSelectionOnly(TeacherAnswerReviewModel answer) =>
@@ -129,11 +133,14 @@ class _TeacherSessionReviewPageState extends State<TeacherSessionReviewPage> {
     if (_showSelectionOnly(answer)) {
       return AppColors.accentViolet.withValues(alpha: 0.55);
     }
-    if (_showIncorrectSelection(answer)) {
+    if (_showStudentWrongSelection(answer)) {
       return AppColors.error;
     }
-    if (_showCorrectAnswerHighlight(question, answer)) {
+    if (_showStudentCorrectSelection(answer)) {
       return AppColors.accentMint;
+    }
+    if (_showRevealedCorrectAnswer(question, answer)) {
+      return AppColors.accentMint.withValues(alpha: 0.45);
     }
     return AppColors.textSecondary.withValues(alpha: 0.3);
   }
@@ -145,11 +152,14 @@ class _TeacherSessionReviewPageState extends State<TeacherSessionReviewPage> {
     if (_showSelectionOnly(answer)) {
       return AppColors.accentViolet.withValues(alpha: 0.1);
     }
-    if (_showIncorrectSelection(answer)) {
+    if (_showStudentWrongSelection(answer)) {
       return AppColors.error.withValues(alpha: 0.12);
     }
-    if (_showCorrectAnswerHighlight(question, answer)) {
+    if (_showStudentCorrectSelection(answer)) {
       return AppColors.accentMint.withValues(alpha: 0.12);
+    }
+    if (_showRevealedCorrectAnswer(question, answer)) {
+      return AppColors.accentMint.withValues(alpha: 0.05);
     }
     return null;
   }
@@ -165,19 +175,39 @@ class _TeacherSessionReviewPageState extends State<TeacherSessionReviewPage> {
         color: AppColors.accentViolet,
       );
     }
-    if (_showIncorrectSelection(answer)) {
+    if (_showStudentWrongSelection(answer)) {
       return const Icon(
         Icons.cancel_outlined,
         size: 20,
         color: AppColors.error,
       );
     }
-    if (_showCorrectAnswerHighlight(question, answer)) {
-      return Icon(
-        answer.wasSelected ? Icons.check_circle_outline : Icons.check_circle,
+    if (_showStudentCorrectSelection(answer)) {
+      return const Icon(
+        Icons.check_circle_outline,
         size: 20,
         color: AppColors.accentMint,
       );
+    }
+    if (_showRevealedCorrectAnswer(question, answer)) {
+      return const Icon(
+        Icons.lightbulb_outline,
+        size: 20,
+        color: AppColors.accentMint,
+      );
+    }
+    return null;
+  }
+
+  String? _answerTagLabel(AppLocalizations l10n, TeacherQuestionReviewModel question, TeacherAnswerReviewModel answer) {
+    if (_showStudentCorrectSelection(answer)) {
+      return l10n.teacherReviewYourAnswerTag;
+    }
+    if (_showStudentWrongSelection(answer)) {
+      return l10n.teacherReviewYourAnswerTag;
+    }
+    if (_showRevealedCorrectAnswer(question, answer)) {
+      return l10n.teacherReviewCorrectAnswerTag;
     }
     return null;
   }
@@ -307,6 +337,10 @@ class _TeacherSessionReviewPageState extends State<TeacherSessionReviewPage> {
                             review.scorePossible,
                           ),
                         ),
+                        if (review.revealCorrectAnswers) ...[
+                          const SizedBox(height: 8),
+                          AppMetaText(text: l10n.teacherReviewLegend),
+                        ],
                         const SizedBox(height: 16),
                         ...review.questions.map((q) {
                           final highlightTarget =
@@ -403,6 +437,26 @@ class _TeacherSessionReviewPageState extends State<TeacherSessionReviewPage> {
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
+                                                if (_answerTagLabel(l10n, q, a)
+                                                    case final tag?)
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                      bottom: 4,
+                                                    ),
+                                                    child: Text(
+                                                      tag,
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .labelSmall
+                                                          ?.copyWith(
+                                                            color: AppColors
+                                                                .textSecondary,
+                                                            fontWeight:
+                                                                FontWeight.w700,
+                                                          ),
+                                                    ),
+                                                  ),
                                                 if (optionText.isNotEmpty)
                                                   Text(optionText),
                                                 if (optionImage != null)

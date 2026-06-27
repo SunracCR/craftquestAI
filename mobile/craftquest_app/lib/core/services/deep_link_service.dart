@@ -30,6 +30,11 @@ class DeepLinkService {
     return link;
   }
 
+  void clearPendingLinks() {
+    _pendingJoinCode = null;
+    _pendingAccountLink = null;
+  }
+
   Future<void> initialize({
     void Function(String code)? onJoinCode,
     void Function(PendingAccountLink link)? onAccountLink,

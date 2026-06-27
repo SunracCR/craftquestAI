@@ -12,6 +12,10 @@ public class CraftQuestDbContext(DbContextOptions<CraftQuestDbContext> options) 
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
     public DbSet<PasswordChangeToken> PasswordChangeTokens => Set<PasswordChangeToken>();
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<NotificationOutbox> NotificationOutbox => Set<NotificationOutbox>();
+    public DbSet<DeviceToken> DeviceTokens => Set<DeviceToken>();
+    public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
     public DbSet<QuestionType> QuestionTypes => Set<QuestionType>();
     public DbSet<Plan> Plans => Set<Plan>();
     public DbSet<Quiz> Quizzes => Set<Quiz>();

@@ -35,6 +35,7 @@ Antes de ejecutar, comprueba la columna **Verificación**. Si ya cumple la condi
 | 59 | *(verificación, sin script)* | Índices login: `EmailNormalized` y OAuth `AuthProviders` | `UQ_Users_EmailNormalized` en `core.Users`; `UQ_AuthProviders_ProviderSubject` en `core.AuthProviders` (incluidos en ítem 38) | ☐ | ☐ | ☐ |
 | 60 | `AddQuizFolders.sql` | Carpetas jerárquicas para cuestionarios (`quiz.QuizFolders`, `Quizzes.FolderId`) | Tabla `quiz.QuizFolders`; `COL_LENGTH('quiz.Quizzes','FolderId')` NOT NULL | ☐ | ☐ | ☐ |
 | 61 | `AddEmailVerificationAndPasswordChange.sql` | Verificación de email (`pending`), `EmailVerifiedAt`, tokens de verificación y confirmación de cambio de contraseña | `COL_LENGTH('core.Users','EmailVerifiedAt')`; tablas `core.EmailVerificationTokens`, `core.PasswordChangeTokens`; `CK_Users_Status` incluye `pending` | ☐ | ☐ | ☐ |
+| 62 | `AddNotifications.sql` | Centro in-app, outbox fan-out, device tokens, preferencias | Tabla `core.Notifications`; `core.NotificationOutbox`; `core.DeviceTokens`; `core.NotificationPreferences` | ☐ | ☐ | ☐ |
 
 ## Estrategia (ítem 58)
 

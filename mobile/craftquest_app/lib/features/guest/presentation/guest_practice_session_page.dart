@@ -376,6 +376,12 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
     if (session == null) return;
 
     final questionId = question.practiceQuestionSnapshotId;
+    final previous = _persistInFlight.remove(questionId);
+    if (previous != null) {
+      await previous.catchError((_) {});
+    }
+    if (!mounted || _session == null) return;
+
     final selected = _selectionFor(question).toList();
     if (selected.isEmpty) {
       if (_statusFor(question) == 'answered') {
@@ -402,10 +408,13 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
         _questionStatuses.remove(questionId);
       });
     }).whenComplete(() {
-      _persistInFlight.remove(questionId);
+      if (identical(_persistInFlight[questionId], future)) {
+        _persistInFlight.remove(questionId);
+      }
     });
 
     _persistInFlight[questionId] = future;
+    await future;
   }
 
   void _schedulePersistSelection(PracticeQuestionModel question) {

@@ -730,6 +730,9 @@
       "possible": { "type": "double" }
     }
   },
+  "teacherReviewLegend": "Rojo = respuesta marcada incorrecta · Verde = respuesta marcada correcta · Bombilla = respuesta correcta no marcada",
+  "teacherReviewYourAnswerTag": "Tu respuesta",
+  "teacherReviewCorrectAnswerTag": "Respuesta correcta",
   "billingPlanLabel": "Plan: {plan}",
   "@billingPlanLabel": {
     "placeholders": { "plan": { "type": "String" } }
@@ -1949,5 +1952,23 @@
   "errorPrepOfferNoLongerExists": "La oferta ya no existe.",
   "errorPrepInvalidProductCode": "Código de producto de compra no válido.",
   "errorPrepGooglePlayNotConfigured": "Google Play no está configurado en el servidor.",
-  "errorPrepAppStoreNotConfigured": "App Store no está configurado. Usa pagos mock en desarrollo."
+  "errorPrepAppStoreNotConfigured": "App Store no está configurado. Usa pagos mock en desarrollo.",
+  "notificationsTitle": "Notificaciones",
+  "notificationsEmpty": "Aún no tienes notificaciones.",
+  "notificationsMarkAllRead": "Marcar todo leído",
+  "notificationsUnreadBadge": "No leída",
+  "notificationsPreferencesTitle": "Ajustes de notificaciones",
+  "notificationsPreferencesSubtitle": "Elige qué avisos recibes y por qué canal.",
+  "notificationsPreferencesSaved": "Preferencias de notificaciones guardadas.",
+  "notificationsChannelInApp": "En la app",
+  "notificationsChannelPush": "Push",
+  "notificationsChannelEmail": "Correo",
+  "notificationTypeQuizShared": "Cuestionario compartido",
+  "notificationTypeClassJoined": "Te unieron a una clase",
+  "notificationTypeAssignmentCreated": "Nueva tarea",
+  "notificationTypeAssignmentDueSoon": "Tarea por vencer",
+  "notificationTypeAiJobCompleted": "Cuestionario IA listo",
+  "notificationTypeAiJobFailed": "Error en cuestionario IA",
+  "notificationTypeMembershipExpiring": "Membresía por vencer",
+  "notificationTypeMembershipExpired": "Membresía vencida"
 }

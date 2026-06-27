@@ -1525,6 +1525,16 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get teacherReviewLegend =>
+      'Rojo = respuesta marcada incorrecta · Verde = respuesta marcada correcta · Bombilla = respuesta correcta no marcada';
+
+  @override
+  String get teacherReviewYourAnswerTag => 'Tu respuesta';
+
+  @override
+  String get teacherReviewCorrectAnswerTag => 'Respuesta correcta';
+
+  @override
   String billingPlanLabel(String plan) {
     return 'Plan: $plan';
   }
@@ -4239,4 +4249,60 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get errorPrepAppStoreNotConfigured =>
       'App Store no está configurado. Usa pagos mock en desarrollo.';
+
+  @override
+  String get notificationsTitle => 'Notificaciones';
+
+  @override
+  String get notificationsEmpty => 'Aún no tienes notificaciones.';
+
+  @override
+  String get notificationsMarkAllRead => 'Marcar todo leído';
+
+  @override
+  String get notificationsUnreadBadge => 'No leída';
+
+  @override
+  String get notificationsPreferencesTitle => 'Ajustes de notificaciones';
+
+  @override
+  String get notificationsPreferencesSubtitle =>
+      'Elige qué avisos recibes y por qué canal.';
+
+  @override
+  String get notificationsPreferencesSaved =>
+      'Preferencias de notificaciones guardadas.';
+
+  @override
+  String get notificationsChannelInApp => 'En la app';
+
+  @override
+  String get notificationsChannelPush => 'Push';
+
+  @override
+  String get notificationsChannelEmail => 'Correo';
+
+  @override
+  String get notificationTypeQuizShared => 'Cuestionario compartido';
+
+  @override
+  String get notificationTypeClassJoined => 'Te unieron a una clase';
+
+  @override
+  String get notificationTypeAssignmentCreated => 'Nueva tarea';
+
+  @override
+  String get notificationTypeAssignmentDueSoon => 'Tarea por vencer';
+
+  @override
+  String get notificationTypeAiJobCompleted => 'Cuestionario IA listo';
+
+  @override
+  String get notificationTypeAiJobFailed => 'Error en cuestionario IA';
+
+  @override
+  String get notificationTypeMembershipExpiring => 'Membresía por vencer';
+
+  @override
+  String get notificationTypeMembershipExpired => 'Membresía vencida';
 }

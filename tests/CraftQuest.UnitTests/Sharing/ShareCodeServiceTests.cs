@@ -1,6 +1,7 @@
 using CraftQuest.Application.Constants;
 using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Exceptions;
+using CraftQuest.Application.Models.Notifications;
 using CraftQuest.Application.Models.Sharing;
 using CraftQuest.Application.Options;
 using CraftQuest.Domain.Constants;
@@ -9,6 +10,7 @@ using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.Services;
 using CraftQuest.UnitTests.Billing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
 namespace CraftQuest.UnitTests.Sharing;
@@ -505,8 +507,78 @@ public class ShareCodeServiceTests
             db,
             billing,
             new StubClassService(),
+            new StubNotificationService(),
+            NullLogger<ShareCodeService>.Instance,
             Options.Create(new JoinLinkOptions
             {
                 LinkBaseUrl = "https://api.craftquestai.com",
             }));
+
+    private sealed class StubNotificationService : INotificationService
+    {
+        public Task NotifyAsync(
+            Guid userId,
+            string type,
+            NotificationPayload payload,
+            string? dedupKey = null,
+            CancellationToken cancellationToken = default) =>
+            Task.CompletedTask;
+
+        public Task NotifyManyAsync(
+            IReadOnlyList<Guid> userIds,
+            string type,
+            NotificationPayload payload,
+            Func<Guid, string?>? dedupKeyFactory = null,
+            CancellationToken cancellationToken = default) =>
+            Task.CompletedTask;
+
+        public Task EnqueueFanOutAsync(
+            string eventType,
+            string payloadJson,
+            CancellationToken cancellationToken = default) =>
+            Task.CompletedTask;
+
+        public Task<NotificationListResultDto> ListAsync(
+            Guid userId,
+            string? cursor,
+            int limit,
+            bool unreadOnly,
+            CancellationToken cancellationToken = default) =>
+            throw new NotImplementedException();
+
+        public Task<int> CountUnreadAsync(Guid userId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(0);
+
+        public Task MarkReadAsync(
+            Guid userId,
+            Guid notificationId,
+            CancellationToken cancellationToken = default) =>
+            Task.CompletedTask;
+
+        public Task MarkAllReadAsync(Guid userId, CancellationToken cancellationToken = default) =>
+            Task.CompletedTask;
+
+        public Task RegisterDeviceTokenAsync(
+            Guid userId,
+            RegisterDeviceTokenRequest request,
+            CancellationToken cancellationToken = default) =>
+            Task.CompletedTask;
+
+        public Task RemoveDeviceTokenAsync(
+            Guid userId,
+            string token,
+            CancellationToken cancellationToken = default) =>
+            Task.CompletedTask;
+
+        public Task<NotificationPreferencesDto> GetPreferencesAsync(
+            Guid userId,
+            CancellationToken cancellationToken = default) =>
+            throw new NotImplementedException();
+
+        public Task UpdatePreferencesAsync(
+            Guid userId,
+            UpdateNotificationPreferencesRequest request,
+            CancellationToken cancellationToken = default) =>
+            Task.CompletedTask;
+    }
 }

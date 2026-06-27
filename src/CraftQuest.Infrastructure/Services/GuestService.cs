@@ -412,7 +412,11 @@ public class GuestService(
             .Select(q => q.ScoringPolicy)
             .FirstOrDefaultAsync(cancellationToken) ?? "strict";
 
-        var selectedIds = request.SelectedAnswerOptionIds?.Distinct().ToList() ?? [];
+        var questionType = supportsMultiple;
+
+        var selectedIds = PracticeAnswerSelectionWriter.NormalizeSelectedIds(
+            request.SelectedAnswerOptionIds,
+            supportsMultiple);
         if (selectedIds.Count == 0)
         {
             throw new AppException("At least one answer option id is required.", 400);
@@ -448,17 +452,11 @@ public class GuestService(
             questionSnapshot.PointsPossible);
 
         var now = DateTime.UtcNow;
-        foreach (var answer in questionSnapshot.AnswerOptionSnapshots)
-        {
-            var selected = selectedIds.Contains(answer.AnswerOptionId);
-            if (answer.WasSelected == selected && (!selected || answer.SelectedAt.HasValue))
-            {
-                continue;
-            }
-
-            answer.WasSelected = selected;
-            answer.SelectedAt = selected ? now : null;
-        }
+        PracticeAnswerSelectionWriter.ApplySelection(
+            questionSnapshot,
+            selectedIds,
+            supportsMultiple,
+            now);
 
         questionSnapshot.AnswerStatus = "answered";
         questionSnapshot.IsCorrect = grading.IsFullyCorrect;

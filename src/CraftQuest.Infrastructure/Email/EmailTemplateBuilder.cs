@@ -1,4 +1,5 @@
 using System.Net;
+using CraftQuest.Application.Models.Notifications;
 
 namespace CraftQuest.Infrastructure.Email;
 
@@ -121,6 +122,128 @@ public static class EmailTemplateBuilder
                     "Confirmar cambio",
                     actionUrl,
                     "Si no solicitaste este cambio, protege tu cuenta de inmediato.")),
+        };
+    }
+
+    public static (string Subject, string PlainText, string Html) BuildAssignmentDueSoon(
+        string language,
+        NotificationPayload payload)
+    {
+        var title = payload.AssignmentTitle ?? "Assignment";
+        var due = payload.DueAtLabel ?? "";
+        return language switch
+        {
+            "en" => (
+                "Assignment due soon",
+                $"Reminder: \"{title}\" is due {due}. Open CraftQuestAI to complete it.",
+                BuildHtml(
+                    "Due soon",
+                    "Assignment reminder",
+                    $"\"{title}\" is due {due}.",
+                    "Open CraftQuestAI",
+                    "https://app.craftquestai.com/",
+                    "You received this because you have a pending assignment.")),
+            "pt" => (
+                "Tarefa perto do prazo",
+                $"Lembrete: \"{title}\" vence {due}. Abra o CraftQuestAI para concluir.",
+                BuildHtml(
+                    "Prazo proximo",
+                    "Lembrete de tarefa",
+                    $"\"{title}\" vence {due}.",
+                    "Abrir CraftQuestAI",
+                    "https://app.craftquestai.com/",
+                    "Voce recebeu isto porque tem uma tarefa pendente.")),
+            _ => (
+                "Tarea por vencer",
+                $"Recordatorio: \"{title}\" vence {due}. Abre CraftQuestAI para completarla.",
+                BuildHtml(
+                    "Por vencer",
+                    "Recordatorio de tarea",
+                    $"\"{title}\" vence {due}.",
+                    "Abrir CraftQuestAI",
+                    "https://app.craftquestai.com/",
+                    "Recibiste esto porque tienes una tarea pendiente.")),
+        };
+    }
+
+    public static (string Subject, string PlainText, string Html) BuildMembershipExpiring(
+        string language,
+        NotificationPayload payload)
+    {
+        var plan = payload.PlanName ?? "Plan";
+        var days = payload.DaysRemaining ?? 0;
+        return language switch
+        {
+            "en" => (
+                "Your membership is expiring",
+                $"Your {plan} plan expires in {days} day(s). Renew to keep your benefits.",
+                BuildHtml(
+                    "Membership",
+                    "Plan expiring soon",
+                    $"Your {plan} plan expires in {days} day(s).",
+                    "Manage subscription",
+                    "https://app.craftquestai.com/",
+                    "Renew to keep teacher features and AI credits.")),
+            "pt" => (
+                "Sua assinatura esta expirando",
+                $"Seu plano {plan} expira em {days} dia(s). Renove para manter seus beneficios.",
+                BuildHtml(
+                    "Assinatura",
+                    "Plano expirando",
+                    $"Seu plano {plan} expira em {days} dia(s).",
+                    "Gerenciar assinatura",
+                    "https://app.craftquestai.com/",
+                    "Renove para manter recursos de professor e creditos IA.")),
+            _ => (
+                "Tu membresía vence pronto",
+                $"Tu plan {plan} vence en {days} día(s). Renueva para mantener tus beneficios.",
+                BuildHtml(
+                    "Membresía",
+                    "Plan por vencer",
+                    $"Tu plan {plan} vence en {days} día(s).",
+                    "Gestionar suscripción",
+                    "https://app.craftquestai.com/",
+                    "Renueva para mantener funciones de profesor y créditos IA.")),
+        };
+    }
+
+    public static (string Subject, string PlainText, string Html) BuildMembershipExpired(
+        string language,
+        NotificationPayload payload)
+    {
+        var plan = payload.PlanName ?? "Plan";
+        return language switch
+        {
+            "en" => (
+                "Your membership has ended",
+                $"Your {plan} plan has ended. You are now on the Free plan.",
+                BuildHtml(
+                    "Membership",
+                    "Plan ended",
+                    $"Your {plan} plan has ended. You are now on the Free plan.",
+                    "View plans",
+                    "https://app.craftquestai.com/",
+                    "Upgrade anytime to restore premium features.")),
+            "pt" => (
+                "Sua assinatura terminou",
+                $"Seu plano {plan} terminou. Voce esta no plano Free.",
+                BuildHtml(
+                    "Assinatura",
+                    "Plano encerrado",
+                    $"Seu plano {plan} terminou. Voce esta no plano Free.",
+                    "Ver planos",
+                    "https://app.craftquestai.com/",
+                    "Faca upgrade quando quiser para recuperar recursos premium.")),
+            _ => (
+                "Tu membresía terminó",
+                $"Tu plan {plan} terminó. Ahora estás en el plan Free.",
+                BuildHtml(
+                    "Membresía",
+                    "Plan terminado",
+                    $"Tu plan {plan} terminó. Ahora estás en el plan Free.",
+                    "Ver planes",
+                    "https://app.craftquestai.com/",
+                    "Mejora cuando quieras para recuperar funciones premium.")),
         };
     }
 

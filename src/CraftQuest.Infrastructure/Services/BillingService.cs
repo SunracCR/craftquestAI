@@ -2,16 +2,23 @@ using CraftQuest.Application.Constants;
 using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Exceptions;
 using CraftQuest.Application.Models.Billing;
+using CraftQuest.Application.Models.Notifications;
 using CraftQuest.Domain.Constants;
 using CraftQuest.Domain.Entities;
+using CraftQuest.Infrastructure.Notifications;
 using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.Services.Billing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 
 namespace CraftQuest.Infrastructure.Services;
 
-public class BillingService(CraftQuestDbContext dbContext, IMemoryCache memoryCache) : IBillingService
+public class BillingService(
+    CraftQuestDbContext dbContext,
+    IMemoryCache memoryCache,
+    INotificationService notificationService,
+    ILogger<BillingService> logger) : IBillingService
 {
     private static readonly TimeSpan BillingCacheDuration = TimeSpan.FromSeconds(45);
 
@@ -714,6 +721,7 @@ public class BillingService(CraftQuestDbContext dbContext, IMemoryCache memoryCa
             .ToListAsync(cancellationToken);
 
         var wasTeacherPlan = active.Any(s => s.Plan.IsTeacherPlan);
+        var expiredPlanName = active.FirstOrDefault()?.Plan.Name ?? "Premium";
 
         foreach (var sub in active)
         {
@@ -757,6 +765,20 @@ public class BillingService(CraftQuestDbContext dbContext, IMemoryCache memoryCa
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        await NotificationPublisher.TryNotifyAsync(
+            () => notificationService.NotifyAsync(
+                userId,
+                NotificationTypes.MembershipExpired,
+                new NotificationPayload
+                {
+                    PlanName = expiredPlanName,
+                    Route = "profile/billing",
+                },
+                $"membership_expired:{userId}:{DateTime.UtcNow:yyyyMMdd}",
+                cancellationToken),
+            logger,
+            "membership_expired");
     }
 
     public async Task<bool> IsSubscriptionExpiringAsync(

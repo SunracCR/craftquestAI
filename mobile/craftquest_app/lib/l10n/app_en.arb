@@ -730,6 +730,9 @@
       "possible": { "type": "double" }
     }
   },
+  "teacherReviewLegend": "Red = incorrect selected answer · Green = correct selected answer · Light bulb = correct answer not selected",
+  "teacherReviewYourAnswerTag": "Your answer",
+  "teacherReviewCorrectAnswerTag": "Correct answer",
   "billingPlanLabel": "Plan: {plan}",
   "@billingPlanLabel": {
     "placeholders": { "plan": { "type": "String" } }
@@ -1898,5 +1901,23 @@
   "errorPrepOfferNoLongerExists": "Offer no longer exists.",
   "errorPrepInvalidProductCode": "Invalid purchase product code.",
   "errorPrepGooglePlayNotConfigured": "Google Play is not configured on the server.",
-  "errorPrepAppStoreNotConfigured": "App Store is not configured. Use mock payments in development."
+  "errorPrepAppStoreNotConfigured": "App Store is not configured. Use mock payments in development.",
+  "notificationsTitle": "Notifications",
+  "notificationsEmpty": "You have no notifications yet.",
+  "notificationsMarkAllRead": "Mark all read",
+  "notificationsUnreadBadge": "Unread",
+  "notificationsPreferencesTitle": "Notification settings",
+  "notificationsPreferencesSubtitle": "Choose which alerts you receive and through which channels.",
+  "notificationsPreferencesSaved": "Notification preferences saved.",
+  "notificationsChannelInApp": "In-app",
+  "notificationsChannelPush": "Push",
+  "notificationsChannelEmail": "Email",
+  "notificationTypeQuizShared": "Quiz shared with you",
+  "notificationTypeClassJoined": "Added to a class",
+  "notificationTypeAssignmentCreated": "New assignment",
+  "notificationTypeAssignmentDueSoon": "Assignment due soon",
+  "notificationTypeAiJobCompleted": "AI quiz ready",
+  "notificationTypeAiJobFailed": "AI quiz failed",
+  "notificationTypeMembershipExpiring": "Membership expiring",
+  "notificationTypeMembershipExpired": "Membership expired"
 }

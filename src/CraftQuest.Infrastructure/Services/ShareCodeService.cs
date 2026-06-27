@@ -1,13 +1,17 @@
+using System.Text.Json;
 using System.Security.Cryptography;
 using CraftQuest.Application.Constants;
 using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Exceptions;
+using CraftQuest.Application.Models.Notifications;
 using CraftQuest.Application.Models.Sharing;
 using CraftQuest.Domain.Constants;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Application;
+using CraftQuest.Infrastructure.Notifications;
 using CraftQuest.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace CraftQuest.Infrastructure.Services;
 
@@ -15,6 +19,8 @@ public class ShareCodeService(
     CraftQuestDbContext dbContext,
     IBillingService billingService,
     IClassService classService,
+    INotificationService notificationService,
+    ILogger<ShareCodeService> logger,
     Microsoft.Extensions.Options.IOptions<CraftQuest.Application.Options.JoinLinkOptions> joinLinkOptions) : IShareCodeService
 {
     private readonly CraftQuest.Application.Options.JoinLinkOptions _joinLinkOptions =
@@ -336,6 +342,40 @@ public class ShareCodeService(
         if (results.Any(r => r.Outcome is "invited" or "already_had_access"))
         {
             await dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        var invited = results.Where(r => r.Outcome == "invited").ToList();
+        if (invited.Count > 0)
+        {
+            var quiz = await dbContext.Quizzes
+                .AsNoTracking()
+                .FirstOrDefaultAsync(q => q.QuizId == quizId, cancellationToken);
+            if (quiz is not null)
+            {
+                var normalizedEmails = invited
+                    .Select(r => r.Email.Trim().ToUpperInvariant())
+                    .ToList();
+                var userIds = await dbContext.Users
+                    .AsNoTracking()
+                    .Where(u => normalizedEmails.Contains(u.EmailNormalized))
+                    .Select(u => u.UserId)
+                    .ToListAsync(cancellationToken);
+
+                await NotificationPublisher.TryNotifyAsync(
+                    () => notificationService.NotifyManyAsync(
+                        userIds,
+                        NotificationTypes.QuizShared,
+                        new NotificationPayload
+                        {
+                            QuizId = quizId,
+                            QuizTitle = quiz.Title,
+                            Route = $"quizzes/{quizId}",
+                        },
+                        userId => $"quiz_shared:{quizId}:{userId}",
+                        cancellationToken),
+                    logger,
+                    "quiz_shared_invite");
+            }
         }
 
         return new InviteUsersResultDto { Results = results };
