@@ -5,7 +5,9 @@ sealed class NotificationsState {
 }
 
 final class NotificationsInitial extends NotificationsState {
-  const NotificationsInitial();
+  const NotificationsInitial({this.unreadCount = 0});
+
+  final int unreadCount;
 }
 
 final class NotificationsLoaded extends NotificationsState {

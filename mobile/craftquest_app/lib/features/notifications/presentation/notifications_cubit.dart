@@ -19,8 +19,10 @@ class NotificationsCubit extends Cubit<NotificationsState> {
       final current = state;
       if (current is NotificationsLoaded) {
         emit(current.copyWith(unreadCount: count));
+      } else if (current is NotificationsInitial) {
+        emit(NotificationsInitial(unreadCount: count));
       } else {
-        emit(NotificationsLoaded(unreadCount: count));
+        emit(NotificationsInitial(unreadCount: count));
       }
     } catch (_) {
       // Badge refresh is best-effort (R2).

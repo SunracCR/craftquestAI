@@ -15,6 +15,7 @@ import 'package:craftquest_app/features/ai_generation/presentation/utils/ai_job_
 import 'package:craftquest_app/features/imports/data/import_repository.dart';
 import 'package:craftquest_app/features/imports/data/models/import_models.dart';
 import 'package:craftquest_app/features/imports/presentation/import_preview_page.dart';
+import 'package:craftquest_app/features/notifications/presentation/notifications_cubit.dart';
 import 'package:craftquest_app/features/quizzes/presentation/quiz_flow_anchor.dart';
 import 'package:craftquest_app/features/quizzes/presentation/quiz_detail_page.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
@@ -111,6 +112,7 @@ class _AiGenerationProgressPageState extends State<AiGenerationProgressPage> {
         });
 
         if (job.isFailed) {
+          unawaited(getIt<NotificationsCubit>().refreshUnreadCount());
           setState(() {
             _error = ApiErrorMapper.mapAiJobFailure(job, l10n);
             _errorDetail = job.creditsWereNotConsumed
@@ -126,6 +128,7 @@ class _AiGenerationProgressPageState extends State<AiGenerationProgressPage> {
         }
 
         if (job.isCompleted && job.questionImportBatchId != null) {
+          unawaited(getIt<NotificationsCubit>().refreshUnreadCount());
           final importId = job.questionImportBatchId!;
           await _importRepository.prefetchPreview(importId);
           if (!mounted) return;
@@ -234,6 +237,7 @@ class _AiGenerationProgressPageState extends State<AiGenerationProgressPage> {
   void _goHome() {
     final l10n = AppLocalizations.of(context)!;
     context.showInfoSnackBar(l10n.aiGenerationBackgroundSnack);
+    unawaited(getIt<NotificationsCubit>().refreshUnreadCount());
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 

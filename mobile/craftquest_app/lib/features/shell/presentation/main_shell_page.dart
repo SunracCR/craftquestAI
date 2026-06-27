@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/services/app_warmup_service.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/widgets/user_avatar.dart';
 import 'package:craftquest_app/features/auth/data/models/auth_models.dart';
 import 'package:craftquest_app/features/home/presentation/home_page.dart';
+import 'package:craftquest_app/features/notifications/presentation/notifications_cubit.dart';
 import 'package:craftquest_app/features/prep_plus/presentation/prep_plus_hub_page.dart';
 import 'package:craftquest_app/features/profile/presentation/profile_page.dart';
 import 'package:craftquest_app/features/teacher/presentation/teacher_hub_page.dart';
@@ -70,6 +73,9 @@ class _MainShellPageState extends State<MainShellPage> {
   void _goToPrepTab() => _selectTab(_prepTabIndex);
 
   void _selectTab(int value) {
+    if (value == 0) {
+      unawaited(getIt<NotificationsCubit>().refreshUnreadCount());
+    }
     setState(() {
       _visitedTabs.add(value);
       _index = value;

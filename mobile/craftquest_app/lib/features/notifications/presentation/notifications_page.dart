@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
@@ -21,10 +23,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
   @override
   void initState() {
     super.initState();
-    final cubit = context.read<NotificationsCubit>();
-    if (cubit.state is NotificationsInitial) {
-      cubit.loadInitial();
-    }
+    // Siempre refrescar al abrir: el badge puede tener contador sin lista cargada.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<NotificationsCubit>().refreshList();
+      }
+    });
   }
 
   @override
@@ -66,6 +70,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
           }
 
           final loaded = state as NotificationsLoaded;
+          if (loaded.items.isEmpty &&
+              loaded.unreadCount > 0 &&
+              loaded.listError == null) {
+            return const AppLoadingView();
+          }
+
           if (loaded.listError != null && loaded.items.isEmpty) {
             return AppErrorView(
               message: loaded.listError!,
@@ -156,12 +166,14 @@ class NotificationBellAction extends StatelessWidget {
       builder: (context, state) {
         final unreadCount = switch (state) {
           NotificationsLoaded(:final unreadCount) => unreadCount,
+          NotificationsInitial(:final unreadCount) => unreadCount,
           _ => 0,
         };
 
         return IconButton(
           tooltip: l10n.notificationsTitle,
           onPressed: () {
+            unawaited(getIt<NotificationsCubit>().refreshList());
             Navigator.of(context).push<void>(
               MaterialPageRoute<void>(
                 builder: (_) => BlocProvider.value(
