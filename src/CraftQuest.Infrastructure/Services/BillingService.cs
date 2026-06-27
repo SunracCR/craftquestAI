@@ -527,6 +527,7 @@ public class BillingService(
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        InvalidateBillingCache(userId);
 
         var manageInStore = SubscriptionPeriodCalculator.IsMobileStoreProvider(subscription.ProviderCode);
 
@@ -584,6 +585,7 @@ public class BillingService(
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        InvalidateBillingCache(userId);
 
         var manageInStore = SubscriptionPeriodCalculator.IsMobileStoreProvider(subscription.ProviderCode);
 

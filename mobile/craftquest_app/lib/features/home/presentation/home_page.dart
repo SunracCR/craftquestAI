@@ -1,3 +1,4 @@
+import 'package:craftquest_app/core/navigation/safe_navigation.dart';
 import 'package:craftquest_app/core/utils/user_role_labels.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
@@ -257,10 +258,9 @@ class _HomePageState extends State<HomePage> {
                           iconBackgroundColor:
                               AppColors.accent.withValues(alpha: 0.2),
                           onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => const QuizListPage(),
-                              ),
+                            SafeNavigation.pushPage(
+                              context,
+                              const QuizListPage(),
                             );
                           },
                         ),
@@ -272,10 +272,9 @@ class _HomePageState extends State<HomePage> {
                           iconBackgroundColor:
                               AppColors.accentViolet.withValues(alpha: 0.2),
                           onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => const AccessibleQuizzesPage(),
-                              ),
+                            SafeNavigation.pushPage(
+                              context,
+                              const AccessibleQuizzesPage(),
                             );
                           },
                         ),
@@ -287,10 +286,9 @@ class _HomePageState extends State<HomePage> {
                           iconBackgroundColor:
                               AppColors.accentCool.withValues(alpha: 0.2),
                           onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => const StudentAssignmentsPage(),
-                              ),
+                            SafeNavigation.pushPage(
+                              context,
+                              const StudentAssignmentsPage(),
                             );
                           },
                         ),
@@ -302,10 +300,9 @@ class _HomePageState extends State<HomePage> {
                           iconBackgroundColor:
                               AppColors.accentGold.withValues(alpha: 0.22),
                           onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => const RedeemCodePage(),
-                              ),
+                            SafeNavigation.pushPage(
+                              context,
+                              const RedeemCodePage(),
                             );
                           },
                         ),

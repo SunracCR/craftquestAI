@@ -1462,6 +1462,18 @@ abstract class AppLocalizations {
   /// **'Agrega preguntas antes de exportar'**
   String get exportQuizPdfEmpty;
 
+  /// No description provided for @exportQuizPdfGeneratingHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Preparando tu documento. Esto puede tardar unos segundos.'**
+  String get exportQuizPdfGeneratingHint;
+
+  /// No description provided for @exportQuizPdfPlanRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'La exportación a PDF está disponible en planes de pago.'**
+  String get exportQuizPdfPlanRequired;
+
   /// No description provided for @publishQuizAction.
   ///
   /// In es, this message translates to:

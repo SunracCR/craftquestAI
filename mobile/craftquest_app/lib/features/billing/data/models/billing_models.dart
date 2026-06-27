@@ -84,14 +84,14 @@ class SubscriptionModel {
     if (!isPaidRecurring || status != 'active') {
       return false;
     }
-    if (autoRenewEnabled && !cancelAtPeriodEnd) {
+    if (!cancelAtPeriodEnd && autoRenewEnabled) {
       return false;
     }
     final periodEnd = endsAt ?? nextBillingAt;
     if (periodEnd == null) {
       return false;
     }
-    return periodEnd.isAfter(DateTime.now().toUtc());
+    return periodEnd.toUtc().isAfter(DateTime.now().toUtc());
   }
 }
 

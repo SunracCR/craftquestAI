@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/utils/deferred_screen_load.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:dio/dio.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
@@ -31,7 +32,7 @@ class QuizListPage extends StatefulWidget {
   State<QuizListPage> createState() => _QuizListPageState();
 }
 
-class _QuizListPageState extends State<QuizListPage> {
+class _QuizListPageState extends State<QuizListPage> with ScreenLoadGeneration {
   late final QuizRepository _repository = getIt<QuizRepository>();
   late final PracticeRepository _practiceRepository = getIt<PracticeRepository>();
   final _searchController = TextEditingController();
@@ -45,7 +46,7 @@ class _QuizListPageState extends State<QuizListPage> {
   @override
   void initState() {
     super.initState();
-    _load();
+    scheduleInitialScreenLoad(_load);
   }
 
   @override
@@ -55,6 +56,8 @@ class _QuizListPageState extends State<QuizListPage> {
   }
 
   Future<void> _load() async {
+    final loadId = beginScreenLoad();
+    if (!mounted) return;
     setState(() {
       _loading = true;
       _error = null;
@@ -64,7 +67,7 @@ class _QuizListPageState extends State<QuizListPage> {
         _repository.getMyQuizzes(),
         _repository.getFolders(),
       ]);
-      if (!mounted) return;
+      if (!mounted || isStaleScreenLoad(loadId)) return;
       setState(() {
         _quizzes = results[0] as List<QuizModel>;
         _folders = results[1] as List<QuizFolderModel>;
@@ -72,13 +75,13 @@ class _QuizListPageState extends State<QuizListPage> {
       });
       unawaited(_loadInProgressSessions());
     } on DioException catch (e) {
-      if (!mounted) return;
+      if (!mounted || isStaleScreenLoad(loadId)) return;
       setState(() {
         _error = DioErrorMapper.map(e);
         _loading = false;
       });
     } catch (_) {
-      if (!mounted) return;
+      if (!mounted || isStaleScreenLoad(loadId)) return;
       setState(() {
         _error = DioErrorMapper.genericMessage();
         _loading = false;

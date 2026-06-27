@@ -1,4 +1,5 @@
 import 'package:craftquest_app/core/utils/assignment_dates.dart';
+import 'package:craftquest_app/core/utils/deferred_screen_load.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
@@ -32,7 +33,7 @@ class TeacherClassDetailPage extends StatefulWidget {
 }
 
 class _TeacherClassDetailPageState extends State<TeacherClassDetailPage>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, ScreenLoadGeneration {
   final _classRepo = getIt<TeacherClassRepository>();
 
   late TabController _tabController;
@@ -45,7 +46,7 @@ class _TeacherClassDetailPageState extends State<TeacherClassDetailPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _load(showInitialLoader: true);
+    scheduleInitialScreenLoad(() => _load(showInitialLoader: true));
   }
 
   @override
@@ -55,15 +56,16 @@ class _TeacherClassDetailPageState extends State<TeacherClassDetailPage>
   }
 
   Future<void> _load({bool showInitialLoader = false}) async {
+    final loadId = beginScreenLoad();
     if (showInitialLoader || _detail == null) {
-      setState(() => _initialLoading = true);
+      if (mounted) setState(() => _initialLoading = true);
     } else {
-      setState(() => _refreshing = true);
+      if (mounted) setState(() => _refreshing = true);
     }
 
     try {
       final detail = await _classRepo.getClassDetail(widget.classId);
-      if (!mounted) return;
+      if (!mounted || isStaleScreenLoad(loadId)) return;
       setState(() {
         _detail = detail;
         _error = null;
@@ -71,7 +73,7 @@ class _TeacherClassDetailPageState extends State<TeacherClassDetailPage>
         _refreshing = false;
       });
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || isStaleScreenLoad(loadId)) return;
       setState(() {
         _error = e;
         _initialLoading = false;

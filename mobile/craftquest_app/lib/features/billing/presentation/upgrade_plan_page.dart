@@ -67,7 +67,7 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
     super.dispose();
   }
 
-  Future<void> _load() async {
+  Future<void> _load({bool forceRefreshBilling = false}) async {
     setState(() {
       _loading = true;
       _error = null;
@@ -76,7 +76,7 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
       final plans = await _repository.getUpgradeablePlans();
       UserBillingModel? billing;
       try {
-        billing = await _repository.getMyBilling();
+        billing = await _repository.getMyBilling(forceRefresh: forceRefreshBilling);
       } catch (_) {
         billing = null;
       }
@@ -215,7 +215,7 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
       onCompleted: () async {
         setState(() => _cancelling = true);
         try {
-          await _load();
+          await _load(forceRefreshBilling: true);
         } finally {
           if (mounted) setState(() => _cancelling = false);
         }
@@ -234,7 +234,7 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
       onCompleted: () async {
         setState(() => _resuming = true);
         try {
-          await _load();
+          await _load(forceRefreshBilling: true);
         } finally {
           if (mounted) setState(() => _resuming = false);
         }

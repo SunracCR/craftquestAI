@@ -75,7 +75,7 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
     super.dispose();
   }
 
-  Future<void> _load() async {
+  Future<void> _load({bool forceRefreshBilling = false}) async {
     setState(() {
       _loadingPlans = true;
       _plansLoadError = null;
@@ -85,7 +85,7 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
       final teacher = plans.where((p) => p.code == 'teacher').firstOrNull;
       SubscriptionModel? subscription;
       if (_isAlreadyTeacher) {
-        final billing = await _repo.getMyBilling();
+        final billing = await _repo.getMyBilling(forceRefresh: forceRefreshBilling);
         subscription = billing.subscription;
       }
       if (!mounted) return;
@@ -273,7 +273,7 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
       context.showSuccessSnackBar(
         l10n.teacherUpgradeCancelSuccessUntil(accessDate),
       );
-      await _load();
+      await _load(forceRefreshBilling: true);
       if (!mounted) return;
       Navigator.of(context).pop();
     } on DioException catch (e) {
@@ -295,7 +295,7 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
       onCompleted: () async {
         setState(() => _resuming = true);
         try {
-          await _load();
+          await _load(forceRefreshBilling: true);
         } finally {
           if (mounted) setState(() => _resuming = false);
         }

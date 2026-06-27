@@ -1,4 +1,5 @@
 import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/utils/deferred_screen_load.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
@@ -35,7 +36,8 @@ class AccessibleQuizzesPage extends StatefulWidget {
   State<AccessibleQuizzesPage> createState() => _AccessibleQuizzesPageState();
 }
 
-class _AccessibleQuizzesPageState extends State<AccessibleQuizzesPage> {
+class _AccessibleQuizzesPageState extends State<AccessibleQuizzesPage>
+    with ScreenLoadGeneration {
   final _repository = getIt<SharingRepository>();
   final _billingRepository = getIt<BillingRepository>();
   List<AccessibleQuizModel> _quizzes = [];
@@ -47,10 +49,12 @@ class _AccessibleQuizzesPageState extends State<AccessibleQuizzesPage> {
   @override
   void initState() {
     super.initState();
-    _load();
+    scheduleInitialScreenLoad(_load);
   }
 
   Future<void> _load() async {
+    final loadId = beginScreenLoad();
+    if (!mounted) return;
     setState(() {
       _loading = true;
       _error = null;
@@ -60,27 +64,25 @@ class _AccessibleQuizzesPageState extends State<AccessibleQuizzesPage> {
         _repository.getAccessibleQuizzes(),
         _billingRepository.getMyBilling(),
       ]);
-      final quizzes = results[0] as List<AccessibleQuizModel>;
-      final billing = results[1] as UserBillingModel;
-      if (!mounted) return;
+      if (!mounted || isStaleScreenLoad(loadId)) return;
       setState(() {
-        _quizzes = quizzes;
-        _billing = billing;
+        _quizzes = results[0] as List<AccessibleQuizModel>;
+        _billing = results[1] as UserBillingModel;
         _loading = false;
         if (_expandedSharers.isEmpty) {
           _expandedSharers.addAll(
-            quizzes.map((q) => q.sharedByUserId).toSet(),
+            _quizzes.map((q) => q.sharedByUserId).toSet(),
           );
         }
       });
     } on DioException catch (e) {
-      if (!mounted) return;
+      if (!mounted || isStaleScreenLoad(loadId)) return;
       setState(() {
         _error = DioErrorMapper.map(e);
         _loading = false;
       });
     } catch (_) {
-      if (!mounted) return;
+      if (!mounted || isStaleScreenLoad(loadId)) return;
       setState(() {
         _error = DioErrorMapper.genericMessage();
         _loading = false;

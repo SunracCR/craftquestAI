@@ -1,4 +1,5 @@
 import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/utils/deferred_screen_load.dart';
 import 'package:craftquest_app/core/network/api_client.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
@@ -30,14 +31,17 @@ class _TeacherDashboardPageState extends State<TeacherDashboardPage> {
   final _repo = getIt<TeacherDashboardRepository>();
   final _billingRepo = getIt<BillingRepository>();
 
-  late Future<TeacherDashboardModel> _future;
+  Future<TeacherDashboardModel>? _future;
   bool _isExpiring = false;
 
   @override
   void initState() {
     super.initState();
-    _future = _loadDashboard();
-    _checkExpiring();
+    scheduleInitialScreenLoad(() {
+      if (!mounted) return;
+      setState(() => _future = _fetchDashboard());
+    });
+    scheduleInitialScreenLoad(_checkExpiring);
   }
 
   Future<void> _checkExpiring() async {
@@ -49,13 +53,13 @@ class _TeacherDashboardPageState extends State<TeacherDashboardPage> {
 
   void _refresh() {
     setState(() {
-      _future = _loadDashboard(forceRefresh: true);
+      _future = _fetchDashboard(forceRefresh: true);
       _isExpiring = false;
     });
     _checkExpiring();
   }
 
-  Future<TeacherDashboardModel> _loadDashboard({bool forceRefresh = false}) async {
+  Future<TeacherDashboardModel> _fetchDashboard({bool forceRefresh = false}) async {
     try {
       return await _repo.getDashboard(forceRefresh: forceRefresh);
     } on DioException catch (e) {
@@ -74,7 +78,8 @@ class _TeacherDashboardPageState extends State<TeacherDashboardPage> {
     return FutureBuilder<TeacherDashboardModel>(
       future: _future,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (_future == null ||
+            snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
             child: CircularProgressIndicator(color: AppColors.teacherAccent),
           );

@@ -353,6 +353,8 @@
   "exportQuizPdfDownloadHint": "Se nao vir o arquivo, verifique a janela de download do navegador",
   "exportQuizPdfFailed": "Nao foi possivel gerar o PDF",
   "exportQuizPdfEmpty": "Adicione perguntas antes de exportar",
+  "exportQuizPdfGeneratingHint": "Preparando seu documento. Isso pode levar alguns segundos.",
+  "exportQuizPdfPlanRequired": "A exportacao para PDF esta disponivel nos planos pagos.",
   "publishQuizAction": "Publicar",
   "quizPublishedMessage": "Questionario publicado",
   "deleteQuizAction": "Excluir questionario",

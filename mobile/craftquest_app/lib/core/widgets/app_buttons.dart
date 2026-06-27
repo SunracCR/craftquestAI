@@ -218,6 +218,7 @@ class AppActionTile extends StatelessWidget {
     this.iconColor,
     this.iconBackgroundColor,
     this.isLoading = false,
+    this.locked = false,
   });
 
   final IconData icon;
@@ -226,6 +227,7 @@ class AppActionTile extends StatelessWidget {
   final Color? iconColor;
   final Color? iconBackgroundColor;
   final bool isLoading;
+  final bool locked;
 
   @override
   Widget build(BuildContext context) {
@@ -274,9 +276,11 @@ class AppActionTile extends StatelessWidget {
                 ),
                 if (!isLoading)
                   Icon(
-                    Icons.chevron_right_rounded,
-                    color: tint.withValues(alpha: 0.85),
-                    size: 24,
+                    locked ? Icons.lock_rounded : Icons.chevron_right_rounded,
+                    color: locked
+                        ? AppColors.textSecondary
+                        : tint.withValues(alpha: 0.85),
+                    size: locked ? 20 : 24,
                   ),
               ],
             ),

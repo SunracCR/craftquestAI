@@ -353,6 +353,8 @@
   "exportQuizPdfDownloadHint": "If you don't see the file, check your browser's download window",
   "exportQuizPdfFailed": "Could not generate the PDF",
   "exportQuizPdfEmpty": "Add questions before exporting",
+  "exportQuizPdfGeneratingHint": "Preparing your document. This may take a few seconds.",
+  "exportQuizPdfPlanRequired": "PDF export is available on paid plans.",
   "publishQuizAction": "Publish",
   "quizPublishedMessage": "Quiz published",
   "deleteQuizAction": "Delete quiz",

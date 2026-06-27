@@ -15,6 +15,7 @@ abstract final class ApiErrorMapper {
   static const upgradePromptErrorCodes = {
     ...planLimitErrorCodes,
     'AI_CREDITS_INSUFFICIENT',
+    'QUIZ_PDF_PLAN_REQUIRED',
   };
 
   static bool isAiCreditsInsufficient(DioException error) {
@@ -324,6 +325,8 @@ abstract final class ApiErrorMapper {
             l10n: l10n,
           ),
         );
+      case 'QUIZ_PDF_PLAN_REQUIRED':
+        return l10n.exportQuizPdfPlanRequired;
       case 'AI_CREDITS_INSUFFICIENT':
         return l10n.errorAiCreditsInsufficient;
       case 'AI_CREDIT_PACKS_NOT_AVAILABLE':

@@ -1,4 +1,5 @@
 import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/utils/deferred_screen_load.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
@@ -26,24 +27,32 @@ class TeacherClassListPage extends StatefulWidget {
 
 class _TeacherClassListPageState extends State<TeacherClassListPage> {
   final _repo = getIt<TeacherClassRepository>();
-  late Future<_ClassLists> _future;
+  Future<_ClassLists>? _future;
+  int _loadGeneration = 0;
 
   @override
   void initState() {
     super.initState();
-    _load();
+    scheduleInitialScreenLoad(_load);
   }
 
   Future<void> _load() async {
+    final loadId = ++_loadGeneration;
     final future = _repo.listClasses(status: 'all').then((all) {
       final active = all.where((c) => c.status == 'active').toList();
       final archived = all.where((c) => c.status == 'archived').toList();
       return (active: active, archived: archived);
     });
-    setState(() {
-      _future = future;
-    });
-    await future;
+    if (mounted && loadId == _loadGeneration) {
+      setState(() => _future = future);
+    }
+    try {
+      await future;
+    } catch (_) {
+      if (mounted && loadId == _loadGeneration) {
+        setState(() => _future = future);
+      }
+    }
   }
 
   Future<void> _openCreate() async {
@@ -182,7 +191,9 @@ class _TeacherClassListPageState extends State<TeacherClassListPage> {
           ),
         ],
       ),
-      body: FutureBuilder<_ClassLists>(
+      body: _future == null
+          ? const AppLoadingView()
+          : FutureBuilder<_ClassLists>(
         future: _future,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {

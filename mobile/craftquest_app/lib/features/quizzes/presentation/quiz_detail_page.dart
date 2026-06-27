@@ -1,7 +1,11 @@
 import 'dart:async';
 
 import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/network/api_error_mapper.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
+import 'package:craftquest_app/core/utils/deferred_screen_load.dart';
+import 'package:craftquest_app/core/utils/file_download.dart';
+import 'package:craftquest_app/core/utils/billing_plan_access.dart';
 import 'package:craftquest_app/core/utils/publication_status_labels.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
@@ -36,6 +40,7 @@ import 'package:craftquest_app/features/auth/presentation/auth_bloc.dart';
 import 'package:craftquest_app/features/sharing/data/sharing_repository.dart';
 import 'package:craftquest_app/features/sharing/data/models/sharing_models.dart';
 import 'package:craftquest_app/features/billing/data/billing_repository.dart';
+import 'package:craftquest_app/features/billing/presentation/upgrade_plan_page.dart';
 import 'package:craftquest_app/features/sharing/presentation/invite_quiz_users_sheet.dart';
 import 'package:craftquest_app/features/sharing/presentation/create_share_code_sheet.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -66,7 +71,7 @@ class QuizDetailPage extends StatefulWidget {
   State<QuizDetailPage> createState() => _QuizDetailPageState();
 }
 
-class _QuizDetailPageState extends State<QuizDetailPage> {
+class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGeneration {
   final _repository = getIt<QuizRepository>();
   final _sharingRepository = getIt<SharingRepository>();
   final _billingRepository = getIt<BillingRepository>();
@@ -89,6 +94,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
   bool _isEditingTitle = false;
   bool _savingTitle = false;
   bool _exportingPdf = false;
+  String? _planCode;
   PracticeActiveSessionModel? _activePractice;
   bool _canInviteDirect = false;
   bool _quizModificationLocked = false;
@@ -103,7 +109,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
     _titleFocusNode = FocusNode();
     _titleFocusNode.addListener(_onTitleFocusChange);
     _publicationStatus = widget.publicationStatus;
-    _refreshQuestionCount();
+    scheduleInitialScreenLoad(_refreshQuestionCount);
     if (widget.isOwner) {
       _loadBillingEntitlements();
     }
@@ -360,7 +366,8 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
   }
 
   Future<void> _refreshQuestionCount({bool showLoading = true}) async {
-    if (showLoading) {
+    final loadId = beginScreenLoad();
+    if (showLoading && mounted) {
       setState(() {
         _loading = true;
         _error = null;
@@ -368,7 +375,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
     }
     try {
       var quiz = await _repository.getQuiz(widget.quizId);
-      if (!mounted) return;
+      if (!mounted || isStaleScreenLoad(loadId)) return;
       if (widget.isOwner) {
         if (!quiz.randomizeQuestions) {
           try {
@@ -384,7 +391,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
             // Ignore; quiz setting stays as returned by the API.
           }
         }
-        if (!mounted) return;
+        if (!mounted || isStaleScreenLoad(loadId)) return;
         setState(() {
           _questionCount = quiz.questionCount;
           _publicationStatus = quiz.publicationStatus;
@@ -396,6 +403,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
           }
         });
       } else {
+        if (!mounted || isStaleScreenLoad(loadId)) return;
         setState(() {
           _questionCount = quiz.questionCount;
           _publicationStatus = quiz.publicationStatus;
@@ -408,7 +416,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
       }
       await _syncPracticeUiIfNeeded();
     } on DioException catch (e) {
-      if (!mounted) return;
+      if (!mounted || isStaleScreenLoad(loadId)) return;
       if (showLoading) {
         setState(() {
           _error = DioErrorMapper.map(e);
@@ -416,7 +424,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
         });
       }
     } catch (_) {
-      if (!mounted) return;
+      if (!mounted || isStaleScreenLoad(loadId)) return;
       if (showLoading) {
         setState(() {
           _error = DioErrorMapper.genericMessage();
@@ -475,11 +483,14 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
 
   bool get _canCreateShareCode => _publicationStatus == 'published';
 
+  bool get _canExportQuizPdf => BillingPlanAccess.canExportQuizPdf(_planCode);
+
   Future<void> _loadBillingEntitlements() async {
     try {
       final billing = await _billingRepository.getMyBilling();
       if (!mounted) return;
       setState(() {
+        _planCode = billing.plan.code;
         _canInviteDirect = billing.entitlements.canInviteUsersDirectly;
         _quizModificationLocked =
             billing.entitlements.quizModificationLocked;
@@ -516,6 +527,67 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
     return base.length > 120 ? '${base.substring(0, 120)}.pdf' : '$base.pdf';
   }
 
+  Future<void> _promptPdfUpgrade() async {
+    final l10n = AppLocalizations.of(context)!;
+    final upgrade = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppColors.radiusMd),
+        ),
+        title: Row(
+          children: [
+            Icon(
+              Icons.lock_rounded,
+              color: AppColors.accentGold.withValues(alpha: 0.95),
+              size: 22,
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                l10n.exportQuizPdfAction,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 17,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          l10n.exportQuizPdfPlanRequired,
+          style: const TextStyle(
+            color: AppColors.textSecondary,
+            height: 1.4,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              l10n.cancel,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              l10n.upgradePlanAction,
+              style: const TextStyle(color: AppColors.accentCool),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (upgrade == true && mounted) {
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(builder: (_) => const UpgradePlanPage()),
+      );
+    }
+  }
+
   Future<void> _exportQuizPdf() async {
     if (_exportingPdf) return;
 
@@ -524,39 +596,71 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
       context.showErrorSnackBar(l10n.exportQuizPdfEmpty);
       return;
     }
+    if (!_canExportQuizPdf) {
+      await _promptPdfUpgrade();
+      return;
+    }
 
     setState(() => _exportingPdf = true);
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+
+    final rootNav = Navigator.of(context, rootNavigator: true);
     var loadingDialogVisible = false;
-    if (mounted) {
-      loadingDialogVisible = true;
-      unawaited(
-        showDialog<void>(
-          context: context,
-          barrierDismissible: false,
-          builder: (dialogContext) => PopScope(
-            canPop: false,
-            child: AlertDialog(
-              content: Row(
-                children: [
-                  const SizedBox(
-                    width: 28,
-                    height: 28,
-                    child: CircularProgressIndicator(strokeWidth: 2.5),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Text(
-                      l10n.exportQuizPdfGenerating,
-                      style: Theme.of(dialogContext).textTheme.bodyLarge,
-                    ),
-                  ),
-                ],
+    showDialog<void>(
+      context: context,
+      useRootNavigator: true,
+      barrierDismissible: false,
+      barrierColor: Colors.black54,
+      builder: (dialogContext) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          backgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppColors.radiusMd),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.picture_as_pdf_rounded,
+                size: 48,
+                color: AppColors.accentGold.withValues(alpha: 0.95),
               ),
-            ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                l10n.exportQuizPdfGenerating,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                l10n.exportQuizPdfGeneratingHint,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 13,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              const LinearProgressIndicator(
+                minHeight: 4,
+                color: AppColors.accentGold,
+                backgroundColor: AppColors.background,
+              ),
+            ],
           ),
         ),
-      );
-    }
+      ),
+    );
+    loadingDialogVisible = true;
+    await WidgetsBinding.instance.endOfFrame;
+    await Future<void>.delayed(const Duration(milliseconds: 120));
 
     try {
       final languageCode = Localizations.localeOf(context).languageCode;
@@ -566,44 +670,82 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
       );
       if (!mounted) return;
 
-      if (loadingDialogVisible) {
-        Navigator.of(context, rootNavigator: true).pop();
+      if (loadingDialogVisible && rootNav.canPop()) {
+        rootNav.pop();
         loadingDialogVisible = false;
       }
 
       final fileName = _pdfFileName();
-      final file = XFile.fromData(
-        bytes,
-        name: fileName,
-        mimeType: 'application/pdf',
-      );
 
       if (kIsWeb) {
-        await Share.shareXFiles([file], text: l10n.exportQuizPdfReady);
+        await downloadFileBytes(
+          bytes: bytes,
+          fileName: fileName,
+          mimeType: 'application/pdf',
+        );
+        if (!mounted) return;
+        await showDialog<void>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: AppColors.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppColors.radiusMd),
+            ),
+            title: Text(
+              l10n.exportQuizPdfReady,
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            content: Text(
+              l10n.exportQuizPdfDownloadHint,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(
+                  l10n.closeAction,
+                  style: const TextStyle(color: AppColors.accentCool),
+                ),
+              ),
+            ],
+          ),
+        );
       } else {
         final dir = await getTemporaryDirectory();
         final path = '${dir.path}/$fileName';
+        final file = XFile.fromData(
+          bytes,
+          name: fileName,
+          mimeType: 'application/pdf',
+        );
         await file.saveTo(path);
         await Share.shareXFiles(
           [XFile(path)],
           text: l10n.exportQuizPdfReady,
         );
+        if (!mounted) return;
+        context.showSuccessSnackBar(l10n.exportQuizPdfReady);
       }
-
-      if (!mounted) return;
-      context.showSuccessSnackBar(
-        kIsWeb ? l10n.exportQuizPdfDownloadHint : l10n.exportQuizPdfReady,
-      );
     } on DioException catch (e) {
       if (!mounted) return;
-      context.showDioErrorSnackBar(e);
+      if (ApiErrorMapper.isPlanLimitError(e)) {
+        context.showErrorSnackBar(DioErrorMapper.map(e, l10n));
+        await Navigator.of(context).push<void>(
+          MaterialPageRoute<void>(builder: (_) => const UpgradePlanPage()),
+        );
+      } else {
+        context.showDioErrorSnackBar(e);
+      }
     } catch (_) {
       if (!mounted) return;
       context.showErrorSnackBar(l10n.exportQuizPdfFailed);
     } finally {
       if (mounted) {
-        if (loadingDialogVisible) {
-          Navigator.of(context, rootNavigator: true).pop();
+        if (loadingDialogVisible && rootNav.canPop()) {
+          rootNav.pop();
         }
         setState(() => _exportingPdf = false);
       }
@@ -1231,15 +1373,6 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
                                     ),
                                     _menuDivider(),
                                     AppActionTile(
-                                      icon: Icons.quiz_rounded,
-                                      label: l10n.viewQuizQuestionsAction,
-                                      iconColor: AppColors.accent,
-                                      iconBackgroundColor: AppColors.accent
-                                          .withValues(alpha: 0.2),
-                                      onTap: _viewQuestions,
-                                    ),
-                                    _menuDivider(),
-                                    AppActionTile(
                                       icon: Icons.picture_as_pdf_outlined,
                                       label: _exportingPdf
                                           ? l10n.exportQuizPdfGenerating
@@ -1248,7 +1381,17 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
                                       iconBackgroundColor: AppColors.accentGold
                                           .withValues(alpha: 0.22),
                                       isLoading: _exportingPdf,
+                                      locked: !_canExportQuizPdf,
                                       onTap: _exportQuizPdf,
+                                    ),
+                                    _menuDivider(),
+                                    AppActionTile(
+                                      icon: Icons.quiz_rounded,
+                                      label: l10n.viewQuizQuestionsAction,
+                                      iconColor: AppColors.accent,
+                                      iconBackgroundColor: AppColors.accent
+                                          .withValues(alpha: 0.2),
+                                      onTap: _viewQuestions,
                                     ),
                                   ],
                                 ],

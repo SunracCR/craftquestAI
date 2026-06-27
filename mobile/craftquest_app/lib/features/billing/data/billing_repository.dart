@@ -27,6 +27,10 @@ class BillingRepository {
       return _cachedBilling!;
     }
 
+    if (forceRefresh) {
+      _inFlightBilling = null;
+    }
+
     _inFlightBilling ??= _fetchMyBilling().whenComplete(() {
       _inFlightBilling = null;
     });

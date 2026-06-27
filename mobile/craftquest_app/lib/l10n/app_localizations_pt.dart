@@ -853,6 +853,14 @@ class AppLocalizationsPt extends AppLocalizations {
   String get exportQuizPdfEmpty => 'Adicione perguntas antes de exportar';
 
   @override
+  String get exportQuizPdfGeneratingHint =>
+      'Preparando seu documento. Isso pode levar alguns segundos.';
+
+  @override
+  String get exportQuizPdfPlanRequired =>
+      'A exportacao para PDF esta disponivel nos planos pagos.';
+
+  @override
   String get publishQuizAction => 'Publicar';
 
   @override

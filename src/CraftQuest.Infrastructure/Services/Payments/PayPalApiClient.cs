@@ -178,11 +178,19 @@ public class PayPalApiClient(
         string reason,
         CancellationToken cancellationToken)
     {
+        await SuspendSubscriptionAsync(subscriptionId, reason, cancellationToken);
+    }
+
+    public async Task SuspendSubscriptionAsync(
+        string subscriptionId,
+        string reason,
+        CancellationToken cancellationToken)
+    {
         await EnsureAccessTokenAsync(cancellationToken);
 
         using var request = new HttpRequestMessage(
             HttpMethod.Post,
-            $"/v1/billing/subscriptions/{subscriptionId}/cancel");
+            $"/v1/billing/subscriptions/{subscriptionId}/suspend");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
         request.Content = JsonContent.Create(
             new { reason },
@@ -192,7 +200,7 @@ public class PayPalApiClient(
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
-            throw new AppException($"PayPal cancel subscription failed: {body}", 502);
+            throw new AppException($"PayPal suspend subscription failed: {body}", 502);
         }
     }
 

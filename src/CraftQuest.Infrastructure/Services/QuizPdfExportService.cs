@@ -2,6 +2,7 @@ using System.Text;
 using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Exceptions;
 using CraftQuest.Application.Models.Quizzes;
+using CraftQuest.Domain.Constants;
 using CraftQuest.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using QuestPDF.Fluent;
@@ -26,6 +27,8 @@ public class QuizPdfExportService(
         string? languageCode,
         CancellationToken cancellationToken = default)
     {
+        await EnsurePaidPlanAsync(userId, cancellationToken);
+
         var questions = await quizService.GetQuestionsForAuthorAsync(
             userId,
             quizId,
@@ -226,6 +229,27 @@ public class QuizPdfExportService(
 
     private static string FormatPoints(decimal points) =>
         points % 1 == 0 ? ((int)points).ToString() : points.ToString("0.##");
+
+    private async Task EnsurePaidPlanAsync(
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        var planCode = await dbContext.UserSubscriptions
+            .AsNoTracking()
+            .Where(s => s.UserId == userId && s.Status == SubscriptionStatuses.Active)
+            .OrderByDescending(s => s.StartedAt)
+            .Select(s => s.Plan.Code)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(planCode)
+            || planCode.Equals("free", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new AppException(
+                "PDF export requires a paid plan.",
+                403,
+                "QUIZ_PDF_PLAN_REQUIRED");
+        }
+    }
 
     private static string SanitizeFileName(string title)
     {
