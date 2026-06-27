@@ -663,7 +663,6 @@ class _QuizDetailPageState extends State<QuizDetailPage> {
             ListTile(
               leading: const Icon(Icons.description_outlined),
               title: Text(l10n.importQuestionsTitle),
-              subtitle: Text('${l10n.importFormatJson} / ${l10n.importFormatTxt}'),
               onTap: () => Navigator.pop(ctx, 'text'),
             ),
           ],
