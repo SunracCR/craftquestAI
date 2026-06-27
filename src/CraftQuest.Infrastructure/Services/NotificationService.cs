@@ -493,28 +493,32 @@ public class NotificationService(
             {
                 throw new AppException($"Invalid notification type: {item.Type}", 400);
             }
+        }
 
-            var existing = await dbContext.NotificationPreferences
-                .FirstOrDefaultAsync(p => p.UserId == userId && p.Type == item.Type, cancellationToken);
+        var types = request.Preferences.Select(p => p.Type).ToList();
+        var existingByType = await dbContext.NotificationPreferences
+            .Where(p => p.UserId == userId && types.Contains(p.Type))
+            .ToDictionaryAsync(p => p.Type, cancellationToken);
 
-            if (existing is null)
-            {
-                dbContext.NotificationPreferences.Add(new NotificationPreference
-                {
-                    NotificationPreferenceId = Guid.NewGuid(),
-                    UserId = userId,
-                    Type = item.Type,
-                    InAppEnabled = item.InAppEnabled,
-                    PushEnabled = item.PushEnabled,
-                    EmailEnabled = item.EmailEnabled,
-                });
-            }
-            else
+        foreach (var item in request.Preferences)
+        {
+            if (existingByType.TryGetValue(item.Type, out var existing))
             {
                 existing.InAppEnabled = item.InAppEnabled;
                 existing.PushEnabled = item.PushEnabled;
                 existing.EmailEnabled = item.EmailEnabled;
+                continue;
             }
+
+            dbContext.NotificationPreferences.Add(new NotificationPreference
+            {
+                NotificationPreferenceId = Guid.NewGuid(),
+                UserId = userId,
+                Type = item.Type,
+                InAppEnabled = item.InAppEnabled,
+                PushEnabled = item.PushEnabled,
+                EmailEnabled = item.EmailEnabled,
+            });
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);

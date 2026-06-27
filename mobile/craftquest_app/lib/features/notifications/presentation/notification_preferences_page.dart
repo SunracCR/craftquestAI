@@ -32,11 +32,67 @@ class _NotificationPreferencesPageState
   bool _loading = true;
   bool _saving = false;
   String? _error;
+  Timer? _saveDebounce;
+  bool _saveInFlight = false;
+  bool _saveQueued = false;
+  bool _showSaveConfirmation = false;
 
   @override
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _saveDebounce?.cancel();
+    super.dispose();
+  }
+
+  void _scheduleSave({bool confirm = false}) {
+    if (confirm) {
+      _showSaveConfirmation = true;
+    }
+    _saveDebounce?.cancel();
+    _saveDebounce = Timer(const Duration(milliseconds: 350), () {
+      unawaited(_flushSave());
+    });
+  }
+
+  Future<void> _flushSave() async {
+    if (_saveInFlight) {
+      _saveQueued = true;
+      return;
+    }
+
+    _saveInFlight = true;
+    if (mounted) setState(() => _saving = true);
+
+    try {
+      await _repository.updatePreferences(_preferences);
+      if (!mounted) return;
+      if (_showSaveConfirmation) {
+        _showSaveConfirmation = false;
+        context.showSuccessSnackBar(
+          AppLocalizations.of(context)!.notificationsPreferencesSaved,
+        );
+      }
+    } on DioException catch (e) {
+      if (!mounted) return;
+      _showSaveConfirmation = false;
+      context.showErrorSnackBar(DioErrorMapper.mapAny(e));
+    } catch (e) {
+      if (!mounted) return;
+      _showSaveConfirmation = false;
+      context.showErrorSnackBar(DioErrorMapper.mapAny(e));
+    } finally {
+      _saveInFlight = false;
+      if (mounted) setState(() => _saving = false);
+      if (_saveQueued) {
+        _saveQueued = false;
+        await _flushSave();
+      }
+    }
   }
 
   Future<void> _load() async {
@@ -66,26 +122,6 @@ class _NotificationPreferencesPageState
     }
   }
 
-  Future<void> _save() async {
-    if (_saving) return;
-    setState(() => _saving = true);
-    try {
-      await _repository.updatePreferences(_preferences);
-      if (!mounted) return;
-      context.showSuccessSnackBar(
-        AppLocalizations.of(context)!.notificationsPreferencesSaved,
-      );
-    } on DioException catch (e) {
-      if (!mounted) return;
-      context.showErrorSnackBar(DioErrorMapper.mapAny(e));
-    } catch (e) {
-      if (!mounted) return;
-      context.showErrorSnackBar(DioErrorMapper.mapAny(e));
-    } finally {
-      if (mounted) setState(() => _saving = false);
-    }
-  }
-
   void _updatePreference(
     String type,
     NotificationChannel channel,
@@ -108,7 +144,7 @@ class _NotificationPreferencesPageState
           )
           .toList();
     });
-    unawaited(_save());
+    _scheduleSave();
   }
 
   void _resetToDefaults() {
@@ -123,7 +159,7 @@ class _NotificationPreferencesPageState
           )
           .toList();
     });
-    unawaited(_save());
+    _scheduleSave(confirm: true);
   }
 
   NotificationPreferenceModel? _prefFor(String type) {
@@ -188,7 +224,6 @@ class _NotificationPreferencesPageState
                               .map(_prefFor)
                               .whereType<NotificationPreferenceModel>()
                               .toList(),
-                          saving: _saving,
                           typeLabel: (type) => _typeLabel(l10n, type),
                           onChanged: _updatePreference,
                         ),
@@ -237,7 +272,6 @@ class _PreferenceSectionCard extends StatelessWidget {
     required this.title,
     required this.sectionKey,
     required this.preferences,
-    required this.saving,
     required this.typeLabel,
     required this.onChanged,
   });
@@ -245,7 +279,6 @@ class _PreferenceSectionCard extends StatelessWidget {
   final String title;
   final String sectionKey;
   final List<NotificationPreferenceModel> preferences;
-  final bool saving;
   final String Function(String type) typeLabel;
   final void Function(String type, NotificationChannel channel, bool enabled)
       onChanged;
@@ -349,7 +382,6 @@ class _PreferenceSectionCard extends StatelessWidget {
             _PreferenceRow(
               label: typeLabel(preferences[i].type),
               preference: preferences[i],
-              saving: saving,
               onChanged: onChanged,
             ),
           ],
@@ -403,13 +435,11 @@ class _PreferenceRow extends StatelessWidget {
   const _PreferenceRow({
     required this.label,
     required this.preference,
-    required this.saving,
     required this.onChanged,
   });
 
   final String label;
   final NotificationPreferenceModel preference;
-  final bool saving;
   final void Function(String type, NotificationChannel channel, bool enabled)
       onChanged;
 
@@ -454,14 +484,12 @@ class _PreferenceRow extends StatelessWidget {
           _ChannelSwitch(
             channel: NotificationChannel.inApp,
             value: preference.inAppEnabled,
-            enabled: !saving,
             onChanged: (value) =>
                 onChanged(preference.type, NotificationChannel.inApp, value),
           ),
           _ChannelSwitch(
             channel: NotificationChannel.push,
             value: preference.pushEnabled,
-            enabled: !saving,
             onChanged: (value) =>
                 onChanged(preference.type, NotificationChannel.push, value),
           ),
@@ -469,7 +497,6 @@ class _PreferenceRow extends StatelessWidget {
               ? _ChannelSwitch(
                   channel: NotificationChannel.email,
                   value: preference.emailEnabled,
-                  enabled: !saving,
                   onChanged: (value) => onChanged(
                     preference.type,
                     NotificationChannel.email,
@@ -499,13 +526,11 @@ class _ChannelSwitch extends StatelessWidget {
   const _ChannelSwitch({
     required this.channel,
     required this.value,
-    required this.enabled,
     required this.onChanged,
   });
 
   final NotificationChannel channel;
   final bool value;
-  final bool enabled;
   final ValueChanged<bool> onChanged;
 
   @override
@@ -521,7 +546,7 @@ class _ChannelSwitch extends StatelessWidget {
             scale: 0.88,
             child: Switch.adaptive(
               value: value,
-              onChanged: enabled ? onChanged : null,
+              onChanged: onChanged,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               activeColor: AppColors.textPrimary,
               activeTrackColor: accent.withValues(alpha: 0.62),
