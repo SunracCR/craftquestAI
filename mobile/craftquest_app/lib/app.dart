@@ -311,7 +311,7 @@ class _AuthGateState extends State<_AuthGate> {
             unawaited(
               context.read<GuestSessionCubit>().clearLocalSession(),
             );
-            unawaited(getIt<NotificationsCubit>().reset());
+            getIt<NotificationsCubit>().reset();
             unawaited(getIt<PushNotificationService>().onLogout());
           },
         ),
