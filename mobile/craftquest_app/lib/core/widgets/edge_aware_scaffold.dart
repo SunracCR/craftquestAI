@@ -55,7 +55,24 @@ PreferredSizeWidget craftQuestAppBar({
   bool automaticallyImplyLeading = true,
 }) {
   return AppBar(
-    automaticallyImplyLeading: automaticallyImplyLeading,
+    automaticallyImplyLeading: false,
+    leading: automaticallyImplyLeading
+        ? Builder(
+            builder: (context) {
+              if (!Navigator.canPop(context)) {
+                return const SizedBox.shrink();
+              }
+              return IconButton(
+                icon: const Icon(Icons.arrow_back_rounded),
+                tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                onPressed: () {
+                  FocusManager.instance.primaryFocus?.unfocus();
+                  Navigator.of(context).maybePop();
+                },
+              );
+            },
+          )
+        : null,
     title: Text(title),
     actions: actions,
     bottom: PreferredSize(

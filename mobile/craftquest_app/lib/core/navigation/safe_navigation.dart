@@ -23,11 +23,16 @@ abstract final class SafeNavigation {
     if (!_tryAcquire()) {
       return Future<T?>.value(null);
     }
-    return Navigator.of(context).push<T>(
-      MaterialPageRoute<T>(
-        settings: settings,
-        builder: (_) => page,
-      ),
-    );
+    return Navigator.of(context)
+        .push<T>(
+          MaterialPageRoute<T>(
+            settings: settings,
+            builder: (_) => page,
+          ),
+        )
+        .whenComplete(() {
+      // Permite volver a entrar en cuanto se cierra la ruta (p. ej. atrás → practicar).
+      _lastPushAt = null;
+    });
   }
 }

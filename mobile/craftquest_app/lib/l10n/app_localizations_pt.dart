@@ -1353,6 +1353,25 @@ class AppLocalizationsPt extends AppLocalizations {
   String get importFormatTxt => 'TXT CraftQuest';
 
   @override
+  String get importFormatJsonHelp =>
+      'Use este formato se tiver um arquivo .json exportado do CraftQuest, um rascunho da IA ou dados de outra ferramenta compativel com CQIF v2.';
+
+  @override
+  String get importFormatTxtHelp =>
+      'Use este formato se tiver um arquivo de texto simples com a estrutura CraftQuest ([QUIZ], [QUESTION], campos chave=valor). Mais facil de editar manualmente.';
+
+  @override
+  String get importFormatUnsureHelp =>
+      'Nao tem certeza? Cole o conteudo, escolha o formato mais proximo e toque em «Normalizar com IA» para converter em JSON antes de importar.';
+
+  @override
+  String get importContentHintJson => 'Cole aqui o JSON CQIF v2 completo';
+
+  @override
+  String get importContentHintTxt =>
+      'Cole aqui o arquivo TXT CraftQuest ([QUIZ], [QUESTION]…)';
+
+  @override
   String get importContentLabel => 'Conteudo';
 
   @override

@@ -1,4 +1,5 @@
 import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_bottom_bar.dart';
 import 'package:craftquest_app/core/widgets/app_buttons.dart';
@@ -107,6 +108,14 @@ class _ImportQuestionsPageState extends State<ImportQuestionsPage> {
     }
   }
 
+  String _contentHint(AppLocalizations l10n) => _sourceType == 'txt'
+      ? l10n.importContentHintTxt
+      : l10n.importContentHintJson;
+
+  String _formatHelp(AppLocalizations l10n) => _sourceType == 'txt'
+      ? l10n.importFormatTxtHelp
+      : l10n.importFormatJsonHelp;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -186,6 +195,22 @@ class _ImportQuestionsPageState extends State<ImportQuestionsPage> {
                           }
                         },
                 ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  _formatHelp(l10n),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                        height: 1.4,
+                      ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  l10n.importFormatUnsureHelp,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                        height: 1.4,
+                      ),
+                ),
               ],
             ),
           ),
@@ -202,7 +227,7 @@ class _ImportQuestionsPageState extends State<ImportQuestionsPage> {
                 decoration: InputDecoration(
                   alignLabelWithHint: true,
                   labelText: l10n.importContentLabel,
-                  hintText: l10n.importContentHint,
+                  hintText: _contentHint(l10n),
                 ),
               ),
             ),

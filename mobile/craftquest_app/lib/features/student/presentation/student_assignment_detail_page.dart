@@ -1,4 +1,5 @@
 import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/utils/deferred_screen_load.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/utils/assignment_dates.dart';
@@ -33,7 +34,8 @@ class StudentAssignmentDetailPage extends StatefulWidget {
       _StudentAssignmentDetailPageState();
 }
 
-class _StudentAssignmentDetailPageState extends State<StudentAssignmentDetailPage> {
+class _StudentAssignmentDetailPageState extends State<StudentAssignmentDetailPage>
+    with ScreenLoadGeneration {
   final _assignmentRandomizeStore = AssignmentRandomizePreferenceStore();
   final _soundPreferenceStore = getIt<PracticeSoundPreferenceStore>();
   bool _randomizeQuestions = false;
@@ -50,14 +52,21 @@ class _StudentAssignmentDetailPageState extends State<StudentAssignmentDetailPag
   void initState() {
     super.initState();
     _randomizeQuestions = assignment.randomizeQuestions;
-    _loadAssignmentRandomizePreference();
-    _loadSoundPreferences();
+    scheduleInitialScreenLoad(_loadPreferences);
   }
 
-  Future<void> _loadSoundPreferences() async {
+  Future<void> _loadPreferences() async {
+    final loadId = beginScreenLoad();
+    await Future.wait([
+      _loadAssignmentRandomizePreference(loadId),
+      _loadSoundPreferences(loadId),
+    ]);
+  }
+
+  Future<void> _loadSoundPreferences(int loadId) async {
     try {
       final prefs = await _soundPreferenceStore.load();
-      if (!mounted) return;
+      if (!mounted || isStaleScreenLoad(loadId)) return;
       setState(() {
         _enableSoundEffects = prefs.enableSoundEffects;
       });
@@ -78,13 +87,13 @@ class _StudentAssignmentDetailPageState extends State<StudentAssignmentDetailPag
         enableSoundEffects: _enableSoundEffects,
       );
 
-  Future<void> _loadAssignmentRandomizePreference() async {
+  Future<void> _loadAssignmentRandomizePreference(int loadId) async {
     if (!assignment.allowStudentRandomizeQuestions) {
       return;
     }
     final saved =
         await _assignmentRandomizeStore.load(assignment.assignmentId);
-    if (!mounted || saved == null) {
+    if (!mounted || isStaleScreenLoad(loadId) || saved == null) {
       return;
     }
     setState(() => _randomizeQuestions = saved);
@@ -174,9 +183,8 @@ class _StudentAssignmentDetailPageState extends State<StudentAssignmentDetailPag
     final canViewAttempts = assignment.myAttemptCount > 0;
 
     return EdgeAwareScaffold(
-      appBar: AppBar(
-        title: Text(l10n.studentAssignmentDetailTitle),
-        backgroundColor: AppColors.surface,
+      appBar: craftQuestAppBar(
+        title: l10n.studentAssignmentDetailTitle,
       ),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.md),

@@ -48,13 +48,15 @@ class _StudentAssignmentsPageState extends State<StudentAssignmentsPage>
     super.dispose();
   }
 
-  Future<void> _load() async {
+  Future<void> _load({bool showLoading = true}) async {
     final loadId = beginScreenLoad();
     if (!mounted) return;
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+    if (showLoading) {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    }
     try {
       final assignments = await _repository.listMyAssignments();
       if (!mounted || isStaleScreenLoad(loadId)) return;
@@ -111,11 +113,12 @@ class _StudentAssignmentsPageState extends State<StudentAssignmentsPage>
       MaterialPageRoute<void>(
         builder: (_) => StudentAssignmentDetailPage(
           assignment: assignment,
-          onChanged: _load,
+          onChanged: () => _load(showLoading: false),
         ),
       ),
     );
-    if (mounted) await _load();
+    if (!mounted) return;
+    scheduleReturnRefresh(() => _load(showLoading: false));
   }
 
   void _selectFilter(_StudentAssignmentsFilter filter) {

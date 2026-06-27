@@ -247,10 +247,10 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
     );
   }
 
-  Future<void> _loadSoundPreferences() async {
+  Future<void> _loadSoundPreferences(int loadId) async {
     try {
       final prefs = await _soundPreferenceStore.load();
-      if (!mounted) return;
+      if (!mounted || isStaleScreenLoad(loadId)) return;
       setState(() {
         _enableSoundEffects = prefs.enableSoundEffects;
       });
@@ -271,12 +271,13 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
         enableSoundEffects: _enableSoundEffects,
       );
 
-  Future<void> _loadPracticePreferences() async {
+  Future<void> _loadPracticePreferences(int loadId) async {
+    if (!mounted || isStaleScreenLoad(loadId)) return;
     setState(() => _loadingPreferences = true);
     try {
       final prefs =
           await _preferencesRepository.getPreferences(widget.quizId);
-      if (!mounted) return;
+      if (!mounted || isStaleScreenLoad(loadId)) return;
       setState(() {
         _showTimer = prefs.showElapsedTimer;
         if (!widget.isOwner) {
@@ -285,7 +286,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
         _loadingPreferences = false;
       });
     } catch (_) {
-      if (!mounted) return;
+      if (!mounted || isStaleScreenLoad(loadId)) return;
       setState(() => _loadingPreferences = false);
     }
   }
@@ -374,23 +375,9 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
       });
     }
     try {
-      var quiz = await _repository.getQuiz(widget.quizId);
+      final quiz = await _repository.getQuiz(widget.quizId);
       if (!mounted || isStaleScreenLoad(loadId)) return;
       if (widget.isOwner) {
-        if (!quiz.randomizeQuestions) {
-          try {
-            final prefs =
-                await _preferencesRepository.getPreferences(widget.quizId);
-            if (prefs.randomizeQuestions) {
-              quiz = await _repository.updateQuiz(
-                quizId: widget.quizId,
-                randomizeQuestions: true,
-              );
-            }
-          } catch (_) {
-            // Ignore; quiz setting stays as returned by the API.
-          }
-        }
         if (!mounted || isStaleScreenLoad(loadId)) return;
         setState(() {
           _questionCount = quiz.questionCount;
@@ -402,6 +389,9 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
             _loading = false;
           }
         });
+        if (!quiz.randomizeQuestions) {
+          unawaited(_syncOwnerRandomizeFromPracticePrefs(loadId));
+        }
       } else {
         if (!mounted || isStaleScreenLoad(loadId)) return;
         setState(() {
@@ -414,7 +404,9 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
           }
         });
       }
-      await _syncPracticeUiIfNeeded();
+      scheduleInitialScreenLoad(
+        () => unawaited(_syncPracticeUiIfNeeded(loadId)),
+      );
     } on DioException catch (e) {
       if (!mounted || isStaleScreenLoad(loadId)) return;
       if (showLoading) {
@@ -434,18 +426,38 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
     }
   }
 
-  Future<void> _syncPracticeUiIfNeeded() async {
+  Future<void> _syncOwnerRandomizeFromPracticePrefs(int loadId) async {
+    try {
+      final prefs =
+          await _preferencesRepository.getPreferences(widget.quizId);
+      if (!mounted || isStaleScreenLoad(loadId)) return;
+      if (!prefs.randomizeQuestions) {
+        return;
+      }
+      final updated = await _repository.updateQuiz(
+        quizId: widget.quizId,
+        randomizeQuestions: true,
+      );
+      if (!mounted || isStaleScreenLoad(loadId)) return;
+      setState(() => _randomizeQuestions = updated.randomizeQuestions);
+    } catch (_) {
+      // Ignore; quiz setting stays as returned by the API.
+    }
+  }
+
+  Future<void> _syncPracticeUiIfNeeded(int loadId) async {
+    if (!mounted || isStaleScreenLoad(loadId)) return;
     if (!_canPractice) {
-      if (_activePractice != null && mounted) {
+      if (_activePractice != null && mounted && !isStaleScreenLoad(loadId)) {
         setState(() => _activePractice = null);
       }
       return;
     }
     getIt<AppWarmupService>().warmSoundOnly();
     await Future.wait([
-      _loadPracticePreferences(),
-      _loadSoundPreferences(),
-      _loadActivePractice(),
+      _loadPracticePreferences(loadId),
+      _loadSoundPreferences(loadId),
+      _loadActivePractice(loadId),
     ]);
   }
 
@@ -459,7 +471,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
     return _practiceRepository.getActiveSessionForQuiz(widget.quizId);
   }
 
-  Future<void> _loadActivePractice() async {
+  Future<void> _loadActivePractice([int? loadId]) async {
     if (!_canPractice) {
       if (mounted && _activePractice != null) {
         setState(() => _activePractice = null);
@@ -470,6 +482,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
       final active =
           await _practiceRepository.getActiveSessionForQuiz(widget.quizId);
       if (!mounted) return;
+      if (loadId != null && isStaleScreenLoad(loadId)) return;
       setState(() => _activePractice = active);
     } catch (_) {
       // Ignore; practice can still be started.

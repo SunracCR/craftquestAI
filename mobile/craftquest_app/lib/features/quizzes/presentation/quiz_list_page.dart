@@ -56,13 +56,15 @@ class _QuizListPageState extends State<QuizListPage> with ScreenLoadGeneration {
     super.dispose();
   }
 
-  Future<void> _load() async {
+  Future<void> _load({bool showLoading = true}) async {
     final loadId = beginScreenLoad();
     if (!mounted) return;
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+    if (showLoading) {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    }
     try {
       final results = await Future.wait([
         _repository.getMyQuizzes(),
@@ -213,7 +215,8 @@ class _QuizListPageState extends State<QuizListPage> with ScreenLoadGeneration {
             ),
           ),
         );
-        await _load();
+        if (!mounted) return;
+        scheduleReturnRefresh(() => _load(showLoading: false));
       },
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
@@ -252,7 +255,7 @@ class _QuizListPageState extends State<QuizListPage> with ScreenLoadGeneration {
                   ),
                 );
                 if (!mounted) return;
-                await _load();
+                scheduleReturnRefresh(() => _load(showLoading: false));
               },
             ),
         ],

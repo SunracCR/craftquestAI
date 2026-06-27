@@ -8,6 +8,13 @@ void scheduleInitialScreenLoad(VoidCallback load) {
   });
 }
 
+/// Refresca la pantalla padre tras volver de una ruta hija, sin bloquear el pop.
+void scheduleReturnRefresh(VoidCallback refresh) {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    refresh();
+  });
+}
+
 /// Ignora resultados de cargas concurrentes obsoletas.
 mixin ScreenLoadGeneration {
   int _screenLoadGeneration = 0;

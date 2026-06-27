@@ -2320,6 +2320,36 @@ abstract class AppLocalizations {
   /// **'TXT CraftQuest'**
   String get importFormatTxt;
 
+  /// No description provided for @importFormatJsonHelp.
+  ///
+  /// In es, this message translates to:
+  /// **'Usa este formato si tienes un archivo .json exportado de CraftQuest, un borrador de la IA o datos de otra herramienta compatible con CQIF v2.'**
+  String get importFormatJsonHelp;
+
+  /// No description provided for @importFormatTxtHelp.
+  ///
+  /// In es, this message translates to:
+  /// **'Usa este formato si tienes un archivo de texto plano con la estructura CraftQuest ([QUIZ], [QUESTION], campos clave=valor). Es más cómodo para editar a mano.'**
+  String get importFormatTxtHelp;
+
+  /// No description provided for @importFormatUnsureHelp.
+  ///
+  /// In es, this message translates to:
+  /// **'¿No estás seguro? Pega el contenido, elige el formato más parecido y pulsa «Normalizar con IA» para convertirlo a JSON antes de importar.'**
+  String get importFormatUnsureHelp;
+
+  /// No description provided for @importContentHintJson.
+  ///
+  /// In es, this message translates to:
+  /// **'Pega aquí el JSON CQIF v2 completo'**
+  String get importContentHintJson;
+
+  /// No description provided for @importContentHintTxt.
+  ///
+  /// In es, this message translates to:
+  /// **'Pega aquí el archivo TXT CraftQuest ([QUIZ], [QUESTION]…)'**
+  String get importContentHintTxt;
+
   /// No description provided for @importContentLabel.
   ///
   /// In es, this message translates to:

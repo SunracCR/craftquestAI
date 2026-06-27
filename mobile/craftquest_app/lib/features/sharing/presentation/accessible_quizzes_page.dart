@@ -52,13 +52,15 @@ class _AccessibleQuizzesPageState extends State<AccessibleQuizzesPage>
     scheduleInitialScreenLoad(_load);
   }
 
-  Future<void> _load() async {
+  Future<void> _load({bool showLoading = true}) async {
     final loadId = beginScreenLoad();
     if (!mounted) return;
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+    if (showLoading) {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    }
     try {
       final results = await Future.wait([
         _repository.getAccessibleQuizzes(),
@@ -124,7 +126,7 @@ class _AccessibleQuizzesPageState extends State<AccessibleQuizzesPage>
       ),
     );
     if (mounted && removed == true) {
-      await _load();
+      scheduleReturnRefresh(() => _load(showLoading: false));
     }
   }
 
