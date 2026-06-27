@@ -52,7 +52,6 @@ class NotificationsCubit extends Cubit<NotificationsState> {
           unreadCount: result.unreadCount,
           items: result.items,
           nextCursor: result.nextCursor,
-          clearListError: true,
         ),
       );
     } on DioException catch (e) {

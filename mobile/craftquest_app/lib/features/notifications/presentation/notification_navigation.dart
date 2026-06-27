@@ -30,7 +30,10 @@ class NotificationNavigation {
         if (quizId.isNotEmpty) {
           await Navigator.of(context).push<void>(
             MaterialPageRoute<void>(
-              builder: (_) => QuizDetailPage(quizId: quizId),
+              builder: (_) => QuizDetailPage(
+                quizId: quizId,
+                quizTitle: data?.quizTitle ?? notification.title,
+              ),
             ),
           );
           return;
@@ -61,7 +64,10 @@ class NotificationNavigation {
         if (data?.quizId != null) {
           await Navigator.of(context).push<void>(
             MaterialPageRoute<void>(
-              builder: (_) => QuizDetailPage(quizId: data!.quizId!),
+              builder: (_) => QuizDetailPage(
+                quizId: data!.quizId!,
+                quizTitle: data.quizTitle ?? notification.title,
+              ),
             ),
           );
         } else {
@@ -89,7 +95,10 @@ class NotificationNavigation {
         if (data?.quizId != null) {
           await Navigator.of(context).push<void>(
             MaterialPageRoute<void>(
-              builder: (_) => QuizDetailPage(quizId: data!.quizId!),
+              builder: (_) => QuizDetailPage(
+                quizId: data!.quizId!,
+                quizTitle: data.quizTitle ?? notification.title,
+              ),
             ),
           );
         } else {

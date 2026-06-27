@@ -28,9 +28,12 @@ import 'package:craftquest_app/features/practice/data/practice_preferences_repos
 import 'package:craftquest_app/features/practice/data/practice_repository.dart';
 import 'package:craftquest_app/features/practice/data/practice_sound_preference_store.dart';
 import 'package:craftquest_app/features/quizzes/data/quiz_repository.dart';
+import 'package:craftquest_app/features/prep_plus/data/prep_plus_admin_repository.dart';
+import 'package:craftquest_app/features/prep_plus/data/prep_plus_repository.dart';
 import 'package:craftquest_app/features/notifications/data/notification_repository.dart';
 import 'package:craftquest_app/features/notifications/presentation/notifications_cubit.dart';
 import 'package:craftquest_app/core/services/push_notification_service.dart';
+import 'package:get_it/get_it.dart';
 
 final getIt = GetIt.instance;
 

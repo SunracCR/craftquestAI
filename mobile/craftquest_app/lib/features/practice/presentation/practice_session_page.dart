@@ -534,29 +534,34 @@ class _PracticeSessionPageState extends State<PracticeSessionPage> {
       return;
     }
 
-    final future = _repository.submitAnswer(
-      sessionId: session.practiceSessionId,
-      practiceQuestionSnapshotId: questionId,
-      selectedAnswerOptionIds: selected,
-    ).then((_) async {
-      if (!mounted) return;
-      setState(() => _questionStatuses[questionId] = 'answered');
-    }).catchError((Object error) {
-      if (!mounted) return;
-      if (error is DioException) {
-        context.showDioErrorSnackBar(error);
-      }
-      setState(() {
-        _questionStatuses.remove(questionId);
-      });
-    }).whenComplete(() {
-      if (identical(_persistInFlight[questionId], future)) {
-        _persistInFlight.remove(questionId);
-      }
-    });
+    late final Future<void> persistFuture;
+    persistFuture = _repository
+        .submitAnswer(
+          sessionId: session.practiceSessionId,
+          practiceQuestionSnapshotId: questionId,
+          selectedAnswerOptionIds: selected,
+        )
+        .then((_) async {
+          if (!mounted) return;
+          setState(() => _questionStatuses[questionId] = 'answered');
+        })
+        .catchError((Object error) {
+          if (!mounted) return;
+          if (error is DioException) {
+            context.showDioErrorSnackBar(error);
+          }
+          setState(() {
+            _questionStatuses.remove(questionId);
+          });
+        })
+        .whenComplete(() {
+          if (identical(_persistInFlight[questionId], persistFuture)) {
+            _persistInFlight.remove(questionId);
+          }
+        });
 
-    _persistInFlight[questionId] = future;
-    await future;
+    _persistInFlight[questionId] = persistFuture;
+    await persistFuture;
   }
 
   void _schedulePersistSelection(PracticeQuestionModel question) {
