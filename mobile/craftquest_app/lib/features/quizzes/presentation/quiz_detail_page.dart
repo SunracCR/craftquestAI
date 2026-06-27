@@ -970,7 +970,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
       await _repository.publishQuiz(widget.quizId);
       if (!mounted) return;
       setState(() => _publicationStatus = 'published');
-      await _syncPracticeUiIfNeeded();
+      await _syncPracticeUiIfNeeded(beginScreenLoad());
       if (!mounted) return;
       context.showSuccessSnackBar(l10n.quizPublishedMessage);
     } on DioException catch (e) {
