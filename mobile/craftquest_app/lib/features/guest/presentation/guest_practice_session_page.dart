@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/utils/deferred_screen_load.dart';
 import 'package:craftquest_app/core/network/api_client.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/services/sound_service.dart';
@@ -53,7 +54,8 @@ class GuestPracticeSessionPage extends StatefulWidget {
       _GuestPracticeSessionPageState();
 }
 
-class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
+class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage>
+    with ScreenLoadGeneration {
   late final GuestRepository _repository;
   final _soundService = getIt<SoundService>();
   late final PracticeSessionFeedback _feedback;
@@ -83,7 +85,7 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
     );
     _repository = getIt<GuestRepository>();
     _showTimer = widget.showElapsedTimer;
-    _initializeSession();
+    scheduleInitialScreenLoad(_initializeSession);
   }
 
   @override
@@ -117,7 +119,9 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
   }
 
   Future<void> _initializeSession() async {
+    final loadId = beginScreenLoad();
     final l10n = AppLocalizations.of(context)!;
+    if (!mounted) return;
     setState(() {
       _loading = true;
       _error = null;
@@ -127,14 +131,15 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
     try {
       final active = await _resolveActiveSession();
 
-      if (!mounted) return;
+      if (!mounted || isStaleScreenLoad(loadId)) return;
 
       if (active != null) {
         final choice = await showPracticeResumeDialog(
           context,
           summary: active,
         );
-        if (!mounted || choice == null || choice == PracticeResumeChoice.cancel) {
+        if (!mounted || isStaleScreenLoad(loadId)) return;
+        if (choice == null || choice == PracticeResumeChoice.cancel) {
           Navigator.of(context).pop();
           return;
         }
@@ -147,19 +152,19 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
           token: widget.token,
           sessionId: active.practiceSessionId,
         );
+        if (!mounted || isStaleScreenLoad(loadId)) return;
       }
 
-      if (!mounted) return;
-      await _start();
+      await _start(loadId: loadId);
     } on DioException catch (e) {
-      if (!mounted) return;
+      if (!mounted || isStaleScreenLoad(loadId)) return;
       setState(() {
         _error = DioErrorMapper.map(e);
         _loading = false;
         _loadingMessage = null;
       });
     } catch (_) {
-      if (!mounted) return;
+      if (!mounted || isStaleScreenLoad(loadId)) return;
       setState(() {
         _error = DioErrorMapper.genericMessage();
         _loading = false;
@@ -216,10 +221,14 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
     );
   }
 
-  Future<void> _start() async {
+  Future<void> _start({int? loadId}) async {
+    final id = loadId ?? beginScreenLoad();
     final l10n = AppLocalizations.of(context)!;
+    if (!mounted) return;
     setState(() {
-      _loading = true;
+      if (loadId == null) {
+        _loading = true;
+      }
       _error = null;
       _loadingMessage = l10n.practicePreparingSession;
     });
@@ -230,7 +239,7 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
         randomizeQuestions: widget.randomizeQuestions,
         showElapsedTimer: widget.showElapsedTimer,
       );
-      if (!mounted) return;
+      if (!mounted || isStaleScreenLoad(id)) return;
       setState(() {
         _applySession(session);
         _loading = false;
@@ -238,14 +247,14 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
       });
       _beginElapsedTimer();
     } on DioException catch (e) {
-      if (!mounted) return;
+      if (!mounted || isStaleScreenLoad(id)) return;
       setState(() {
         _error = DioErrorMapper.map(e);
         _loading = false;
         _loadingMessage = null;
       });
     } catch (_) {
-      if (!mounted) return;
+      if (!mounted || isStaleScreenLoad(id)) return;
       setState(() {
         _error = DioErrorMapper.genericMessage();
         _loading = false;
@@ -255,7 +264,9 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
   }
 
   Future<void> _resumeSession(String sessionId) async {
+    final loadId = beginScreenLoad();
     final l10n = AppLocalizations.of(context)!;
+    if (!mounted) return;
     setState(() {
       _loading = true;
       _error = null;
@@ -267,7 +278,7 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
         token: widget.token,
         sessionId: sessionId,
       );
-      if (!mounted) return;
+      if (!mounted || isStaleScreenLoad(loadId)) return;
       setState(() {
         _applySession(session);
         _loading = false;
@@ -275,14 +286,14 @@ class _GuestPracticeSessionPageState extends State<GuestPracticeSessionPage> {
       });
       _beginElapsedTimer();
     } on DioException catch (e) {
-      if (!mounted) return;
+      if (!mounted || isStaleScreenLoad(loadId)) return;
       setState(() {
         _error = DioErrorMapper.map(e);
         _loading = false;
         _loadingMessage = null;
       });
     } catch (_) {
-      if (!mounted) return;
+      if (!mounted || isStaleScreenLoad(loadId)) return;
       setState(() {
         _error = DioErrorMapper.genericMessage();
         _loading = false;

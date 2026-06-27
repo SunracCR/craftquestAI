@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/navigation/safe_navigation.dart';
 import 'package:craftquest_app/core/services/sound_service.dart';
 import 'package:craftquest_app/features/practice/data/models/practice_models.dart';
 import 'package:craftquest_app/features/practice/domain/practice_launch_options.dart';
@@ -20,6 +21,8 @@ Future<bool?> openPracticeSession(
   bool allowStudentRandomizeQuestions = false,
   bool forfeitExitCountsAsAttempt = false,
   Future<PracticeActiveSessionModel?>? activeSessionPrefetch,
+  Future<PracticeLaunchOptions>? launchOptionsPrefetch,
+  bool launchOptionsResolved = false,
   PracticeLaunchOptions? launchOptions,
 }) async {
   if (!context.mounted) {
@@ -40,19 +43,20 @@ Future<bool?> openPracticeSession(
     soundService.playStartSfx();
   }
 
-  return Navigator.of(context).push<bool>(
-    MaterialPageRoute<bool>(
-      builder: (_) => PracticeSessionPage(
-        quizId: quizId,
-        quizTitle: quizTitle,
-        options: options,
-        resumeSessionId: resumeSessionId,
-        classId: classId,
-        assignmentId: assignmentId,
-        allowAssignmentRandomizeOverride: allowStudentRandomizeQuestions,
-        forfeitExitCountsAsAttempt: forfeitExitCountsAsAttempt,
-        activeSessionPrefetch: activeSessionPrefetch,
-      ),
+  return SafeNavigation.pushPage<bool>(
+    context,
+    PracticeSessionPage(
+      quizId: quizId,
+      quizTitle: quizTitle,
+      options: options,
+      resumeSessionId: resumeSessionId,
+      classId: classId,
+      assignmentId: assignmentId,
+      allowAssignmentRandomizeOverride: allowStudentRandomizeQuestions,
+      forfeitExitCountsAsAttempt: forfeitExitCountsAsAttempt,
+      activeSessionPrefetch: activeSessionPrefetch,
+      launchOptionsPrefetch: launchOptionsPrefetch,
+      launchOptionsResolved: launchOptionsResolved,
     ),
   );
 }

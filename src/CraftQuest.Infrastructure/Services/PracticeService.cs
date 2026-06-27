@@ -20,8 +20,6 @@ public class PracticeService(
     IAnalyticsService analyticsService,
     IMediaService mediaService) : IPracticeService
 {
-    private const int InProgressExpiryDays = 30;
-
     public async Task<PracticeSessionDto> StartSessionAsync(
         Guid studentUserId,
         StartPracticeSessionRequest request,
@@ -49,38 +47,26 @@ public class PracticeService(
         }
         else
         {
-            var hasSharedAccess = await shareCodeService.HasQuizAccessAsync(
+            await EnsureQuizPracticeAccessAsync(
                 studentUserId,
-                request.QuizId,
+                quiz,
                 cancellationToken);
-            if (!hasSharedAccess)
-            {
-                throw new AppException(
-                    "You do not have access to practice this quiz. Redeem a share code first.",
-                    403);
-            }
         }
 
-        var questions = await dbContext.Questions
-            .AsNoTracking()
-            .Include(q => q.QuestionType)
-            .Include(q => q.AnswerOptions.Where(o => o.IsActive))
-            .Include(q => q.CorrectAnswerOptions)
-            .Where(q => q.QuizId == request.QuizId)
-            .OrderBy(q => q.SortOrder)
-            .ToListAsync(cancellationToken);
+        var questions = await PracticeQuestionLoader.LoadForQuizAsync(
+            dbContext,
+            request.QuizId,
+            cancellationToken);
 
         if (questions.Count == 0)
         {
             throw new AppException("Quiz has no questions.", 400);
         }
 
-        var questionIds = questions.Select(q => q.QuestionId).ToList();
-        var justificationsByQuestionId = await dbContext.QuestionJustifications
-            .AsNoTracking()
-            .Include(j => j.Sources)
-            .Where(j => questionIds.Contains(j.QuestionId))
-            .ToDictionaryAsync(j => j.QuestionId, cancellationToken);
+        await PracticeSessionExpiry.ExpireStaleSessionsForUserAsync(
+            dbContext,
+            studentUserId,
+            cancellationToken);
 
         var randomizeQuestions = PracticeSessionOrdering.ResolveRandomizeQuestions(
             request.AssignmentId.HasValue,
@@ -175,9 +161,8 @@ public class PracticeService(
                     });
                 }
 
-                justificationsByQuestionId.TryGetValue(question.QuestionId, out var justification);
                 var (justificationText, justificationSourcesJson) =
-                    QuestionJustificationMapper.BuildPracticeSnapshot(justification);
+                    QuestionJustificationMapper.BuildPracticeSnapshot(question.Justification);
 
                 session.QuestionSnapshots.Add(new PracticeQuestionSnapshot
                 {
@@ -446,25 +431,15 @@ public class PracticeService(
         Guid? assignmentId = null,
         CancellationToken cancellationToken = default)
     {
-        var cutoff = DateTime.UtcNow.AddDays(-InProgressExpiryDays);
-        var now = DateTime.UtcNow;
-        await dbContext.PracticeSessions
-            .Where(s =>
-                s.StudentUserId == studentUserId
-                && s.Status == "in_progress"
-                && (s.LastActivityAt ?? s.StartedAt) < cutoff)
-            .ExecuteUpdateAsync(
-                setters => setters
-                    .SetProperty(s => s.Status, "expired")
-                    .SetProperty(s => s.FinishedAt, now),
-                cancellationToken);
+        var cutoff = PracticeSessionExpiry.StaleCutoffUtc();
 
         var query = dbContext.PracticeSessions
             .AsNoTracking()
             .Where(s =>
                 s.StudentUserId == studentUserId
                 && s.QuizId == quizId
-                && s.Status == "in_progress");
+                && s.Status == "in_progress"
+                && (s.LastActivityAt ?? s.StartedAt) >= cutoff);
 
         query = assignmentId.HasValue
             ? query.Where(s => s.AssignmentId == assignmentId)
@@ -490,22 +465,14 @@ public class PracticeService(
         Guid studentUserId,
         CancellationToken cancellationToken = default)
     {
-        var cutoff = DateTime.UtcNow.AddDays(-InProgressExpiryDays);
-        var now = DateTime.UtcNow;
-        await dbContext.PracticeSessions
-            .Where(s =>
-                s.StudentUserId == studentUserId
-                && s.Status == "in_progress"
-                && (s.LastActivityAt ?? s.StartedAt) < cutoff)
-            .ExecuteUpdateAsync(
-                setters => setters
-                    .SetProperty(s => s.Status, "expired")
-                    .SetProperty(s => s.FinishedAt, now),
-                cancellationToken);
+        var cutoff = PracticeSessionExpiry.StaleCutoffUtc();
 
         return await dbContext.PracticeSessions
             .AsNoTracking()
-            .Where(s => s.StudentUserId == studentUserId && s.Status == "in_progress")
+            .Where(s =>
+                s.StudentUserId == studentUserId
+                && s.Status == "in_progress"
+                && (s.LastActivityAt ?? s.StartedAt) >= cutoff)
             .OrderByDescending(s => s.LastActivityAt ?? s.StartedAt)
             .Select(s => new PracticeActiveSessionSummaryDto
             {
@@ -858,6 +825,37 @@ public class PracticeService(
             BestPercentage = percentages.Count > 0 ? percentages.Max() : null,
             Questions = questionAnalytics,
         };
+    }
+
+    private async Task EnsureQuizPracticeAccessAsync(
+        Guid userId,
+        Quiz quiz,
+        CancellationToken cancellationToken)
+    {
+        if (quiz.CreatedByUserId == userId || quiz.Visibility == "public")
+        {
+            return;
+        }
+
+        var now = DateTime.UtcNow;
+        var hasAccess = await dbContext.QuizAccesses.AnyAsync(
+            a => a.UserId == userId
+                && a.QuizId == quiz.QuizId
+                && (
+                    (a.AccessType == "redeemed"
+                        && a.AssignmentId == null
+                        && a.ClassId == null)
+                    || (a.AccessType == "purchase"
+                        && a.ExpiresAt != null
+                        && a.ExpiresAt > now)),
+            cancellationToken);
+
+        if (!hasAccess)
+        {
+            throw new AppException(
+                "You do not have access to practice this quiz. Redeem a share code first.",
+                403);
+        }
     }
 
     private async Task EnsureSharedQuizPracticeAccessAsync(

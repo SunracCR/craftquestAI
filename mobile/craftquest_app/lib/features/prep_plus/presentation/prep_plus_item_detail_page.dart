@@ -16,6 +16,8 @@ import 'package:craftquest_app/features/prep_plus/data/models/prep_plus_models.d
 import 'package:craftquest_app/features/prep_plus/data/prep_plus_repository.dart';
 import 'package:craftquest_app/features/prep_plus/presentation/prep_plus_preview_page.dart';
 import 'package:craftquest_app/features/prep_plus/presentation/widgets/prep_plus_access_combo_card.dart';
+import 'package:craftquest_app/features/practice/data/practice_preferences_repository.dart';
+import 'package:craftquest_app/features/practice/data/practice_repository.dart';
 import 'package:craftquest_app/features/practice/presentation/my_practice_attempts_page.dart';
 import 'package:craftquest_app/features/practice/presentation/practice_navigation.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
@@ -598,10 +600,18 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
           AppPrimaryButton(
           label: l10n.prepPlusPracticeAction,
           onPressed: () async {
+            final prefsRepo = getIt<PracticePreferencesRepository>();
+            final practiceRepo = getIt<PracticeRepository>();
             await openPracticeSession(
               context,
               quizId: item.quizId,
               quizTitle: item.title,
+              activeSessionPrefetch: practiceRepo.getActiveSessionForQuiz(
+                item.quizId,
+              ),
+              launchOptionsPrefetch: prefsRepo.loadLaunchOptions(
+                item.quizId,
+              ),
             );
             if (mounted) await _load();
           },

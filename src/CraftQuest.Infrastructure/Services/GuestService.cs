@@ -140,12 +140,17 @@ public class GuestService(
     {
         var visit = await ResolveVisitAsync(guestVisitId, token, cancellationToken);
 
-        var activeCount = await dbContext.PracticeSessions
-            .CountAsync(
-                s => s.GuestVisitId == guestVisitId && s.Status == "in_progress",
-                cancellationToken);
+        var sessionCounts = await dbContext.PracticeSessions
+            .Where(s => s.GuestVisitId == guestVisitId)
+            .GroupBy(_ => 1)
+            .Select(g => new
+            {
+                Active = g.Count(s => s.Status == "in_progress"),
+                Total = g.Count(),
+            })
+            .FirstOrDefaultAsync(cancellationToken);
 
-        if (activeCount > 0)
+        if (sessionCounts?.Active > 0)
         {
             throw new AppException(
                 "You already have an active practice session.",
@@ -153,10 +158,7 @@ public class GuestService(
                 errorCode: "ACTIVE_PRACTICE_SESSION");
         }
 
-        var totalCount = await dbContext.PracticeSessions
-            .CountAsync(s => s.GuestVisitId == guestVisitId, cancellationToken);
-
-        if (totalCount >= MaxAttemptsPerVisit)
+        if ((sessionCounts?.Total ?? 0) >= MaxAttemptsPerVisit)
         {
             throw new AppException("Maximum attempts reached for this visit.", 400);
         }
@@ -171,26 +173,15 @@ public class GuestService(
             throw new AppException("Quiz is not published.", 403);
         }
 
-        var questions = await dbContext.Questions
-            .AsNoTracking()
-            .Include(q => q.QuestionType)
-            .Include(q => q.AnswerOptions.Where(o => o.IsActive))
-            .Include(q => q.CorrectAnswerOptions)
-            .Where(q => q.QuizId == visit.QuizId)
-            .OrderBy(q => q.SortOrder)
-            .ToListAsync(cancellationToken);
+        var questions = await PracticeQuestionLoader.LoadForQuizAsync(
+            dbContext,
+            visit.QuizId,
+            cancellationToken);
 
         if (questions.Count == 0)
         {
             throw new AppException("Quiz has no questions.", 400);
         }
-
-        var questionIds = questions.Select(q => q.QuestionId).ToList();
-        var justificationsByQuestionId = await dbContext.QuestionJustifications
-            .AsNoTracking()
-            .Include(j => j.Sources)
-            .Where(j => questionIds.Contains(j.QuestionId))
-            .ToDictionaryAsync(j => j.QuestionId, cancellationToken);
 
         var randomize = request.RandomizeQuestions ?? quiz.RandomizeQuestions;
         var questionList = PracticeSessionOrdering.OrderQuestions(questions, randomize);
@@ -281,9 +272,8 @@ public class GuestService(
                     });
                 }
 
-                justificationsByQuestionId.TryGetValue(question.QuestionId, out var justification);
                 var (justificationText, justificationSourcesJson) =
-                    QuestionJustificationMapper.BuildPracticeSnapshot(justification);
+                    QuestionJustificationMapper.BuildPracticeSnapshot(question.Justification);
 
                 session.QuestionSnapshots.Add(new PracticeQuestionSnapshot
                 {

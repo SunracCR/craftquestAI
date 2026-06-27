@@ -878,6 +878,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
       quizTitle: _quizTitle,
       resumeSessionId: _activePractice?.practiceSessionId,
       launchOptions: _currentLaunchOptions,
+      launchOptionsResolved: true,
       activeSessionPrefetch: _prefetchActiveSessionForPractice(),
     );
     if (!mounted) return;
@@ -890,6 +891,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
       quizId: widget.quizId,
       quizTitle: _quizTitle,
       launchOptions: _currentLaunchOptions,
+      launchOptionsResolved: true,
       activeSessionPrefetch: _prefetchActiveSessionForPractice(),
     );
     if (!mounted) return;

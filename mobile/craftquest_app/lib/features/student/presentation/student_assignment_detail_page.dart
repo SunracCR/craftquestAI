@@ -129,6 +129,7 @@ class _StudentAssignmentDetailPageState extends State<StudentAssignmentDetailPag
         allowStudentRandomizeQuestions: assignment.allowStudentRandomizeQuestions,
         forfeitExitCountsAsAttempt: assignment.forfeitExitApplies,
         launchOptions: _currentLaunchOptions,
+        launchOptionsResolved: true,
       );
       if (shouldRefresh == true) {
         widget.onChanged();

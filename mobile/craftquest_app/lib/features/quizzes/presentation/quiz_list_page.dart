@@ -11,6 +11,7 @@ import 'package:craftquest_app/core/widgets/app_list_entry_card.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/features/practice/data/models/practice_models.dart';
+import 'package:craftquest_app/features/practice/data/practice_preferences_repository.dart';
 import 'package:craftquest_app/features/practice/data/practice_repository.dart';
 import 'package:craftquest_app/features/practice/presentation/practice_navigation.dart';
 import 'package:craftquest_app/features/quizzes/data/models/quiz_models.dart';
@@ -235,11 +236,20 @@ class _QuizListPageState extends State<QuizListPage> with ScreenLoadGeneration {
                   ? l10n.practiceContinueAction
                   : l10n.practiceQuizAction,
               onPressed: () async {
+                final prefsRepo = getIt<PracticePreferencesRepository>();
                 await openPracticeSession(
                   context,
                   quizId: quiz.quizId,
                   quizTitle: quiz.title,
                   resumeSessionId: activePractice?.practiceSessionId,
+                  activeSessionPrefetch: activePractice != null
+                      ? Future.value(activePractice)
+                      : _practiceRepository.getActiveSessionForQuiz(
+                          quiz.quizId,
+                        ),
+                  launchOptionsPrefetch: prefsRepo.loadLaunchOptions(
+                    quiz.quizId,
+                  ),
                 );
                 if (!mounted) return;
                 await _load();
