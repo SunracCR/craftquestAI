@@ -17,3 +17,6 @@ mobile/**/.flutter-plugins-dependencies
 .idea/
 *.iml
 .cursor/
+
+google-services.json
+GoogleService-Info.plist
