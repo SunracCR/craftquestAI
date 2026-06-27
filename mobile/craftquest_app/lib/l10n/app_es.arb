@@ -1966,6 +1966,8 @@
   "notificationsPreferencesSectionAssignments": "Tareas",
   "notificationsPreferencesSectionMembership": "Membresía",
   "notificationsPreferencesSectionAi": "Generación con IA",
+  "notificationsPreferencesDefaultsHint": "Por defecto: avisos en la app y push activos. El correo solo viene activado en membresía por vencer y membresía vencida.",
+  "notificationsPreferencesResetDefaults": "Restaurar valores por defecto",
   "notificationsChannelInApp": "En la app",
   "notificationsChannelPush": "Push",
   "notificationsChannelEmail": "Correo",

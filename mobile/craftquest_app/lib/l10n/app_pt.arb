@@ -1914,6 +1914,8 @@
   "notificationsPreferencesSectionAssignments": "Tarefas",
   "notificationsPreferencesSectionMembership": "Assinatura",
   "notificationsPreferencesSectionAi": "Geração com IA",
+  "notificationsPreferencesDefaultsHint": "Por predefinição: avisos na app e push ativos. O e-mail só vem ativo para assinatura a expirar e assinatura expirada.",
+  "notificationsPreferencesResetDefaults": "Restaurar predefinições",
   "notificationsChannelInApp": "No app",
   "notificationsChannelPush": "Push",
   "notificationsChannelEmail": "E-mail",

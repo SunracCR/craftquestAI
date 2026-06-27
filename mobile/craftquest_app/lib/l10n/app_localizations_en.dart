@@ -4263,6 +4263,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationsPreferencesSectionAi => 'AI generation';
 
   @override
+  String get notificationsPreferencesDefaultsHint =>
+      'By default, in-app and push are on. Email is only enabled for membership expiring and membership expired alerts.';
+
+  @override
+  String get notificationsPreferencesResetDefaults => 'Restore default settings';
+
+  @override
   String get notificationsChannelInApp => 'In-app';
 
   @override

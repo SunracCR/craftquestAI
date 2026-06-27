@@ -4295,6 +4295,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get notificationsPreferencesSectionAi => 'Generación con IA';
 
   @override
+  String get notificationsPreferencesDefaultsHint =>
+      'Por defecto: avisos en la app y push activos. El correo solo viene activado en membresía por vencer y membresía vencida.';
+
+  @override
+  String get notificationsPreferencesResetDefaults =>
+      'Restaurar valores por defecto';
+
+  @override
   String get notificationsChannelInApp => 'En la app';
 
   @override

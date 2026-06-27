@@ -10,6 +10,10 @@ const emailEligibleNotificationTypes = <String>{
   'membership_expired',
 };
 
+/// Correo activo por defecto solo para avisos de membresía.
+bool notificationDefaultEmailEnabled(String type) =>
+    type == 'membership_expiring' || type == 'membership_expired';
+
 class NotificationPreferenceSection {
   const NotificationPreferenceSection({
     required this.titleKey,

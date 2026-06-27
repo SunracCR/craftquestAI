@@ -4294,6 +4294,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get notificationsPreferencesSectionAi => 'Geração com IA';
 
   @override
+  String get notificationsPreferencesDefaultsHint =>
+      'Por predefinição: avisos na app e push ativos. O e-mail só vem ativo para assinatura a expirar e assinatura expirada.';
+
+  @override
+  String get notificationsPreferencesResetDefaults => 'Restaurar predefinições';
+
+  @override
   String get notificationsChannelInApp => 'No app';
 
   @override

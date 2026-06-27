@@ -7072,6 +7072,12 @@ abstract class AppLocalizations {
   /// No description provided for @notificationsPreferencesSectionAi.
   String get notificationsPreferencesSectionAi;
 
+  /// No description provided for @notificationsPreferencesDefaultsHint.
+  String get notificationsPreferencesDefaultsHint;
+
+  /// No description provided for @notificationsPreferencesResetDefaults.
+  String get notificationsPreferencesResetDefaults;
+
   /// No description provided for @notificationsChannelInApp.
   String get notificationsChannelInApp;
 

@@ -1915,6 +1915,8 @@
   "notificationsPreferencesSectionAssignments": "Assignments",
   "notificationsPreferencesSectionMembership": "Membership",
   "notificationsPreferencesSectionAi": "AI generation",
+  "notificationsPreferencesDefaultsHint": "By default, in-app and push are on. Email is only enabled for membership expiring and membership expired alerts.",
+  "notificationsPreferencesResetDefaults": "Restore default settings",
   "notificationsChannelInApp": "In-app",
   "notificationsChannelPush": "Push",
   "notificationsChannelEmail": "Email",
