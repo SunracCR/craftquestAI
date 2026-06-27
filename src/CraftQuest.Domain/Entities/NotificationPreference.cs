@@ -7,7 +7,7 @@ public class NotificationPreference
     public string Type { get; set; } = string.Empty;
     public bool InAppEnabled { get; set; } = true;
     public bool PushEnabled { get; set; } = true;
-    public bool EmailEnabled { get; set; } = true;
+    public bool EmailEnabled { get; set; } = false;
 
     public User User { get; set; } = null!;
 }

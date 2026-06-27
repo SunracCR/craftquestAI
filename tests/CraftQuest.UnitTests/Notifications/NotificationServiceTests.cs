@@ -106,12 +106,88 @@ public class NotificationServiceTests
         Assert.Equal(1, count);
     }
 
-    private static NotificationService CreateService(CraftQuestDbContext db)
+    [Fact]
+    public async Task GetPreferencesAsync_EmailDefaultsOffExceptMembership()
+    {
+        await using var db = CreateDb();
+        var userId = await SeedUserAsync(db, "es");
+        var service = CreateService(db);
+
+        var prefs = await service.GetPreferencesAsync(userId);
+
+        foreach (var item in prefs.Preferences)
+        {
+            var expectedEmail = item.Type is NotificationTypes.MembershipExpiring
+                or NotificationTypes.MembershipExpired;
+            Assert.Equal(expectedEmail, item.EmailEnabled);
+            Assert.True(item.InAppEnabled);
+            Assert.True(item.PushEnabled);
+        }
+    }
+
+    [Fact]
+    public async Task NotifyAsync_SendsEmail_WhenEmailEnabledForType()
+    {
+        await using var db = CreateDb();
+        var userId = await SeedUserAsync(db, "es");
+        db.NotificationPreferences.Add(new NotificationPreference
+        {
+            NotificationPreferenceId = Guid.NewGuid(),
+            UserId = userId,
+            Type = NotificationTypes.ClassJoined,
+            InAppEnabled = true,
+            PushEnabled = true,
+            EmailEnabled = true,
+        });
+        await db.SaveChangesAsync();
+
+        var emailSender = new CapturingEmailSender();
+        var service = CreateService(db, emailSender);
+
+        await service.NotifyAsync(
+            userId,
+            NotificationTypes.ClassJoined,
+            new NotificationPayload { ClassName = "Math 101" });
+
+        Assert.Equal("user@test.local", emailSender.LastToEmail);
+        Assert.Contains("Math 101", emailSender.LastPlainTextBody);
+    }
+
+    [Fact]
+    public async Task NotifyAsync_SkipsEmail_WhenEmailDisabledForType()
+    {
+        await using var db = CreateDb();
+        var userId = await SeedUserAsync(db, "es");
+        db.NotificationPreferences.Add(new NotificationPreference
+        {
+            NotificationPreferenceId = Guid.NewGuid(),
+            UserId = userId,
+            Type = NotificationTypes.ClassJoined,
+            InAppEnabled = true,
+            PushEnabled = true,
+            EmailEnabled = false,
+        });
+        await db.SaveChangesAsync();
+
+        var emailSender = new CapturingEmailSender();
+        var service = CreateService(db, emailSender);
+
+        await service.NotifyAsync(
+            userId,
+            NotificationTypes.ClassJoined,
+            new NotificationPayload { ClassName = "Math 101" });
+
+        Assert.Null(emailSender.LastToEmail);
+    }
+
+    private static NotificationService CreateService(
+        CraftQuestDbContext db,
+        CapturingEmailSender? emailSender = null)
     {
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddScoped(_ => db);
-        services.AddSingleton<IEmailSender, CapturingEmailSender>();
+        services.AddSingleton<IEmailSender>(emailSender ?? new CapturingEmailSender());
         services.AddSingleton<IPushSender, NoOpPushSender>();
         services.AddScoped<NotificationService>();
         var provider = services.BuildServiceProvider();

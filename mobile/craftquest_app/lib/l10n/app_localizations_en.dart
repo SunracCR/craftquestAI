@@ -4245,10 +4245,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationsPreferencesSubtitle =>
-      'Choose which alerts you receive and through which channels.';
+      'Choose how you receive each type of alert.';
 
   @override
   String get notificationsPreferencesSaved => 'Notification preferences saved.';
+
+  @override
+  String get notificationsPreferencesSectionSharing => 'Sharing and classes';
+
+  @override
+  String get notificationsPreferencesSectionAssignments => 'Assignments';
+
+  @override
+  String get notificationsPreferencesSectionMembership => 'Membership';
+
+  @override
+  String get notificationsPreferencesSectionAi => 'AI generation';
 
   @override
   String get notificationsChannelInApp => 'In-app';

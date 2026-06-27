@@ -166,6 +166,208 @@ public static class EmailTemplateBuilder
         };
     }
 
+    public static (string Subject, string PlainText, string Html) BuildQuizShared(
+        string language,
+        NotificationPayload payload)
+    {
+        var quiz = payload.QuizTitle ?? "Quiz";
+        var owner = payload.OwnerName ?? "Someone";
+        return language switch
+        {
+            "en" => (
+                "A quiz was shared with you",
+                $"{owner} shared \"{quiz}\" with you on CraftQuestAI. Open the app to practice.",
+                BuildHtml(
+                    "Quiz shared",
+                    "New shared quiz",
+                    $"{owner} shared \"{quiz}\" with you.",
+                    "Open CraftQuestAI",
+                    "https://app.craftquestai.com/",
+                    "You can change email alerts in notification settings.")),
+            "pt" => (
+                "Um questionario foi compartilhado com voce",
+                $"{owner} compartilhou \"{quiz}\" com voce no CraftQuestAI. Abra o app para praticar.",
+                BuildHtml(
+                    "Questionario compartilhado",
+                    "Novo questionario compartilhado",
+                    $"{owner} compartilhou \"{quiz}\" com voce.",
+                    "Abrir CraftQuestAI",
+                    "https://app.craftquestai.com/",
+                    "Voce pode alterar alertas por e-mail nas configuracoes.")),
+            _ => (
+                "Te compartieron un cuestionario",
+                $"{owner} te compartió \"{quiz}\" en CraftQuestAI. Abre la app para practicar.",
+                BuildHtml(
+                    "Cuestionario compartido",
+                    "Nuevo cuestionario compartido",
+                    $"{owner} te compartió \"{quiz}\".",
+                    "Abrir CraftQuestAI",
+                    "https://app.craftquestai.com/",
+                    "Puedes cambiar avisos por correo en ajustes de notificaciones.")),
+        };
+    }
+
+    public static (string Subject, string PlainText, string Html) BuildClassJoined(
+        string language,
+        NotificationPayload payload)
+    {
+        var className = payload.ClassName ?? "Class";
+        return language switch
+        {
+            "en" => (
+                "You were added to a class",
+                $"You were added to \"{className}\" on CraftQuestAI. Open the app to see assignments.",
+                BuildHtml(
+                    "Class",
+                    "Added to a class",
+                    $"You were added to \"{className}\".",
+                    "Open CraftQuestAI",
+                    "https://app.craftquestai.com/",
+                    "You can change email alerts in notification settings.")),
+            "pt" => (
+                "Voce foi adicionado a uma turma",
+                $"Voce foi adicionado a \"{className}\" no CraftQuestAI. Abra o app para ver tarefas.",
+                BuildHtml(
+                    "Turma",
+                    "Adicionado a uma turma",
+                    $"Voce foi adicionado a \"{className}\".",
+                    "Abrir CraftQuestAI",
+                    "https://app.craftquestai.com/",
+                    "Voce pode alterar alertas por e-mail nas configuracoes.")),
+            _ => (
+                "Te añadieron a una clase",
+                $"Te añadieron a \"{className}\" en CraftQuestAI. Abre la app para ver tareas.",
+                BuildHtml(
+                    "Clase",
+                    "Te unieron a una clase",
+                    $"Te añadieron a \"{className}\".",
+                    "Abrir CraftQuestAI",
+                    "https://app.craftquestai.com/",
+                    "Puedes cambiar avisos por correo en ajustes de notificaciones.")),
+        };
+    }
+
+    public static (string Subject, string PlainText, string Html) BuildAssignmentCreated(
+        string language,
+        NotificationPayload payload)
+    {
+        var title = payload.AssignmentTitle ?? "Assignment";
+        var className = payload.ClassName ?? "Class";
+        return language switch
+        {
+            "en" => (
+                "New assignment",
+                $"You have a new assignment \"{title}\" in {className}. Open CraftQuestAI to start.",
+                BuildHtml(
+                    "Assignment",
+                    "New assignment",
+                    $"\"{title}\" was assigned in {className}.",
+                    "Open CraftQuestAI",
+                    "https://app.craftquestai.com/",
+                    "You can change email alerts in notification settings.")),
+            "pt" => (
+                "Nova tarefa",
+                $"Voce tem uma nova tarefa \"{title}\" em {className}. Abra o CraftQuestAI para comecar.",
+                BuildHtml(
+                    "Tarefa",
+                    "Nova tarefa",
+                    $"\"{title}\" foi atribuida em {className}.",
+                    "Abrir CraftQuestAI",
+                    "https://app.craftquestai.com/",
+                    "Voce pode alterar alertas por e-mail nas configuracoes.")),
+            _ => (
+                "Nueva tarea",
+                $"Tienes una nueva tarea \"{title}\" en {className}. Abre CraftQuestAI para empezar.",
+                BuildHtml(
+                    "Tarea",
+                    "Nueva tarea",
+                    $"\"{title}\" fue asignada en {className}.",
+                    "Abrir CraftQuestAI",
+                    "https://app.craftquestai.com/",
+                    "Puedes cambiar avisos por correo en ajustes de notificaciones.")),
+        };
+    }
+
+    public static (string Subject, string PlainText, string Html) BuildAiJobCompleted(
+        string language,
+        NotificationPayload payload)
+    {
+        var quiz = payload.QuizTitle ?? "Quiz";
+        return language switch
+        {
+            "en" => (
+                "Your AI quiz is ready",
+                $"\"{quiz}\" was generated successfully. Open CraftQuestAI to review it.",
+                BuildHtml(
+                    "AI generation",
+                    "Quiz ready",
+                    $"\"{quiz}\" was generated successfully.",
+                    "Open CraftQuestAI",
+                    "https://app.craftquestai.com/",
+                    "You can change email alerts in notification settings.")),
+            "pt" => (
+                "Seu questionario IA esta pronto",
+                $"\"{quiz}\" foi gerado com sucesso. Abra o CraftQuestAI para revisar.",
+                BuildHtml(
+                    "Geracao IA",
+                    "Questionario pronto",
+                    $"\"{quiz}\" foi gerado com sucesso.",
+                    "Abrir CraftQuestAI",
+                    "https://app.craftquestai.com/",
+                    "Voce pode alterar alertas por e-mail nas configuracoes.")),
+            _ => (
+                "Tu cuestionario IA está listo",
+                $"\"{quiz}\" se generó correctamente. Abre CraftQuestAI para revisarlo.",
+                BuildHtml(
+                    "Generación IA",
+                    "Cuestionario listo",
+                    $"\"{quiz}\" se generó correctamente.",
+                    "Abrir CraftQuestAI",
+                    "https://app.craftquestai.com/",
+                    "Puedes cambiar avisos por correo en ajustes de notificaciones.")),
+        };
+    }
+
+    public static (string Subject, string PlainText, string Html) BuildAiJobFailed(
+        string language,
+        NotificationPayload payload)
+    {
+        var quiz = payload.QuizTitle ?? "Quiz";
+        return language switch
+        {
+            "en" => (
+                "AI quiz generation failed",
+                $"We could not finish generating \"{quiz}\". Open CraftQuestAI to try again.",
+                BuildHtml(
+                    "AI generation",
+                    "Generation failed",
+                    $"We could not finish generating \"{quiz}\".",
+                    "Open CraftQuestAI",
+                    "https://app.craftquestai.com/",
+                    "You can change email alerts in notification settings.")),
+            "pt" => (
+                "Falha na geracao IA",
+                $"Nao foi possivel concluir a geracao de \"{quiz}\". Abra o CraftQuestAI para tentar novamente.",
+                BuildHtml(
+                    "Geracao IA",
+                    "Falha na geracao",
+                    $"Nao foi possivel concluir a geracao de \"{quiz}\".",
+                    "Abrir CraftQuestAI",
+                    "https://app.craftquestai.com/",
+                    "Voce pode alterar alertas por e-mail nas configuracoes.")),
+            _ => (
+                "Error en la generación IA",
+                $"No pudimos terminar de generar \"{quiz}\". Abre CraftQuestAI para intentarlo de nuevo.",
+                BuildHtml(
+                    "Generación IA",
+                    "Error en la generación",
+                    $"No pudimos terminar de generar \"{quiz}\".",
+                    "Abrir CraftQuestAI",
+                    "https://app.craftquestai.com/",
+                    "Puedes cambiar avisos por correo en ajustes de notificaciones.")),
+        };
+    }
+
     public static (string Subject, string PlainText, string Html) BuildMembershipExpiring(
         string language,
         NotificationPayload payload)

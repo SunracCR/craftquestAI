@@ -38,7 +38,12 @@ public class NotificationService(
 
     private static readonly HashSet<string> EmailEligibleTypes =
     [
+        NotificationTypes.QuizShared,
+        NotificationTypes.ClassJoined,
+        NotificationTypes.AssignmentCreated,
         NotificationTypes.AssignmentDueSoon,
+        NotificationTypes.AiJobCompleted,
+        NotificationTypes.AiJobFailed,
         NotificationTypes.MembershipExpiring,
         NotificationTypes.MembershipExpired,
     ];
@@ -95,7 +100,13 @@ public class NotificationService(
             }
 
             var pref = preferences.GetValueOrDefault(userId);
-            if (pref is { InAppEnabled: false, PushEnabled: false, EmailEnabled: false })
+            var inAppEnabled = ResolvePreference(pref?.InAppEnabled, defaultValue: true);
+            var pushEnabled = ResolvePreference(pref?.PushEnabled, defaultValue: true);
+            var emailEnabled = ResolvePreference(
+                pref?.EmailEnabled,
+                GetDefaultEmailEnabled(type));
+            if (!inAppEnabled && !pushEnabled &&
+                (!EmailEligibleTypes.Contains(type) || !emailEnabled))
             {
                 continue;
             }
@@ -111,7 +122,7 @@ public class NotificationService(
                 user.PreferredLanguage ?? "es",
                 payload);
 
-            if (pref?.InAppEnabled != false)
+            if (inAppEnabled)
             {
                 entities.Add(new Notification
                 {
@@ -127,7 +138,7 @@ public class NotificationService(
                 });
             }
 
-            if (pref?.PushEnabled != false)
+            if (pushEnabled)
             {
                 pushDeliveries.Add(new PushDelivery(
                     userId,
@@ -136,7 +147,7 @@ public class NotificationService(
                     BuildPushData(type, payload)));
             }
 
-            if (pref?.EmailEnabled != false && EmailEligibleTypes.Contains(type))
+            if (emailEnabled && EmailEligibleTypes.Contains(type))
             {
                 emailDeliveries.Add(new EmailDelivery(
                     user.Email,
@@ -159,7 +170,35 @@ public class NotificationService(
             }
         }
 
-        QueueDeliveriesInBackground(pushDeliveries, emailDeliveries);
+        QueuePushDeliveriesInBackground(pushDeliveries);
+        await SendEmailDeliveriesAsync(emailDeliveries, cancellationToken);
+    }
+
+    private async Task SendEmailDeliveriesAsync(
+        IReadOnlyList<EmailDelivery> emailDeliveries,
+        CancellationToken cancellationToken)
+    {
+        foreach (var email in emailDeliveries)
+        {
+            try
+            {
+                await SendNotificationEmailAsync(
+                    emailSender,
+                    email.Email,
+                    email.Language,
+                    email.Type,
+                    email.Payload,
+                    cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(
+                    ex,
+                    "Email failed for {Email}, type {Type}",
+                    email.Email,
+                    email.Type);
+            }
+        }
     }
 
     private async Task<HashSet<(Guid UserId, string DedupKey)>> LoadExistingDedupKeysAsync(
@@ -196,11 +235,9 @@ public class NotificationService(
             .ToHashSet();
     }
 
-    private void QueueDeliveriesInBackground(
-        IReadOnlyList<PushDelivery> pushDeliveries,
-        IReadOnlyList<EmailDelivery> emailDeliveries)
+    private void QueuePushDeliveriesInBackground(IReadOnlyList<PushDelivery> pushDeliveries)
     {
-        if (pushDeliveries.Count == 0 && emailDeliveries.Count == 0)
+        if (pushDeliveries.Count == 0)
         {
             return;
         }
@@ -211,7 +248,6 @@ public class NotificationService(
             {
                 await using var scope = scopeFactory.CreateAsyncScope();
                 var scopedPush = scope.ServiceProvider.GetRequiredService<IPushSender>();
-                var scopedEmail = scope.ServiceProvider.GetRequiredService<IEmailSender>();
 
                 foreach (var push in pushDeliveries)
                 {
@@ -232,32 +268,10 @@ public class NotificationService(
                             push.UserId);
                     }
                 }
-
-                foreach (var email in emailDeliveries)
-                {
-                    try
-                    {
-                        await SendNotificationEmailAsync(
-                            scopedEmail,
-                            email.Email,
-                            email.Language,
-                            email.Type,
-                            email.Payload,
-                            CancellationToken.None);
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.LogWarning(
-                            ex,
-                            "Email failed for {Email}, type {Type}",
-                            email.Email,
-                            email.Type);
-                    }
-                }
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Background notification delivery failed");
+                logger.LogWarning(ex, "Background push delivery failed");
             }
         });
     }
@@ -456,9 +470,11 @@ public class NotificationService(
             return new NotificationPreferenceDto
             {
                 Type = type,
-                InAppEnabled = pref?.InAppEnabled ?? true,
-                PushEnabled = pref?.PushEnabled ?? true,
-                EmailEnabled = pref?.EmailEnabled ?? true,
+                InAppEnabled = ResolvePreference(pref?.InAppEnabled, defaultValue: true),
+                PushEnabled = ResolvePreference(pref?.PushEnabled, defaultValue: true),
+                EmailEnabled = ResolvePreference(
+                    pref?.EmailEnabled,
+                    GetDefaultEmailEnabled(type)),
             };
         }).ToList();
 
@@ -566,8 +582,18 @@ public class NotificationService(
     {
         var (subject, plain, html) = type switch
         {
+            NotificationTypes.QuizShared =>
+                EmailTemplateBuilder.BuildQuizShared(language, payload),
+            NotificationTypes.ClassJoined =>
+                EmailTemplateBuilder.BuildClassJoined(language, payload),
+            NotificationTypes.AssignmentCreated =>
+                EmailTemplateBuilder.BuildAssignmentCreated(language, payload),
             NotificationTypes.AssignmentDueSoon =>
                 EmailTemplateBuilder.BuildAssignmentDueSoon(language, payload),
+            NotificationTypes.AiJobCompleted =>
+                EmailTemplateBuilder.BuildAiJobCompleted(language, payload),
+            NotificationTypes.AiJobFailed =>
+                EmailTemplateBuilder.BuildAiJobFailed(language, payload),
             NotificationTypes.MembershipExpiring =>
                 EmailTemplateBuilder.BuildMembershipExpiring(language, payload),
             NotificationTypes.MembershipExpired =>
@@ -602,4 +628,11 @@ public class NotificationService(
         NotificationTypes.MembershipExpiring,
         NotificationTypes.MembershipExpired,
     ];
+
+    private static bool ResolvePreference(bool? stored, bool defaultValue) =>
+        stored ?? defaultValue;
+
+    private static bool GetDefaultEmailEnabled(string type) =>
+        type is NotificationTypes.MembershipExpiring
+            or NotificationTypes.MembershipExpired;
 }

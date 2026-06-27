@@ -7060,6 +7060,18 @@ abstract class AppLocalizations {
   /// No description provided for @notificationsPreferencesSaved.
   String get notificationsPreferencesSaved;
 
+  /// No description provided for @notificationsPreferencesSectionSharing.
+  String get notificationsPreferencesSectionSharing;
+
+  /// No description provided for @notificationsPreferencesSectionAssignments.
+  String get notificationsPreferencesSectionAssignments;
+
+  /// No description provided for @notificationsPreferencesSectionMembership.
+  String get notificationsPreferencesSectionMembership;
+
+  /// No description provided for @notificationsPreferencesSectionAi.
+  String get notificationsPreferencesSectionAi;
+
   /// No description provided for @notificationsChannelInApp.
   String get notificationsChannelInApp;
 
