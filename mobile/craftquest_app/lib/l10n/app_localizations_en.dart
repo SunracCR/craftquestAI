@@ -623,6 +623,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get prepPlusViewHistory => 'View my history';
 
   @override
+  String get prepPlusProgressSectionTitle => 'My progress';
+
+  @override
   String get prepPlusAccessGranted => 'Access granted. You can practice now!';
 
   @override

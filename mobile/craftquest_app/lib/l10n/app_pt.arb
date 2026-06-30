@@ -264,6 +264,7 @@
   },
   "prepPlusNotAvailableForPurchase": "Indisponível para compra no momento.",
   "prepPlusViewHistory": "Ver meu histórico",
+  "prepPlusProgressSectionTitle": "Meu progresso",
   "prepPlusAccessGranted": "Acesso concedido. Já pode praticar!",
   "prepPlusConfirmPayPalPayment": "Confirmar pagamento PayPal",
   "prepPlusStoreProductMissing": "Pagamento na loja não configurado para esta oferta. Use a versão web com PayPal.",

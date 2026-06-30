@@ -264,6 +264,7 @@
   },
   "prepPlusNotAvailableForPurchase": "Not available for purchase right now.",
   "prepPlusViewHistory": "View my history",
+  "prepPlusProgressSectionTitle": "My progress",
   "prepPlusAccessGranted": "Access granted. You can practice now!",
   "prepPlusConfirmPayPalPayment": "Confirm PayPal payment",
   "prepPlusStoreProductMissing": "Store billing is not configured for this offer. Use the web app with PayPal.",

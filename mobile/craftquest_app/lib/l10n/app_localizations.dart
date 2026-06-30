@@ -1132,6 +1132,12 @@ abstract class AppLocalizations {
   /// **'Ver mi historial'**
   String get prepPlusViewHistory;
 
+  /// No description provided for @prepPlusProgressSectionTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Mi progreso'**
+  String get prepPlusProgressSectionTitle;
+
   /// No description provided for @prepPlusAccessGranted.
   ///
   /// In es, this message translates to:

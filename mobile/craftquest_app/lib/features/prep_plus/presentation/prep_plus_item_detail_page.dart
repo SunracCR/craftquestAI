@@ -13,16 +13,22 @@ import 'package:craftquest_app/core/widgets/app_section_card.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
+import 'package:craftquest_app/core/services/sound_service.dart';
+import 'package:craftquest_app/core/widgets/app_section_title.dart';
+import 'package:craftquest_app/features/analytics/presentation/quiz_analytics_page.dart';
 import 'package:craftquest_app/features/prep_plus/data/models/prep_plus_models.dart';
 import 'package:craftquest_app/features/prep_plus/data/prep_plus_repository.dart';
 import 'package:craftquest_app/features/prep_plus/presentation/prep_plus_preview_page.dart';
 import 'package:craftquest_app/features/prep_plus/presentation/widgets/prep_plus_access_combo_card.dart';
 import 'package:craftquest_app/features/practice/data/models/practice_models.dart';
+import 'package:craftquest_app/features/practice/data/practice_sound_preference_store.dart';
 import 'package:craftquest_app/features/practice/domain/practice_launch_options.dart';
 import 'package:craftquest_app/features/practice/data/practice_preferences_repository.dart';
 import 'package:craftquest_app/features/practice/data/practice_repository.dart';
 import 'package:craftquest_app/features/practice/presentation/my_practice_attempts_page.dart';
 import 'package:craftquest_app/features/practice/presentation/practice_navigation.dart';
+import 'package:craftquest_app/features/practice/presentation/practice_session_feedback.dart';
+import 'package:craftquest_app/features/practice/presentation/widgets/practice_launch_options_card.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -44,15 +50,20 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
   static const _bestValueDurationDays = 183;
 
   final _repository = getIt<PrepPlusRepository>();
+  final _preferencesRepository = getIt<PracticePreferencesRepository>();
+  final _soundPreferenceStore = getIt<PracticeSoundPreferenceStore>();
   PrepItemDetailModel? _item;
   String? _selectedOfferId;
   bool _loading = true;
+  bool _loadingPreferences = false;
   bool _checkingOut = false;
+  bool _randomizeQuestions = false;
+  bool _showTimer = true;
+  bool _enableSoundEffects = PracticeLaunchOptions.defaults.enableSoundEffects;
   String? _error;
   String? _pendingPayPalOrderId;
   StreamSubscription<List<PurchaseDetails>>? _purchaseSub;
   Future<PracticeActiveSessionModel?>? _activeSessionPrefetch;
-  Future<PracticeLaunchOptions>? _launchOptionsPrefetch;
 
   static bool get _supportsStorePurchase =>
       !kIsWeb &&
@@ -90,6 +101,8 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       });
       if (item.canPractice) {
         _warmPracticeLaunch(item.quizId);
+        unawaited(_loadPracticePreferences(item.quizId));
+        unawaited(_loadSoundPreferences());
       }
     } on DioException catch (e) {
       if (!mounted) return;
@@ -120,11 +133,126 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
   }
 
   void _warmPracticeLaunch(String quizId) {
-    final practiceRepo = getIt<PracticeRepository>();
-    final prefsRepo = getIt<PracticePreferencesRepository>();
-    _activeSessionPrefetch = practiceRepo.getActiveSessionForQuiz(quizId);
-    _launchOptionsPrefetch = prefsRepo.loadLaunchOptions(quizId);
+    _activeSessionPrefetch =
+        getIt<PracticeRepository>().getActiveSessionForQuiz(quizId);
   }
+
+  PracticeLaunchOptions get _currentLaunchOptions => PracticeLaunchOptions(
+        randomizeQuestions: _randomizeQuestions,
+        showTimer: _showTimer,
+        enableSoundEffects: _enableSoundEffects,
+      );
+
+  Future<void> _loadPracticePreferences(String quizId) async {
+    if (!mounted) return;
+    setState(() => _loadingPreferences = true);
+    try {
+      final prefs = await _preferencesRepository.getPreferences(quizId);
+      if (!mounted) return;
+      setState(() {
+        _showTimer = prefs.showElapsedTimer;
+        _randomizeQuestions = prefs.randomizeQuestions;
+        _loadingPreferences = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loadingPreferences = false);
+    }
+  }
+
+  Future<void> _loadSoundPreferences() async {
+    try {
+      final prefs = await _soundPreferenceStore.load();
+      if (!mounted) return;
+      setState(() => _enableSoundEffects = prefs.enableSoundEffects);
+    } catch (_) {}
+  }
+
+  Future<void> _persistShowTimerPreference(String quizId) async {
+    try {
+      await _preferencesRepository.savePreferences(
+        quizId: quizId,
+        randomizeQuestions: _randomizeQuestions,
+        showElapsedTimer: _showTimer,
+      );
+    } on DioException catch (e) {
+      if (!mounted) return;
+      context.showDioErrorSnackBar(e);
+    }
+  }
+
+  Future<void> _updateRandomizeQuestions(String quizId, bool value) async {
+    final previous = _randomizeQuestions;
+    setState(() => _randomizeQuestions = value);
+    try {
+      await _preferencesRepository.savePreferences(
+        quizId: quizId,
+        randomizeQuestions: value,
+        showElapsedTimer: _showTimer,
+      );
+    } on DioException catch (e) {
+      if (!mounted) return;
+      setState(() => _randomizeQuestions = previous);
+      context.showDioErrorSnackBar(e);
+    }
+  }
+
+  void _updateShowTimer(String quizId, bool value) {
+    setState(() => _showTimer = value);
+    _persistShowTimerPreference(quizId);
+  }
+
+  Future<void> _updateSoundEffects(bool value) async {
+    setState(() => _enableSoundEffects = value);
+    await _soundPreferenceStore.saveSoundEffects(value);
+    if (value) {
+      PracticeSessionFeedback.previewEnabled(getIt<SoundService>());
+    }
+  }
+
+  Future<void> _viewAnalytics(String quizId, String title) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => QuizAnalyticsPage(
+          quizId: quizId,
+          quizTitle: title,
+          personalMode: true,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _viewAttempts(String quizId, String title) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => MyPracticeAttemptsPage(
+          quizId: quizId,
+          quizTitle: title,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _startPractice(PrepItemDetailModel item) async {
+    final practiceRepo = getIt<PracticeRepository>();
+    await openPracticeSession(
+      context,
+      quizId: item.quizId,
+      quizTitle: item.title,
+      launchOptions: _currentLaunchOptions,
+      launchOptionsResolved: true,
+      activeSessionPrefetch: _activeSessionPrefetch ??
+          practiceRepo.getActiveSessionForQuiz(item.quizId),
+    );
+    if (mounted) await _load();
+  }
+
+  Widget _historyMenuDivider() => Divider(
+        height: 1,
+        indent: AppSpacing.md,
+        endIndent: AppSpacing.md,
+        color: AppColors.textSecondary.withValues(alpha: 0.12),
+      );
 
   void _openPreview() {
     final item = _item;
@@ -492,6 +620,42 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
                             l10n: l10n,
                           ),
                         ),
+                        if (_item!.canPractice) ...[
+                          const SizedBox(height: AppSpacing.lg),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.md,
+                            ),
+                            child: _loadingPreferences
+                                ? const Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: AppSpacing.md,
+                                    ),
+                                    child: Center(
+                                      child: SizedBox(
+                                        width: 28,
+                                        height: 28,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : PracticeLaunchOptionsCard(
+                                    randomizeQuestions: _randomizeQuestions,
+                                    showTimer: _showTimer,
+                                    enableSoundEffects: _enableSoundEffects,
+                                    onRandomizeQuestionsChanged: (value) =>
+                                        _updateRandomizeQuestions(
+                                      _item!.quizId,
+                                      value,
+                                    ),
+                                    onShowTimerChanged: (value) =>
+                                        _updateShowTimer(_item!.quizId, value),
+                                    onSoundEffectsChanged: _updateSoundEffects,
+                                  ),
+                          ),
+                        ],
                         if (_item!.offers.isNotEmpty &&
                             (_item!.canPurchase ||
                                 _item!.userAccessState == 'expired')) ...[
@@ -584,23 +748,48 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
                           Padding(
                             padding: const EdgeInsets.fromLTRB(
                               AppSpacing.md,
-                              AppSpacing.md,
+                              AppSpacing.lg,
                               AppSpacing.md,
                               0,
                             ),
-                            child: OutlinedButton.icon(
-                              onPressed: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute<void>(
-                                    builder: (_) => MyPracticeAttemptsPage(
-                                      quizId: _item!.quizId,
-                                      quizTitle: _item!.title,
-                                    ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                AppSectionTitle(
+                                  title: l10n.prepPlusProgressSectionTitle,
+                                ),
+                                const SizedBox(height: AppSpacing.xs),
+                                AppSectionCard(
+                                  padding: EdgeInsets.zero,
+                                  child: Column(
+                                    children: [
+                                      AppActionTile(
+                                        icon: Icons.analytics_rounded,
+                                        label: l10n.myQuizAnalyticsAction,
+                                        iconColor: AppColors.accentCool,
+                                        iconBackgroundColor: AppColors.accentCool
+                                            .withValues(alpha: 0.2),
+                                        onTap: () => _viewAnalytics(
+                                          _item!.quizId,
+                                          _item!.title,
+                                        ),
+                                      ),
+                                      _historyMenuDivider(),
+                                      AppActionTile(
+                                        icon: Icons.history_rounded,
+                                        label: l10n.prepPlusViewHistory,
+                                        iconColor: AppColors.accentSky,
+                                        iconBackgroundColor: AppColors.accentSky
+                                            .withValues(alpha: 0.2),
+                                        onTap: () => _viewAttempts(
+                                          _item!.quizId,
+                                          _item!.title,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                );
-                              },
-                              icon: const Icon(Icons.history_rounded),
-                              label: Text(l10n.prepPlusViewHistory),
+                                ),
+                              ],
                             ),
                           ),
                       ],
@@ -617,20 +806,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
         children: [
           AppPrimaryButton(
           label: l10n.prepPlusPracticeAction,
-          onPressed: () async {
-            final prefsRepo = getIt<PracticePreferencesRepository>();
-            final practiceRepo = getIt<PracticeRepository>();
-            await openPracticeSession(
-              context,
-              quizId: item.quizId,
-              quizTitle: item.title,
-              activeSessionPrefetch: _activeSessionPrefetch ??
-                  practiceRepo.getActiveSessionForQuiz(item.quizId),
-              launchOptionsPrefetch: _launchOptionsPrefetch ??
-                  prefsRepo.loadLaunchOptions(item.quizId),
-            );
-            if (mounted) await _load();
-          },
+          onPressed: () => _startPractice(item),
         ),
         ],
       );
