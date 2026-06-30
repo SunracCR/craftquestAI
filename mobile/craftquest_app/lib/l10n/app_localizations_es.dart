@@ -2043,6 +2043,38 @@ class AppLocalizationsEs extends AppLocalizations {
       'Aprueba la suscripción en PayPal y vuelve a la app para activarla.';
 
   @override
+  String get paypalReturnTitle => 'Pago con PayPal';
+
+  @override
+  String get paypalReturnProcessing => 'Procesando tu pago de PayPal…';
+
+  @override
+  String get paypalReturnSuccessSubscription =>
+      'Suscripción activada correctamente.';
+
+  @override
+  String get paypalReturnSuccessPrep =>
+      'Acceso Prep+ concedido correctamente.';
+
+  @override
+  String get paypalReturnSuccessCredits =>
+      'Créditos de IA añadidos a tu cuenta.';
+
+  @override
+  String get paypalReturnSuccessOrder =>
+      'Pago completado correctamente.';
+
+  @override
+  String get paypalReturnError =>
+      'No pudimos completar el pago de PayPal. Inténtalo de nuevo.';
+
+  @override
+  String get paypalReturnCancelled => 'Cancelaste el pago en PayPal.';
+
+  @override
+  String get paypalReturnContinue => 'Continuar';
+
+  @override
   String get subscriptionAutoRenewDisclaimer =>
       'Renovación automática cada periodo hasta que la canceles. Puedes desactivarla en cualquier momento.';
 

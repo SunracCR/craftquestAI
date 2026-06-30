@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:craftquest_app/core/billing/paypal_web_launcher.dart';
 import 'package:craftquest_app/core/billing/payment_platform.dart';
 import 'package:craftquest_app/core/compliance/parental_gate_dialog.dart';
 import 'package:craftquest_app/core/di/injection.dart';
@@ -14,6 +15,7 @@ import 'package:craftquest_app/features/auth/data/models/auth_models.dart';
 import 'package:craftquest_app/features/auth/presentation/auth_bloc.dart';
 import 'package:craftquest_app/features/billing/data/billing_repository.dart';
 import 'package:craftquest_app/features/billing/data/models/billing_models.dart';
+import 'package:craftquest_app/features/billing/data/pending_paypal_payment_store.dart';
 import 'package:craftquest_app/features/billing/presentation/billing_cycle_selector.dart';
 import 'package:craftquest_app/features/billing/presentation/subscription_cancel_flow.dart';
 import 'package:craftquest_app/features/billing/presentation/subscription_resume_flow.dart';
@@ -185,11 +187,22 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
       if (subscription.approvalUrl != null) {
         final uri = Uri.parse(subscription.approvalUrl!);
         if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-          if (!mounted) return;
-          context.showSuccessSnackBar(
-            l10n.paypalAwaitingSubscriptionActivation,
+          await getIt<PendingPayPalPaymentStore>().save(
+            PendingPayPalPayment(
+              flow: PendingPayPalPaymentFlow.subscription,
+              id: subscription.subscriptionId,
+              createdAt: DateTime.now().toUtc(),
+              billingCycle: _billingCycle.apiValue,
+              planCode: plan.code,
+            ),
           );
+          await launchPayPalApproval(uri);
+          if (!mounted) return;
+          if (!kIsWeb) {
+            context.showSuccessSnackBar(
+              l10n.paypalAwaitingSubscriptionActivation,
+            );
+          }
         }
       }
     } on DioException catch (e) {

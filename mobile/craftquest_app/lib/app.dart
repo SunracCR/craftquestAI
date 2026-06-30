@@ -18,6 +18,8 @@ import 'package:craftquest_app/features/auth/presentation/account_link_launch.da
 import 'package:craftquest_app/features/auth/presentation/login_page.dart';
 import 'package:craftquest_app/features/auth/presentation/reset_password_page.dart';
 import 'package:craftquest_app/features/auth/presentation/verify_email_page.dart';
+import 'package:craftquest_app/features/billing/presentation/paypal_return_launch.dart';
+import 'package:craftquest_app/features/billing/presentation/paypal_return_page.dart';
 import 'package:craftquest_app/features/profile/presentation/confirm_password_change_page.dart';
 import 'package:craftquest_app/features/guest/data/guest_repository.dart';
 import 'package:craftquest_app/features/guest/data/guest_token_storage.dart';
@@ -148,6 +150,7 @@ class _AuthGate extends StatefulWidget {
 class _AuthGateState extends State<_AuthGate> {
   final _handledJoinCodes = <String>{};
   final _handledAccountLinks = <String>{};
+  final _handledPayPalReturns = <String>{};
 
   @override
   void initState() {
@@ -167,6 +170,7 @@ class _AuthGateState extends State<_AuthGate> {
   void _resetEntryDeepLinkState() {
     _handledJoinCodes.clear();
     _handledAccountLinks.clear();
+    _handledPayPalReturns.clear();
     getIt<DeepLinkService>().clearPendingLinks();
     clearWebEntryDeepLinkUrl();
   }
@@ -186,6 +190,22 @@ class _AuthGateState extends State<_AuthGate> {
     final deepLinkService = getIt<DeepLinkService>();
     final authState = context.read<AuthBloc>().state;
     if (authState is AuthInitial || authState is AuthLoading) {
+      return;
+    }
+
+    final paypalReturn = readWebPayPalReturn();
+    if (paypalReturn != null) {
+      final returnKey = paypalReturn.dedupeKey;
+      if (!_handledPayPalReturns.contains(returnKey)) {
+        _handledPayPalReturns.add(returnKey);
+        if (paypalReturn.isCancel || authState is AuthAuthenticated) {
+          rootNavigatorKey.currentState?.push(
+            MaterialPageRoute<void>(
+              builder: (_) => PayPalReturnPage(returnInfo: paypalReturn),
+            ),
+          );
+        }
+      }
       return;
     }
 

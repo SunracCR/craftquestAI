@@ -21,6 +21,7 @@ import 'package:craftquest_app/features/ai_generation/data/study_material_reposi
 import 'package:craftquest_app/features/analytics/data/analytics_repository.dart';
 import 'package:craftquest_app/features/media/data/media_repository.dart';
 import 'package:craftquest_app/features/billing/data/billing_repository.dart';
+import 'package:craftquest_app/features/billing/data/pending_paypal_payment_store.dart';
 import 'package:craftquest_app/features/sharing/data/sharing_repository.dart';
 import 'package:craftquest_app/features/teacher/data/teacher_assignment_repository.dart';
 import 'package:craftquest_app/features/teacher/data/teacher_class_repository.dart';
@@ -37,6 +38,7 @@ import 'package:craftquest_app/features/notifications/data/notification_reposito
 import 'package:craftquest_app/features/notifications/presentation/notifications_cubit.dart';
 import 'package:craftquest_app/core/services/push_notification_service.dart';
 import 'package:get_it/get_it.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 final getIt = GetIt.instance;
 
@@ -95,6 +97,9 @@ void configureDependencies() {
   getIt.registerLazySingleton(() => TeacherAssignmentRepository(getIt<ApiClient>()));
   getIt.registerLazySingleton(() => TeacherDashboardRepository(getIt<ApiClient>()));
   getIt.registerLazySingleton(() => BillingRepository(getIt<ApiClient>()));
+  getIt.registerLazySingleton(
+    () => PendingPayPalPaymentStore(SharedPreferences.getInstance()),
+  );
   getIt.registerLazySingleton(() => SharingRepository(getIt<ApiClient>()));
   getIt.registerLazySingleton(() => AiRepository(getIt<ApiClient>()));
   getIt.registerLazySingleton(() => StudyMaterialRepository(getIt<ApiClient>()));

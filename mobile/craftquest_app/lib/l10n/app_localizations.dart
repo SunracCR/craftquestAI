@@ -3438,6 +3438,60 @@ abstract class AppLocalizations {
   /// **'Aprueba la suscripción en PayPal y vuelve a la app para activarla.'**
   String get paypalAwaitingSubscriptionActivation;
 
+  /// No description provided for @paypalReturnTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Pago con PayPal'**
+  String get paypalReturnTitle;
+
+  /// No description provided for @paypalReturnProcessing.
+  ///
+  /// In es, this message translates to:
+  /// **'Procesando tu pago de PayPal…'**
+  String get paypalReturnProcessing;
+
+  /// No description provided for @paypalReturnSuccessSubscription.
+  ///
+  /// In es, this message translates to:
+  /// **'Suscripción activada correctamente.'**
+  String get paypalReturnSuccessSubscription;
+
+  /// No description provided for @paypalReturnSuccessPrep.
+  ///
+  /// In es, this message translates to:
+  /// **'Acceso Prep+ concedido correctamente.'**
+  String get paypalReturnSuccessPrep;
+
+  /// No description provided for @paypalReturnSuccessCredits.
+  ///
+  /// In es, this message translates to:
+  /// **'Créditos de IA añadidos a tu cuenta.'**
+  String get paypalReturnSuccessCredits;
+
+  /// No description provided for @paypalReturnSuccessOrder.
+  ///
+  /// In es, this message translates to:
+  /// **'Pago completado correctamente.'**
+  String get paypalReturnSuccessOrder;
+
+  /// No description provided for @paypalReturnError.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos completar el pago de PayPal. Inténtalo de nuevo.'**
+  String get paypalReturnError;
+
+  /// No description provided for @paypalReturnCancelled.
+  ///
+  /// In es, this message translates to:
+  /// **'Cancelaste el pago en PayPal.'**
+  String get paypalReturnCancelled;
+
+  /// No description provided for @paypalReturnContinue.
+  ///
+  /// In es, this message translates to:
+  /// **'Continuar'**
+  String get paypalReturnContinue;
+
   /// No description provided for @subscriptionAutoRenewDisclaimer.
   ///
   /// In es, this message translates to:

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:craftquest_app/core/billing/paypal_web_launcher.dart';
 import 'package:craftquest_app/core/billing/payment_platform.dart';
 import 'package:craftquest_app/core/compliance/parental_gate_dialog.dart';
 import 'package:craftquest_app/core/di/injection.dart';
@@ -18,6 +19,7 @@ import 'package:craftquest_app/features/billing/presentation/subscription_cancel
 import 'package:craftquest_app/features/billing/presentation/subscription_resume_flow.dart';
 import 'package:craftquest_app/features/billing/data/billing_repository.dart';
 import 'package:craftquest_app/features/billing/data/models/billing_models.dart';
+import 'package:craftquest_app/features/billing/data/pending_paypal_payment_store.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -189,9 +191,20 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
           subscription.approvalUrl!.isNotEmpty) {
         final uri = Uri.parse(subscription.approvalUrl!);
         if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          await getIt<PendingPayPalPaymentStore>().save(
+            PendingPayPalPayment(
+              flow: PendingPayPalPaymentFlow.subscription,
+              id: subscription.subscriptionId,
+              createdAt: DateTime.now().toUtc(),
+              billingCycle: _billingCycle.apiValue,
+              planCode: plan.code,
+            ),
+          );
+          await launchPayPalApproval(uri);
           if (!mounted) return;
-          context.showSuccessSnackBar(l10n.paypalAwaitingSubscriptionActivation);
+          if (!kIsWeb) {
+            context.showSuccessSnackBar(l10n.paypalAwaitingSubscriptionActivation);
+          }
         }
       }
     } on DioException catch (e) {

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:craftquest_app/core/billing/paypal_web_launcher.dart';
 import 'package:craftquest_app/core/billing/payment_platform.dart';
 import 'package:craftquest_app/core/compliance/parental_gate_dialog.dart';
 import 'package:craftquest_app/core/di/injection.dart';
@@ -16,6 +17,7 @@ import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/core/services/sound_service.dart';
 import 'package:craftquest_app/core/widgets/app_section_title.dart';
 import 'package:craftquest_app/features/analytics/presentation/quiz_analytics_page.dart';
+import 'package:craftquest_app/features/billing/data/pending_paypal_payment_store.dart';
 import 'package:craftquest_app/features/prep_plus/data/models/prep_plus_models.dart';
 import 'package:craftquest_app/features/prep_plus/data/prep_plus_repository.dart';
 import 'package:craftquest_app/features/prep_plus/presentation/prep_plus_preview_page.dart';
@@ -352,9 +354,20 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       if (order.approvalUrl != null && order.approvalUrl!.isNotEmpty) {
         final uri = Uri.parse(order.approvalUrl!);
         if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          await getIt<PendingPayPalPaymentStore>().save(
+            PendingPayPalPayment(
+              flow: PendingPayPalPaymentFlow.prep,
+              id: order.orderId,
+              createdAt: DateTime.now().toUtc(),
+              catalogItemId: widget.catalogItemId,
+              offerId: offer.offerId,
+            ),
+          );
+          await launchPayPalApproval(uri);
           if (!mounted) return;
-          context.showInfoSnackBar(l10n.paypalAwaitingCapture);
+          if (!kIsWeb) {
+            context.showInfoSnackBar(l10n.paypalAwaitingCapture);
+          }
         }
       }
     } on DioException catch (e) {

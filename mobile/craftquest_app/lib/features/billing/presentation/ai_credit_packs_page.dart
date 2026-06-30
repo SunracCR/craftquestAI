@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:craftquest_app/core/billing/paypal_web_launcher.dart';
 import 'package:craftquest_app/core/billing/payment_platform.dart';
 import 'package:craftquest_app/core/compliance/parental_gate_dialog.dart';
 import 'package:craftquest_app/core/di/injection.dart';
@@ -13,6 +14,7 @@ import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/features/billing/data/billing_repository.dart';
 import 'package:craftquest_app/features/billing/data/models/billing_models.dart';
+import 'package:craftquest_app/features/billing/data/pending_paypal_payment_store.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -142,9 +144,19 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
       if (order.approvalUrl != null && order.approvalUrl!.isNotEmpty) {
         final uri = Uri.parse(order.approvalUrl!);
         if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          await getIt<PendingPayPalPaymentStore>().save(
+            PendingPayPalPayment(
+              flow: PendingPayPalPaymentFlow.aiCredit,
+              id: order.orderId,
+              createdAt: DateTime.now().toUtc(),
+              packCode: pack.code,
+            ),
+          );
+          await launchPayPalApproval(uri);
           if (!mounted) return;
-          context.showInfoSnackBar(l10n.paypalAwaitingCapture);
+          if (!kIsWeb) {
+            context.showInfoSnackBar(l10n.paypalAwaitingCapture);
+          }
         }
       }
     } on DioException catch (e) {
