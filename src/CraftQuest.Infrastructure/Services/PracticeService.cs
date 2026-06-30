@@ -53,17 +53,15 @@ public class PracticeService(
                 cancellationToken);
         }
 
-        var expireTask = PracticeSessionExpiry.ExpireStaleSessionsForUserAsync(
+        await PracticeSessionExpiry.ExpireStaleSessionsForUserAsync(
             dbContext,
             studentUserId,
             cancellationToken);
-        var questionsTask = PracticeQuestionLoader.LoadForQuizAsync(
+
+        var questions = await PracticeQuestionLoader.LoadForQuizAsync(
             dbContext,
             request.QuizId,
             cancellationToken);
-
-        await Task.WhenAll(expireTask, questionsTask);
-        var questions = await questionsTask;
 
         if (questions.Count == 0)
         {
