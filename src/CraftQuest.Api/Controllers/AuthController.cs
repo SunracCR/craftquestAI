@@ -92,6 +92,37 @@ public class AuthController(IAuthService authService) : ApiControllerBase
         return Ok(profile);
     }
 
+    [HttpDelete("me")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> DeleteMe(CancellationToken cancellationToken)
+    {
+        await authService.DeleteAccountAsync(GetUserId(), cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPost("confirm-parental-consent")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ConfirmParentalConsent(
+        [FromBody] ConfirmParentalConsentRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await authService.ConfirmParentalConsentAsync(request, cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost("resend-parental-consent")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> ResendParentalConsent(
+        [FromBody] ResendParentalConsentRequest request,
+        CancellationToken cancellationToken)
+    {
+        await authService.ResendParentalConsentAsync(request, cancellationToken);
+        return NoContent();
+    }
+
     [HttpPost("change-password")]
     [Authorize]
     [ProducesResponseType(typeof(ChangePasswordResultDto), StatusCodes.Status202Accepted)]

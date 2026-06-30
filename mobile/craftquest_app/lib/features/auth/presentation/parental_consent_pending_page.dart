@@ -10,21 +10,22 @@ import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
-class VerifyEmailPendingPage extends StatefulWidget {
-  const VerifyEmailPendingPage({
+class ParentalConsentPendingPage extends StatefulWidget {
+  const ParentalConsentPendingPage({
     required this.email,
-    this.guardianEmail,
+    required this.guardianEmail,
     super.key,
   });
 
   final String email;
-  final String? guardianEmail;
+  final String guardianEmail;
 
   @override
-  State<VerifyEmailPendingPage> createState() => _VerifyEmailPendingPageState();
+  State<ParentalConsentPendingPage> createState() =>
+      _ParentalConsentPendingPageState();
 }
 
-class _VerifyEmailPendingPageState extends State<VerifyEmailPendingPage> {
+class _ParentalConsentPendingPageState extends State<ParentalConsentPendingPage> {
   final _repository = getIt<AuthRepository>();
   bool _isResending = false;
 
@@ -35,12 +36,12 @@ class _VerifyEmailPendingPageState extends State<VerifyEmailPendingPage> {
 
     setState(() => _isResending = true);
     try {
-      await _repository.resendVerification(email: widget.email);
+      await _repository.resendParentalConsent(email: widget.email);
       if (!mounted) {
         return;
       }
       context.showSuccessSnackBar(
-        AppLocalizations.of(context)!.verifyEmailResentMessage,
+        AppLocalizations.of(context)!.parentalConsentResend,
       );
     } on DioException catch (e) {
       if (!mounted) {
@@ -64,19 +65,19 @@ class _VerifyEmailPendingPageState extends State<VerifyEmailPendingPage> {
     final l10n = AppLocalizations.of(context)!;
 
     return EdgeAwareScaffold(
-      appBar: craftQuestAppBar(title: l10n.verifyEmailPendingTitle),
+      appBar: craftQuestAppBar(title: l10n.parentalConsentPendingTitle),
       body: ListView(
         padding: AppSpacing.pageVertical,
         children: [
-          AppBrandHeader(title: l10n.verifyEmailPendingTitle),
+          AppBrandHeader(title: l10n.parentalConsentPendingTitle),
           const SizedBox(height: AppSpacing.lg),
           Text(
-            l10n.verifyEmailPendingMessage(widget.email),
+            l10n.parentalConsentPendingMessage(widget.guardianEmail),
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           const SizedBox(height: AppSpacing.xl),
           AppGradientPrimaryButton(
-            label: l10n.verifyEmailResendAction,
+            label: l10n.parentalConsentResend,
             isLoading: _isResending,
             onPressed: _resend,
           ),

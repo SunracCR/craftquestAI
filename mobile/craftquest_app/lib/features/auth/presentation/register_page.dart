@@ -1,14 +1,20 @@
+import 'package:craftquest_app/core/compliance/age_collection_storage.dart';
+import 'package:craftquest_app/core/compliance/legal_links.dart';
+import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_brand_header.dart';
 import 'package:craftquest_app/core/widgets/app_buttons.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/features/auth/presentation/auth_bloc.dart';
+import 'package:craftquest_app/features/auth/presentation/parental_consent_pending_page.dart';
 import 'package:craftquest_app/features/auth/presentation/verify_email_pending_page.dart';
 import 'package:craftquest_app/features/auth/presentation/widgets/oauth_sign_in_buttons.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -19,21 +25,77 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
+  final _ageStorage = getIt<AgeCollectionStorage>();
   final _displayNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _guardianEmailController = TextEditingController();
+  DateTime? _birthDate;
+  bool _isMinor = false;
   bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStoredBirthDate();
+  }
+
+  Future<void> _loadStoredBirthDate() async {
+    final stored = await _ageStorage.getDateOfBirth();
+    final minor = await _ageStorage.isMinor();
+    if (!mounted || stored == null) {
+      return;
+    }
+    setState(() {
+      _birthDate = stored;
+      _isMinor = minor;
+    });
+  }
 
   @override
   void dispose() {
     _displayNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _guardianEmailController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickBirthDate() async {
+    final now = DateTime.now();
+    final initial = _birthDate ?? DateTime(now.year - 16, now.month, now.day);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(now.year - 100),
+      lastDate: now,
+      helpText: AppLocalizations.of(context)!.ageScreenBirthDateLabel,
+    );
+    if (picked == null) {
+      return;
+    }
+
+    var age = now.year - picked.year;
+    if (picked.month > now.month ||
+        (picked.month == now.month && picked.day > now.day)) {
+      age--;
+    }
+
+    setState(() {
+      _birthDate = picked;
+      _isMinor = age < AgeCollectionStorage.minimumAgeWithoutParentalConsent;
+    });
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate() || _isSubmitting) {
+      return;
+    }
+
+    if (_birthDate == null) {
+      AppSnackBars.showError(
+        AppLocalizations.of(context)!.ageScreenBirthDateLabel,
+      );
       return;
     }
 
@@ -50,6 +112,8 @@ class _RegisterPageState extends State<RegisterPage> {
         email: _emailController.text.trim(),
         password: _passwordController.text,
         displayName: _displayNameController.text.trim(),
+        dateOfBirth: _birthDate,
+        guardianEmail: _isMinor ? _guardianEmailController.text.trim() : null,
       ),
     );
 
@@ -65,15 +129,35 @@ class _RegisterPageState extends State<RegisterPage> {
     if (result is AuthEmailVerificationPending) {
       await Navigator.of(context).pushReplacement(
         MaterialPageRoute<void>(
-          builder: (_) => VerifyEmailPendingPage(email: result.email),
+          builder: (_) => VerifyEmailPendingPage(
+            email: result.email,
+            guardianEmail: result.guardianEmail,
+          ),
         ),
       );
+      if (!context.mounted || !result.requiresParentalConsent) {
+        return;
+      }
+      if (result.guardianEmail != null && result.guardianEmail!.isNotEmpty) {
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => ParentalConsentPendingPage(
+              email: result.email,
+              guardianEmail: result.guardianEmail!,
+            ),
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
+    final birthDateLabel = _birthDate == null
+        ? l10n.ageScreenBirthDateLabel
+        : DateFormat.yMMMMd(locale).format(_birthDate!);
 
     return EdgeAwareScaffold(
       appBar: craftQuestAppBar(title: l10n.registerTitle),
@@ -113,6 +197,39 @@ class _RegisterPageState extends State<RegisterPage> {
                   return null;
                 },
               ),
+              const SizedBox(height: AppSpacing.md),
+              OutlinedButton.icon(
+                onPressed: _pickBirthDate,
+                icon: const Icon(Icons.calendar_today_outlined),
+                label: Text(birthDateLabel),
+              ),
+              if (_isMinor) ...[
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  l10n.ageScreenMinorNotice,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.accentCool,
+                      ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                TextFormField(
+                  controller: _guardianEmailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(
+                    labelText: l10n.guardianEmailLabel,
+                    hintText: l10n.guardianEmailHint,
+                  ),
+                  validator: (value) {
+                    if (!_isMinor) {
+                      return null;
+                    }
+                    if (value == null || value.trim().isEmpty) {
+                      return l10n.fieldRequired;
+                    }
+                    return null;
+                  },
+                ),
+              ],
               const SizedBox(height: AppSpacing.lg),
               AppGradientPrimaryButton(
                 label: l10n.registerAction,
@@ -124,6 +241,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 enabled: !_isSubmitting,
                 forceGoogleAccountSelection: true,
               ),
+              const RegisterLegalDisclaimer(),
             ],
           ),
         ),

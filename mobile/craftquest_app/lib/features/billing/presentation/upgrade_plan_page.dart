@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:craftquest_app/core/billing/payment_platform.dart';
+import 'package:craftquest_app/core/compliance/parental_gate_dialog.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
@@ -127,6 +128,9 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
   }
 
   Future<void> _buyWithStore(UpgradeablePlanModel plan) async {
+    if (!await showParentalGate(context)) {
+      return;
+    }
     final l10n = AppLocalizations.of(context)!;
     final productId = plan.storeProductId(
       isIos: defaultTargetPlatform == TargetPlatform.iOS,
@@ -156,6 +160,9 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
   }
 
   Future<void> _buyWithPayPal(UpgradeablePlanModel plan) async {
+    if (!await showParentalGate(context)) {
+      return;
+    }
     final l10n = AppLocalizations.of(context)!;
     setState(() => _purchasing = true);
     try {

@@ -1931,5 +1931,41 @@
   "notificationTypeAiJobCompleted": "Questionário IA pronto",
   "notificationTypeAiJobFailed": "Falha no questionário IA",
   "notificationTypeMembershipExpiring": "Assinatura expirando",
-  "notificationTypeMembershipExpired": "Assinatura expirada"
+  "notificationTypeMembershipExpired": "Assinatura expirada",
+  "legalSectionTitle": "Legal",
+  "privacyPolicyLink": "Politica de privacidade",
+  "termsOfServiceLink": "Termos de servico",
+  "registerLegalDisclaimerPrefix": "Ao se cadastrar, voce aceita os ",
+  "registerLegalDisclaimerAnd": " e a ",
+  "registerLegalDisclaimerSuffix": ".",
+  "deleteAccountTitle": "Excluir minha conta",
+  "deleteAccountSubtitle": "Seus dados serao excluidos permanentemente. Esta acao nao pode ser desfeita.",
+  "deleteAccountConfirmHint": "Digite EXCLUIR para confirmar",
+  "deleteAccountConfirmWord": "EXCLUIR",
+  "deleteAccountAction": "Excluir conta",
+  "deleteAccountSuccess": "Sua conta foi excluida.",
+  "deleteAccountCancel": "Cancelar",
+  "parentalGateTitle": "Verificacao de adulto",
+  "parentalGateSubtitle": "Para continuar, resolva esta operacao:",
+  "parentalGateAnswerLabel": "Resposta",
+  "parentalGateWrongAnswer": "Resposta incorreta. Tente novamente.",
+  "parentalGateConfirm": "Confirmar",
+  "parentalGateCancel": "Cancelar",
+  "ageScreenTitle": "Quando voce nasceu?",
+  "ageScreenSubtitle": "Usamos esta informacao para oferecer uma experiencia adequada a sua idade.",
+  "ageScreenBirthDateLabel": "Data de nascimento",
+  "ageScreenContinue": "Continuar",
+  "ageScreenMinorNotice": "Como voce e menor de idade, precisara do consentimento de um pai, mae ou responsavel para criar uma conta.",
+  "guardianEmailLabel": "E-mail do pai, mae ou responsavel",
+  "guardianEmailHint": "responsavel@exemplo.com",
+  "parentalConsentPendingTitle": "Aguardando consentimento parental",
+  "parentalConsentPendingMessage": "Enviamos um e-mail para {email} para que um adulto autorize sua conta.",
+  "@parentalConsentPendingMessage": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "parentalConsentResend": "Reenviar e-mail ao responsavel"
 }

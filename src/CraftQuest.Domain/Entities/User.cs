@@ -15,6 +15,10 @@ public class User
     public string? PhoneNumber { get; set; }
     public string Status { get; set; } = "active";
     public DateTime? EmailVerifiedAt { get; set; }
+    public DateOnly? DateOfBirth { get; set; }
+    public string? ParentalConsentStatus { get; set; }
+    public DateTime? ParentalConsentAt { get; set; }
+    public string? GuardianEmail { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public DateTime? DeletedAt { get; set; }

@@ -22,6 +22,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthOAuthSignInRequested>(_onOAuthSignInRequested);
     on<AuthRegisterRequested>(_onRegisterRequested);
     on<AuthLogoutRequested>(_onLogoutRequested);
+    on<AuthDeleteAccountRequested>(_onDeleteAccountRequested);
     on<AuthSessionExpired>(_onSessionExpired);
     on<AuthProfileUpdated>(_onProfileUpdated);
     on<AuthProfileRefreshRequested>(_onProfileRefreshRequested);
@@ -162,8 +163,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         email: event.email,
         password: event.password,
         displayName: event.displayName,
+        dateOfBirth: event.dateOfBirth,
+        guardianEmail: event.guardianEmail,
       );
-      emit(AuthEmailVerificationPending(result.email));
+      emit(AuthEmailVerificationPending(
+        result.email,
+        guardianEmail: result.guardianEmail,
+        requiresParentalConsent: result.requiresParentalConsent,
+      ));
     } on DioException catch (e) {
       emit(_loginFailure(_repository.mapError(e)));
     } catch (_) {
@@ -191,6 +198,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     unawaited(OAuthSignInService.clearGoogleSession());
     _resetSessionExpiredFlag();
     emit(const AuthUnauthenticated());
+  }
+
+  Future<void> _onDeleteAccountRequested(
+    AuthDeleteAccountRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    try {
+      await _repository.deleteAccount();
+      unawaited(OAuthSignInService.clearGoogleSession());
+      _resetSessionExpiredFlag();
+      emit(const AuthUnauthenticated());
+    } on DioException catch (e) {
+      emit(_loginFailure(_repository.mapError(e)));
+    } catch (_) {
+      emit(_loginFailure(DioErrorMapper.genericMessage()));
+    }
   }
 
   void _resetSessionExpiredFlag() {

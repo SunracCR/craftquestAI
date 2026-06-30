@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:craftquest_app/core/compliance/legal_links.dart';
+import 'package:craftquest_app/core/config/legal_urls.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/locale/locale_controller.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
@@ -226,6 +228,61 @@ class _ProfilePageState extends State<ProfilePage> {
       }
       rethrow;
     }
+  }
+
+  Future<void> _confirmDeleteAccount(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmController = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.deleteAccountTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(l10n.deleteAccountSubtitle),
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: confirmController,
+              decoration: InputDecoration(
+                labelText: l10n.deleteAccountConfirmHint,
+              ),
+              autocorrect: false,
+              textCapitalization: TextCapitalization.characters,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.deleteAccountCancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.error,
+            ),
+            onPressed: () {
+              final matches = confirmController.text.trim().toUpperCase() ==
+                  l10n.deleteAccountConfirmWord.toUpperCase();
+              Navigator.of(dialogContext).pop(matches);
+            },
+            child: Text(l10n.deleteAccountAction),
+          ),
+        ],
+      ),
+    );
+    confirmController.dispose();
+
+    if (confirmed != true || !context.mounted) {
+      return;
+    }
+
+    context.read<AuthBloc>().add(const AuthDeleteAccountRequested());
+    if (!context.mounted) {
+      return;
+    }
+    context.showSuccessSnackBar(l10n.deleteAccountSuccess);
   }
 
   @override
@@ -633,6 +690,42 @@ class _ProfilePageState extends State<ProfilePage> {
                   onTap: () {
                     context.read<AuthBloc>().add(const AuthLogoutRequested());
                   },
+                ),
+                _divider(),
+                ListTile(
+                  leading: const Icon(
+                    Icons.delete_forever_outlined,
+                    color: AppColors.error,
+                  ),
+                  title: Text(
+                    l10n.deleteAccountTitle,
+                    style: const TextStyle(color: AppColors.error),
+                  ),
+                  subtitle: Text(l10n.deleteAccountSubtitle),
+                  onTap: () => _confirmDeleteAccount(context),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          AppSectionTitle(title: l10n.legalSectionTitle),
+          const SizedBox(height: AppSpacing.xs),
+          AppSectionCard(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.privacy_tip_outlined),
+                  title: Text(l10n.privacyPolicyLink),
+                  trailing: const Icon(Icons.open_in_new_rounded, size: 18),
+                  onTap: () => openLegalUrl(LegalUrls.privacyPolicyUrl),
+                ),
+                _divider(),
+                ListTile(
+                  leading: const Icon(Icons.description_outlined),
+                  title: Text(l10n.termsOfServiceLink),
+                  trailing: const Icon(Icons.open_in_new_rounded, size: 18),
+                  onTap: () => openLegalUrl(LegalUrls.termsOfServiceUrl),
                 ),
               ],
             ),

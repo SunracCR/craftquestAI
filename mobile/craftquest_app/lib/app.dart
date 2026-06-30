@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:craftquest_app/core/compliance/age_collection_gate.dart';
 import 'package:craftquest_app/core/compliance/parental_consent_gate.dart';
 import 'package:craftquest_app/core/auth/session_expired_notifier.dart';
 import 'package:craftquest_app/core/di/injection.dart';
@@ -79,7 +80,9 @@ class CraftQuestApp extends StatelessWidget {
               return AppConnectivityOverlay(child: child);
             },
             home: const ParentalConsentGate(
-              child: _SessionExpiredListener(child: _AuthGate()),
+              child: AgeCollectionGate(
+                child: _SessionExpiredListener(child: _AuthGate()),
+              ),
             ),
           );
         },

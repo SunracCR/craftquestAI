@@ -11,6 +11,7 @@ public class CraftQuestDbContext(DbContextOptions<CraftQuestDbContext> options) 
     public DbSet<AuthProvider> AuthProviders => Set<AuthProvider>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
+    public DbSet<ParentalConsentToken> ParentalConsentTokens => Set<ParentalConsentToken>();
     public DbSet<PasswordChangeToken> PasswordChangeTokens => Set<PasswordChangeToken>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<NotificationOutbox> NotificationOutbox => Set<NotificationOutbox>();

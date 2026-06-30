@@ -43,10 +43,16 @@ class AuthFailure extends AuthState {
 }
 
 class AuthEmailVerificationPending extends AuthState {
-  const AuthEmailVerificationPending(this.email);
+  const AuthEmailVerificationPending(
+    this.email, {
+    this.guardianEmail,
+    this.requiresParentalConsent = false,
+  });
 
   final String email;
+  final String? guardianEmail;
+  final bool requiresParentalConsent;
 
   @override
-  List<Object?> get props => [email];
+  List<Object?> get props => [email, guardianEmail, requiresParentalConsent];
 }

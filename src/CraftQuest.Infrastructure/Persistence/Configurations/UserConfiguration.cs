@@ -26,6 +26,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.CountryCode).HasMaxLength(10);
         builder.Property(x => x.PhoneNumber).HasMaxLength(40);
         builder.Property(x => x.Status).HasMaxLength(30).IsRequired();
+        builder.Property(x => x.ParentalConsentStatus).HasMaxLength(30);
+        builder.Property(x => x.GuardianEmail).HasMaxLength(320);
 
         builder.HasQueryFilter(x => x.DeletedAt == null);
     }

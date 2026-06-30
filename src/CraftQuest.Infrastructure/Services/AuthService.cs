@@ -26,6 +26,8 @@ public class AuthService(
     IOptions<JoinLinkOptions> joinLinkOptions,
     IOptions<ExternalAuthOptions> externalAuthOptions) : IAuthService
 {
+    private const int MinimumAgeWithoutParentalConsent = 13;
+
     private readonly PasswordResetOptions _resetOptions = passwordResetOptions.Value;
     private readonly JoinLinkOptions _joinLinkOptions = joinLinkOptions.Value;
     private readonly ExternalAuthOptions _externalAuth = externalAuthOptions.Value;
@@ -70,6 +72,26 @@ public class AuthService(
             .FirstOrDefaultAsync(r => r.Code == RoleCodes.Student, cancellationToken)
             ?? throw new AuthException("Default student role is not configured.", 500);
 
+        var requiresParentalConsent = false;
+        string? guardianEmail = null;
+        if (request.DateOfBirth.HasValue)
+        {
+            var age = CalculateAge(request.DateOfBirth.Value);
+            if (age < MinimumAgeWithoutParentalConsent)
+            {
+                if (string.IsNullOrWhiteSpace(request.GuardianEmail))
+                {
+                    throw new AuthException(
+                        "Guardian email is required for users under 13.",
+                        400,
+                        "GUARDIAN_EMAIL_REQUIRED");
+                }
+
+                requiresParentalConsent = true;
+                guardianEmail = request.GuardianEmail.Trim();
+            }
+        }
+
         var userId = Guid.NewGuid();
         var displayName = string.IsNullOrWhiteSpace(request.DisplayName)
             ? request.Email.Split('@')[0]
@@ -82,7 +104,12 @@ public class AuthService(
             DisplayName = displayName,
             AvatarId = "craft_01",
             PasswordHash = PasswordHasher.HashPassword(request.Password),
-            Status = "pending",
+            Status = UserStatuses.Pending,
+            DateOfBirth = request.DateOfBirth,
+            ParentalConsentStatus = requiresParentalConsent
+                ? ParentalConsentStatuses.Pending
+                : ParentalConsentStatuses.NotRequired,
+            GuardianEmail = guardianEmail,
             CreatedAt = DateTime.UtcNow,
         };
 
@@ -108,10 +135,17 @@ public class AuthService(
 
         await SendVerificationEmailAsync(user, cancellationToken);
 
+        if (requiresParentalConsent)
+        {
+            await SendParentalConsentEmailAsync(user, cancellationToken);
+        }
+
         return new RegisterResultDto
         {
             RequiresEmailVerification = true,
+            RequiresParentalConsent = requiresParentalConsent,
             Email = user.Email,
+            GuardianEmail = guardianEmail,
         };
     }
 
@@ -133,7 +167,7 @@ public class AuthService(
             throw new AuthException("Invalid email or password.", 401);
         }
 
-        if (user.Status == "pending")
+        if (user.Status == UserStatuses.Pending)
         {
             throw new AuthException(
                 "Email address is not verified.",
@@ -141,7 +175,15 @@ public class AuthService(
                 "EMAIL_NOT_VERIFIED");
         }
 
-        if (user.Status != "active")
+        if (user.Status == UserStatuses.PendingParentalConsent)
+        {
+            throw new AuthException(
+                "Waiting for parental consent.",
+                403,
+                "PARENTAL_CONSENT_PENDING");
+        }
+
+        if (user.Status != UserStatuses.Active)
         {
             throw new AuthException("Invalid email or password.", 401);
         }
@@ -176,20 +218,36 @@ public class AuthService(
                 t => t.TokenHash == tokenHash && t.UsedAt == null && t.ExpiresAt > now,
                 cancellationToken);
 
-        if (verificationToken?.User is null || verificationToken.User.Status != "pending")
+        if (verificationToken?.User is null || verificationToken.User.Status != UserStatuses.Pending)
         {
             throw new AuthException("Invalid or expired verification token.", 400, "INVALID_VERIFICATION_TOKEN");
         }
 
-        verificationToken.User.Status = "active";
         verificationToken.User.EmailVerifiedAt = now;
         verificationToken.User.UpdatedAt = now;
         verificationToken.UsedAt = now;
 
-        await dbContext.SaveChangesAsync(cancellationToken);
-        await billingService.AssignFreePlanAsync(verificationToken.User.UserId, cancellationToken);
+        if (verificationToken.User.ParentalConsentStatus == ParentalConsentStatuses.Pending)
+        {
+            verificationToken.User.Status = UserStatuses.PendingParentalConsent;
+        }
+        else
+        {
+            verificationToken.User.Status = UserStatuses.Active;
+            await billingService.AssignFreePlanAsync(verificationToken.User.UserId, cancellationToken);
+        }
 
-        return BuildAuthResponse(verificationToken.User);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        if (verificationToken.User.Status == UserStatuses.Active)
+        {
+            return BuildAuthResponse(verificationToken.User);
+        }
+
+        throw new AuthException(
+            "Waiting for parental consent.",
+            403,
+            "PARENTAL_CONSENT_PENDING");
     }
 
     public async Task ResendVerificationAsync(
@@ -210,6 +268,129 @@ public class AuthService(
         }
 
         await SendVerificationEmailAsync(user, cancellationToken);
+    }
+
+    public async Task DeleteAccountAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await dbContext.Users
+            .FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken)
+            ?? throw new AuthException("User not found.", 404);
+
+        if (user.Status == "deleted" || user.DeletedAt is not null)
+        {
+            throw new AuthException("User account is already deleted.", 404);
+        }
+
+        var deviceTokens = await dbContext.DeviceTokens
+            .Where(t => t.UserId == userId)
+            .ToListAsync(cancellationToken);
+        dbContext.DeviceTokens.RemoveRange(deviceTokens);
+
+        var emailTokens = await dbContext.EmailVerificationTokens
+            .Where(t => t.UserId == userId)
+            .ToListAsync(cancellationToken);
+        dbContext.EmailVerificationTokens.RemoveRange(emailTokens);
+
+        var resetTokens = await dbContext.PasswordResetTokens
+            .Where(t => t.UserId == userId)
+            .ToListAsync(cancellationToken);
+        dbContext.PasswordResetTokens.RemoveRange(resetTokens);
+
+        var changeTokens = await dbContext.PasswordChangeTokens
+            .Where(t => t.UserId == userId)
+            .ToListAsync(cancellationToken);
+        dbContext.PasswordChangeTokens.RemoveRange(changeTokens);
+
+        var parentalTokens = await dbContext.ParentalConsentTokens
+            .Where(t => t.UserId == userId)
+            .ToListAsync(cancellationToken);
+        dbContext.ParentalConsentTokens.RemoveRange(parentalTokens);
+
+        var now = DateTime.UtcNow;
+        user.Status = UserStatuses.Deleted;
+        user.DeletedAt = now;
+        user.UpdatedAt = now;
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<AuthResponseDto> ConfirmParentalConsentAsync(
+        ConfirmParentalConsentRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        EnsureTokenSecurityConfigured();
+
+        if (string.IsNullOrWhiteSpace(request.Token))
+        {
+            throw new AuthException("Consent token is required.", 400);
+        }
+
+        var tokenHash = PasswordResetTokenHasher.Hash(request.Token.Trim(), _resetOptions.Pepper);
+        var now = DateTime.UtcNow;
+
+        var consentToken = await dbContext.ParentalConsentTokens
+            .Include(t => t.User)
+            .ThenInclude(u => u.UserRoles)
+            .ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(
+                t => t.TokenHash == tokenHash && t.UsedAt == null && t.ExpiresAt > now,
+                cancellationToken);
+
+        if (consentToken?.User is null
+            || consentToken.User.ParentalConsentStatus != ParentalConsentStatuses.Pending)
+        {
+            throw new AuthException(
+                "Invalid or expired parental consent token.",
+                400,
+                "INVALID_PARENTAL_CONSENT_TOKEN");
+        }
+
+        consentToken.User.ParentalConsentStatus = ParentalConsentStatuses.Granted;
+        consentToken.User.ParentalConsentAt = now;
+        consentToken.User.UpdatedAt = now;
+        consentToken.UsedAt = now;
+
+        if (consentToken.User.EmailVerifiedAt is not null)
+        {
+            consentToken.User.Status = UserStatuses.Active;
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        if (consentToken.User.Status == UserStatuses.Active)
+        {
+            await billingService.AssignFreePlanAsync(consentToken.User.UserId, cancellationToken);
+            return BuildAuthResponse(consentToken.User);
+        }
+
+        throw new AuthException(
+            "Email address is not verified.",
+            403,
+            "EMAIL_NOT_VERIFIED");
+    }
+
+    public async Task ResendParentalConsentAsync(
+        ResendParentalConsentRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        EnsureTokenSecurityConfigured();
+
+        var normalizedEmail = request.Email.Trim().ToUpperInvariant();
+        var user = await dbContext.Users
+            .FirstOrDefaultAsync(
+                u => u.EmailNormalized == normalizedEmail
+                    && u.Status == UserStatuses.PendingParentalConsent
+                    && u.ParentalConsentStatus == ParentalConsentStatuses.Pending,
+                cancellationToken);
+
+        if (user is null || string.IsNullOrWhiteSpace(user.GuardianEmail))
+        {
+            return;
+        }
+
+        await SendParentalConsentEmailAsync(user, cancellationToken);
     }
 
     public async Task<AuthResponseDto> LoginWithGoogleAsync(
@@ -600,6 +781,69 @@ public class AuthService(
         await emailSender.SendAsync(user.Email, subject, plainText, html, cancellationToken);
     }
 
+    private async Task SendParentalConsentEmailAsync(User user, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(user.GuardianEmail))
+        {
+            return;
+        }
+
+        var rawToken = PasswordResetTokenHasher.GenerateToken();
+        var tokenHash = PasswordResetTokenHasher.Hash(rawToken, _resetOptions.Pepper);
+        var now = DateTime.UtcNow;
+
+        var activeTokens = await dbContext.ParentalConsentTokens
+            .Where(t => t.UserId == user.UserId && t.UsedAt == null && t.ExpiresAt > now)
+            .ToListAsync(cancellationToken);
+
+        foreach (var existing in activeTokens)
+        {
+            existing.UsedAt = now;
+        }
+
+        dbContext.ParentalConsentTokens.Add(new ParentalConsentToken
+        {
+            ParentalConsentTokenId = Guid.NewGuid(),
+            UserId = user.UserId,
+            TokenHash = tokenHash,
+            ExpiresAt = now.AddMinutes(_resetOptions.TokenLifetimeMinutes),
+            CreatedAt = now,
+        });
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        var actionUrl = AccountLinkUrlBuilder.BuildLandingUrl(
+            _joinLinkOptions,
+            AccountLinkUrlBuilder.ParentalConsent,
+            rawToken);
+        var language = user.PreferredLanguage ?? "es";
+        var displayName = user.DisplayName ?? user.Email;
+        var (subject, plainText, html) = EmailTemplateBuilder.BuildParentalConsent(
+            language,
+            displayName,
+            actionUrl,
+            _resetOptions.TokenLifetimeMinutes);
+
+        await emailSender.SendAsync(
+            user.GuardianEmail,
+            subject,
+            plainText,
+            html,
+            cancellationToken);
+    }
+
+    private static int CalculateAge(DateOnly dateOfBirth)
+    {
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var age = today.Year - dateOfBirth.Year;
+        if (dateOfBirth > today.AddYears(-age))
+        {
+            age--;
+        }
+
+        return age;
+    }
+
     private void EnsureTokenSecurityConfigured()
     {
         if (string.IsNullOrWhiteSpace(_resetOptions.Pepper))
@@ -618,7 +862,7 @@ public class AuthService(
             .FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken)
             ?? throw new AuthException("User not found.", 404);
 
-        if (user.Status != "active")
+        if (user.Status != UserStatuses.Active)
         {
             throw new AuthException("User account is not active.", 403);
         }

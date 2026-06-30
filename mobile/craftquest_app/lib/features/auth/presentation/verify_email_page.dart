@@ -5,6 +5,7 @@ import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_buttons.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/features/auth/data/auth_repository.dart';
+import 'package:craftquest_app/features/auth/presentation/parental_consent_pending_page.dart';
 import 'package:craftquest_app/features/auth/presentation/auth_bloc.dart';
 import 'package:craftquest_app/features/auth/presentation/widgets/auth_premium_background.dart';
 import 'package:craftquest_app/features/auth/presentation/widgets/auth_premium_header.dart';
@@ -14,9 +15,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class VerifyEmailPage extends StatefulWidget {
-  const VerifyEmailPage({required this.initialToken, super.key});
+  const VerifyEmailPage({
+    required this.initialToken,
+    this.email,
+    this.guardianEmail,
+    super.key,
+  });
 
   final String initialToken;
+  final String? email;
+  final String? guardianEmail;
 
   @override
   State<VerifyEmailPage> createState() => _VerifyEmailPageState();
@@ -54,6 +62,20 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
         return;
       }
       setState(() => _isSubmitting = false);
+      final errorCode = _errorCodeFrom(e);
+      if (errorCode == 'PARENTAL_CONSENT_PENDING') {
+        final email = widget.email ?? '';
+        final guardianEmail = widget.guardianEmail ?? email;
+        await Navigator.of(context).pushReplacement(
+          MaterialPageRoute<void>(
+            builder: (_) => ParentalConsentPendingPage(
+              email: email,
+              guardianEmail: guardianEmail,
+            ),
+          ),
+        );
+        return;
+      }
       context.showErrorSnackBar(_repository.mapError(e));
     } catch (_) {
       if (!mounted) {
@@ -62,6 +84,17 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
       setState(() => _isSubmitting = false);
       context.showErrorSnackBar(DioErrorMapper.genericMessage());
     }
+  }
+
+  String? _errorCodeFrom(DioException error) {
+    final data = error.response?.data;
+    if (data is Map<String, dynamic>) {
+      final code = data['errorCode'];
+      if (code is String && code.isNotEmpty) {
+        return code;
+      }
+    }
+    return null;
   }
 
   @override

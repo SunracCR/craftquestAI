@@ -45,6 +45,47 @@ public static class EmailTemplateBuilder
         };
     }
 
+    public static (string Subject, string PlainText, string Html) BuildParentalConsent(
+        string language,
+        string childDisplayName,
+        string actionUrl,
+        int lifetimeMinutes)
+    {
+        return language switch
+        {
+            "en" => (
+                "Parental consent required for CraftQuestAI",
+                $"A minor ({childDisplayName}) registered for CraftQuestAI and needs your authorization. Use this link (valid for {lifetimeMinutes} minutes):\n\n{actionUrl}\n\nIf you did not expect this, ignore this email.",
+                BuildHtml(
+                    "Parental consent",
+                    "Authorize a minor's account",
+                    $"A minor registered as \"{childDisplayName}\" needs your consent. This link expires in {lifetimeMinutes} minutes.",
+                    "Grant consent",
+                    actionUrl,
+                    "If you did not expect this, ignore this email.")),
+            "pt" => (
+                "Consentimento parental necessario para CraftQuestAI",
+                $"Um menor ({childDisplayName}) se cadastrou no CraftQuestAI e precisa da sua autorizacao. Use este link (valido por {lifetimeMinutes} minutos):\n\n{actionUrl}\n\nSe voce nao esperava isso, ignore este e-mail.",
+                BuildHtml(
+                    "Consentimento parental",
+                    "Autorizar conta de menor",
+                    $"Um menor registrado como \"{childDisplayName}\" precisa do seu consentimento. Este link expira em {lifetimeMinutes} minutos.",
+                    "Conceder consentimento",
+                    actionUrl,
+                    "Se voce nao esperava isso, ignore este e-mail.")),
+            _ => (
+                "Se requiere consentimiento parental para CraftQuestAI",
+                $"Un menor ({childDisplayName}) se registró en CraftQuestAI y necesita tu autorización. Usa este enlace (válido {lifetimeMinutes} minutos):\n\n{actionUrl}\n\nSi no esperabas esto, ignora este correo.",
+                BuildHtml(
+                    "Consentimiento parental",
+                    "Autorizar cuenta de menor",
+                    $"Un menor registrado como \"{childDisplayName}\" necesita tu consentimiento. El enlace caduca en {lifetimeMinutes} minutos.",
+                    "Otorgar consentimiento",
+                    actionUrl,
+                    "Si no esperabas esto, ignora este correo.")),
+        };
+    }
+
     public static (string Subject, string PlainText, string Html) BuildPasswordReset(
         string language,
         string actionUrl,

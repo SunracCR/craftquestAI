@@ -45,4 +45,14 @@ public interface IAuthService
     Task ResendVerificationAsync(
         ResendVerificationRequest request,
         CancellationToken cancellationToken = default);
+
+    Task DeleteAccountAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    Task<AuthResponseDto> ConfirmParentalConsentAsync(
+        ConfirmParentalConsentRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task ResendParentalConsentAsync(
+        ResendParentalConsentRequest request,
+        CancellationToken cancellationToken = default);
 }

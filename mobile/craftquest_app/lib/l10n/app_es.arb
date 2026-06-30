@@ -1983,5 +1983,41 @@
   "notificationTypeAiJobCompleted": "Cuestionario IA listo",
   "notificationTypeAiJobFailed": "Error en cuestionario IA",
   "notificationTypeMembershipExpiring": "Membresía por vencer",
-  "notificationTypeMembershipExpired": "Membresía vencida"
+  "notificationTypeMembershipExpired": "Membresía vencida",
+  "legalSectionTitle": "Legal",
+  "privacyPolicyLink": "Política de privacidad",
+  "termsOfServiceLink": "Términos de servicio",
+  "registerLegalDisclaimerPrefix": "Al registrarte aceptas los ",
+  "registerLegalDisclaimerAnd": " y la ",
+  "registerLegalDisclaimerSuffix": ".",
+  "deleteAccountTitle": "Eliminar mi cuenta",
+  "deleteAccountSubtitle": "Se eliminarán tus datos de forma permanente. Esta acción no se puede deshacer.",
+  "deleteAccountConfirmHint": "Escribe ELIMINAR para confirmar",
+  "deleteAccountConfirmWord": "ELIMINAR",
+  "deleteAccountAction": "Eliminar cuenta",
+  "deleteAccountSuccess": "Tu cuenta ha sido eliminada.",
+  "deleteAccountCancel": "Cancelar",
+  "parentalGateTitle": "Verificación de adulto",
+  "parentalGateSubtitle": "Para continuar, resuelve esta operación:",
+  "parentalGateAnswerLabel": "Respuesta",
+  "parentalGateWrongAnswer": "Respuesta incorrecta. Inténtalo de nuevo.",
+  "parentalGateConfirm": "Confirmar",
+  "parentalGateCancel": "Cancelar",
+  "ageScreenTitle": "¿Cuándo naciste?",
+  "ageScreenSubtitle": "Usamos esta información para ofrecer una experiencia adecuada a tu edad.",
+  "ageScreenBirthDateLabel": "Fecha de nacimiento",
+  "ageScreenContinue": "Continuar",
+  "ageScreenMinorNotice": "Como eres menor de edad, necesitarás el consentimiento de un padre, madre o tutor para crear una cuenta.",
+  "guardianEmailLabel": "Correo del padre, madre o tutor",
+  "guardianEmailHint": "tutor@ejemplo.com",
+  "parentalConsentPendingTitle": "Esperando consentimiento parental",
+  "parentalConsentPendingMessage": "Enviamos un correo a {email} para que un adulto autorice tu cuenta.",
+  "@parentalConsentPendingMessage": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "parentalConsentResend": "Reenviar correo al tutor"
 }

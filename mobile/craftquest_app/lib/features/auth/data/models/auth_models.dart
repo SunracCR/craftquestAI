@@ -80,16 +80,23 @@ class RegisterResultModel {
   const RegisterResultModel({
     required this.requiresEmailVerification,
     required this.email,
+    this.requiresParentalConsent = false,
+    this.guardianEmail,
   });
 
   factory RegisterResultModel.fromJson(Map<String, dynamic> json) {
     return RegisterResultModel(
       requiresEmailVerification:
           json['requiresEmailVerification'] as bool? ?? true,
+      requiresParentalConsent:
+          json['requiresParentalConsent'] as bool? ?? false,
       email: json['email'] as String,
+      guardianEmail: json['guardianEmail'] as String?,
     );
   }
 
   final bool requiresEmailVerification;
+  final bool requiresParentalConsent;
   final String email;
+  final String? guardianEmail;
 }

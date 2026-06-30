@@ -11,6 +11,7 @@ public enum AccountLinkKind
     VerifyEmail,
     ResetPassword,
     ConfirmPasswordChange,
+    ParentalConsent,
 }
 
 public enum JoinDeviceKind
@@ -163,6 +164,7 @@ public static class JoinLandingPageRenderer
         {
             AccountLinkKind.VerifyEmail => AccountLinkUrlBuilder.VerifyEmail,
             AccountLinkKind.ResetPassword => AccountLinkUrlBuilder.ResetPassword,
+            AccountLinkKind.ParentalConsent => AccountLinkUrlBuilder.ParentalConsent,
             _ => AccountLinkUrlBuilder.ConfirmPasswordChange,
         };
 
@@ -264,6 +266,21 @@ public static class JoinLandingPageRenderer
                 "Abre la app o continua en el navegador para elegir una nueva contrasena.",
                 "Continuar en la web", "Descargar en Google Play", "Descargar en App Store",
                 "Restablecimiento de contrasena CraftQuestAI"),
+            AccountLinkKind.ParentalConsent when isEn => new AccountLinkLabels(
+                "en", "Parental consent",
+                "Open the app or continue in the browser to authorize the minor's account.",
+                "Continue on web", "Get on Google Play", "Get on App Store",
+                "CraftQuestAI parental consent"),
+            AccountLinkKind.ParentalConsent when isPt => new AccountLinkLabels(
+                "pt", "Consentimento parental",
+                "Abra o app ou continue no navegador para autorizar a conta do menor.",
+                "Continuar na web", "Baixar no Google Play", "Baixar na App Store",
+                "Consentimento parental CraftQuestAI"),
+            AccountLinkKind.ParentalConsent => new AccountLinkLabels(
+                "es", "Consentimiento parental",
+                "Abre la app o continua en el navegador para autorizar la cuenta del menor.",
+                "Continuar en la web", "Descargar en Google Play", "Descargar en App Store",
+                "Consentimiento parental CraftQuestAI"),
             AccountLinkKind.ConfirmPasswordChange when isEn => new AccountLinkLabels(
                 "en", "Confirm password change",
                 "Open the app or continue in the browser to confirm your new password.",
@@ -274,7 +291,7 @@ public static class JoinLandingPageRenderer
                 "Abra o app ou continue no navegador para confirmar sua nova senha.",
                 "Continuar na web", "Baixar no Google Play", "Baixar na App Store",
                 "Alteracao de senha CraftQuestAI"),
-            _ => new AccountLinkLabels(
+            AccountLinkKind.ConfirmPasswordChange => new AccountLinkLabels(
                 "es", "Confirmar cambio de contrasena",
                 "Abre la app o continua en el navegador para confirmar tu nueva contrasena.",
                 "Continuar en la web", "Descargar en Google Play", "Descargar en App Store",

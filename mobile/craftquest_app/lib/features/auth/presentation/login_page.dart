@@ -1,3 +1,4 @@
+import 'package:craftquest_app/core/compliance/legal_links.dart';
 import 'package:craftquest_app/core/auth/saved_login_credentials_storage.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
@@ -353,6 +354,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             const SizedBox(height: AppSpacing.sm),
                             const GuestPracticePromoCard(compact: true),
+                            const LegalLinksRow(),
                         ],
                       ),
                     ),

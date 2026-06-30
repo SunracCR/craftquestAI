@@ -50,18 +50,27 @@ class AuthRegisterRequested extends AuthEvent {
     required this.email,
     required this.password,
     this.displayName,
+    this.dateOfBirth,
+    this.guardianEmail,
   });
 
   final String email;
   final String password;
   final String? displayName;
+  final DateTime? dateOfBirth;
+  final String? guardianEmail;
 
   @override
-  List<Object?> get props => [email, password, displayName];
+  List<Object?> get props =>
+      [email, password, displayName, dateOfBirth, guardianEmail];
 }
 
 class AuthLogoutRequested extends AuthEvent {
   const AuthLogoutRequested();
+}
+
+class AuthDeleteAccountRequested extends AuthEvent {
+  const AuthDeleteAccountRequested();
 }
 
 /// Sesión invalidada (p. ej. refresh token expirado); cierra sesión en la app.

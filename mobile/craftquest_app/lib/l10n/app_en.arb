@@ -1932,5 +1932,41 @@
   "notificationTypeAiJobCompleted": "AI quiz ready",
   "notificationTypeAiJobFailed": "AI quiz failed",
   "notificationTypeMembershipExpiring": "Membership expiring",
-  "notificationTypeMembershipExpired": "Membership expired"
+  "notificationTypeMembershipExpired": "Membership expired",
+  "legalSectionTitle": "Legal",
+  "privacyPolicyLink": "Privacy Policy",
+  "termsOfServiceLink": "Terms of Service",
+  "registerLegalDisclaimerPrefix": "By signing up you agree to the ",
+  "registerLegalDisclaimerAnd": " and ",
+  "registerLegalDisclaimerSuffix": ".",
+  "deleteAccountTitle": "Delete my account",
+  "deleteAccountSubtitle": "Your data will be permanently deleted. This action cannot be undone.",
+  "deleteAccountConfirmHint": "Type DELETE to confirm",
+  "deleteAccountConfirmWord": "DELETE",
+  "deleteAccountAction": "Delete account",
+  "deleteAccountSuccess": "Your account has been deleted.",
+  "deleteAccountCancel": "Cancel",
+  "parentalGateTitle": "Adult verification",
+  "parentalGateSubtitle": "To continue, solve this operation:",
+  "parentalGateAnswerLabel": "Answer",
+  "parentalGateWrongAnswer": "Incorrect answer. Try again.",
+  "parentalGateConfirm": "Confirm",
+  "parentalGateCancel": "Cancel",
+  "ageScreenTitle": "When were you born?",
+  "ageScreenSubtitle": "We use this information to provide an age-appropriate experience.",
+  "ageScreenBirthDateLabel": "Date of birth",
+  "ageScreenContinue": "Continue",
+  "ageScreenMinorNotice": "Because you are underage, you will need a parent or guardian's consent to create an account.",
+  "guardianEmailLabel": "Parent or guardian email",
+  "guardianEmailHint": "guardian@example.com",
+  "parentalConsentPendingTitle": "Waiting for parental consent",
+  "parentalConsentPendingMessage": "We sent an email to {email} so an adult can authorize your account.",
+  "@parentalConsentPendingMessage": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "parentalConsentResend": "Resend email to guardian"
 }

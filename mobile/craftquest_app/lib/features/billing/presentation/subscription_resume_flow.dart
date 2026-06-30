@@ -78,6 +78,7 @@ abstract final class SubscriptionResumeFlow {
           TextButton(
             onPressed: () async {
               await SubscriptionCancelFlow.openStoreSubscriptionManagement(
+                ctx,
                 providerCode,
               );
             },

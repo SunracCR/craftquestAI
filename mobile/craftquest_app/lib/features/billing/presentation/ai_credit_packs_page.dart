@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:craftquest_app/core/billing/payment_platform.dart';
+import 'package:craftquest_app/core/compliance/parental_gate_dialog.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
@@ -112,6 +113,9 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
   }
 
   Future<void> _buyPack(AiCreditPackModel pack) async {
+    if (!await showParentalGate(context)) {
+      return;
+    }
     if (_supportsStorePurchase && _storeAvailable) {
       await _buyWithStore(pack);
     } else if (PaymentPlatform.supportsPayPalCheckout) {

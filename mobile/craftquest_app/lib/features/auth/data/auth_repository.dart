@@ -13,6 +13,8 @@ class AuthRepository {
     required String email,
     required String password,
     String? displayName,
+    DateTime? dateOfBirth,
+    String? guardianEmail,
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/api/auth/register',
@@ -21,6 +23,10 @@ class AuthRepository {
         'password': password,
         if (displayName != null && displayName.isNotEmpty)
           'displayName': displayName,
+        if (dateOfBirth != null)
+          'dateOfBirth': dateOfBirth.toIso8601String().split('T').first,
+        if (guardianEmail != null && guardianEmail.isNotEmpty)
+          'guardianEmail': guardianEmail,
       },
     );
     return RegisterResultModel.fromJson(response.data!);
@@ -39,6 +45,21 @@ class AuthRepository {
       '/api/auth/resend-verification',
       data: {'email': email},
     );
+  }
+
+  Future<void> resendParentalConsent({required String email}) async {
+    await _apiClient.dio.post<void>(
+      '/api/auth/resend-parental-consent',
+      data: {'email': email},
+    );
+  }
+
+  Future<AuthResponseModel> confirmParentalConsent({required String token}) async {
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/api/auth/confirm-parental-consent',
+      data: {'token': token},
+    );
+    return _persistAndMap(response.data!);
   }
 
   Future<void> confirmPasswordChange({required String token}) async {
@@ -162,6 +183,11 @@ class AuthRepository {
   }
 
   Future<void> logout() => _apiClient.tokenStorage.clear();
+
+  Future<void> deleteAccount() async {
+    await _apiClient.dio.delete<void>('/api/auth/me');
+    await _apiClient.tokenStorage.clear();
+  }
 
   Future<AuthResponseModel> _persistAndMap(Map<String, dynamic> data) async {
     final auth = AuthResponseModel.fromJson(data);

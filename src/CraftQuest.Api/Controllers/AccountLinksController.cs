@@ -33,6 +33,14 @@ public class AccountLinksController(IOptions<JoinLinkOptions> joinLinkOptions) :
         return RenderLanding(AccountLinkKind.ConfirmPasswordChange, token);
     }
 
+    [HttpGet("/parental-consent/{token}")]
+    [AllowAnonymous]
+    [Produces("text/html")]
+    public IActionResult ParentalConsentLanding(string token)
+    {
+        return RenderLanding(AccountLinkKind.ParentalConsent, token);
+    }
+
     private IActionResult RenderLanding(AccountLinkKind kind, string token){
         if (string.IsNullOrWhiteSpace(token) || token.Trim().Length < 20)
         {

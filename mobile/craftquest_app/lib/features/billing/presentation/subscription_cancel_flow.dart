@@ -1,3 +1,4 @@
+import 'package:craftquest_app/core/compliance/parental_gate_dialog.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/utils/billing_display.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
@@ -78,7 +79,7 @@ abstract final class SubscriptionCancelFlow {
           ),
           TextButton(
             onPressed: () async {
-              await openStoreSubscriptionManagement(providerCode);
+              await openStoreSubscriptionManagement(ctx, providerCode);
             },
             child: Text(
               openLabel,
@@ -165,7 +166,13 @@ abstract final class SubscriptionCancelFlow {
     }
   }
 
-  static Future<void> openStoreSubscriptionManagement(String providerCode) async {
+  static Future<void> openStoreSubscriptionManagement(
+    BuildContext context,
+    String providerCode,
+  ) async {
+    if (!await showParentalGate(context)) {
+      return;
+    }
     final uri = providerCode == 'google_play'
         ? Uri.parse(
             'https://play.google.com/store/account/subscriptions',

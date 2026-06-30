@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:craftquest_app/core/billing/payment_platform.dart';
+import 'package:craftquest_app/core/compliance/parental_gate_dialog.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
@@ -165,6 +166,9 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
   }
 
   Future<void> _buyPaid(PrepAccessOfferModel offer) async {
+    if (!await showParentalGate(context)) {
+      return;
+    }
     final l10n = AppLocalizations.of(context)!;
 
     if (_supportsStorePurchase &&

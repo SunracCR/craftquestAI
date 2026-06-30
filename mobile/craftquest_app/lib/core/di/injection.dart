@@ -1,3 +1,4 @@
+import 'package:craftquest_app/core/compliance/age_collection_storage.dart';
 import 'package:craftquest_app/core/compliance/age_signal_service.dart';
 import 'package:craftquest_app/core/auth/saved_login_credentials_storage.dart';
 import 'package:craftquest_app/core/auth/session_expired_notifier.dart';
@@ -47,6 +48,7 @@ void configureDependencies() {
   getIt.registerLazySingleton(GuestTokenStorage.new);
   getIt.registerLazySingleton(LocaleController.new);
   getIt.registerLazySingleton(AgeSignalService.new);
+  getIt.registerLazySingleton(AgeCollectionStorage.new);
   getIt.registerLazySingleton(NetworkConnectivityService.new);
   getIt.registerLazySingleton(SessionExpiredNotifier.new);
   getIt.registerLazySingleton(

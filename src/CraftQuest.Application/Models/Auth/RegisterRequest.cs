@@ -12,4 +12,9 @@ public class RegisterRequest
 
     [MaxLength(160)]
     public string? DisplayName { get; set; }
+
+    public DateOnly? DateOfBirth { get; set; }
+
+    [EmailAddress, MaxLength(320)]
+    public string? GuardianEmail { get; set; }
 }
