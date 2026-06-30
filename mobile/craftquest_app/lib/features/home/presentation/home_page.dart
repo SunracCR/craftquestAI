@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:craftquest_app/core/navigation/safe_navigation.dart';
 import 'package:craftquest_app/core/utils/user_role_labels.dart';
 import 'package:craftquest_app/core/di/injection.dart';
@@ -55,7 +57,9 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _initHome();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_initHome());
+    });
   }
 
   Future<void> _initHome() async {

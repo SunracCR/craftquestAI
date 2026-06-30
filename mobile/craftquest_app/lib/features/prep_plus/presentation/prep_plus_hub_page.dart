@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
@@ -25,44 +27,65 @@ class _PrepPlusHubPageState extends State<PrepPlusHubPage> {
   final _repository = getIt<PrepPlusRepository>();
   List<PrepCategoryModel> _roots = [];
   PrepMyAccessesModel? _accesses;
-  bool _loading = true;
+  bool _loadingCategories = true;
+  bool _loadingAccesses = false;
   String? _error;
 
   @override
   void initState() {
     super.initState();
-    _load();
+    unawaited(_loadCategories());
+    unawaited(_loadAccesses());
   }
 
-  Future<void> _load() async {
+  Future<void> _loadCategories({bool forceRefresh = false}) async {
     setState(() {
-      _loading = true;
+      _loadingCategories = true;
       _error = null;
     });
     try {
-      final results = await Future.wait([
-        _repository.getCategories(),
-        _repository.getMyAccesses(),
-      ]);
+      final roots = await _repository.getCategories(forceRefresh: forceRefresh);
       if (!mounted) return;
       setState(() {
-        _roots = results[0] as List<PrepCategoryModel>;
-        _accesses = results[1] as PrepMyAccessesModel;
-        _loading = false;
+        _roots = roots;
+        _loadingCategories = false;
       });
     } on DioException catch (e) {
       if (!mounted) return;
       setState(() {
         _error = _repository.mapError(e);
-        _loading = false;
+        _loadingCategories = false;
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _error = DioErrorMapper.genericMessage();
-        _loading = false;
+        _loadingCategories = false;
       });
     }
+  }
+
+  Future<void> _loadAccesses() async {
+    if (!mounted) return;
+    setState(() => _loadingAccesses = true);
+    try {
+      final accesses = await _repository.getMyAccesses();
+      if (!mounted) return;
+      setState(() {
+        _accesses = accesses;
+        _loadingAccesses = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loadingAccesses = false);
+    }
+  }
+
+  Future<void> _refreshAll() async {
+    await Future.wait([
+      _loadCategories(forceRefresh: true),
+      _loadAccesses(),
+    ]);
   }
 
   List<PrepCategoryModel> get _geographicRoots =>
@@ -85,20 +108,28 @@ class _PrepPlusHubPageState extends State<PrepPlusHubPage> {
 
     return EdgeAwareScaffold(
       appBar: craftQuestAppBar(title: l10n.prepPlusScreenTitle),
-      body: _loading
+      body: _loadingCategories
           ? const AppLoadingView()
           : _error != null
               ? AppErrorView(
                   message: _error!,
                   retryLabel: l10n.retry,
-                  onRetry: _load,
+                  onRetry: () => _loadCategories(forceRefresh: true),
                 )
               : RefreshIndicator(
-                  onRefresh: _load,
+                  onRefresh: _refreshAll,
                   child: ListView(
                     padding: AppSpacing.listBottom,
                     children: [
                       PrepPlusHubHero(subtitle: l10n.prepPlusScreenSubtitle),
+                      if (_loadingAccesses && activeCount == 0)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                            vertical: AppSpacing.sm,
+                          ),
+                          child: LinearProgressIndicator(minHeight: 2),
+                        ),
                       if (activeCount > 0) ...[
                         const SizedBox(height: AppSpacing.md),
                         PrepPlusMyAccessesTile(
@@ -111,7 +142,7 @@ class _PrepPlusHubPageState extends State<PrepPlusHubPage> {
                                         const PrepPlusMyAccessesPage(),
                                   ),
                                 )
-                                .then((_) => _load());
+                                .then((_) => _loadAccesses());
                           },
                         ),
                       ],

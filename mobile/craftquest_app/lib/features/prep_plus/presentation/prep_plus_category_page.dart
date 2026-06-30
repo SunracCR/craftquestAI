@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
@@ -49,9 +51,12 @@ class _PrepPlusCategoryPageState extends State<PrepPlusCategoryPage> {
     super.dispose();
   }
 
-  Future<void> _load() async {
+  Future<void> _load({bool forceRefresh = false}) async {
+    final hadItems = _items.isNotEmpty;
     setState(() {
-      _loading = true;
+      if (!hadItems) {
+        _loading = true;
+      }
       _error = null;
     });
     try {
@@ -61,6 +66,7 @@ class _PrepPlusCategoryPageState extends State<PrepPlusCategoryPage> {
         priceFilter: _priceFilter,
         institutionTag: _institutionTag,
         userAccessFilter: _accessFilter,
+        forceRefresh: forceRefresh,
       );
       if (!mounted) return;
       setState(() {
@@ -96,7 +102,7 @@ class _PrepPlusCategoryPageState extends State<PrepPlusCategoryPage> {
       _accessFilter = result.accessFilter;
       _institutionTag = result.institutionTag;
     });
-    await _load();
+    await _load(forceRefresh: true);
   }
 
   @override
@@ -181,15 +187,14 @@ class _PrepPlusCategoryPageState extends State<PrepPlusCategoryPage> {
                                     subtitle: _subtitleFor(context, item),
                                     accentColor: _accentFor(item),
                                     leadingIcon: Icons.quiz_rounded,
-                                    onTap: () async {
-                                      await Navigator.of(context).push(
+                                    onTap: () {
+                                      Navigator.of(context).push(
                                         MaterialPageRoute<void>(
                                           builder: (_) => PrepPlusItemDetailPage(
                                             catalogItemId: item.catalogItemId,
                                           ),
                                         ),
                                       );
-                                      if (mounted) await _load();
                                     },
                                   ),
                                 );

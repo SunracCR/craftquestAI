@@ -295,9 +295,7 @@ class _AuthGateState extends State<_AuthGate> {
                   user.preferredLanguage,
                 ),
               );
-              unawaited(getIt<NotificationsCubit>().refreshUnreadCount());
-              unawaited(getIt<PushNotificationService>().onAuthenticated());
-              // Tras limpiar la pila de login, abrir join links pendientes.
+              // Notificaciones y push: solo en _AuthenticatedShell.initState.
               _scheduleDeepLinkRoute();
             });
           },

@@ -105,34 +105,70 @@ public class PrepPlusCatalogService(
             query = query.Where(i => i.AccessOffers.Any(o => o.IsActive && !o.IsFree && o.PriceAmount > 0));
         }
 
+        query = ApplyUserAccessFilter(query, userId, accessFilter, now);
+
         var items = await query
             .OrderBy(i => i.TitleOverride ?? i.Quiz.Title)
+            .Skip(skip)
+            .Take(take)
             .ToListAsync(cancellationToken);
 
+        if (items.Count == 0)
+        {
+            return [];
+        }
+
         var catalogItemIds = items.Select(i => i.CatalogItemId).ToList();
-        var accessByItem = await LoadPurchaseAccessByCatalogItemAsync(userId, catalogItemIds, cancellationToken);
+        var accessByItem = await LoadPurchaseAccessByCatalogItemAsync(
+            userId,
+            catalogItemIds,
+            cancellationToken);
 
         var quizIds = items.Select(i => i.QuizId).Distinct().ToList();
         var questionCounts = await dbContext.Questions
+            .AsNoTracking()
             .Where(q => quizIds.Contains(q.QuizId))
             .GroupBy(q => q.QuizId)
             .Select(g => new { g.Key, Count = g.Count() })
             .ToDictionaryAsync(x => x.Key, x => x.Count, cancellationToken);
 
-        var mapped = items
+        return items
             .Select(i =>
             {
                 accessByItem.TryGetValue(i.CatalogItemId, out var access);
                 var state = ResolveAccessState(access, now);
                 return MapBrowseItem(i, questionCounts.GetValueOrDefault(i.QuizId), state, access, now);
             })
-            .Where(i => MatchesUserAccessFilter(i.UserAccessState, accessFilter))
-            .Skip(skip)
-            .Take(take)
             .ToList();
-
-        return mapped;
     }
+
+    private IQueryable<PrepCatalogItem> ApplyUserAccessFilter(
+        IQueryable<PrepCatalogItem> query,
+        Guid userId,
+        string accessFilter,
+        DateTime now) =>
+        accessFilter switch
+        {
+            "active" => query.Where(i =>
+                dbContext.QuizAccesses.Any(a =>
+                    a.UserId == userId
+                    && a.AccessType == "purchase"
+                    && a.PrepCatalogItemId == i.CatalogItemId
+                    && a.ExpiresAt > now)),
+            "expired" => query.Where(i =>
+                dbContext.QuizAccesses.Any(a =>
+                    a.UserId == userId
+                    && a.AccessType == "purchase"
+                    && a.PrepCatalogItemId == i.CatalogItemId
+                    && a.ExpiresAt != null
+                    && a.ExpiresAt <= now)),
+            "none" => query.Where(i =>
+                !dbContext.QuizAccesses.Any(a =>
+                    a.UserId == userId
+                    && a.AccessType == "purchase"
+                    && a.PrepCatalogItemId == i.CatalogItemId)),
+            _ => query,
+        };
 
     public async Task<PrepCatalogItemPublicDetailDto> GetPublicItemAsync(
         Guid userId,
@@ -643,15 +679,6 @@ public class PrepPlusCatalogService(
 
         return access.ExpiresAt > now ? "active" : "expired";
     }
-
-    private static bool MatchesUserAccessFilter(string state, string filter) =>
-        filter switch
-        {
-            "none" => state == "none",
-            "active" => state == "active",
-            "expired" => state == "expired",
-            _ => true,
-        };
 
     private static PrepCatalogBrowseItemDto MapBrowseItem(
         PrepCatalogItem item,

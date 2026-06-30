@@ -6,17 +6,48 @@ import 'package:craftquest_app/features/prep_plus/data/models/prep_plus_models.d
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 
+class _TimedCache<T> {
+  _TimedCache(this.value, this.cachedAt);
+
+  final T value;
+  final DateTime cachedAt;
+}
+
 class PrepPlusRepository {
   PrepPlusRepository(this._apiClient);
 
   final ApiClient _apiClient;
 
-  Future<List<PrepCategoryModel>> getCategories() async {
+  static const _categoriesTtl = Duration(minutes: 10);
+  static const _browseTtl = Duration(minutes: 2);
+
+  _TimedCache<List<PrepCategoryModel>>? _categoriesCache;
+  final Map<String, _TimedCache<List<PrepBrowseItemModel>>> _browseCache = {};
+
+  Future<List<PrepCategoryModel>> getCategories({bool forceRefresh = false}) async {
+    final cached = _categoriesCache;
+    if (!forceRefresh &&
+        cached != null &&
+        DateTime.now().difference(cached.cachedAt) < _categoriesTtl) {
+      return cached.value;
+    }
+
     final response =
         await _apiClient.dio.get<List<dynamic>>('/api/prep/categories');
-    return (response.data ?? [])
+    final categories = (response.data ?? [])
         .map((e) => PrepCategoryModel.fromJson(e as Map<String, dynamic>))
         .toList();
+    _categoriesCache = _TimedCache(categories, DateTime.now());
+    return categories;
+  }
+
+  /// Precarga categorías en segundo plano (p. ej. al iniciar sesión).
+  Future<void> prefetchCategories() async {
+    try {
+      await getCategories();
+    } catch (_) {
+      // Best effort.
+    }
   }
 
   Future<List<PrepBrowseItemModel>> browseCategoryItems({
@@ -28,7 +59,27 @@ class PrepPlusRepository {
     String? userAccessFilter,
     int skip = 0,
     int take = 20,
+    bool forceRefresh = false,
   }) async {
+    final cacheKey = _browseCacheKey(
+      categoryId: categoryId,
+      search: search,
+      priceFilter: priceFilter,
+      institutionTag: institutionTag,
+      tags: tags,
+      userAccessFilter: userAccessFilter,
+      skip: skip,
+      take: take,
+    );
+
+    if (!forceRefresh) {
+      final cached = _browseCache[cacheKey];
+      if (cached != null &&
+          DateTime.now().difference(cached.cachedAt) < _browseTtl) {
+        return cached.value;
+      }
+    }
+
     final response = await _apiClient.dio.get<List<dynamic>>(
       '/api/prep/categories/$categoryId/items',
       queryParameters: {
@@ -43,9 +94,42 @@ class PrepPlusRepository {
         'take': take,
       },
     );
-    return (response.data ?? [])
+    final items = (response.data ?? [])
         .map((e) => PrepBrowseItemModel.fromJson(e as Map<String, dynamic>))
         .toList();
+    _browseCache[cacheKey] = _TimedCache(items, DateTime.now());
+    return items;
+  }
+
+  void invalidateBrowseCache({String? categoryId}) {
+    if (categoryId == null) {
+      _browseCache.clear();
+      return;
+    }
+    _browseCache.removeWhere((key, _) => key.startsWith('$categoryId|'));
+  }
+
+  String _browseCacheKey({
+    required String categoryId,
+    String? search,
+    String? priceFilter,
+    String? institutionTag,
+    List<String>? tags,
+    String? userAccessFilter,
+    required int skip,
+    required int take,
+  }) {
+    final tagKey = (tags ?? const []).join(',');
+    return [
+      categoryId,
+      search ?? '',
+      priceFilter ?? 'all',
+      institutionTag ?? '',
+      tagKey,
+      userAccessFilter ?? 'all',
+      skip,
+      take,
+    ].join('|');
   }
 
   Future<PrepItemDetailModel> getItem(String catalogItemId) async {
@@ -99,6 +183,7 @@ class PrepPlusRepository {
       '/api/prep/items/$catalogItemId/checkout',
       data: {'offerId': offerId},
     );
+    invalidateBrowseCache();
     return PrepCheckoutResultModel.fromJson(response.data!);
   }
 
@@ -118,6 +203,7 @@ class PrepPlusRepository {
       '/api/prep/paypal/capture-order',
       data: {'orderId': orderId},
     );
+    invalidateBrowseCache();
     return PrepCheckoutResultModel.fromJson(response.data!);
   }
 
@@ -140,6 +226,7 @@ class PrepPlusRepository {
         if (transactionId != null) 'transactionId': transactionId,
       },
     );
+    invalidateBrowseCache();
     return PrepCheckoutResultModel.fromJson(response.data!);
   }
 

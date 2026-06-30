@@ -1,3 +1,4 @@
+import 'package:craftquest_app/core/compliance/compliance_pref_cache.dart';
 import 'package:craftquest_app/core/compliance/age_collection_controller.dart';
 import 'package:craftquest_app/core/compliance/age_collection_storage.dart';
 import 'package:craftquest_app/core/compliance/age_signal_service.dart';
@@ -48,8 +49,11 @@ void configureDependencies() {
   getIt.registerLazySingleton(SavedLoginCredentialsStorage.new);
   getIt.registerLazySingleton(GuestTokenStorage.new);
   getIt.registerLazySingleton(LocaleController.new);
+  getIt.registerLazySingleton(CompliancePrefCache.new);
   getIt.registerLazySingleton(AgeSignalService.new);
-  getIt.registerLazySingleton(AgeCollectionStorage.new);
+  getIt.registerLazySingleton(
+    () => AgeCollectionStorage(getIt<CompliancePrefCache>()),
+  );
   getIt.registerLazySingleton(
     () => AgeCollectionController(getIt<AgeCollectionStorage>()),
   );
@@ -81,6 +85,7 @@ void configureDependencies() {
     () => AppWarmupService(
       getIt<SoundService>(),
       getIt<TeacherDashboardRepository>(),
+      getIt<PrepPlusRepository>(),
     ),
   );
   getIt.registerLazySingleton(() => ImportRepository(getIt<ApiClient>()));
