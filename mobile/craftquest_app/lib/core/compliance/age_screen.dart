@@ -76,41 +76,43 @@ class _AgeScreenState extends State<AgeScreen> {
         : DateFormat.yMMMMd(locale).format(_birthDate!);
 
     return EdgeAwareScaffold(
-      body: SafeArea(
-        child: ListView(
-          padding: AppSpacing.pageVertical,
-          children: [
-            AppBrandHeader(title: l10n.ageScreenTitle),
-            const SizedBox(height: AppSpacing.lg),
+      appBar: craftQuestAppBar(
+        title: l10n.ageScreenTitle,
+        automaticallyImplyLeading: false,
+      ),
+      body: ListView(
+        padding: AppSpacing.pageVertical,
+        children: [
+          AppBrandHeader(title: l10n.ageScreenTitle),
+          const SizedBox(height: AppSpacing.lg),
+          Text(
+            l10n.ageScreenSubtitle,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          OutlinedButton.icon(
+            onPressed: _pickDate,
+            icon: const Icon(Icons.calendar_today_outlined),
+            label: Text(formattedDate),
+          ),
+          if (_isMinor) ...[
+            const SizedBox(height: AppSpacing.md),
             Text(
-              l10n.ageScreenSubtitle,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppColors.textSecondary,
+              l10n.ageScreenMinorNotice,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.accentCool,
                   ),
             ),
-            const SizedBox(height: AppSpacing.xl),
-            OutlinedButton.icon(
-              onPressed: _pickDate,
-              icon: const Icon(Icons.calendar_today_outlined),
-              label: Text(formattedDate),
-            ),
-            if (_isMinor) ...[
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                l10n.ageScreenMinorNotice,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.accentCool,
-                    ),
-              ),
-            ],
-            const SizedBox(height: AppSpacing.xl),
-            AppGradientPrimaryButton(
-              label: l10n.ageScreenContinue,
-              isLoading: _saving,
-              onPressed: _birthDate == null ? null : _continue,
-            ),
           ],
-        ),
+          const SizedBox(height: AppSpacing.xl),
+          AppGradientPrimaryButton(
+            label: l10n.ageScreenContinue,
+            isLoading: _saving,
+            onPressed: _birthDate == null ? null : _continue,
+          ),
+        ],
       ),
     );
   }
