@@ -177,11 +177,18 @@ public class PrepPlusCatalogService(
     {
         var item = await LoadPublishedItemAsync(catalogItemId, cancellationToken);
         var now = DateTime.UtcNow;
-        var access = await GetPurchaseAccessAsync(userId, item.CatalogItemId, item.QuizId, cancellationToken);
-        var state = ResolveAccessState(access, now);
-        var questionCount = await dbContext.Questions
+
+        var accessTask = GetPurchaseAccessAsync(userId, item.CatalogItemId, item.QuizId, cancellationToken);
+        var questionCountTask = dbContext.Questions
             .CountAsync(q => q.QuizId == item.QuizId, cancellationToken);
-        var rootType = await GetRootCategoryTypeAsync(item.CategoryId, cancellationToken);
+        var rootTypeTask = GetRootCategoryTypeAsync(item.CategoryId, cancellationToken);
+
+        await Task.WhenAll(accessTask, questionCountTask, rootTypeTask);
+
+        var access = await accessTask;
+        var questionCount = await questionCountTask;
+        var rootType = await rootTypeTask;
+        var state = ResolveAccessState(access, now);
 
         return new PrepCatalogItemPublicDetailDto
         {

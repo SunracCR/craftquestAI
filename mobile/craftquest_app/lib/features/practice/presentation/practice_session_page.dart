@@ -70,10 +70,13 @@ class _PracticeSessionPageState extends State<PracticeSessionPage>
 
   PracticeSessionModel? _session;
   PracticeLaunchOptions _launchOptions = PracticeLaunchOptions.defaults;
+  List<PracticeQuestionNavModel> _questionNav = [];
+  final Map<String, PracticeQuestionModel> _questionCache = {};
   final Map<String, String> _questionStatuses = {};
   final Map<String, Set<String>> _pendingSelections = {};
   int _currentIndex = 0;
   bool _loading = true;
+  bool _loadingQuestion = false;
   bool _finishing = false;
   bool _savingProgress = false;
   String? _error;
@@ -231,19 +234,112 @@ class _PracticeSessionPageState extends State<PracticeSessionPage>
   void _applySession(PracticeSessionModel session) {
     _questionStatuses.clear();
     _pendingSelections.clear();
+    _questionCache.clear();
+
+    _questionNav = session.questionNav.isNotEmpty
+        ? session.questionNav
+        : session.questions
+            .map(
+              (q) => PracticeQuestionNavModel(
+                practiceQuestionSnapshotId: q.practiceQuestionSnapshotId,
+                questionId: q.questionId,
+                displayOrder: q.displayOrder,
+                answerStatus: q.answerStatus,
+              ),
+            )
+            .toList();
+
+    for (final nav in _questionNav) {
+      _questionStatuses[nav.practiceQuestionSnapshotId] = nav.answerStatus;
+    }
     for (final q in session.questions) {
+      _questionCache[q.practiceQuestionSnapshotId] = q;
       _questionStatuses[q.practiceQuestionSnapshotId] = q.answerStatus;
       _hydrateSelections(q);
     }
+
+    final total = session.totalQuestions > 0
+        ? session.totalQuestions
+        : _questionNav.length;
     final index = session.currentQuestionIndex.clamp(
       0,
-      session.questions.isEmpty ? 0 : session.questions.length - 1,
+      total == 0 ? 0 : total - 1,
     );
     _showTimer = session.showElapsedTimer;
     _elapsedBaseline = Duration(seconds: session.elapsedSecondsBeforePause);
     _currentIndex = index;
     _session = session;
     _precacheAdjacentQuestions();
+    unawaited(_prefetchQuestionAt(index + 1));
+  }
+
+  int get _totalQuestions {
+    if (_questionNav.isNotEmpty) {
+      return _questionNav.length;
+    }
+    return _session?.totalQuestions ?? 0;
+  }
+
+  Future<void> _prefetchQuestionAt(int index) async {
+    if (index < 0 || index >= _totalQuestions) {
+      return;
+    }
+    final nav = _questionNav[index];
+    if (_questionCache.containsKey(nav.practiceQuestionSnapshotId)) {
+      return;
+    }
+    final session = _session;
+    if (session == null) {
+      return;
+    }
+    try {
+      final question = await _repository.getSessionQuestion(
+        sessionId: session.practiceSessionId,
+        practiceQuestionSnapshotId: nav.practiceQuestionSnapshotId,
+      );
+      if (!mounted) {
+        return;
+      }
+      _questionCache[question.practiceQuestionSnapshotId] = question;
+    } catch (_) {
+      // Best effort prefetch.
+    }
+  }
+
+  Future<void> _ensureQuestionAt(int index) async {
+    if (index < 0 || index >= _totalQuestions) {
+      return;
+    }
+    final nav = _questionNav[index];
+    if (_questionCache.containsKey(nav.practiceQuestionSnapshotId)) {
+      return;
+    }
+    final session = _session;
+    if (session == null) {
+      return;
+    }
+
+    setState(() => _loadingQuestion = true);
+    try {
+      final question = await _repository.getSessionQuestion(
+        sessionId: session.practiceSessionId,
+        practiceQuestionSnapshotId: nav.practiceQuestionSnapshotId,
+      );
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _questionCache[question.practiceQuestionSnapshotId] = question;
+        _hydrateSelections(question);
+        _loadingQuestion = false;
+      });
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _loadingQuestion = false);
+      rethrow;
+    }
   }
 
   void _precacheAdjacentQuestions() {
@@ -251,12 +347,29 @@ class _PracticeSessionPageState extends State<PracticeSessionPage>
     if (session == null || !mounted) {
       return;
     }
+    final cachedQuestions = _questionCache.values.toList()
+      ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
+    if (cachedQuestions.isEmpty) {
+      return;
+    }
+    var adjacentIndex = _currentIndex;
+    if (_questionNav.isNotEmpty) {
+      final currentId = _questionNav[_currentIndex].practiceQuestionSnapshotId;
+      adjacentIndex = cachedQuestions.indexWhere(
+        (q) => q.practiceQuestionSnapshotId == currentId,
+      );
+      if (adjacentIndex < 0) {
+        adjacentIndex = 0;
+      }
+    }
     PracticeImagePrecacher.precacheAdjacentQuestions(
       context,
       apiBaseUrl: getIt<ApiClient>().dio.options.baseUrl,
-      questions: session.questions,
-      currentIndex: _currentIndex,
+      questions: cachedQuestions,
+      currentIndex: adjacentIndex,
     );
+    unawaited(_prefetchQuestionAt(_currentIndex + 1));
+    unawaited(_prefetchQuestionAt(_currentIndex - 1));
   }
 
   Future<void> _resumeSession(String sessionId) async {
@@ -271,8 +384,10 @@ class _PracticeSessionPageState extends State<PracticeSessionPage>
     try {
       final session = await _repository.getSession(sessionId);
       if (!mounted || isStaleScreenLoad(loadId)) return;
+      setState(() => _applySession(session));
+      await _ensureQuestionAt(_currentIndex);
+      if (!mounted || isStaleScreenLoad(loadId)) return;
       setState(() {
-        _applySession(session);
         _loading = false;
         _loadingMessage = null;
       });
@@ -283,6 +398,7 @@ class _PracticeSessionPageState extends State<PracticeSessionPage>
         _error = DioErrorMapper.map(e);
         _loading = false;
         _loadingMessage = null;
+        _loadingQuestion = false;
       });
     } catch (_) {
       if (!mounted || isStaleScreenLoad(loadId)) return;
@@ -425,8 +541,10 @@ class _PracticeSessionPageState extends State<PracticeSessionPage>
         assignmentId: widget.assignmentId,
       );
       if (!mounted || isStaleScreenLoad(id)) return;
+      setState(() => _applySession(session));
+      await _ensureQuestionAt(_currentIndex);
+      if (!mounted || isStaleScreenLoad(id)) return;
       setState(() {
-        _applySession(session);
         _loading = false;
         _loadingMessage = null;
       });
@@ -437,6 +555,7 @@ class _PracticeSessionPageState extends State<PracticeSessionPage>
         _error = DioErrorMapper.map(e);
         _loading = false;
         _loadingMessage = null;
+        _loadingQuestion = false;
       });
     } catch (_) {
       if (!mounted || isStaleScreenLoad(id)) return;
@@ -449,37 +568,38 @@ class _PracticeSessionPageState extends State<PracticeSessionPage>
   }
 
   PracticeQuestionModel? get _currentQuestion {
-    final session = _session;
-    if (session == null || session.questions.isEmpty) {
+    if (_questionNav.isEmpty || _currentIndex >= _questionNav.length) {
       return null;
     }
-    if (_currentIndex >= session.questions.length) {
-      return null;
-    }
-    return session.questions[_currentIndex];
+    final snapshotId = _questionNav[_currentIndex].practiceQuestionSnapshotId;
+    return _questionCache[snapshotId];
   }
 
-  String _statusFor(PracticeQuestionModel question) =>
-      _questionStatuses[question.practiceQuestionSnapshotId] ?? 'unanswered';
+  String _statusForSnapshot(String snapshotId) =>
+      _questionStatuses[snapshotId] ?? 'unanswered';
 
-  bool _isQuestionDone(PracticeQuestionModel question) {
-    if (_statusFor(question) == 'answered') {
+  String _statusFor(PracticeQuestionModel question) =>
+      _statusForSnapshot(question.practiceQuestionSnapshotId);
+
+  bool _isNavItemDone(PracticeQuestionNavModel nav) {
+    if (_statusForSnapshot(nav.practiceQuestionSnapshotId) == 'answered') {
       return true;
     }
-    return _selectionFor(question).isNotEmpty;
+    final cached = _questionCache[nav.practiceQuestionSnapshotId];
+    if (cached != null && _selectionFor(cached).isNotEmpty) {
+      return true;
+    }
+    return false;
   }
 
   int get _completedCount {
-    final session = _session;
-    if (session == null) return 0;
-    return session.questions.where(_isQuestionDone).length;
+    if (_questionNav.isEmpty) {
+      return 0;
+    }
+    return _questionNav.where(_isNavItemDone).length;
   }
 
-  bool get _allCompleted {
-    final session = _session;
-    if (session == null) return false;
-    return _completedCount >= session.questions.length;
-  }
+  bool get _allCompleted => _completedCount >= _totalQuestions && _totalQuestions > 0;
 
   Set<String> _selectionFor(PracticeQuestionModel question) {
     return _pendingSelections.putIfAbsent(
@@ -496,9 +616,8 @@ class _PracticeSessionPageState extends State<PracticeSessionPage>
   }
 
   List<PracticeQuestionNavStatus> _navStatuses() {
-    final session = _session!;
-    return session.questions.map((q) {
-      return _isQuestionDone(q)
+    return _questionNav.map((nav) {
+      return _isNavItemDone(nav)
           ? PracticeQuestionNavStatus.answered
           : PracticeQuestionNavStatus.pending;
     }).toList();
@@ -510,15 +629,29 @@ class _PracticeSessionPageState extends State<PracticeSessionPage>
         question.selectedAnswerOptionIds.toSet();
   }
 
-  void _goToQuestion(int index) {
-    final session = _session;
-    if (session == null) return;
-    if (index < 0 || index >= session.questions.length) return;
-    setState(() {
-      _currentIndex = index;
-      _hydrateSelections(session.questions[index]);
-    });
-    _precacheAdjacentQuestions();
+  Future<void> _goToQuestion(int index) async {
+    if (index < 0 || index >= _totalQuestions) {
+      return;
+    }
+    try {
+      await _ensureQuestionAt(index);
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _currentIndex = index;
+        final question = _currentQuestion;
+        if (question != null) {
+          _hydrateSelections(question);
+        }
+      });
+      _precacheAdjacentQuestions();
+    } on DioException catch (e) {
+      if (!mounted) {
+        return;
+      }
+      context.showDioErrorSnackBar(e);
+    }
   }
 
   Future<void> _persistSelection(PracticeQuestionModel question) async {
@@ -668,15 +801,15 @@ class _PracticeSessionPageState extends State<PracticeSessionPage>
 
   Widget? _buildBottomBar(AppLocalizations l10n) {
     final session = _session;
-    if (session == null || session.questions.isEmpty) {
+    if (session == null || _totalQuestions == 0) {
       return null;
     }
 
-    final isBusy = _finishing;
+    final isBusy = _finishing || _loadingQuestion;
 
     return PracticeSessionBottomBar(
       canGoBack: _currentIndex > 0,
-      canGoForward: _currentIndex < session.questions.length - 1,
+      canGoForward: _currentIndex < _totalQuestions - 1,
       allCompleted: _allCompleted,
       isBusy: isBusy,
       onPrevious: () {
@@ -743,9 +876,11 @@ class _PracticeSessionPageState extends State<PracticeSessionPage>
                       ? () => _resumeSession(widget.resumeSessionId!)
                       : _initializeSession,
                 )
-              : session == null || question == null
+              : session == null
                   ? AppEmptyView(message: l10n.practiceNoQuestions)
-                  : Column(
+                  : question == null
+                      ? AppLoadingView(message: _loadingMessage)
+                      : Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Padding(
@@ -761,7 +896,7 @@ class _PracticeSessionPageState extends State<PracticeSessionPage>
                               PracticeQuestionNavHeader(
                                 currentIndex: _currentIndex,
                                 displayOrder: question.displayOrder,
-                                totalQuestions: session.questions.length,
+                                totalQuestions: _totalQuestions,
                                 completedCount: _completedCount,
                                 statuses: _navStatuses(),
                                 onSelected: _goToQuestion,

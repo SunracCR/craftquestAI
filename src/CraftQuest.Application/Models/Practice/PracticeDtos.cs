@@ -24,6 +24,14 @@ public class StartPracticeSessionRequest
     public int? ClientUtcOffsetMinutes { get; set; }
 }
 
+public sealed class PracticeQuestionNavItemDto
+{
+    public required Guid PracticeQuestionSnapshotId { get; init; }
+    public required Guid QuestionId { get; init; }
+    public required int DisplayOrder { get; init; }
+    public required string AnswerStatus { get; init; }
+}
+
 public sealed class PracticeSessionDto
 {
     public required Guid PracticeSessionId { get; init; }
@@ -36,6 +44,7 @@ public sealed class PracticeSessionDto
     public int AnsweredCount { get; init; }
     public int TotalQuestions { get; init; }
     public required IReadOnlyList<PracticeQuestionDto> Questions { get; init; }
+    public IReadOnlyList<PracticeQuestionNavItemDto> QuestionNav { get; init; } = [];
 }
 
 public sealed class PracticeActiveSessionSummaryDto

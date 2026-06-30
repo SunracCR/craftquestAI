@@ -37,6 +37,12 @@ public interface IPracticeService
         Guid sessionId,
         CancellationToken cancellationToken = default);
 
+    Task<PracticeQuestionDto> GetSessionQuestionAsync(
+        Guid studentUserId,
+        Guid sessionId,
+        Guid practiceQuestionSnapshotId,
+        CancellationToken cancellationToken = default);
+
     Task UpdateProgressAsync(
         Guid studentUserId,
         Guid sessionId,

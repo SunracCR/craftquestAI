@@ -17,6 +17,8 @@ import 'package:craftquest_app/features/prep_plus/data/models/prep_plus_models.d
 import 'package:craftquest_app/features/prep_plus/data/prep_plus_repository.dart';
 import 'package:craftquest_app/features/prep_plus/presentation/prep_plus_preview_page.dart';
 import 'package:craftquest_app/features/prep_plus/presentation/widgets/prep_plus_access_combo_card.dart';
+import 'package:craftquest_app/features/practice/data/models/practice_models.dart';
+import 'package:craftquest_app/features/practice/domain/practice_launch_options.dart';
 import 'package:craftquest_app/features/practice/data/practice_preferences_repository.dart';
 import 'package:craftquest_app/features/practice/data/practice_repository.dart';
 import 'package:craftquest_app/features/practice/presentation/my_practice_attempts_page.dart';
@@ -49,6 +51,8 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
   String? _error;
   String? _pendingPayPalOrderId;
   StreamSubscription<List<PurchaseDetails>>? _purchaseSub;
+  Future<PracticeActiveSessionModel?>? _activeSessionPrefetch;
+  Future<PracticeLaunchOptions>? _launchOptionsPrefetch;
 
   static bool get _supportsStorePurchase =>
       !kIsWeb &&
@@ -84,6 +88,9 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
         _selectedOfferId = _defaultOfferId(item.offers);
         _loading = false;
       });
+      if (item.canPractice) {
+        _warmPracticeLaunch(item.quizId);
+      }
     } on DioException catch (e) {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
@@ -110,6 +117,13 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       if (o.durationDays > longest.durationDays) longest = o;
     }
     return longest.offerId;
+  }
+
+  void _warmPracticeLaunch(String quizId) {
+    final practiceRepo = getIt<PracticeRepository>();
+    final prefsRepo = getIt<PracticePreferencesRepository>();
+    _activeSessionPrefetch = practiceRepo.getActiveSessionForQuiz(quizId);
+    _launchOptionsPrefetch = prefsRepo.loadLaunchOptions(quizId);
   }
 
   void _openPreview() {
@@ -610,12 +624,10 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
               context,
               quizId: item.quizId,
               quizTitle: item.title,
-              activeSessionPrefetch: practiceRepo.getActiveSessionForQuiz(
-                item.quizId,
-              ),
-              launchOptionsPrefetch: prefsRepo.loadLaunchOptions(
-                item.quizId,
-              ),
+              activeSessionPrefetch: _activeSessionPrefetch ??
+                  practiceRepo.getActiveSessionForQuiz(item.quizId),
+              launchOptionsPrefetch: _launchOptionsPrefetch ??
+                  prefsRepo.loadLaunchOptions(item.quizId),
             );
             if (mounted) await _load();
           },

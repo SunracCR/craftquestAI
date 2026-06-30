@@ -26,12 +26,36 @@ class PracticeActiveSessionModel {
   final int totalQuestions;
 }
 
+class PracticeQuestionNavModel {
+  const PracticeQuestionNavModel({
+    required this.practiceQuestionSnapshotId,
+    required this.questionId,
+    required this.displayOrder,
+    required this.answerStatus,
+  });
+
+  factory PracticeQuestionNavModel.fromJson(Map<String, dynamic> json) {
+    return PracticeQuestionNavModel(
+      practiceQuestionSnapshotId: json['practiceQuestionSnapshotId'] as String,
+      questionId: json['questionId'] as String,
+      displayOrder: json['displayOrder'] as int,
+      answerStatus: json['answerStatus'] as String? ?? 'unanswered',
+    );
+  }
+
+  final String practiceQuestionSnapshotId;
+  final String questionId;
+  final int displayOrder;
+  final String answerStatus;
+}
+
 class PracticeSessionModel {
   const PracticeSessionModel({
     required this.practiceSessionId,
     required this.quizId,
     required this.status,
     required this.questions,
+    this.questionNav = const [],
     this.showElapsedTimer = false,
     this.currentQuestionIndex = 0,
     this.elapsedSecondsBeforePause = 0,
@@ -45,6 +69,12 @@ class PracticeSessionModel {
           (e) => PracticeQuestionModel.fromJson(e as Map<String, dynamic>),
         )
         .toList();
+    final navJson = json['questionNav'] as List<dynamic>? ?? [];
+    final questionNav = navJson
+        .map(
+          (e) => PracticeQuestionNavModel.fromJson(e as Map<String, dynamic>),
+        )
+        .toList();
     return PracticeSessionModel(
       practiceSessionId: json['practiceSessionId'] as String,
       quizId: json['quizId'] as String,
@@ -54,8 +84,10 @@ class PracticeSessionModel {
       elapsedSecondsBeforePause:
           json['elapsedSecondsBeforePause'] as int? ?? 0,
       answeredCount: json['answeredCount'] as int? ?? 0,
-      totalQuestions: json['totalQuestions'] as int? ?? questions.length,
+      totalQuestions: json['totalQuestions'] as int? ??
+          (questionNav.isNotEmpty ? questionNav.length : questions.length),
       questions: questions,
+      questionNav: questionNav,
     );
   }
 
@@ -68,6 +100,7 @@ class PracticeSessionModel {
   final int answeredCount;
   final int totalQuestions;
   final List<PracticeQuestionModel> questions;
+  final List<PracticeQuestionNavModel> questionNav;
 }
 
 class PracticeQuestionModel {

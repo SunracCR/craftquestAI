@@ -75,6 +75,16 @@ class PracticeRepository {
     return PracticeSessionModel.fromJson(response.data!);
   }
 
+  Future<PracticeQuestionModel> getSessionQuestion({
+    required String sessionId,
+    required String practiceQuestionSnapshotId,
+  }) async {
+    final response = await _apiClient.dio.get<Map<String, dynamic>>(
+      '/api/practice-sessions/$sessionId/questions/$practiceQuestionSnapshotId',
+    );
+    return PracticeQuestionModel.fromJson(response.data!);
+  }
+
   Future<void> updateProgress({
     required String sessionId,
     required int currentQuestionIndex,

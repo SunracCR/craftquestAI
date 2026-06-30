@@ -86,6 +86,21 @@ public class PracticeController(IPracticeService practiceService) : ApiControlle
         return Ok(session);
     }
 
+    [HttpGet("{sessionId:guid}/questions/{practiceQuestionSnapshotId:guid}")]
+    [ProducesResponseType(typeof(PracticeQuestionDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetSessionQuestion(
+        Guid sessionId,
+        Guid practiceQuestionSnapshotId,
+        CancellationToken cancellationToken)
+    {
+        var question = await practiceService.GetSessionQuestionAsync(
+            GetUserId(),
+            sessionId,
+            practiceQuestionSnapshotId,
+            cancellationToken);
+        return Ok(question);
+    }
+
     [HttpPatch("{sessionId:guid}/progress")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> UpdateProgress(
