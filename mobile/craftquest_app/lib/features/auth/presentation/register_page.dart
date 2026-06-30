@@ -146,8 +146,8 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).toString();
-    final birthDateLabel = _birthDate == null
-        ? l10n.ageScreenBirthDateLabel
+    final formattedBirthDate = _birthDate == null
+        ? null
         : DateFormat.yMMMMd(locale).format(_birthDate!);
 
     return EdgeAwareScaffold(
@@ -189,10 +189,31 @@ class _RegisterPageState extends State<RegisterPage> {
                 },
               ),
               const SizedBox(height: AppSpacing.md),
-              OutlinedButton.icon(
-                onPressed: _pickBirthDate,
-                icon: const Icon(Icons.calendar_today_outlined),
-                label: Text(birthDateLabel),
+              InputDecorator(
+                decoration: InputDecoration(
+                  labelText: l10n.ageScreenBirthDateLabel,
+                ),
+                isEmpty: _birthDate == null,
+                child: InkWell(
+                  onTap: _pickBirthDate,
+                  borderRadius: BorderRadius.circular(AppColors.radiusSm),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today_outlined,
+                        size: 20,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          formattedBirthDate ?? '',
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
               if (_isMinor) ...[
                 const SizedBox(height: AppSpacing.md),

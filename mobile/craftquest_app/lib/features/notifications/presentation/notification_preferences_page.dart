@@ -4,7 +4,6 @@ import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
-import 'package:craftquest_app/core/widgets/app_notice_banner.dart';
 import 'package:craftquest_app/core/widgets/app_section_card.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
@@ -199,11 +198,19 @@ class _NotificationPreferencesPageState
                           ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                    AppNoticeBanner(
-                      message: l10n.notificationsPreferencesDefaultsHint,
-                      variant: AppNoticeVariant.info,
-                      actionLabel: l10n.notificationsPreferencesResetDefaults,
-                      onAction: _saving ? null : _resetToDefaults,
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: TextButton(
+                        onPressed: _saving ? null : _resetToDefaults,
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.accentGold,
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        child: Text(l10n.notificationsPreferencesResetDefaults),
+                      ),
                     ),
                     if (_saving) ...[
                       const SizedBox(height: AppSpacing.sm),
