@@ -33,6 +33,8 @@ public static class PrepPlusErrorCodes
     public const string QuizNoQuestions = "PREP_QUIZ_NO_QUESTIONS";
     public const string ListingEndBeforeStart = "PREP_LISTING_END_BEFORE_START";
     public const string PreviewNotAvailable = "PREP_PREVIEW_NOT_AVAILABLE";
+    public const string PreviewInvalidQuestion = "PREP_PREVIEW_INVALID_QUESTION";
+    public const string PreviewInvalidAnswerOption = "PREP_PREVIEW_INVALID_ANSWER_OPTION";
     public const string ItemNotAvailable = "PREP_ITEM_NOT_AVAILABLE";
     public const string OfferNotFound = "PREP_OFFER_NOT_FOUND";
     public const string OfferIsFree = "PREP_OFFER_IS_FREE";

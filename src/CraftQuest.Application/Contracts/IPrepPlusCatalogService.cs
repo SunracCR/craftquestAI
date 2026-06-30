@@ -28,6 +28,11 @@ public interface IPrepPlusCatalogService
         Guid catalogItemId,
         CancellationToken cancellationToken = default);
 
+    Task<PrepPreviewFinishResultDto> FinishPreviewAsync(
+        Guid catalogItemId,
+        PrepPreviewFinishRequest request,
+        CancellationToken cancellationToken = default);
+
     Task<PrepMyAccessesDto> GetMyAccessesAsync(
         Guid userId,
         CancellationToken cancellationToken = default);

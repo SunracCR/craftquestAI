@@ -137,6 +137,7 @@ class AuthRepository {
     String? displayName,
     String? avatarId,
     String? preferredLanguage,
+    DateTime? dateOfBirth,
   }) async {
     final response = await _apiClient.dio.patch<Map<String, dynamic>>(
       '/api/auth/me',
@@ -144,6 +145,8 @@ class AuthRepository {
         if (displayName != null) 'displayName': displayName,
         if (avatarId != null) 'avatarId': avatarId,
         if (preferredLanguage != null) 'preferredLanguage': preferredLanguage,
+        if (dateOfBirth != null)
+          'dateOfBirth': dateOfBirth.toIso8601String().split('T').first,
       },
     );
     return UserProfileModel.fromJson(response.data!);

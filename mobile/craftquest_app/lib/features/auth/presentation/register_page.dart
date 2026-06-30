@@ -1,4 +1,5 @@
 import 'package:craftquest_app/core/compliance/age_collection_storage.dart';
+import 'package:craftquest_app/core/compliance/birth_date_correction.dart';
 import 'package:craftquest_app/core/compliance/legal_links.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
@@ -62,29 +63,19 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Future<void> _pickBirthDate() async {
-    final now = DateTime.now();
-    final initial = _birthDate ?? DateTime(now.year - 16, now.month, now.day);
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: initial,
-      firstDate: DateTime(now.year - 100),
-      lastDate: now,
-      helpText: AppLocalizations.of(context)!.ageScreenBirthDateLabel,
+    final picked = await BirthDateCorrection.pickDate(
+      context,
+      initialDate: _birthDate,
     );
     if (picked == null) {
       return;
     }
 
-    var age = now.year - picked.year;
-    if (picked.month > now.month ||
-        (picked.month == now.month && picked.day > now.day)) {
-      age--;
-    }
-
     setState(() {
       _birthDate = picked;
-      _isMinor = age < AgeCollectionStorage.minimumAgeWithoutParentalConsent;
+      _isMinor = BirthDateCorrection.isMinor(picked);
     });
+    await _ageStorage.saveDateOfBirth(picked);
   }
 
   Future<void> _submit() async {

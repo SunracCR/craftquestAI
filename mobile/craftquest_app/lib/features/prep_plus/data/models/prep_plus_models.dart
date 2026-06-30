@@ -1,3 +1,5 @@
+import 'package:craftquest_app/features/teacher/data/models/teacher_review_models.dart';
+
 class PrepCategoryModel {
   const PrepCategoryModel({
     required this.categoryId,
@@ -262,6 +264,43 @@ class PrepPreviewModel {
 
   final String catalogItemId;
   final List<PrepPreviewQuestionModel> sampleQuestions;
+}
+
+class PrepPreviewFinishResultModel {
+  const PrepPreviewFinishResultModel({
+    required this.catalogItemId,
+    required this.scoreObtained,
+    required this.scorePossible,
+    required this.percentage,
+    required this.correctAnswers,
+    required this.incorrectAnswers,
+    required this.omittedAnswers,
+    required this.review,
+  });
+
+  factory PrepPreviewFinishResultModel.fromJson(Map<String, dynamic> json) {
+    return PrepPreviewFinishResultModel(
+      catalogItemId: json['catalogItemId'] as String,
+      scoreObtained: (json['scoreObtained'] as num).toDouble(),
+      scorePossible: (json['scorePossible'] as num).toDouble(),
+      percentage: (json['percentage'] as num).toDouble(),
+      correctAnswers: json['correctAnswers'] as int,
+      incorrectAnswers: json['incorrectAnswers'] as int,
+      omittedAnswers: json['omittedAnswers'] as int,
+      review: TeacherPracticeReviewModel.fromJson(
+        json['review'] as Map<String, dynamic>,
+      ),
+    );
+  }
+
+  final String catalogItemId;
+  final double scoreObtained;
+  final double scorePossible;
+  final double percentage;
+  final int correctAnswers;
+  final int incorrectAnswers;
+  final int omittedAnswers;
+  final TeacherPracticeReviewModel review;
 }
 
 class PrepMyAccessItemModel {

@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:craftquest_app/core/compliance/birth_date_correction.dart';
+import 'package:craftquest_app/core/compliance/age_collection_storage.dart';
 import 'package:craftquest_app/core/compliance/legal_links.dart';
 import 'package:craftquest_app/core/config/legal_urls.dart';
 import 'package:craftquest_app/core/di/injection.dart';
@@ -33,6 +35,7 @@ import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key, required this.user});
@@ -47,8 +50,10 @@ class _ProfilePageState extends State<ProfilePage> {
   final _repository = getIt<AuthRepository>();
   final _billingRepository = getIt<BillingRepository>();
   final _localeController = getIt<LocaleController>();
+  final _ageStorage = getIt<AgeCollectionStorage>();
   late String _avatarId;
   String? _displayNameOverride;
+  DateTime? _storedBirthDate;
   bool _savingAvatar = false;
   bool _savingName = false;
   UserBillingModel? _billing;
@@ -64,6 +69,23 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     _avatarId = widget.user.avatarId ?? AvatarOption.defaultId;
+    unawaited(_loadStoredBirthDate());
+  }
+
+  Future<void> _loadStoredBirthDate() async {
+    final stored = await _ageStorage.getDateOfBirth();
+    final fromProfile = _parseProfileBirthDate(widget.user.dateOfBirth);
+    if (!mounted) {
+      return;
+    }
+    setState(() => _storedBirthDate = stored ?? fromProfile);
+  }
+
+  DateTime? _parseProfileBirthDate(String? isoDate) {
+    if (isoDate == null || isoDate.isEmpty) {
+      return null;
+    }
+    return DateTime.tryParse(isoDate);
   }
 
   /// Billing is optional UI on this page — defer so profile edits are not queued behind it.
@@ -283,6 +305,44 @@ class _ProfilePageState extends State<ProfilePage> {
       return;
     }
     context.showSuccessSnackBar(l10n.deleteAccountSuccess);
+  }
+
+  Future<void> _correctBirthDate() async {
+    final l10n = AppLocalizations.of(context)!;
+    final picked = await BirthDateCorrection.pickDate(
+      context,
+      initialDate: _storedBirthDate,
+    );
+    if (picked == null || !mounted) {
+      return;
+    }
+
+    try {
+      await BirthDateCorrection.apply(
+        context,
+        picked,
+        syncToAccount: true,
+      );
+      if (!mounted) {
+        return;
+      }
+      setState(() => _storedBirthDate = picked);
+      context.showSuccessSnackBar(l10n.correctBirthDateSuccess);
+    } on DioException catch (e) {
+      if (!mounted) {
+        return;
+      }
+      context.showDioErrorSnackBar(e);
+    }
+  }
+
+  String _birthDateSubtitle(AppLocalizations l10n) {
+    final date = _storedBirthDate;
+    if (date == null) {
+      return l10n.correctBirthDateSubtitle;
+    }
+    final locale = Localizations.localeOf(context).toString();
+    return DateFormat.yMMMMd(locale).format(date);
   }
 
   @override
@@ -714,6 +774,14 @@ class _ProfilePageState extends State<ProfilePage> {
             padding: EdgeInsets.zero,
             child: Column(
               children: [
+                ListTile(
+                  leading: const Icon(Icons.cake_outlined),
+                  title: Text(l10n.correctBirthDateAction),
+                  subtitle: Text(_birthDateSubtitle(l10n)),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: _correctBirthDate,
+                ),
+                _divider(),
                 ListTile(
                   leading: const Icon(Icons.privacy_tip_outlined),
                   title: Text(l10n.privacyPolicyLink),

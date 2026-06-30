@@ -49,6 +49,9 @@ void configureDependencies() {
   getIt.registerLazySingleton(LocaleController.new);
   getIt.registerLazySingleton(AgeSignalService.new);
   getIt.registerLazySingleton(AgeCollectionStorage.new);
+  getIt.registerLazySingleton(
+    () => AgeCollectionController(getIt<AgeCollectionStorage>()),
+  );
   getIt.registerLazySingleton(NetworkConnectivityService.new);
   getIt.registerLazySingleton(SessionExpiredNotifier.new);
   getIt.registerLazySingleton(

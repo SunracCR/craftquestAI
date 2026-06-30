@@ -47,6 +47,7 @@ class AppNoticeBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final accent = _accentColor;
     final resolvedIcon = icon ?? _defaultIcon;
+    final hasAction = actionLabel != null && onAction != null;
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -71,26 +72,40 @@ class AppNoticeBanner extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
-              child: Text(
-                message,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      height: 1.5,
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w500,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    message,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          height: 1.5,
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                  ),
+                  if (hasAction) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: TextButton(
+                        onPressed: onAction,
+                        style: TextButton.styleFrom(
+                          foregroundColor: accent,
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        child: Text(
+                          actionLabel!,
+                          textAlign: TextAlign.start,
+                        ),
+                      ),
                     ),
+                  ],
+                ],
               ),
             ),
-            if (actionLabel != null && onAction != null)
-              TextButton(
-                onPressed: onAction,
-                style: TextButton.styleFrom(
-                  foregroundColor: accent,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: Text(actionLabel!),
-              ),
           ],
         ),
       ),

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:craftquest_app/core/compliance/age_collection_storage.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
@@ -23,6 +25,20 @@ class _AgeScreenState extends State<AgeScreen> {
   final _storage = getIt<AgeCollectionStorage>();
   DateTime? _birthDate;
   bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_loadStoredDate());
+  }
+
+  Future<void> _loadStoredDate() async {
+    final stored = await _storage.getDateOfBirth();
+    if (!mounted || stored == null) {
+      return;
+    }
+    setState(() => _birthDate = stored);
+  }
 
   Future<void> _pickDate() async {
     final now = DateTime.now();

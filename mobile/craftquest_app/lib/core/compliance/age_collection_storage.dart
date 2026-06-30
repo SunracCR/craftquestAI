@@ -43,4 +43,12 @@ class AgeCollectionStorage {
       age < minimumAgeWithoutParentalConsent,
     );
   }
+
+  /// Borra la fecha guardada para volver a mostrar la pantalla inicial de edad.
+  Future<void> clear() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_collectedKey);
+    await prefs.remove(_dobKey);
+    await prefs.remove(_minorKey);
+  }
 }

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:craftquest_app/core/compliance/age_collection_controller.dart';
 import 'package:craftquest_app/core/compliance/age_collection_storage.dart';
 import 'package:craftquest_app/core/compliance/age_screen.dart';
 import 'package:craftquest_app/core/di/injection.dart';
@@ -18,6 +19,7 @@ class AgeCollectionGate extends StatefulWidget {
 
 class _AgeCollectionGateState extends State<AgeCollectionGate> {
   final _storage = getIt<AgeCollectionStorage>();
+  late final AgeCollectionController _controller;
 
   bool _loading = true;
   bool _needsAge = false;
@@ -25,6 +27,18 @@ class _AgeCollectionGateState extends State<AgeCollectionGate> {
   @override
   void initState() {
     super.initState();
+    _controller = getIt<AgeCollectionController>();
+    _controller.addListener(_onRecollectionRequested);
+    unawaited(_load());
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_onRecollectionRequested);
+    super.dispose();
+  }
+
+  void _onRecollectionRequested() {
     unawaited(_load());
   }
 

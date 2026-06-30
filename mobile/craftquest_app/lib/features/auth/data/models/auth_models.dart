@@ -22,6 +22,7 @@ class UserProfileModel {
     this.displayName,
     this.avatarId,
     this.preferredLanguage,
+    this.dateOfBirth,
     required this.roles,
   });
 
@@ -32,6 +33,7 @@ class UserProfileModel {
       displayName: json['displayName'] as String?,
       avatarId: json['avatarId'] as String?,
       preferredLanguage: json['preferredLanguage'] as String?,
+      dateOfBirth: json['dateOfBirth'] as String?,
       roles: (json['roles'] as List<dynamic>).cast<String>(),
     );
   }
@@ -41,12 +43,14 @@ class UserProfileModel {
   final String? displayName;
   final String? avatarId;
   final String? preferredLanguage;
+  final String? dateOfBirth;
   final List<String> roles;
 
   UserProfileModel copyWith({
     String? displayName,
     String? avatarId,
     String? preferredLanguage,
+    String? dateOfBirth,
   }) {
     return UserProfileModel(
       userId: userId,
@@ -54,6 +58,7 @@ class UserProfileModel {
       displayName: displayName ?? this.displayName,
       avatarId: avatarId ?? this.avatarId,
       preferredLanguage: preferredLanguage ?? this.preferredLanguage,
+      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       roles: roles,
     );
   }

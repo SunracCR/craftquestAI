@@ -3,6 +3,9 @@ using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Exceptions;
 using CraftQuest.Application.Models.PrepPlus;
 using CraftQuest.Application.Models.Quizzes;
+using CraftQuest.Application.Models.Teacher;
+using CraftQuest.Application.Services;
+using CraftQuest.Application.Services.PrepPlus;
 using CraftQuest.Domain.Constants;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
@@ -12,7 +15,8 @@ namespace CraftQuest.Infrastructure.Services;
 
 public class PrepPlusCatalogService(
     CraftQuestDbContext dbContext,
-    IPrepPlusAccessService prepPlusAccessService) : IPrepPlusCatalogService
+    IPrepPlusAccessService prepPlusAccessService,
+    IMediaService mediaService) : IPrepPlusCatalogService
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
@@ -215,6 +219,191 @@ public class PrepPlusCatalogService(
         {
             CatalogItemId = catalogItemId,
             SampleQuestions = ordered,
+        };
+    }
+
+    public async Task<PrepPreviewFinishResultDto> FinishPreviewAsync(
+        Guid catalogItemId,
+        PrepPreviewFinishRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var item = await LoadPublishedItemAsync(catalogItemId, cancellationToken);
+
+        var sampleQuestionIds = await dbContext.PrepSampleQuestions
+            .AsNoTracking()
+            .Where(s => s.CatalogItemId == catalogItemId)
+            .OrderBy(s => s.SortOrder)
+            .Select(s => s.QuestionId)
+            .ToListAsync(cancellationToken);
+
+        if (sampleQuestionIds.Count == 0)
+        {
+            throw new AppException(
+                "Preview is not available for this item.",
+                404,
+                PrepPlusErrorCodes.PreviewNotAvailable);
+        }
+
+        var answersByQuestion = (request.Answers ?? [])
+            .GroupBy(a => a.QuestionId)
+            .ToDictionary(g => g.Key, g => g.Last());
+
+        foreach (var questionId in answersByQuestion.Keys)
+        {
+            if (!sampleQuestionIds.Contains(questionId))
+            {
+                throw new AppException(
+                    "One or more question ids are not part of this preview.",
+                    400,
+                    PrepPlusErrorCodes.PreviewInvalidQuestion);
+            }
+        }
+
+        var questions = await dbContext.Questions
+            .AsNoTracking()
+            .Include(q => q.QuestionType)
+            .Include(q => q.AnswerOptions.Where(o => o.IsActive))
+            .Include(q => q.CorrectAnswerOptions)
+            .Include(q => q.Justification!)
+                .ThenInclude(j => j.Sources)
+            .Where(q => sampleQuestionIds.Contains(q.QuestionId))
+            .ToListAsync(cancellationToken);
+
+        var orderedQuestions = sampleQuestionIds
+            .Select(id => questions.FirstOrDefault(q => q.QuestionId == id))
+            .Where(q => q is not null)
+            .Cast<Question>()
+            .ToList();
+
+        if (orderedQuestions.Count != sampleQuestionIds.Count)
+        {
+            throw new AppException(
+                "Preview sample questions are incomplete.",
+                500,
+                PrepPlusErrorCodes.PreviewNotAvailable);
+        }
+
+        var correctCount = 0;
+        var incorrectCount = 0;
+        var omittedCount = 0;
+        decimal scoreObtained = 0;
+        decimal scorePossible = 0;
+        var reviewQuestions = new List<TeacherPracticeQuestionReviewDto>();
+
+        for (var index = 0; index < orderedQuestions.Count; index++)
+        {
+            var question = orderedQuestions[index];
+            scorePossible += question.Points;
+
+            var validOptionIds = question.AnswerOptions
+                .Where(o => o.IsActive)
+                .Select(o => o.AnswerOptionId)
+                .ToHashSet();
+
+            var selectedIds = answersByQuestion.TryGetValue(question.QuestionId, out var submission)
+                ? submission.SelectedAnswerOptionIds
+                    .Where(id => id != Guid.Empty)
+                    .Distinct()
+                    .ToList()
+                : [];
+
+            foreach (var selectedId in selectedIds)
+            {
+                if (!validOptionIds.Contains(selectedId))
+                {
+                    throw new AppException(
+                        "Invalid answer option id for preview question.",
+                        400,
+                        PrepPlusErrorCodes.PreviewInvalidAnswerOption);
+                }
+            }
+
+            var supportsMultiple = question.QuestionType.SupportsMultipleCorrectAnswers;
+            var correctIds = question.CorrectAnswerOptions
+                .Select(c => c.AnswerOptionId)
+                .ToHashSet();
+
+            var scoringPolicy = AnswerGradingService.ResolveScoringPolicyForQuestionType(
+                question.QuestionType.Code,
+                question.ScoringPolicy);
+
+            string answerStatus;
+            bool? isCorrect;
+            decimal pointsAwarded;
+
+            if (selectedIds.Count == 0)
+            {
+                answerStatus = "omitted";
+                isCorrect = null;
+                pointsAwarded = 0;
+                omittedCount++;
+            }
+            else
+            {
+                answerStatus = "answered";
+                var grading = AnswerGradingService.GradeAnswer(
+                    selectedIds.ToHashSet(),
+                    correctIds,
+                    supportsMultiple,
+                    scoringPolicy,
+                    question.Points);
+
+                pointsAwarded = grading.PointsAwarded;
+                isCorrect = grading.IsFullyCorrect;
+                scoreObtained += pointsAwarded;
+
+                if (grading.IsFullyCorrect)
+                {
+                    correctCount++;
+                }
+                else
+                {
+                    incorrectCount++;
+                }
+            }
+
+            reviewQuestions.Add(
+                PrepPreviewReviewMapper.MapQuestion(
+                    question,
+                    index,
+                    selectedIds.ToHashSet(),
+                    isCorrect,
+                    pointsAwarded,
+                    answerStatus,
+                    mediaService));
+        }
+
+        var percentage = scorePossible > 0
+            ? Math.Round(scoreObtained / scorePossible * 100, 2)
+            : 0;
+
+        var review = new TeacherPracticeReviewDto
+        {
+            PracticeSessionId = catalogItemId,
+            QuizId = item.QuizId,
+            Status = "finished",
+            ScoreObtained = scoreObtained,
+            ScorePossible = scorePossible,
+            FinishedAt = DateTime.UtcNow,
+            Student = new TeacherStudentDto
+            {
+                UserId = Guid.Empty,
+                DisplayName = null,
+            },
+            Questions = reviewQuestions,
+            RevealCorrectAnswers = true,
+        };
+
+        return new PrepPreviewFinishResultDto
+        {
+            CatalogItemId = catalogItemId,
+            ScoreObtained = scoreObtained,
+            ScorePossible = scorePossible,
+            Percentage = percentage,
+            CorrectAnswers = correctCount,
+            IncorrectAnswers = incorrectCount,
+            OmittedAnswers = omittedCount,
+            Review = review,
         };
     }
 

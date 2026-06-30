@@ -1,3 +1,4 @@
+import 'package:craftquest_app/core/compliance/birth_date_correction.dart';
 import 'package:craftquest_app/core/compliance/legal_links.dart';
 import 'package:craftquest_app/core/auth/saved_login_credentials_storage.dart';
 import 'package:craftquest_app/core/di/injection.dart';
@@ -355,6 +356,23 @@ class _LoginPageState extends State<LoginPage> {
                             const SizedBox(height: AppSpacing.sm),
                             const GuestPracticePromoCard(compact: true),
                             const LegalLinksRow(),
+                            Center(
+                              child: TextButton(
+                                onPressed: () async {
+                                  await BirthDateCorrection
+                                      .requestFullAgeScreen();
+                                },
+                                child: Text(
+                                  l10n.correctBirthDateLoginHint,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .labelMedium
+                                      ?.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                     ),

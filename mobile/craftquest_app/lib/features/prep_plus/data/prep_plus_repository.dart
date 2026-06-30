@@ -62,6 +62,28 @@ class PrepPlusRepository {
     return PrepPreviewModel.fromJson(response.data!);
   }
 
+  Future<PrepPreviewFinishResultModel> finishPreview({
+    required String catalogItemId,
+    required Map<String, Set<String>> selections,
+    int? durationSeconds,
+  }) async {
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/api/prep/items/$catalogItemId/preview/finish',
+      data: {
+        'answers': selections.entries
+            .map(
+              (entry) => {
+                'questionId': entry.key,
+                'selectedAnswerOptionIds': entry.value.toList(),
+              },
+            )
+            .toList(),
+        if (durationSeconds != null) 'durationSeconds': durationSeconds,
+      },
+    );
+    return PrepPreviewFinishResultModel.fromJson(response.data!);
+  }
+
   Future<PrepMyAccessesModel> getMyAccesses() async {
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
       '/api/prep/my-accesses',

@@ -28,6 +28,7 @@ class TeacherSessionReviewPage extends StatefulWidget {
     this.guestVisitId,
     this.guestToken,
     this.initialQuestionSnapshotId,
+    this.initialReview,
   });
 
   final String sessionId;
@@ -37,6 +38,7 @@ class TeacherSessionReviewPage extends StatefulWidget {
   final String? guestVisitId;
   final String? guestToken;
   final String? initialQuestionSnapshotId;
+  final TeacherPracticeReviewModel? initialReview;
 
   @override
   State<TeacherSessionReviewPage> createState() =>
@@ -55,10 +57,21 @@ class _TeacherSessionReviewPageState extends State<TeacherSessionReviewPage> {
   @override
   void initState() {
     super.initState();
-    _load();
+    if (widget.initialReview != null) {
+      _review = widget.initialReview;
+      _loading = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scheduleScrollToInitialQuestion();
+      });
+    } else {
+      _load();
+    }
   }
 
   Future<void> _load({bool forceRefresh = false}) async {
+    if (widget.initialReview != null) {
+      return;
+    }
     setState(() {
       _loading = true;
       _error = null;

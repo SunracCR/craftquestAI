@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
@@ -5,10 +7,12 @@ import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_answer_tile.dart';
 import 'package:craftquest_app/core/widgets/app_bottom_bar.dart';
 import 'package:craftquest_app/core/widgets/app_buttons.dart';
+import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/features/prep_plus/data/models/prep_plus_models.dart';
 import 'package:craftquest_app/features/prep_plus/data/prep_plus_repository.dart';
+import 'package:craftquest_app/features/prep_plus/presentation/prep_plus_preview_result_page.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -35,11 +39,19 @@ class _PrepPlusPreviewPageState extends State<PrepPlusPreviewPage> {
   List<PrepPreviewQuestionModel> _questions = [];
   int _currentIndex = 0;
   final Map<String, Set<String>> _selections = {};
+  bool _finishing = false;
+  final Stopwatch _elapsed = Stopwatch();
 
   @override
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _elapsed.stop();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -54,6 +66,9 @@ class _PrepPlusPreviewPageState extends State<PrepPlusPreviewPage> {
         _questions = preview.sampleQuestions;
         _loading = false;
       });
+      _elapsed
+        ..reset()
+        ..start();
     } on DioException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -100,6 +115,52 @@ class _PrepPlusPreviewPageState extends State<PrepPlusPreviewPage> {
     setState(() => _currentIndex = index);
   }
 
+  Future<void> _finishSimulation() async {
+    if (_finishing) {
+      return;
+    }
+
+    setState(() => _finishing = true);
+    _elapsed.stop();
+
+    try {
+      final result = await _repository.finishPreview(
+        catalogItemId: widget.catalogItemId,
+        selections: _selections,
+        durationSeconds: _elapsed.elapsed.inSeconds,
+      );
+      if (!mounted) {
+        return;
+      }
+      await Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(
+          builder: (_) => PrepPlusPreviewResultPage(
+            result: result,
+            quizTitle: widget.title,
+            catalogItemId: widget.catalogItemId,
+            elapsed: _elapsed.elapsed,
+          ),
+        ),
+      );
+    } on DioException catch (e) {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _finishing = false);
+      _elapsed.start();
+      context.showDioErrorSnackBar(e);
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _finishing = false);
+      _elapsed.start();
+      context.showErrorSnackBar(
+        DioErrorMapper.genericMessage(AppLocalizations.of(context)!),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -133,13 +194,17 @@ class _PrepPlusPreviewPageState extends State<PrepPlusPreviewPage> {
                         label: _currentIndex >= _questions.length - 1
                             ? l10n.prepPlusPreviewFinishCta
                             : l10n.prepPlusPreviewNext,
-                        onPressed: () {
-                          if (_currentIndex >= _questions.length - 1) {
-                            Navigator.of(context).pop();
-                          } else {
-                            _goTo(_currentIndex + 1);
-                          }
-                        },
+                        isLoading: _finishing &&
+                            _currentIndex >= _questions.length - 1,
+                        onPressed: _finishing
+                            ? null
+                            : () {
+                                if (_currentIndex >= _questions.length - 1) {
+                                  unawaited(_finishSimulation());
+                                } else {
+                                  _goTo(_currentIndex + 1);
+                                }
+                              },
                       ),
                     ),
                   ],

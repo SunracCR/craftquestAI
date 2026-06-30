@@ -67,6 +67,20 @@ public class PrepController(
         return Ok(preview);
     }
 
+    [HttpPost("items/{catalogItemId:guid}/preview/finish")]
+    [ProducesResponseType(typeof(PrepPreviewFinishResultDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> FinishPreview(
+        Guid catalogItemId,
+        [FromBody] PrepPreviewFinishRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await prepPlusCatalogService.FinishPreviewAsync(
+            catalogItemId,
+            request,
+            cancellationToken);
+        return Ok(result);
+    }
+
     [HttpGet("my-accesses")]
     [ProducesResponseType(typeof(PrepMyAccessesDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMyAccesses(CancellationToken cancellationToken)

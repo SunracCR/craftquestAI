@@ -7,5 +7,6 @@ public sealed class UserProfileDto
     public string? DisplayName { get; init; }
     public string? AvatarId { get; init; }
     public string? PreferredLanguage { get; init; }
+    public DateOnly? DateOfBirth { get; init; }
     public required IReadOnlyList<string> Roles { get; init; }
 }

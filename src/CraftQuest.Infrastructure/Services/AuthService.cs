@@ -465,6 +465,7 @@ public class AuthService(
                 u.DisplayName,
                 u.AvatarId,
                 u.PreferredLanguage,
+                u.DateOfBirth,
                 Roles = u.UserRoles.Select(ur => ur.Role!.Code).ToList(),
             })
             .FirstOrDefaultAsync(cancellationToken)
@@ -473,6 +474,7 @@ public class AuthService(
         var displayName = snapshot.DisplayName;
         var avatarId = snapshot.AvatarId;
         var preferredLanguage = snapshot.PreferredLanguage;
+        var dateOfBirth = snapshot.DateOfBirth;
         var hasChanges = false;
 
         if (request.DisplayName is not null)
@@ -512,6 +514,18 @@ public class AuthService(
             hasChanges = true;
         }
 
+        if (request.DateOfBirth.HasValue)
+        {
+            var dob = request.DateOfBirth.Value;
+            if (dob > DateOnly.FromDateTime(DateTime.UtcNow))
+            {
+                throw new AuthException("Invalid date of birth.", 400, "INVALID_DATE_OF_BIRTH");
+            }
+
+            dateOfBirth = dob;
+            hasChanges = true;
+        }
+
         if (hasChanges)
         {
             var updatedAt = DateTime.UtcNow;
@@ -522,6 +536,7 @@ public class AuthService(
                         .SetProperty(u => u.DisplayName, displayName)
                         .SetProperty(u => u.AvatarId, avatarId)
                         .SetProperty(u => u.PreferredLanguage, preferredLanguage)
+                        .SetProperty(u => u.DateOfBirth, dateOfBirth)
                         .SetProperty(u => u.UpdatedAt, updatedAt),
                     cancellationToken);
 
@@ -538,6 +553,7 @@ public class AuthService(
             DisplayName = displayName,
             AvatarId = avatarId ?? "craft_01",
             PreferredLanguage = preferredLanguage,
+            DateOfBirth = dateOfBirth,
             Roles = snapshot.Roles,
         };
     }
@@ -1070,6 +1086,7 @@ public class AuthService(
         DisplayName = user.DisplayName,
         AvatarId = user.AvatarId ?? "craft_01",
         PreferredLanguage = user.PreferredLanguage,
+        DateOfBirth = user.DateOfBirth,
         Roles = user.UserRoles.Select(ur => ur.Role.Code).ToList(),
     };
 

@@ -203,8 +203,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get verifyEmailPendingTitle => 'Confirme seu e-mail';
 
   @override
-  String verifyEmailPendingMessage(String email) =>
-      'Enviamos um link de ativacao para $email. Verifique a caixa de entrada e o spam.';
+  String verifyEmailPendingMessage(String email) {
+    return 'Enviamos um link de ativacao para $email. Verifique a caixa de entrada e o spam.';
+  }
 
   @override
   String get verifyEmailResendAction => 'Reenviar e-mail';
@@ -239,12 +240,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get confirmPasswordChangeTitle => 'Confirmar alteracao de senha';
 
   @override
-  String get confirmPasswordChangeInProgress =>
-      'Confirmando sua nova senha…';
+  String get confirmPasswordChangeInProgress => 'Confirmando sua nova senha…';
 
   @override
-  String get confirmPasswordChangeSuccess =>
-      'Senha atualizada com sucesso.';
+  String get confirmPasswordChangeSuccess => 'Senha atualizada com sucesso.';
 
   @override
   String get confirmPasswordChangeRetryAction => 'Tentar confirmacao novamente';
@@ -520,7 +519,23 @@ class AppLocalizationsPt extends AppLocalizations {
   String get prepPlusPreviewNext => 'Próxima';
 
   @override
-  String get prepPlusPreviewFinishCta => 'Fechar simulação';
+  String get prepPlusPreviewFinishCta => 'Finalizar simulação';
+
+  @override
+  String get prepPlusPreviewResultTitle => 'Resultado da simulação';
+
+  @override
+  String get prepPlusPreviewResultDemoNotice =>
+      'Modo demonstração — este resultado não é salvo no seu histórico.';
+
+  @override
+  String get prepPlusPreviewTryAgainAction => 'Tentar novamente';
+
+  @override
+  String get prepPlusPreviewBackAction => 'Voltar ao detalhe';
+
+  @override
+  String get prepPlusPreviewResultOmitted => 'Omitidas';
 
   @override
   String prepPlusPreviewQuestionLabel(int number) {
@@ -1784,7 +1799,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String shareCodeShareLinkMessage(String title, String url, String code) {
-    return 'Entre em "$title" no CraftQuestAI:\n$url\n\nOu use o codigo: $code';
+    return 'Entre em \"$title\" no CraftQuestAI:\n$url\n\nOu use o codigo: $code';
   }
 
   @override
@@ -4289,8 +4304,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get notificationsUnreadBadge => 'Não lida';
 
   @override
-  String get notificationsPreferencesTitle =>
-      'Configurações de notificações';
+  String get notificationsPreferencesTitle => 'Configurações de notificações';
 
   @override
   String get notificationsPreferencesSubtitle =>
@@ -4351,4 +4365,109 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get notificationTypeMembershipExpired => 'Assinatura expirada';
+
+  @override
+  String get legalSectionTitle => 'Legal';
+
+  @override
+  String get privacyPolicyLink => 'Politica de privacidade';
+
+  @override
+  String get termsOfServiceLink => 'Termos de servico';
+
+  @override
+  String get registerLegalDisclaimerPrefix =>
+      'Ao se cadastrar, voce aceita os ';
+
+  @override
+  String get registerLegalDisclaimerAnd => ' e a ';
+
+  @override
+  String get registerLegalDisclaimerSuffix => '.';
+
+  @override
+  String get deleteAccountTitle => 'Excluir minha conta';
+
+  @override
+  String get deleteAccountSubtitle =>
+      'Seus dados serao excluidos permanentemente. Esta acao nao pode ser desfeita.';
+
+  @override
+  String get deleteAccountConfirmHint => 'Digite EXCLUIR para confirmar';
+
+  @override
+  String get deleteAccountConfirmWord => 'EXCLUIR';
+
+  @override
+  String get deleteAccountAction => 'Excluir conta';
+
+  @override
+  String get deleteAccountSuccess => 'Sua conta foi excluida.';
+
+  @override
+  String get deleteAccountCancel => 'Cancelar';
+
+  @override
+  String get parentalGateTitle => 'Verificacao de adulto';
+
+  @override
+  String get parentalGateSubtitle => 'Para continuar, resolva esta operacao:';
+
+  @override
+  String get parentalGateAnswerLabel => 'Resposta';
+
+  @override
+  String get parentalGateWrongAnswer => 'Resposta incorreta. Tente novamente.';
+
+  @override
+  String get parentalGateConfirm => 'Confirmar';
+
+  @override
+  String get parentalGateCancel => 'Cancelar';
+
+  @override
+  String get ageScreenTitle => 'Quando voce nasceu?';
+
+  @override
+  String get ageScreenSubtitle =>
+      'Usamos esta informacao para oferecer uma experiencia adequada a sua idade.';
+
+  @override
+  String get ageScreenBirthDateLabel => 'Data de nascimento';
+
+  @override
+  String get ageScreenContinue => 'Continuar';
+
+  @override
+  String get ageScreenMinorNotice =>
+      'Como voce e menor de idade, precisara do consentimento de um pai, mae ou responsavel para criar uma conta.';
+
+  @override
+  String get guardianEmailLabel => 'E-mail do pai, mae ou responsavel';
+
+  @override
+  String get guardianEmailHint => 'responsavel@exemplo.com';
+
+  @override
+  String get parentalConsentPendingTitle => 'Aguardando consentimento parental';
+
+  @override
+  String parentalConsentPendingMessage(String email) {
+    return 'Enviamos um e-mail para $email para que um adulto autorize sua conta.';
+  }
+
+  @override
+  String get parentalConsentResend => 'Reenviar e-mail ao responsavel';
+
+  @override
+  String get correctBirthDateAction => 'Corrigir data de nascimento';
+
+  @override
+  String get correctBirthDateSubtitle => 'Se voce indicou a idade errada';
+
+  @override
+  String get correctBirthDateSuccess => 'Data de nascimento atualizada';
+
+  @override
+  String get correctBirthDateLoginHint => 'Errou a data de nascimento?';
 }

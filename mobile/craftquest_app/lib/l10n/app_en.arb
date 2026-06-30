@@ -212,7 +212,12 @@
   "prepPlusPreviewTryInteraction": "Tap an answer to see how the tool works.",
   "prepPlusPreviewPrevious": "Previous",
   "prepPlusPreviewNext": "Next",
-  "prepPlusPreviewFinishCta": "Close simulation",
+  "prepPlusPreviewFinishCta": "Finish simulation",
+  "prepPlusPreviewResultTitle": "Simulation result",
+  "prepPlusPreviewResultDemoNotice": "Demo mode — this result is not saved to your history.",
+  "prepPlusPreviewTryAgainAction": "Try again",
+  "prepPlusPreviewBackAction": "Back to item",
+  "prepPlusPreviewResultOmitted": "Skipped",
   "prepPlusPreviewQuestionLabel": "Question {number}",
   "@prepPlusPreviewQuestionLabel": {
     "placeholders": { "number": { "type": "int" } }
@@ -1968,5 +1973,9 @@
       }
     }
   },
-  "parentalConsentResend": "Resend email to guardian"
+  "parentalConsentResend": "Resend email to guardian",
+  "correctBirthDateAction": "Correct date of birth",
+  "correctBirthDateSubtitle": "If you entered the wrong age",
+  "correctBirthDateSuccess": "Date of birth updated",
+  "correctBirthDateLoginHint": "Wrong date of birth?"
 }

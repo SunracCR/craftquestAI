@@ -212,7 +212,12 @@
   "prepPlusPreviewTryInteraction": "Toca una respuesta para ver cómo funciona la herramienta.",
   "prepPlusPreviewPrevious": "Anterior",
   "prepPlusPreviewNext": "Siguiente",
-  "prepPlusPreviewFinishCta": "Cerrar simulación",
+  "prepPlusPreviewFinishCta": "Finalizar simulación",
+  "prepPlusPreviewResultTitle": "Resultado de simulación",
+  "prepPlusPreviewResultDemoNotice": "Modo demostración — este resultado no se guarda en tu historial.",
+  "prepPlusPreviewTryAgainAction": "Intentar de nuevo",
+  "prepPlusPreviewBackAction": "Volver al detalle",
+  "prepPlusPreviewResultOmitted": "Omitidas",
   "prepPlusPreviewQuestionLabel": "Pregunta {number}",
   "@prepPlusPreviewQuestionLabel": {
     "placeholders": { "number": { "type": "int" } }
@@ -2019,5 +2024,9 @@
       }
     }
   },
-  "parentalConsentResend": "Reenviar correo al tutor"
+  "parentalConsentResend": "Reenviar correo al tutor",
+  "correctBirthDateAction": "Corregir fecha de nacimiento",
+  "correctBirthDateSubtitle": "Si te equivocaste al indicar tu edad",
+  "correctBirthDateSuccess": "Fecha de nacimiento actualizada",
+  "correctBirthDateLoginHint": "¿Te equivocaste en tu fecha de nacimiento?"
 }

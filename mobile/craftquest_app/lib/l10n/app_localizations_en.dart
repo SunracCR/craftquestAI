@@ -203,8 +203,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get verifyEmailPendingTitle => 'Confirm your email';
 
   @override
-  String verifyEmailPendingMessage(String email) =>
-      'We sent an activation link to $email. Check your inbox and spam folder.';
+  String verifyEmailPendingMessage(String email) {
+    return 'We sent an activation link to $email. Check your inbox and spam folder.';
+  }
 
   @override
   String get verifyEmailResendAction => 'Resend email';
@@ -239,12 +240,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get confirmPasswordChangeTitle => 'Confirm password change';
 
   @override
-  String get confirmPasswordChangeInProgress =>
-      'Confirming your new password…';
+  String get confirmPasswordChangeInProgress => 'Confirming your new password…';
 
   @override
-  String get confirmPasswordChangeSuccess =>
-      'Password updated successfully.';
+  String get confirmPasswordChangeSuccess => 'Password updated successfully.';
 
   @override
   String get confirmPasswordChangeRetryAction => 'Retry confirmation';
@@ -519,7 +518,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get prepPlusPreviewNext => 'Next';
 
   @override
-  String get prepPlusPreviewFinishCta => 'Close simulation';
+  String get prepPlusPreviewFinishCta => 'Finish simulation';
+
+  @override
+  String get prepPlusPreviewResultTitle => 'Simulation result';
+
+  @override
+  String get prepPlusPreviewResultDemoNotice =>
+      'Demo mode — this result is not saved to your history.';
+
+  @override
+  String get prepPlusPreviewTryAgainAction => 'Try again';
+
+  @override
+  String get prepPlusPreviewBackAction => 'Back to item';
+
+  @override
+  String get prepPlusPreviewResultOmitted => 'Skipped';
 
   @override
   String prepPlusPreviewQuestionLabel(int number) {
@@ -1353,7 +1368,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get importFormatUnsureHelp =>
-      'Not sure? Paste your content, pick the closest format, and tap "Normalize with AI" to convert it to JSON before importing.';
+      'Not sure? Paste your content, pick the closest format, and tap \"Normalize with AI\" to convert it to JSON before importing.';
 
   @override
   String get importContentHintJson => 'Paste the full CQIF v2 JSON here';
@@ -1768,7 +1783,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String shareCodeShareLinkMessage(String title, String url, String code) {
-    return 'Join "$title" on CraftQuestAI:\n$url\n\nOr use code: $code';
+    return 'Join \"$title\" on CraftQuestAI:\n$url\n\nOr use code: $code';
   }
 
   @override
@@ -4286,7 +4301,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'By default, in-app and push are on. Email is only enabled for membership expiring and membership expired alerts.';
 
   @override
-  String get notificationsPreferencesResetDefaults => 'Restore default settings';
+  String get notificationsPreferencesResetDefaults =>
+      'Restore default settings';
 
   @override
   String get notificationsChannelInApp => 'In-app';
@@ -4320,4 +4336,108 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationTypeMembershipExpired => 'Membership expired';
+
+  @override
+  String get legalSectionTitle => 'Legal';
+
+  @override
+  String get privacyPolicyLink => 'Privacy Policy';
+
+  @override
+  String get termsOfServiceLink => 'Terms of Service';
+
+  @override
+  String get registerLegalDisclaimerPrefix => 'By signing up you agree to the ';
+
+  @override
+  String get registerLegalDisclaimerAnd => ' and ';
+
+  @override
+  String get registerLegalDisclaimerSuffix => '.';
+
+  @override
+  String get deleteAccountTitle => 'Delete my account';
+
+  @override
+  String get deleteAccountSubtitle =>
+      'Your data will be permanently deleted. This action cannot be undone.';
+
+  @override
+  String get deleteAccountConfirmHint => 'Type DELETE to confirm';
+
+  @override
+  String get deleteAccountConfirmWord => 'DELETE';
+
+  @override
+  String get deleteAccountAction => 'Delete account';
+
+  @override
+  String get deleteAccountSuccess => 'Your account has been deleted.';
+
+  @override
+  String get deleteAccountCancel => 'Cancel';
+
+  @override
+  String get parentalGateTitle => 'Adult verification';
+
+  @override
+  String get parentalGateSubtitle => 'To continue, solve this operation:';
+
+  @override
+  String get parentalGateAnswerLabel => 'Answer';
+
+  @override
+  String get parentalGateWrongAnswer => 'Incorrect answer. Try again.';
+
+  @override
+  String get parentalGateConfirm => 'Confirm';
+
+  @override
+  String get parentalGateCancel => 'Cancel';
+
+  @override
+  String get ageScreenTitle => 'When were you born?';
+
+  @override
+  String get ageScreenSubtitle =>
+      'We use this information to provide an age-appropriate experience.';
+
+  @override
+  String get ageScreenBirthDateLabel => 'Date of birth';
+
+  @override
+  String get ageScreenContinue => 'Continue';
+
+  @override
+  String get ageScreenMinorNotice =>
+      'Because you are underage, you will need a parent or guardian\'s consent to create an account.';
+
+  @override
+  String get guardianEmailLabel => 'Parent or guardian email';
+
+  @override
+  String get guardianEmailHint => 'guardian@example.com';
+
+  @override
+  String get parentalConsentPendingTitle => 'Waiting for parental consent';
+
+  @override
+  String parentalConsentPendingMessage(String email) {
+    return 'We sent an email to $email so an adult can authorize your account.';
+  }
+
+  @override
+  String get parentalConsentResend => 'Resend email to guardian';
+
+  @override
+  String get correctBirthDateAction => 'Correct date of birth';
+
+  @override
+  String get correctBirthDateSubtitle => 'If you entered the wrong age';
+
+  @override
+  String get correctBirthDateSuccess => 'Date of birth updated';
+
+  @override
+  String get correctBirthDateLoginHint => 'Wrong date of birth?';
 }

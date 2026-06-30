@@ -430,40 +430,112 @@ abstract class AppLocalizations {
   /// **'Ya tengo el código de recuperación'**
   String get resetPasswordHaveCode;
 
+  /// No description provided for @verifyEmailPendingTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Confirma tu correo'**
   String get verifyEmailPendingTitle;
 
+  /// No description provided for @verifyEmailPendingMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Te enviamos un enlace de activación a {email}. Revisa tu bandeja de entrada y la carpeta de spam.'**
   String verifyEmailPendingMessage(String email);
 
+  /// No description provided for @verifyEmailResendAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Reenviar correo'**
   String get verifyEmailResendAction;
 
+  /// No description provided for @verifyEmailResentMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Correo de activación reenviado.'**
   String get verifyEmailResentMessage;
 
+  /// No description provided for @verifyEmailTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Activar cuenta'**
   String get verifyEmailTitle;
 
+  /// No description provided for @verifyEmailInProgress.
+  ///
+  /// In es, this message translates to:
+  /// **'Estamos verificando tu correo…'**
   String get verifyEmailInProgress;
 
+  /// No description provided for @verifyEmailSuccess.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Cuenta activada! Entrando…'**
   String get verifyEmailSuccess;
 
+  /// No description provided for @verifyEmailRetryAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Reintentar activación'**
   String get verifyEmailRetryAction;
 
+  /// No description provided for @errorEmailNotVerifiedTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Correo no verificado'**
   String get errorEmailNotVerifiedTitle;
 
+  /// No description provided for @errorEmailNotVerifiedMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Debes activar tu cuenta desde el enlace que te enviamos por correo antes de iniciar sesión.'**
   String get errorEmailNotVerifiedMessage;
 
+  /// No description provided for @errorEmailNotVerified.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu correo aún no está verificado. Revisa tu bandeja o reenvía el enlace.'**
   String get errorEmailNotVerified;
 
+  /// No description provided for @confirmPasswordChangeTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Confirmar cambio de contraseña'**
   String get confirmPasswordChangeTitle;
 
+  /// No description provided for @confirmPasswordChangeInProgress.
+  ///
+  /// In es, this message translates to:
+  /// **'Confirmando tu nueva contraseña…'**
   String get confirmPasswordChangeInProgress;
 
+  /// No description provided for @confirmPasswordChangeSuccess.
+  ///
+  /// In es, this message translates to:
+  /// **'Contraseña actualizada correctamente.'**
   String get confirmPasswordChangeSuccess;
 
+  /// No description provided for @confirmPasswordChangeRetryAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Reintentar confirmación'**
   String get confirmPasswordChangeRetryAction;
 
+  /// No description provided for @passwordChangePendingMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisa tu correo para confirmar el cambio de contraseña.'**
   String get passwordChangePendingMessage;
 
+  /// No description provided for @errorInvalidVerificationToken.
+  ///
+  /// In es, this message translates to:
+  /// **'El enlace de activación no es válido o ha caducado.'**
   String get errorInvalidVerificationToken;
 
+  /// No description provided for @errorInvalidPasswordChangeToken.
+  ///
+  /// In es, this message translates to:
+  /// **'El enlace de confirmación no es válido o ha caducado.'**
   String get errorInvalidPasswordChangeToken;
 
   /// No description provided for @oauthDividerLabel.
@@ -895,8 +967,38 @@ abstract class AppLocalizations {
   /// No description provided for @prepPlusPreviewFinishCta.
   ///
   /// In es, this message translates to:
-  /// **'Cerrar simulación'**
+  /// **'Finalizar simulación'**
   String get prepPlusPreviewFinishCta;
+
+  /// No description provided for @prepPlusPreviewResultTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Resultado de simulación'**
+  String get prepPlusPreviewResultTitle;
+
+  /// No description provided for @prepPlusPreviewResultDemoNotice.
+  ///
+  /// In es, this message translates to:
+  /// **'Modo demostración — este resultado no se guarda en tu historial.'**
+  String get prepPlusPreviewResultDemoNotice;
+
+  /// No description provided for @prepPlusPreviewTryAgainAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Intentar de nuevo'**
+  String get prepPlusPreviewTryAgainAction;
+
+  /// No description provided for @prepPlusPreviewBackAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Volver al detalle'**
+  String get prepPlusPreviewBackAction;
+
+  /// No description provided for @prepPlusPreviewResultOmitted.
+  ///
+  /// In es, this message translates to:
+  /// **'Omitidas'**
+  String get prepPlusPreviewResultOmitted;
 
   /// No description provided for @prepPlusPreviewQuestionLabel.
   ///
@@ -1307,15 +1409,27 @@ abstract class AppLocalizations {
   String quizFolderDeleteConfirmWithQuizzes(String folderName, int quizCount);
 
   /// No description provided for @quizSearchHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Buscar cuestionarios'**
   String get quizSearchHint;
 
   /// No description provided for @quizSearchNoResults.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin resultados'**
   String get quizSearchNoResults;
 
   /// No description provided for @quizFolderDropToRoot.
+  ///
+  /// In es, this message translates to:
+  /// **'Mover a la raíz'**
   String get quizFolderDropToRoot;
 
   /// No description provided for @quizFolderMoveInvalid.
+  ///
+  /// In es, this message translates to:
+  /// **'No se puede mover ahí'**
   String get quizFolderMoveInvalid;
 
   /// No description provided for @createQuizTitle.
@@ -2593,12 +2707,21 @@ abstract class AppLocalizations {
   );
 
   /// No description provided for @teacherReviewLegend.
+  ///
+  /// In es, this message translates to:
+  /// **'Rojo = respuesta marcada incorrecta · Verde = respuesta marcada correcta · Bombilla = respuesta correcta no marcada'**
   String get teacherReviewLegend;
 
   /// No description provided for @teacherReviewYourAnswerTag.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu respuesta'**
   String get teacherReviewYourAnswerTag;
 
   /// No description provided for @teacherReviewCorrectAnswerTag.
+  ///
+  /// In es, this message translates to:
+  /// **'Respuesta correcta'**
   String get teacherReviewCorrectAnswerTag;
 
   /// No description provided for @billingPlanLabel.
@@ -2649,6 +2772,10 @@ abstract class AppLocalizations {
   /// **'Introduce el código compartido por tu profesor o compañero'**
   String get redeemCodeSubtitle;
 
+  /// No description provided for @redeemCodeOpeningQuiz.
+  ///
+  /// In es, this message translates to:
+  /// **'Abriendo cuestionario…'**
   String get redeemCodeOpeningQuiz;
 
   /// No description provided for @redeemCodeLabel.
@@ -2942,7 +3069,7 @@ abstract class AppLocalizations {
   /// No description provided for @shareCodeShareLinkMessage.
   ///
   /// In es, this message translates to:
-  /// **'Únete a "{title}" en CraftQuestAI:\n{url}\n\nO usa el código: {code}'**
+  /// **'Únete a \"{title}\" en CraftQuestAI:\n{url}\n\nO usa el código: {code}'**
   String shareCodeShareLinkMessage(String title, String url, String code);
 
   /// No description provided for @shareCodeCloseAction.
@@ -7070,76 +7197,346 @@ abstract class AppLocalizations {
   String get errorPrepAppStoreNotConfigured;
 
   /// No description provided for @notificationsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Notificaciones'**
   String get notificationsTitle;
 
   /// No description provided for @notificationsEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no tienes notificaciones.'**
   String get notificationsEmpty;
 
   /// No description provided for @notificationsMarkAllRead.
+  ///
+  /// In es, this message translates to:
+  /// **'Marcar todo leído'**
   String get notificationsMarkAllRead;
 
   /// No description provided for @notificationsUnreadBadge.
+  ///
+  /// In es, this message translates to:
+  /// **'No leída'**
   String get notificationsUnreadBadge;
 
   /// No description provided for @notificationsPreferencesTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Ajustes de notificaciones'**
   String get notificationsPreferencesTitle;
 
   /// No description provided for @notificationsPreferencesSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Configura cómo quieres recibir cada tipo de aviso.'**
   String get notificationsPreferencesSubtitle;
 
   /// No description provided for @notificationsPreferencesSaved.
+  ///
+  /// In es, this message translates to:
+  /// **'Preferencias de notificaciones guardadas.'**
   String get notificationsPreferencesSaved;
 
   /// No description provided for @notificationsPreferencesSectionSharing.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartidos y clases'**
   String get notificationsPreferencesSectionSharing;
 
   /// No description provided for @notificationsPreferencesSectionAssignments.
+  ///
+  /// In es, this message translates to:
+  /// **'Tareas'**
   String get notificationsPreferencesSectionAssignments;
 
   /// No description provided for @notificationsPreferencesSectionMembership.
+  ///
+  /// In es, this message translates to:
+  /// **'Membresía'**
   String get notificationsPreferencesSectionMembership;
 
   /// No description provided for @notificationsPreferencesSectionAi.
+  ///
+  /// In es, this message translates to:
+  /// **'Generación con IA'**
   String get notificationsPreferencesSectionAi;
 
   /// No description provided for @notificationsPreferencesDefaultsHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Por defecto: avisos en la app y push activos. El correo solo viene activado en membresía por vencer y membresía vencida.'**
   String get notificationsPreferencesDefaultsHint;
 
   /// No description provided for @notificationsPreferencesResetDefaults.
+  ///
+  /// In es, this message translates to:
+  /// **'Restaurar valores por defecto'**
   String get notificationsPreferencesResetDefaults;
 
   /// No description provided for @notificationsChannelInApp.
+  ///
+  /// In es, this message translates to:
+  /// **'En la app'**
   String get notificationsChannelInApp;
 
   /// No description provided for @notificationsChannelPush.
+  ///
+  /// In es, this message translates to:
+  /// **'Push'**
   String get notificationsChannelPush;
 
   /// No description provided for @notificationsChannelEmail.
+  ///
+  /// In es, this message translates to:
+  /// **'Correo'**
   String get notificationsChannelEmail;
 
   /// No description provided for @notificationTypeQuizShared.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuestionario compartido'**
   String get notificationTypeQuizShared;
 
   /// No description provided for @notificationTypeClassJoined.
+  ///
+  /// In es, this message translates to:
+  /// **'Te unieron a una clase'**
   String get notificationTypeClassJoined;
 
   /// No description provided for @notificationTypeAssignmentCreated.
+  ///
+  /// In es, this message translates to:
+  /// **'Nueva tarea'**
   String get notificationTypeAssignmentCreated;
 
   /// No description provided for @notificationTypeAssignmentDueSoon.
+  ///
+  /// In es, this message translates to:
+  /// **'Tarea por vencer'**
   String get notificationTypeAssignmentDueSoon;
 
   /// No description provided for @notificationTypeAiJobCompleted.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuestionario IA listo'**
   String get notificationTypeAiJobCompleted;
 
   /// No description provided for @notificationTypeAiJobFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'Error en cuestionario IA'**
   String get notificationTypeAiJobFailed;
 
   /// No description provided for @notificationTypeMembershipExpiring.
+  ///
+  /// In es, this message translates to:
+  /// **'Membresía por vencer'**
   String get notificationTypeMembershipExpiring;
 
   /// No description provided for @notificationTypeMembershipExpired.
+  ///
+  /// In es, this message translates to:
+  /// **'Membresía vencida'**
   String get notificationTypeMembershipExpired;
+
+  /// No description provided for @legalSectionTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Legal'**
+  String get legalSectionTitle;
+
+  /// No description provided for @privacyPolicyLink.
+  ///
+  /// In es, this message translates to:
+  /// **'Política de privacidad'**
+  String get privacyPolicyLink;
+
+  /// No description provided for @termsOfServiceLink.
+  ///
+  /// In es, this message translates to:
+  /// **'Términos de servicio'**
+  String get termsOfServiceLink;
+
+  /// No description provided for @registerLegalDisclaimerPrefix.
+  ///
+  /// In es, this message translates to:
+  /// **'Al registrarte aceptas los '**
+  String get registerLegalDisclaimerPrefix;
+
+  /// No description provided for @registerLegalDisclaimerAnd.
+  ///
+  /// In es, this message translates to:
+  /// **' y la '**
+  String get registerLegalDisclaimerAnd;
+
+  /// No description provided for @registerLegalDisclaimerSuffix.
+  ///
+  /// In es, this message translates to:
+  /// **'.'**
+  String get registerLegalDisclaimerSuffix;
+
+  /// No description provided for @deleteAccountTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar mi cuenta'**
+  String get deleteAccountTitle;
+
+  /// No description provided for @deleteAccountSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Se eliminarán tus datos de forma permanente. Esta acción no se puede deshacer.'**
+  String get deleteAccountSubtitle;
+
+  /// No description provided for @deleteAccountConfirmHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Escribe ELIMINAR para confirmar'**
+  String get deleteAccountConfirmHint;
+
+  /// No description provided for @deleteAccountConfirmWord.
+  ///
+  /// In es, this message translates to:
+  /// **'ELIMINAR'**
+  String get deleteAccountConfirmWord;
+
+  /// No description provided for @deleteAccountAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar cuenta'**
+  String get deleteAccountAction;
+
+  /// No description provided for @deleteAccountSuccess.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu cuenta ha sido eliminada.'**
+  String get deleteAccountSuccess;
+
+  /// No description provided for @deleteAccountCancel.
+  ///
+  /// In es, this message translates to:
+  /// **'Cancelar'**
+  String get deleteAccountCancel;
+
+  /// No description provided for @parentalGateTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Verificación de adulto'**
+  String get parentalGateTitle;
+
+  /// No description provided for @parentalGateSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Para continuar, resuelve esta operación:'**
+  String get parentalGateSubtitle;
+
+  /// No description provided for @parentalGateAnswerLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Respuesta'**
+  String get parentalGateAnswerLabel;
+
+  /// No description provided for @parentalGateWrongAnswer.
+  ///
+  /// In es, this message translates to:
+  /// **'Respuesta incorrecta. Inténtalo de nuevo.'**
+  String get parentalGateWrongAnswer;
+
+  /// No description provided for @parentalGateConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'Confirmar'**
+  String get parentalGateConfirm;
+
+  /// No description provided for @parentalGateCancel.
+  ///
+  /// In es, this message translates to:
+  /// **'Cancelar'**
+  String get parentalGateCancel;
+
+  /// No description provided for @ageScreenTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Cuándo naciste?'**
+  String get ageScreenTitle;
+
+  /// No description provided for @ageScreenSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Usamos esta información para ofrecer una experiencia adecuada a tu edad.'**
+  String get ageScreenSubtitle;
+
+  /// No description provided for @ageScreenBirthDateLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Fecha de nacimiento'**
+  String get ageScreenBirthDateLabel;
+
+  /// No description provided for @ageScreenContinue.
+  ///
+  /// In es, this message translates to:
+  /// **'Continuar'**
+  String get ageScreenContinue;
+
+  /// No description provided for @ageScreenMinorNotice.
+  ///
+  /// In es, this message translates to:
+  /// **'Como eres menor de edad, necesitarás el consentimiento de un padre, madre o tutor para crear una cuenta.'**
+  String get ageScreenMinorNotice;
+
+  /// No description provided for @guardianEmailLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Correo del padre, madre o tutor'**
+  String get guardianEmailLabel;
+
+  /// No description provided for @guardianEmailHint.
+  ///
+  /// In es, this message translates to:
+  /// **'tutor@ejemplo.com'**
+  String get guardianEmailHint;
+
+  /// No description provided for @parentalConsentPendingTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Esperando consentimiento parental'**
+  String get parentalConsentPendingTitle;
+
+  /// No description provided for @parentalConsentPendingMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviamos un correo a {email} para que un adulto autorice tu cuenta.'**
+  String parentalConsentPendingMessage(String email);
+
+  /// No description provided for @parentalConsentResend.
+  ///
+  /// In es, this message translates to:
+  /// **'Reenviar correo al tutor'**
+  String get parentalConsentResend;
+
+  /// No description provided for @correctBirthDateAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Corregir fecha de nacimiento'**
+  String get correctBirthDateAction;
+
+  /// No description provided for @correctBirthDateSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Si te equivocaste al indicar tu edad'**
+  String get correctBirthDateSubtitle;
+
+  /// No description provided for @correctBirthDateSuccess.
+  ///
+  /// In es, this message translates to:
+  /// **'Fecha de nacimiento actualizada'**
+  String get correctBirthDateSuccess;
+
+  /// No description provided for @correctBirthDateLoginHint.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Te equivocaste en tu fecha de nacimiento?'**
+  String get correctBirthDateLoginHint;
 }
 
 class _AppLocalizationsDelegate
