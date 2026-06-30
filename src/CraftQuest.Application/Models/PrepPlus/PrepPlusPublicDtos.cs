@@ -53,10 +53,36 @@ public sealed class PrepCatalogItemPublicDetailDto
     public IReadOnlyList<PrepAccessOfferDto> Offers { get; init; } = [];
 }
 
+public sealed class PrepPreviewAnswerOptionMediaDto
+{
+    public required Guid AnswerOptionId { get; init; }
+    public required string MediaUrl { get; init; }
+}
+
+public sealed class PrepPreviewQuestionFinishDto
+{
+    public required Guid QuestionId { get; init; }
+    public required decimal Points { get; init; }
+    public required string ScoringPolicy { get; init; }
+    public required bool SupportsMultipleCorrectAnswers { get; init; }
+    public required IReadOnlyList<Guid> CorrectAnswerOptionIds { get; init; }
+    public string? QuestionMediaUrl { get; init; }
+    public IReadOnlyList<PrepPreviewAnswerOptionMediaDto> AnswerOptionMediaUrls { get; init; } = [];
+    public string? JustificationText { get; init; }
+    public IReadOnlyList<QuestionJustificationSourceReviewDto> JustificationSources { get; init; } = [];
+}
+
+public sealed class PrepPreviewFinishPackageDto
+{
+    public required Guid QuizId { get; init; }
+    public required IReadOnlyList<PrepPreviewQuestionFinishDto> Questions { get; init; }
+}
+
 public sealed class PrepPreviewDto
 {
     public required Guid CatalogItemId { get; init; }
     public required IReadOnlyList<QuestionStudentDto> SampleQuestions { get; init; }
+    public PrepPreviewFinishPackageDto? FinishPackage { get; init; }
 }
 
 public sealed class PrepMyAccessItemDto

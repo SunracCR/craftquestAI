@@ -1,5 +1,7 @@
 using CraftQuest.Application.Contracts;
+using CraftQuest.Application.Models.PrepPlus;
 using CraftQuest.Application.Models.Teacher;
+using CraftQuest.Application.Services;
 using CraftQuest.Application.Services.Quizzes;
 using CraftQuest.Domain.Entities;
 
@@ -8,6 +10,59 @@ namespace CraftQuest.Application.Services.PrepPlus;
 public static class PrepPreviewReviewMapper
 {
     private const string QuestionImageKey = "QUESTION_IMAGE";
+
+    public static PrepPreviewFinishPackageDto MapFinishPackage(
+        Guid quizId,
+        IReadOnlyList<Question> orderedQuestions,
+        IMediaService mediaService)
+    {
+        return new PrepPreviewFinishPackageDto
+        {
+            QuizId = quizId,
+            Questions = orderedQuestions
+                .Select(q => MapQuestionFinish(q, mediaService))
+                .ToList(),
+        };
+    }
+
+    private static PrepPreviewQuestionFinishDto MapQuestionFinish(
+        Question question,
+        IMediaService mediaService)
+    {
+        var options = question.AnswerOptions
+            .Where(o => o.IsActive)
+            .OrderBy(o => o.DefaultSortOrder)
+            .ToList();
+
+        var stemOption = options.FirstOrDefault(IsQuestionImageStem);
+
+        return new PrepPreviewQuestionFinishDto
+        {
+            QuestionId = question.QuestionId,
+            Points = question.Points,
+            ScoringPolicy = AnswerGradingService.ResolveScoringPolicyForQuestionType(
+                question.QuestionType.Code,
+                question.ScoringPolicy),
+            SupportsMultipleCorrectAnswers = question.QuestionType.SupportsMultipleCorrectAnswers,
+            CorrectAnswerOptionIds = question.CorrectAnswerOptions
+                .Select(c => c.AnswerOptionId)
+                .ToList(),
+            QuestionMediaUrl = stemOption?.MediaAssetId is Guid stemMediaId
+                ? mediaService.BuildPublicUrl(stemMediaId)
+                : null,
+            AnswerOptionMediaUrls = options
+                .Where(o => !IsQuestionImageStem(o) && o.MediaAssetId is Guid mediaId)
+                .Select(o => new PrepPreviewAnswerOptionMediaDto
+                {
+                    AnswerOptionId = o.AnswerOptionId,
+                    MediaUrl = mediaService.BuildPublicUrl(o.MediaAssetId!.Value),
+                })
+                .ToList(),
+            JustificationText = question.Justification?.JustificationText,
+            JustificationSources = QuestionJustificationMapper.ParseSnapshotSources(
+                QuestionJustificationMapper.BuildPracticeSnapshot(question.Justification).SourcesJson),
+        };
+    }
 
     public static TeacherPracticeQuestionReviewDto MapQuestion(
         Question question,

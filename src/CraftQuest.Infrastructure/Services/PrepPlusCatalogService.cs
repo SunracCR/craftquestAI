@@ -242,19 +242,26 @@ public class PrepPlusCatalogService(
             .AsNoTracking()
             .Include(q => q.QuestionType)
             .Include(q => q.AnswerOptions.Where(o => o.IsActive))
+            .Include(q => q.CorrectAnswerOptions)
+            .Include(q => q.Justification!)
+                .ThenInclude(j => j.Sources)
             .Where(q => samples.Contains(q.QuestionId))
             .ToListAsync(cancellationToken);
 
-        var ordered = samples
+        var orderedQuestions = samples
             .Select(id => questions.FirstOrDefault(q => q.QuestionId == id))
             .Where(q => q is not null)
-            .Select(q => MapStudentQuestion(q!))
+            .Cast<Question>()
             .ToList();
 
         return new PrepPreviewDto
         {
             CatalogItemId = catalogItemId,
-            SampleQuestions = ordered,
+            SampleQuestions = orderedQuestions.Select(MapStudentQuestion).ToList(),
+            FinishPackage = PrepPreviewReviewMapper.MapFinishPackage(
+                item.QuizId,
+                orderedQuestions,
+                mediaService),
         };
     }
 

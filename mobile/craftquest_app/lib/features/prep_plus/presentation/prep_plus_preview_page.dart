@@ -12,12 +12,13 @@ import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/features/prep_plus/data/models/prep_plus_models.dart';
 import 'package:craftquest_app/features/prep_plus/data/prep_plus_repository.dart';
+import 'package:craftquest_app/features/prep_plus/domain/prep_preview_grader.dart';
 import 'package:craftquest_app/features/prep_plus/presentation/prep_plus_preview_result_page.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
-/// Vista previa interactiva: misma UX que practicar, sin enviar respuestas al servidor.
+/// Vista previa interactiva: califica en el cliente al finalizar (sin esperar al servidor).
 class PrepPlusPreviewPage extends StatefulWidget {
   const PrepPlusPreviewPage({
     super.key,
@@ -36,11 +37,13 @@ class _PrepPlusPreviewPageState extends State<PrepPlusPreviewPage> {
   final _repository = getIt<PrepPlusRepository>();
   bool _loading = true;
   String? _error;
-  List<PrepPreviewQuestionModel> _questions = [];
+  PrepPreviewModel? _preview;
   int _currentIndex = 0;
   final Map<String, Set<String>> _selections = {};
-  bool _finishing = false;
   final Stopwatch _elapsed = Stopwatch();
+
+  List<PrepPreviewQuestionModel> get _questions =>
+      _preview?.sampleQuestions ?? [];
 
   @override
   void initState() {
@@ -63,7 +66,7 @@ class _PrepPlusPreviewPageState extends State<PrepPlusPreviewPage> {
       final preview = await _repository.getPreview(widget.catalogItemId);
       if (!mounted) return;
       setState(() {
-        _questions = preview.sampleQuestions;
+        _preview = preview;
         _loading = false;
       });
       _elapsed
@@ -116,29 +119,40 @@ class _PrepPlusPreviewPageState extends State<PrepPlusPreviewPage> {
   }
 
   Future<void> _finishSimulation() async {
-    if (_finishing) {
+    final preview = _preview;
+    if (preview == null) {
       return;
     }
 
-    setState(() => _finishing = true);
     _elapsed.stop();
+    final elapsed = _elapsed.elapsed;
 
     try {
-      final result = await _repository.finishPreview(
-        catalogItemId: widget.catalogItemId,
-        selections: _selections,
-        durationSeconds: _elapsed.elapsed.inSeconds,
-      );
+      final PrepPreviewFinishResultModel result;
+      if (preview.finishPackage != null) {
+        result = PrepPreviewGrader.grade(
+          preview: preview,
+          selections: _selections,
+        );
+      } else {
+        result = await _repository.finishPreview(
+          catalogItemId: widget.catalogItemId,
+          selections: _selections,
+          durationSeconds: elapsed.inSeconds,
+        );
+      }
+
       if (!mounted) {
         return;
       }
+
       await Navigator.of(context).pushReplacement(
         MaterialPageRoute<void>(
           builder: (_) => PrepPlusPreviewResultPage(
             result: result,
             quizTitle: widget.title,
             catalogItemId: widget.catalogItemId,
-            elapsed: _elapsed.elapsed,
+            elapsed: elapsed,
           ),
         ),
       );
@@ -146,14 +160,12 @@ class _PrepPlusPreviewPageState extends State<PrepPlusPreviewPage> {
       if (!mounted) {
         return;
       }
-      setState(() => _finishing = false);
       _elapsed.start();
       context.showDioErrorSnackBar(e);
     } catch (_) {
       if (!mounted) {
         return;
       }
-      setState(() => _finishing = false);
       _elapsed.start();
       context.showErrorSnackBar(
         DioErrorMapper.genericMessage(AppLocalizations.of(context)!),
@@ -194,17 +206,13 @@ class _PrepPlusPreviewPageState extends State<PrepPlusPreviewPage> {
                         label: _currentIndex >= _questions.length - 1
                             ? l10n.prepPlusPreviewFinishCta
                             : l10n.prepPlusPreviewNext,
-                        isLoading: _finishing &&
-                            _currentIndex >= _questions.length - 1,
-                        onPressed: _finishing
-                            ? null
-                            : () {
-                                if (_currentIndex >= _questions.length - 1) {
-                                  unawaited(_finishSimulation());
-                                } else {
-                                  _goTo(_currentIndex + 1);
-                                }
-                              },
+                        onPressed: () {
+                          if (_currentIndex >= _questions.length - 1) {
+                            unawaited(_finishSimulation());
+                          } else {
+                            _goTo(_currentIndex + 1);
+                          }
+                        },
                       ),
                     ),
                   ],

@@ -250,20 +250,149 @@ class PrepPreviewModel {
   const PrepPreviewModel({
     required this.catalogItemId,
     required this.sampleQuestions,
+    this.finishPackage,
   });
 
   factory PrepPreviewModel.fromJson(Map<String, dynamic> json) {
     final samples = json['sampleQuestions'] as List<dynamic>? ?? [];
+    final packageJson = json['finishPackage'] as Map<String, dynamic>?;
     return PrepPreviewModel(
       catalogItemId: json['catalogItemId'] as String,
       sampleQuestions: samples
           .map((e) => PrepPreviewQuestionModel.fromJson(e as Map<String, dynamic>))
           .toList(),
+      finishPackage: packageJson != null
+          ? PrepPreviewFinishPackageModel.fromJson(packageJson)
+          : null,
     );
   }
 
   final String catalogItemId;
   final List<PrepPreviewQuestionModel> sampleQuestions;
+  final PrepPreviewFinishPackageModel? finishPackage;
+}
+
+class PrepPreviewFinishPackageModel {
+  const PrepPreviewFinishPackageModel({
+    required this.quizId,
+    required this.questions,
+  });
+
+  factory PrepPreviewFinishPackageModel.fromJson(Map<String, dynamic> json) {
+    final questionsJson = json['questions'] as List<dynamic>? ?? [];
+    return PrepPreviewFinishPackageModel(
+      quizId: json['quizId'] as String,
+      questions: questionsJson
+          .map(
+            (e) => PrepPreviewQuestionFinishModel.fromJson(
+              e as Map<String, dynamic>,
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  final String quizId;
+  final List<PrepPreviewQuestionFinishModel> questions;
+}
+
+class PrepPreviewQuestionFinishModel {
+  const PrepPreviewQuestionFinishModel({
+    required this.questionId,
+    required this.points,
+    required this.scoringPolicy,
+    required this.supportsMultipleCorrectAnswers,
+    required this.correctAnswerOptionIds,
+    this.questionMediaUrl,
+    this.answerOptionMediaUrls = const [],
+    this.justificationText,
+    this.justificationSources = const [],
+  });
+
+  factory PrepPreviewQuestionFinishModel.fromJson(Map<String, dynamic> json) {
+    final correctIds = json['correctAnswerOptionIds'] as List<dynamic>? ?? [];
+    final mediaJson = json['answerOptionMediaUrls'] as List<dynamic>? ?? [];
+    final sourcesJson = json['justificationSources'] as List<dynamic>? ?? [];
+    return PrepPreviewQuestionFinishModel(
+      questionId: json['questionId'] as String,
+      points: (json['points'] as num).toDouble(),
+      scoringPolicy: json['scoringPolicy'] as String? ?? 'strict',
+      supportsMultipleCorrectAnswers:
+          json['supportsMultipleCorrectAnswers'] as bool? ?? false,
+      correctAnswerOptionIds: correctIds.map((e) => e as String).toList(),
+      questionMediaUrl: json['questionMediaUrl'] as String?,
+      answerOptionMediaUrls: mediaJson
+          .map(
+            (e) => PrepPreviewAnswerOptionMediaModel.fromJson(
+              e as Map<String, dynamic>,
+            ),
+          )
+          .toList(),
+      justificationText: json['justificationText'] as String?,
+      justificationSources: sourcesJson
+          .map(
+            (e) => PrepPreviewJustificationSourceModel.fromJson(
+              e as Map<String, dynamic>,
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  final String questionId;
+  final double points;
+  final String scoringPolicy;
+  final bool supportsMultipleCorrectAnswers;
+  final List<String> correctAnswerOptionIds;
+  final String? questionMediaUrl;
+  final List<PrepPreviewAnswerOptionMediaModel> answerOptionMediaUrls;
+  final String? justificationText;
+  final List<PrepPreviewJustificationSourceModel> justificationSources;
+}
+
+class PrepPreviewAnswerOptionMediaModel {
+  const PrepPreviewAnswerOptionMediaModel({
+    required this.answerOptionId,
+    required this.mediaUrl,
+  });
+
+  factory PrepPreviewAnswerOptionMediaModel.fromJson(Map<String, dynamic> json) {
+    return PrepPreviewAnswerOptionMediaModel(
+      answerOptionId: json['answerOptionId'] as String,
+      mediaUrl: json['mediaUrl'] as String,
+    );
+  }
+
+  final String answerOptionId;
+  final String mediaUrl;
+}
+
+class PrepPreviewJustificationSourceModel {
+  const PrepPreviewJustificationSourceModel({
+    this.title,
+    this.sourceUrl,
+    this.snippet,
+    this.pageNumber,
+    this.isPrimary = false,
+  });
+
+  factory PrepPreviewJustificationSourceModel.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    return PrepPreviewJustificationSourceModel(
+      title: json['title'] as String?,
+      sourceUrl: json['sourceUrl'] as String?,
+      snippet: json['snippet'] as String?,
+      pageNumber: json['pageNumber'] as int?,
+      isPrimary: json['isPrimary'] as bool? ?? false,
+    );
+  }
+
+  final String? title;
+  final String? sourceUrl;
+  final String? snippet;
+  final int? pageNumber;
+  final bool isPrimary;
 }
 
 class PrepPreviewFinishResultModel {
