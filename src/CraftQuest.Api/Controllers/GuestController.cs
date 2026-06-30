@@ -82,6 +82,23 @@ public class GuestController(IGuestService guestService) : ControllerBase
         return Ok(session);
     }
 
+    [HttpGet("{visitId:guid}/practice/{sessionId:guid}/questions/{snapshotId:guid}")]
+    [ProducesResponseType(typeof(PracticeQuestionDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetSessionQuestion(
+        Guid visitId,
+        Guid sessionId,
+        Guid snapshotId,
+        CancellationToken cancellationToken)
+    {
+        var question = await guestService.GetSessionQuestionAsync(
+            visitId,
+            GuestToken,
+            sessionId,
+            snapshotId,
+            cancellationToken);
+        return Ok(question);
+    }
+
     [HttpPost("{visitId:guid}/practice/{sessionId:guid}/questions/{snapshotId:guid}/answer")]
     [ProducesResponseType(typeof(SubmitAnswerResultDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> SubmitAnswer(

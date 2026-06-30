@@ -4,6 +4,7 @@ using CraftQuest.Application.Exceptions;
 using CraftQuest.Application.Models.Guest;
 using CraftQuest.Application.Models.Practice;
 using CraftQuest.Application.Models.Teacher;
+using CraftQuest.Application.Options;
 using CraftQuest.Application.Services;
 using CraftQuest.Application.Services.Quizzes;
 using CraftQuest.Application.Services.Teacher;
@@ -11,12 +12,17 @@ using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.Services.Practice;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace CraftQuest.Infrastructure.Services;
 
 public class GuestService(
     CraftQuestDbContext dbContext,
-    IMediaService mediaService) : IGuestService
+    IMediaService mediaService,
+    IPracticeSnapshotDeferredWriter deferredSnapshotWriter,
+    IOptions<PracticeOptions> practiceOptions,
+    ILogger<GuestService> logger) : IGuestService
 {
     private static readonly TimeSpan VisitTtl = TimeSpan.FromHours(4);
     private const int MaxAttemptsPerVisit = 10;
@@ -188,6 +194,8 @@ public class GuestService(
 
         var sessionId = Guid.NewGuid();
         var now = DateTime.UtcNow;
+        var options = practiceOptions.Value;
+        var timing = new PracticeSessionStartTiming(logger, options.LogStartSessionTiming);
 
         var session = new PracticeSession
         {
@@ -204,96 +212,20 @@ public class GuestService(
             CreatedAt = now,
         };
 
-        const string questionImageKey = "QUESTION_IMAGE";
-
-        var autoDetectChanges = dbContext.ChangeTracker.AutoDetectChangesEnabled;
-        dbContext.ChangeTracker.AutoDetectChangesEnabled = false;
-        try
+        using (timing.Phase("buildSnapshots"))
         {
-            var displayOrder = 0;
-            foreach (var question in questionList)
-            {
-                displayOrder++;
-                var snapshotId = Guid.NewGuid();
-                var seed = Guid.NewGuid().ToString("N");
+            PracticeSessionSnapshotBuilder.PopulateQuestionSnapshots(session, questionList, now);
+        }
 
-                var allOptions = question.AnswerOptions.Where(o => o.IsActive).ToList();
-                var stemOption = allOptions.FirstOrDefault(o =>
-                    string.Equals(o.StableKey, questionImageKey, StringComparison.OrdinalIgnoreCase));
-                var selectableOptions = allOptions
-                    .Where(o => !string.Equals(o.StableKey, questionImageKey, StringComparison.OrdinalIgnoreCase))
-                    .ToList();
+        var useDeferredInsert = options.EnableDeferredSnapshotInsert
+            && questionList.Count >= options.DeferredInsertMinQuestions;
+        Guid? firstQuestionSnapshotId = useDeferredInsert
+            ? PracticeSessionSnapshotBuilder.GetFirstQuestionSnapshotId(session)
+            : null;
 
-                var correctIds = question.CorrectAnswerOptions
-                    .Select(c => c.AnswerOptionId)
-                    .ToHashSet();
-
-                var orderedOptions = question.RandomizeAnswerOptions
-                    ? PracticeSessionOrdering.ShuffleAnswerOptions(selectableOptions, seed)
-                    : selectableOptions.OrderBy(o => o.DefaultSortOrder).ToList();
-
-                var labels = AnswerGradingService.BuildDisplayLabels(orderedOptions.Count);
-                var answerSnapshots = new List<PracticeAnswerOptionSnapshot>();
-
-                if (stemOption is not null)
-                {
-                    answerSnapshots.Add(new PracticeAnswerOptionSnapshot
-                    {
-                        PracticeAnswerOptionSnapshotId = Guid.NewGuid(),
-                        PracticeQuestionSnapshotId = snapshotId,
-                        AnswerOptionId = stemOption.AnswerOptionId,
-                        StableKeySnapshot = stemOption.StableKey,
-                        DisplayOrder = 0,
-                        DisplayLabel = string.Empty,
-                        AnswerTextSnapshot = stemOption.AnswerText,
-                        MediaAssetIdSnapshot = stemOption.MediaAssetId,
-                        IsCorrectSnapshot = false,
-                        WasSelected = false,
-                        CreatedAt = now,
-                    });
-                }
-
-                for (var i = 0; i < orderedOptions.Count; i++)
-                {
-                    var option = orderedOptions[i];
-                    answerSnapshots.Add(new PracticeAnswerOptionSnapshot
-                    {
-                        PracticeAnswerOptionSnapshotId = Guid.NewGuid(),
-                        PracticeQuestionSnapshotId = snapshotId,
-                        AnswerOptionId = option.AnswerOptionId,
-                        StableKeySnapshot = option.StableKey,
-                        DisplayOrder = i + 1,
-                        DisplayLabel = labels[i],
-                        AnswerTextSnapshot = option.AnswerText,
-                        MediaAssetIdSnapshot = option.MediaAssetId,
-                        IsCorrectSnapshot = correctIds.Contains(option.AnswerOptionId),
-                        WasSelected = false,
-                        CreatedAt = now,
-                    });
-                }
-
-                var (justificationText, justificationSourcesJson) =
-                    QuestionJustificationMapper.BuildPracticeSnapshot(question.Justification);
-
-                session.QuestionSnapshots.Add(new PracticeQuestionSnapshot
-                {
-                    PracticeQuestionSnapshotId = snapshotId,
-                    PracticeSessionId = sessionId,
-                    QuestionId = question.QuestionId,
-                    QuestionTypeCodeSnapshot = question.QuestionType.Code,
-                    QuestionTextSnapshot = question.QuestionText,
-                    PointsPossible = question.Points,
-                    DisplayOrder = displayOrder,
-                    AnswerStatus = "unanswered",
-                    RandomizationSeed = seed,
-                    JustificationTextSnapshot = justificationText,
-                    JustificationSourcesSnapshot = justificationSourcesJson,
-                    CreatedAt = now,
-                    AnswerOptionSnapshots = answerSnapshots,
-                });
-            }
-
-            visit.LastActivityAt = now;
+        visit.LastActivityAt = now;
+        using (timing.Phase("persistSnapshots"))
+        {
             await PracticeSnapshotBulkInserter.InsertAsync(
                 dbContext,
                 session,
@@ -301,15 +233,35 @@ public class GuestService(
                 {
                     GuestVisitId = guestVisitId,
                     GuestVisitLastActivityAt = now,
+                    SynchronousAnswerOptionsQuestionSnapshotId = firstQuestionSnapshotId,
+                    OnPhaseTiming = options.LogStartSessionTiming
+                        ? (phase, milliseconds) =>
+                            logger.LogDebug(
+                                "Guest practice session start phase {Phase}={Milliseconds}ms quizId={QuizId}",
+                                phase,
+                                milliseconds,
+                                visit.QuizId)
+                        : null,
                 },
                 cancellationToken);
         }
-        finally
+
+        if (useDeferredInsert && firstQuestionSnapshotId is Guid firstSnapshotId)
         {
-            dbContext.ChangeTracker.AutoDetectChangesEnabled = autoDetectChanges;
+            var deferredOptions = session.QuestionSnapshots
+                .Where(q => q.PracticeQuestionSnapshotId != firstSnapshotId)
+                .SelectMany(q => q.AnswerOptionSnapshots)
+                .ToList();
+
+            deferredSnapshotWriter.EnqueueRemainingAnswerOptions(sessionId, deferredOptions);
         }
 
-        return MapSession(session);
+        timing.LogSummary(
+            visit.QuizId,
+            session.QuestionSnapshots.Count,
+            PracticeSessionSnapshotBuilder.CountAnswerOptions(session));
+
+        return MapSession(session, slim: true);
     }
 
     public async Task<PracticeActiveSessionSummaryDto?> GetActiveSessionAsync(
@@ -364,8 +316,46 @@ public class GuestService(
         CancellationToken cancellationToken = default)
     {
         await ResolveVisitAsync(guestVisitId, token, cancellationToken);
-        var session = await LoadGuestSessionAsync(guestVisitId, sessionId, cancellationToken);
-        return MapSession(session);
+        var session = await LoadGuestSessionMetadataAsync(guestVisitId, sessionId, cancellationToken);
+        return MapSession(session, slim: true);
+    }
+
+    public async Task<PracticeQuestionDto> GetSessionQuestionAsync(
+        Guid guestVisitId,
+        string token,
+        Guid sessionId,
+        Guid practiceQuestionSnapshotId,
+        CancellationToken cancellationToken = default)
+    {
+        await ResolveVisitAsync(guestVisitId, token, cancellationToken);
+
+        var retryOptions = practiceOptions.Value;
+        var maxAttempts = Math.Max(1, retryOptions.GetSessionQuestionRetryAttempts);
+        var retryDelayMs = Math.Max(25, retryOptions.GetSessionQuestionRetryDelayMs);
+
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            var snapshot = await dbContext.PracticeQuestionSnapshots
+                .AsNoTracking()
+                .Include(q => q.AnswerOptionSnapshots)
+                .Include(q => q.PracticeSession)
+                .FirstOrDefaultAsync(
+                    q => q.PracticeQuestionSnapshotId == practiceQuestionSnapshotId
+                        && q.PracticeSessionId == sessionId
+                        && q.PracticeSession.GuestVisitId == guestVisitId
+                        && q.PracticeSession.Status == "in_progress",
+                    cancellationToken)
+                ?? throw new AppException("Practice session not found.", 404);
+
+            if (snapshot.AnswerOptionSnapshots.Count > 0 || attempt == maxAttempts)
+            {
+                return MapQuestion(snapshot);
+            }
+
+            await Task.Delay(retryDelayMs * attempt, cancellationToken);
+        }
+
+        throw new AppException("Practice question is not ready yet.", 503);
     }
 
     public async Task<SubmitAnswerResultDto> SubmitAnswerAsync(
@@ -687,6 +677,57 @@ public class GuestService(
         return visit;
     }
 
+    private async Task<PracticeSession> LoadGuestSessionMetadataAsync(
+        Guid guestVisitId,
+        Guid sessionId,
+        CancellationToken cancellationToken)
+    {
+        var session = await dbContext.PracticeSessions
+            .AsNoTracking()
+            .Include(s => s.QuestionSnapshots)
+            .FirstOrDefaultAsync(
+                s => s.PracticeSessionId == sessionId && s.GuestVisitId == guestVisitId,
+                cancellationToken)
+            ?? throw new AppException("Practice session not found.", 404);
+
+        if (session.Status != "in_progress")
+        {
+            throw new AppException("Practice session is not in progress.", 400);
+        }
+
+        var resumeIndex = ResolveResumeQuestionIndex(session);
+        var resumeSnapshotId = session.QuestionSnapshots
+            .OrderBy(q => q.DisplayOrder)
+            .ElementAtOrDefault(resumeIndex)
+            ?.PracticeQuestionSnapshotId;
+
+        if (resumeSnapshotId is null)
+        {
+            return session;
+        }
+
+        var resumeSnapshot = await dbContext.PracticeQuestionSnapshots
+            .AsNoTracking()
+            .Include(q => q.AnswerOptionSnapshots)
+            .FirstOrDefaultAsync(
+                q => q.PracticeQuestionSnapshotId == resumeSnapshotId.Value,
+                cancellationToken);
+
+        if (resumeSnapshot is not null)
+        {
+            foreach (var snapshot in session.QuestionSnapshots)
+            {
+                if (snapshot.PracticeQuestionSnapshotId == resumeSnapshotId)
+                {
+                    snapshot.AnswerOptionSnapshots = resumeSnapshot.AnswerOptionSnapshots;
+                    break;
+                }
+            }
+        }
+
+        return session;
+    }
+
     private async Task<PracticeSession> LoadGuestSessionAsync(
         Guid guestVisitId,
         Guid sessionId,
@@ -718,58 +759,57 @@ public class GuestService(
         return session;
     }
 
-    private PracticeSessionDto MapSession(PracticeSession session)
+    private static int ResolveResumeQuestionIndex(PracticeSession session)
     {
-        const string questionImageKey = "QUESTION_IMAGE";
+        var questions = session.QuestionSnapshots.OrderBy(q => q.DisplayOrder).ToList();
+        if (questions.Count == 0)
+        {
+            return 0;
+        }
 
-        var questions = session.QuestionSnapshots
+        if (session.CurrentQuestionIndex is >= 0 and var savedIndex
+            && savedIndex < questions.Count)
+        {
+            return savedIndex;
+        }
+
+        var firstUnanswered = questions.FindIndex(q => q.AnswerStatus != "answered");
+        return firstUnanswered >= 0 ? firstUnanswered : questions.Count - 1;
+    }
+
+    private PracticeSessionDto MapSession(PracticeSession session, bool slim = false)
+    {
+        var orderedSnapshots = session.QuestionSnapshots
             .OrderBy(q => q.DisplayOrder)
-            .Select(q =>
-            {
-                var snapshots = q.AnswerOptionSnapshots.OrderBy(a => a.DisplayOrder).ToList();
-                var stemSnapshot = snapshots.FirstOrDefault(a =>
-                    string.Equals(a.StableKeySnapshot, questionImageKey, StringComparison.OrdinalIgnoreCase));
-                var answerSnapshots = snapshots
-                    .Where(a => !string.Equals(
-                        a.StableKeySnapshot,
-                        questionImageKey,
-                        StringComparison.OrdinalIgnoreCase))
-                    .ToList();
+            .ToList();
 
-                return new PracticeQuestionDto
-                {
-                    PracticeQuestionSnapshotId = q.PracticeQuestionSnapshotId,
-                    QuestionId = q.QuestionId,
-                    DisplayOrder = q.DisplayOrder,
-                    QuestionText = q.QuestionTextSnapshot,
-                    QuestionType = q.QuestionTypeCodeSnapshot,
-                    QuestionMediaUrl = stemSnapshot?.MediaAssetIdSnapshot is Guid mediaId
-                        ? mediaService.BuildPublicUrl(mediaId)
-                        : null,
-                    AnswerStatus = q.AnswerStatus,
-                    SelectedAnswerOptionIds = answerSnapshots
-                        .Where(a => a.WasSelected)
-                        .Select(a => a.AnswerOptionId)
-                        .ToList(),
-                    Answers = answerSnapshots
-                        .Select(a => new PracticeAnswerOptionDto
-                        {
-                            AnswerOptionId = a.AnswerOptionId,
-                            DisplayOrder = a.DisplayOrder,
-                            DisplayLabel = a.DisplayLabel,
-                            Text = a.AnswerTextSnapshot,
-                            MediaAssetId = a.MediaAssetIdSnapshot,
-                            MediaUrl = a.MediaAssetIdSnapshot.HasValue
-                                ? mediaService.BuildPublicUrl(a.MediaAssetIdSnapshot.Value)
-                                : null,
-                        })
-                        .ToList(),
-                };
+        var questionNav = orderedSnapshots
+            .Select(q => new PracticeQuestionNavItemDto
+            {
+                PracticeQuestionSnapshotId = q.PracticeQuestionSnapshotId,
+                QuestionId = q.QuestionId,
+                DisplayOrder = q.DisplayOrder,
+                AnswerStatus = q.AnswerStatus,
             })
             .ToList();
 
-        var total = questions.Count;
-        var answered = questions.Count(q => q.AnswerStatus == "answered");
+        var currentIndex = ResolveResumeQuestionIndex(session);
+        IReadOnlyList<PracticeQuestionDto> questions;
+
+        if (slim)
+        {
+            var initialSnapshot = orderedSnapshots.ElementAtOrDefault(currentIndex)
+                ?? orderedSnapshots.FirstOrDefault();
+            questions = initialSnapshot is null
+                ? []
+                : [MapQuestion(initialSnapshot)];
+        }
+        else
+        {
+            questions = orderedSnapshots.Select(MapQuestion).ToList();
+        }
+
+        var answeredCount = orderedSnapshots.Count(q => q.AnswerStatus == "answered");
 
         return new PracticeSessionDto
         {
@@ -778,11 +818,57 @@ public class GuestService(
             Status = session.Status,
             StartedAt = session.StartedAt,
             ShowElapsedTimer = session.ShowElapsedTimer,
-            CurrentQuestionIndex = session.CurrentQuestionIndex ?? 0,
+            CurrentQuestionIndex = currentIndex,
             ElapsedSecondsBeforePause = session.ElapsedSecondsBeforePause,
-            AnsweredCount = answered,
-            TotalQuestions = total,
+            AnsweredCount = answeredCount,
+            TotalQuestions = orderedSnapshots.Count,
             Questions = questions,
+            QuestionNav = questionNav,
+        };
+    }
+
+    private PracticeQuestionDto MapQuestion(PracticeQuestionSnapshot q)
+    {
+        const string questionImageKey = "QUESTION_IMAGE";
+
+        var snapshots = q.AnswerOptionSnapshots.OrderBy(a => a.DisplayOrder).ToList();
+        var stemSnapshot = snapshots.FirstOrDefault(a =>
+            string.Equals(a.StableKeySnapshot, questionImageKey, StringComparison.OrdinalIgnoreCase));
+        var answerSnapshots = snapshots
+            .Where(a => !string.Equals(
+                a.StableKeySnapshot,
+                questionImageKey,
+                StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        return new PracticeQuestionDto
+        {
+            PracticeQuestionSnapshotId = q.PracticeQuestionSnapshotId,
+            QuestionId = q.QuestionId,
+            DisplayOrder = q.DisplayOrder,
+            QuestionText = q.QuestionTextSnapshot,
+            QuestionType = q.QuestionTypeCodeSnapshot,
+            QuestionMediaUrl = stemSnapshot?.MediaAssetIdSnapshot is Guid mediaId
+                ? mediaService.BuildPublicUrl(mediaId)
+                : null,
+            AnswerStatus = q.AnswerStatus,
+            SelectedAnswerOptionIds = answerSnapshots
+                .Where(a => a.WasSelected)
+                .Select(a => a.AnswerOptionId)
+                .ToList(),
+            Answers = answerSnapshots
+                .Select(a => new PracticeAnswerOptionDto
+                {
+                    AnswerOptionId = a.AnswerOptionId,
+                    DisplayOrder = a.DisplayOrder,
+                    DisplayLabel = a.DisplayLabel,
+                    Text = a.AnswerTextSnapshot,
+                    MediaAssetId = a.MediaAssetIdSnapshot,
+                    MediaUrl = a.MediaAssetIdSnapshot.HasValue
+                        ? mediaService.BuildPublicUrl(a.MediaAssetIdSnapshot.Value)
+                        : null,
+                })
+                .ToList(),
         };
     }
 

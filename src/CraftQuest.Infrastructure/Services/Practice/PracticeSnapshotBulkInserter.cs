@@ -1,4 +1,5 @@
 using System.Data;
+using System.Diagnostics;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
 using Microsoft.Data.SqlClient;
@@ -19,6 +20,14 @@ internal static class PracticeSnapshotBulkInserter
     {
         public Guid? GuestVisitId { get; init; }
         public DateTime? GuestVisitLastActivityAt { get; init; }
+
+        /// <summary>
+        /// When set, only answer-option snapshots for this question snapshot are persisted synchronously.
+        /// Remaining options must be inserted separately (typically in the background).
+        /// </summary>
+        public Guid? SynchronousAnswerOptionsQuestionSnapshotId { get; init; }
+
+        public Action<string, long>? OnPhaseTiming { get; init; }
     }
 
     public static async Task InsertAsync(
@@ -43,14 +52,23 @@ internal static class PracticeSnapshotBulkInserter
                 var connection = (SqlConnection)dbContext.Database.GetDbConnection();
                 if (connection.State != ConnectionState.Open)
                 {
+                    var openStopwatch = Stopwatch.StartNew();
                     await connection.OpenAsync(cancellationToken);
+                    openStopwatch.Stop();
+                    options?.OnPhaseTiming?.Invoke("connectionOpen", openStopwatch.ElapsedMilliseconds);
                 }
 
                 var sqlTransaction = transaction.GetDbTransaction() is SqlTransaction sqlTx
                     ? sqlTx
                     : throw new InvalidOperationException("Expected SqlTransaction for bulk insert.");
 
-                await BulkInsertAsync(connection, sqlTransaction, session, cancellationToken);
+                await BulkInsertAsync(
+                    connection,
+                    sqlTransaction,
+                    session,
+                    options?.SynchronousAnswerOptionsQuestionSnapshotId,
+                    options?.OnPhaseTiming,
+                    cancellationToken);
 
                 if (options?.GuestVisitId is Guid guestVisitId
                     && options.GuestVisitLastActivityAt is DateTime lastActivityAt)
@@ -73,41 +91,109 @@ internal static class PracticeSnapshotBulkInserter
         });
     }
 
+    public static async Task InsertAnswerOptionsAsync(
+        CraftQuestDbContext dbContext,
+        IReadOnlyList<PracticeAnswerOptionSnapshot> answerOptions,
+        CancellationToken cancellationToken = default)
+    {
+        if (answerOptions.Count == 0)
+        {
+            return;
+        }
+
+        if (!dbContext.Database.IsSqlServer())
+        {
+            dbContext.PracticeAnswerOptionSnapshots.AddRange(answerOptions);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return;
+        }
+
+        var strategy = dbContext.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                var connection = (SqlConnection)dbContext.Database.GetDbConnection();
+                if (connection.State != ConnectionState.Open)
+                {
+                    await connection.OpenAsync(cancellationToken);
+                }
+
+                var sqlTransaction = transaction.GetDbTransaction() is SqlTransaction sqlTx
+                    ? sqlTx
+                    : throw new InvalidOperationException("Expected SqlTransaction for bulk insert.");
+
+                var optionsTable = BuildAnswerOptionSnapshotsTable(answerOptions);
+                await BulkCopyTableAsync(
+                    connection,
+                    sqlTransaction,
+                    "practice.PracticeAnswerOptionSnapshots",
+                    optionsTable,
+                    cancellationToken);
+
+                await transaction.CommitAsync(cancellationToken);
+            }
+            catch
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                throw;
+            }
+        });
+    }
+
     private static async Task BulkInsertAsync(
         SqlConnection connection,
         SqlTransaction transaction,
         PracticeSession session,
+        Guid? synchronousAnswerOptionsQuestionSnapshotId,
+        Action<string, long>? onPhaseTiming,
         CancellationToken cancellationToken)
     {
         var sessionsTable = BuildSessionsTable(session);
         var questionsTable = BuildQuestionSnapshotsTable(session);
-        var optionsTable = BuildAnswerOptionSnapshotsTable(session);
+        var optionsTable = synchronousAnswerOptionsQuestionSnapshotId is Guid firstQuestionSnapshotId
+            ? BuildAnswerOptionSnapshotsTable(
+                session.QuestionSnapshots
+                    .Where(q => q.PracticeQuestionSnapshotId == firstQuestionSnapshotId)
+                    .SelectMany(q => q.AnswerOptionSnapshots)
+                    .ToList())
+            : BuildAnswerOptionSnapshotsTable(session);
 
+        var sessionCopyStopwatch = Stopwatch.StartNew();
         await BulkCopyTableAsync(
             connection,
             transaction,
             "practice.PracticeSessions",
             sessionsTable,
             cancellationToken);
+        sessionCopyStopwatch.Stop();
+        onPhaseTiming?.Invoke("bulkCopySession", sessionCopyStopwatch.ElapsedMilliseconds);
 
         if (questionsTable.Rows.Count > 0)
         {
+            var questionCopyStopwatch = Stopwatch.StartNew();
             await BulkCopyTableAsync(
                 connection,
                 transaction,
                 "practice.PracticeQuestionSnapshots",
                 questionsTable,
                 cancellationToken);
+            questionCopyStopwatch.Stop();
+            onPhaseTiming?.Invoke("bulkCopyQuestions", questionCopyStopwatch.ElapsedMilliseconds);
         }
 
         if (optionsTable.Rows.Count > 0)
         {
+            var optionCopyStopwatch = Stopwatch.StartNew();
             await BulkCopyTableAsync(
                 connection,
                 transaction,
                 "practice.PracticeAnswerOptionSnapshots",
                 optionsTable,
                 cancellationToken);
+            optionCopyStopwatch.Stop();
+            onPhaseTiming?.Invoke("bulkCopyOptions", optionCopyStopwatch.ElapsedMilliseconds);
         }
     }
 
@@ -250,7 +336,12 @@ internal static class PracticeSnapshotBulkInserter
         return table;
     }
 
-    private static DataTable BuildAnswerOptionSnapshotsTable(PracticeSession session)
+    private static DataTable BuildAnswerOptionSnapshotsTable(PracticeSession session) =>
+        BuildAnswerOptionSnapshotsTable(
+            session.QuestionSnapshots.SelectMany(q => q.AnswerOptionSnapshots).ToList());
+
+    private static DataTable BuildAnswerOptionSnapshotsTable(
+        IReadOnlyList<PracticeAnswerOptionSnapshot> answerOptions)
     {
         var table = new DataTable();
         table.Columns.Add("PracticeAnswerOptionSnapshotId", typeof(Guid));
@@ -266,24 +357,21 @@ internal static class PracticeSnapshotBulkInserter
         table.Columns.Add("SelectedAt", typeof(DateTime));
         table.Columns.Add("CreatedAt", typeof(DateTime));
 
-        foreach (var question in session.QuestionSnapshots)
+        foreach (var option in answerOptions)
         {
-            foreach (var option in question.AnswerOptionSnapshots)
-            {
-                table.Rows.Add(
-                    option.PracticeAnswerOptionSnapshotId,
-                    option.PracticeQuestionSnapshotId,
-                    option.AnswerOptionId,
-                    ToDbValue(option.StableKeySnapshot),
-                    option.DisplayOrder,
-                    option.DisplayLabel,
-                    ToDbValue(option.AnswerTextSnapshot),
-                    ToDbValue(option.MediaAssetIdSnapshot),
-                    option.IsCorrectSnapshot,
-                    option.WasSelected,
-                    ToDbValue(option.SelectedAt),
-                    option.CreatedAt);
-            }
+            table.Rows.Add(
+                option.PracticeAnswerOptionSnapshotId,
+                option.PracticeQuestionSnapshotId,
+                option.AnswerOptionId,
+                ToDbValue(option.StableKeySnapshot),
+                option.DisplayOrder,
+                option.DisplayLabel,
+                ToDbValue(option.AnswerTextSnapshot),
+                ToDbValue(option.MediaAssetIdSnapshot),
+                option.IsCorrectSnapshot,
+                option.WasSelected,
+                ToDbValue(option.SelectedAt),
+                option.CreatedAt);
         }
 
         return table;

@@ -7,6 +7,7 @@ using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.HostedServices;
 using CraftQuest.Infrastructure.Services;
 using CraftQuest.Infrastructure.Services.Ai;
+using CraftQuest.Infrastructure.Services.Practice;
 using CraftQuest.Infrastructure.StudyMaterials;
 using CraftQuest.Infrastructure.Security;
 using CraftQuest.Infrastructure.Services.Payments;
@@ -75,6 +76,7 @@ public static class DependencyInjection
         services.AddScoped<INotificationService, NotificationService>();
         services.Configure<AiOptions>(configuration.GetSection(AiOptions.SectionName));
         services.Configure<AiGenerationOptions>(configuration.GetSection(AiGenerationOptions.SectionName));
+        services.Configure<PracticeOptions>(configuration.GetSection(PracticeOptions.SectionName));
         services.Configure<MediaOptions>(configuration.GetSection(MediaOptions.SectionName));
         services.Configure<PaymentOptions>(configuration.GetSection(PaymentOptions.SectionName));
         services.AddHttpClient("Gemini", client =>
@@ -93,6 +95,8 @@ public static class DependencyInjection
         services.AddScoped<IStudyMaterialService, StudyMaterialService>();
         services.AddScoped<IQuizGenerationService, QuizGenerationService>();
         services.AddHostedService<AiProcessingHostedService>();
+        services.AddPracticeSnapshotDeferredWriter();
+        services.AddHostedService<DatabaseKeepWarmHostedService>();
         services.AddSingleton<JwtTokenService>();
         services.AddScoped<IAppStatusService, AppStatusService>();
         services.AddScoped<IAuthService, AuthService>();

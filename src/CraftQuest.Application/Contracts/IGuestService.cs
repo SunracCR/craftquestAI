@@ -33,6 +33,13 @@ public interface IGuestService
         Guid sessionId,
         CancellationToken cancellationToken = default);
 
+    Task<PracticeQuestionDto> GetSessionQuestionAsync(
+        Guid guestVisitId,
+        string token,
+        Guid sessionId,
+        Guid practiceQuestionSnapshotId,
+        CancellationToken cancellationToken = default);
+
     Task<SubmitAnswerResultDto> SubmitAnswerAsync(
         Guid guestVisitId,
         string token,

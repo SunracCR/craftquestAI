@@ -95,6 +95,19 @@ class GuestRepository {
     return PracticeSessionModel.fromJson(response.data!);
   }
 
+  Future<PracticeQuestionModel> getSessionQuestion({
+    required String visitId,
+    required String token,
+    required String sessionId,
+    required String practiceQuestionSnapshotId,
+  }) async {
+    final response = await _apiClient.dio.get<Map<String, dynamic>>(
+      '/api/guest/$visitId/practice/$sessionId/questions/$practiceQuestionSnapshotId',
+      options: _guestOptions(token),
+    );
+    return PracticeQuestionModel.fromJson(response.data!);
+  }
+
   Future<Map<String, dynamic>> submitAnswer({
     required String visitId,
     required String token,
