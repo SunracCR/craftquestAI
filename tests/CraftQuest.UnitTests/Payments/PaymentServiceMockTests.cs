@@ -136,6 +136,39 @@ public class PaymentServiceMockTests
     }
 
     [Fact]
+    public async Task ActivatePayPalSubscription_WhenPurchaseValidatedButPlanStillFree_RepairsActivation()
+    {
+        await using var db = CreateDb();
+        await SeedPlansAndUserAsync(db);
+        var userId = await db.Users.Select(u => u.UserId).FirstAsync();
+        var service = CreatePaymentService(db);
+
+        var created = await service.CreatePayPalSubscriptionAsync(
+            userId,
+            new PayPalCreateSubscriptionRequest { PlanCode = "pro", BillingCycle = "monthly" });
+
+        var purchase = await db.Purchases.SingleAsync(p => p.UserId == userId);
+        purchase.Status = "validated";
+        purchase.PurchasedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+
+        var activated = await service.ActivatePayPalSubscriptionAsync(
+            userId,
+            new PayPalActivateSubscriptionRequest { SubscriptionId = created.SubscriptionId });
+
+        Assert.Equal("pro", activated.PlanCode);
+
+        var activePlan = await db.UserSubscriptions
+            .Include(s => s.Plan)
+            .Where(s => s.UserId == userId && s.Status == "active")
+            .OrderByDescending(s => s.StartedAt)
+            .Select(s => s.Plan.Code)
+            .FirstAsync();
+
+        Assert.Equal("pro", activePlan);
+    }
+
+    [Fact]
     public async Task VerifyMobilePurchase_InMockMode_ActivatesSubscriptionWithPeriod()
     {
         await using var db = CreateDb();

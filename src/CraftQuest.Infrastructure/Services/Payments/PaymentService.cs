@@ -174,20 +174,17 @@ public class PaymentService(
 
         if (purchase.Status == "validated")
         {
-            return new PayPalCaptureOrderResponse
-            {
-                PlanCode = purchase.ProductCode,
-                Status = purchase.Status,
-                MockMode = options.Value.UseMockPayments,
-            };
+            return await BuildValidatedCaptureResponseAsync(
+                userId,
+                purchase,
+                request.OrderId,
+                cancellationToken);
         }
 
         if (!options.Value.UseMockPayments)
         {
             await payPalApiClient.CaptureOrderAsync(request.OrderId, cancellationToken);
         }
-
-        await CompletePurchaseAsync(purchase, cancellationToken);
 
         var billingCycle = await ResolveBillingCycleFromPurchaseAsync(purchase, cancellationToken);
         var now = DateTime.UtcNow;
@@ -205,6 +202,8 @@ public class PaymentService(
                 LastPaymentAt = now,
             },
             cancellationToken);
+
+        await CompletePurchaseAsync(purchase, cancellationToken);
 
         return new PayPalCaptureOrderResponse
         {
@@ -297,20 +296,12 @@ public class PaymentService(
 
         if (purchase.Status == "validated")
         {
-            var active = await dbContext.UserSubscriptions
-                .Include(s => s.Plan)
-                .Where(s => s.UserId == userId && s.Status == "active")
-                .OrderByDescending(s => s.StartedAt)
-                .FirstAsync(cancellationToken);
-
-            return new PayPalActivateSubscriptionResponse
-            {
-                PlanCode = active.Plan.Code,
-                Status = purchase.Status,
-                CurrentPeriodEnd = active.EndsAt,
-                AutoRenewEnabled = active.AutoRenewEnabled,
-                MockMode = options.Value.UseMockPayments,
-            };
+            return await BuildValidatedSubscriptionActivationResponseAsync(
+                userId,
+                purchase,
+                request.SubscriptionId,
+                request.BillingCycle,
+                cancellationToken);
         }
 
         var billingCycle = SubscriptionPeriodCalculator.NormalizeBillingCycle(
@@ -330,8 +321,6 @@ public class PaymentService(
         var now = DateTime.UtcNow;
         periodEnd ??= SubscriptionPeriodCalculator.CalculatePeriodEnd(now, billingCycle);
 
-        await CompletePurchaseAsync(purchase, cancellationToken);
-
         await billingService.ActivatePlanAsync(
             userId,
             purchase.ProductCode,
@@ -346,6 +335,8 @@ public class PaymentService(
                 LastPaymentAt = now,
             },
             cancellationToken);
+
+        await CompletePurchaseAsync(purchase, cancellationToken);
 
         return new PayPalActivateSubscriptionResponse
         {
@@ -836,6 +827,117 @@ public class PaymentService(
         purchase.Status = "validated";
         purchase.PurchasedAt = DateTime.UtcNow;
         await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task<PayPalCaptureOrderResponse> BuildValidatedCaptureResponseAsync(
+        Guid userId,
+        Purchase purchase,
+        string providerTransactionId,
+        CancellationToken cancellationToken)
+    {
+        await EnsurePaidPlanActiveForPurchaseAsync(
+            userId,
+            purchase,
+            providerTransactionId,
+            autoRenewEnabled: false,
+            cancellationToken);
+
+        return new PayPalCaptureOrderResponse
+        {
+            PlanCode = purchase.ProductCode,
+            Status = purchase.Status,
+            MockMode = options.Value.UseMockPayments,
+        };
+    }
+
+    private async Task<PayPalActivateSubscriptionResponse> BuildValidatedSubscriptionActivationResponseAsync(
+        Guid userId,
+        Purchase purchase,
+        string subscriptionId,
+        string? billingCycleOverride,
+        CancellationToken cancellationToken)
+    {
+        var billingCycle = SubscriptionPeriodCalculator.NormalizeBillingCycle(
+            billingCycleOverride
+            ?? purchase.BillingCycle
+            ?? await ResolveBillingCycleFromPurchaseAsync(purchase, cancellationToken));
+
+        DateTime? periodEnd = null;
+        if (!options.Value.UseMockPayments)
+        {
+            var details = await payPalApiClient.GetSubscriptionAsync(
+                subscriptionId,
+                cancellationToken);
+            periodEnd = details.NextBillingTime;
+        }
+
+        var active = await EnsurePaidPlanActiveForPurchaseAsync(
+            userId,
+            purchase,
+            subscriptionId,
+            autoRenewEnabled: true,
+            cancellationToken,
+            billingCycle,
+            periodEnd);
+
+        return new PayPalActivateSubscriptionResponse
+        {
+            PlanCode = purchase.ProductCode,
+            Status = purchase.Status,
+            CurrentPeriodEnd = active.EndsAt ?? periodEnd,
+            AutoRenewEnabled = active.AutoRenewEnabled,
+            MockMode = options.Value.UseMockPayments,
+        };
+    }
+
+    private async Task<UserSubscription> EnsurePaidPlanActiveForPurchaseAsync(
+        Guid userId,
+        Purchase purchase,
+        string providerTransactionId,
+        bool autoRenewEnabled,
+        CancellationToken cancellationToken,
+        string? billingCycle = null,
+        DateTime? periodEnd = null)
+    {
+        var active = await dbContext.UserSubscriptions
+            .Include(s => s.Plan)
+            .Where(s => s.UserId == userId && s.Status == "active")
+            .OrderByDescending(s => s.StartedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (active is not null
+            && string.Equals(active.Plan.Code, purchase.ProductCode, StringComparison.OrdinalIgnoreCase))
+        {
+            return active;
+        }
+
+        var normalizedCycle = SubscriptionPeriodCalculator.NormalizeBillingCycle(
+            billingCycle
+            ?? purchase.BillingCycle
+            ?? BillingCycles.Monthly);
+        var now = DateTime.UtcNow;
+        periodEnd ??= SubscriptionPeriodCalculator.CalculatePeriodEnd(now, normalizedCycle);
+
+        await billingService.ActivatePlanAsync(
+            userId,
+            purchase.ProductCode,
+            "paypal",
+            providerTransactionId,
+            new SubscriptionActivationOptions
+            {
+                BillingCycle = normalizedCycle,
+                AutoRenewEnabled = autoRenewEnabled,
+                PeriodStart = now,
+                PeriodEnd = periodEnd,
+                LastPaymentAt = purchase.PurchasedAt ?? now,
+            },
+            cancellationToken);
+
+        return await dbContext.UserSubscriptions
+            .Include(s => s.Plan)
+            .Where(s => s.UserId == userId && s.Status == "active")
+            .OrderByDescending(s => s.StartedAt)
+            .FirstAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<AiCreditPackDto>> GetAiCreditPacksAsync(

@@ -495,6 +495,7 @@ public class BillingService(
 
         await SyncTeacherRoleAsync(userId, plan.IsTeacherPlan, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
+        InvalidateBillingCache(userId);
     }
 
     public async Task<CancelAutoRenewResponse> CancelAutoRenewAsync(
