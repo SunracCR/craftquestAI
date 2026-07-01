@@ -411,7 +411,11 @@ class _AuthenticatedShellState extends State<_AuthenticatedShell>
 
   @override
   Widget build(BuildContext context) {
-    return MainShellPage(user: widget.user);
+    final roleKey = widget.user.roles.join('-');
+    return MainShellPage(
+      key: ValueKey('shell-${widget.user.userId}-$roleKey'),
+      user: widget.user,
+    );
   }
 }
 

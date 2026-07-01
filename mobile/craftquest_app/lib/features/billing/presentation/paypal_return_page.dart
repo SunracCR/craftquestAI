@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:craftquest_app/core/billing/post_checkout_session_refresh.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/navigation/app_keys.dart';
 import 'package:craftquest_app/core/navigation/web_entry_url_cleanup.dart';
@@ -11,7 +12,6 @@ import 'package:craftquest_app/core/widgets/app_buttons.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
-import 'package:craftquest_app/features/auth/presentation/auth_bloc.dart';
 import 'package:craftquest_app/features/billing/data/billing_repository.dart';
 import 'package:craftquest_app/features/billing/data/pending_paypal_payment_store.dart';
 import 'package:craftquest_app/features/billing/presentation/paypal_return_launch.dart';
@@ -19,7 +19,6 @@ import 'package:craftquest_app/features/prep_plus/data/prep_plus_repository.dart
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 enum _PayPalReturnStatus { processing, success, error, cancelled }
 
@@ -88,7 +87,6 @@ class _PayPalReturnPageState extends State<PayPalReturnPage> {
             code: activated.planCode,
           );
         });
-        context.read<AuthBloc>().add(const AuthProfileRefreshRequested());
         await _paymentStore.clear();
         return;
       }
@@ -132,7 +130,6 @@ class _PayPalReturnPageState extends State<PayPalReturnPage> {
             code: activated.planCode,
           );
         });
-        context.read<AuthBloc>().add(const AuthProfileRefreshRequested());
       } else {
         final captured = await _billingRepository.capturePayPalOrder(orderId);
         if (!mounted) return;
@@ -144,7 +141,6 @@ class _PayPalReturnPageState extends State<PayPalReturnPage> {
             code: captured.planCode,
           );
         });
-        context.read<AuthBloc>().add(const AuthProfileRefreshRequested());
       }
 
       await _paymentStore.clear();
@@ -169,9 +165,12 @@ class _PayPalReturnPageState extends State<PayPalReturnPage> {
     }
     setState(() => _continuing = true);
 
+    if (_status == _PayPalReturnStatus.success && mounted) {
+      await refreshAppSessionAfterCheckout(context);
+    }
+
     await _paymentStore.clear();
     clearWebEntryDeepLinkUrl();
-    unawaited(_billingRepository.getMyBilling(forceRefresh: true));
 
     if (!mounted) {
       return;

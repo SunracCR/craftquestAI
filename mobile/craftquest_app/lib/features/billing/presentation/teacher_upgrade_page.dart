@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:craftquest_app/core/billing/post_checkout_session_refresh.dart';
 import 'package:craftquest_app/core/billing/paypal_web_launcher.dart';
 import 'package:craftquest_app/core/billing/payment_platform.dart';
 import 'package:craftquest_app/core/compliance/parental_gate_dialog.dart';
@@ -175,7 +176,8 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
           billingCycle: _billingCycle.apiValue,
         );
         if (!mounted) return;
-        context.read<AuthBloc>().add(const AuthProfileRefreshRequested());
+        await refreshAppSessionAfterCheckout(context);
+        if (!mounted) return;
         context.showSuccessSnackBar(
           l10n.upgradeSuccess(
             BillingDisplay.localizedPlanName(l10n, code: plan.code),
@@ -235,7 +237,8 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
             await InAppPurchase.instance.completePurchase(purchase);
           }
           if (!mounted) return;
-          context.read<AuthBloc>().add(const AuthProfileRefreshRequested());
+          await refreshAppSessionAfterCheckout(context);
+          if (!mounted) return;
           context.showSuccessSnackBar(
             l10n.upgradeSuccess(
               BillingDisplay.localizedPlanName(l10n, code: verified.planCode),

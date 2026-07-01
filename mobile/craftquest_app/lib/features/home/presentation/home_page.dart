@@ -62,8 +62,18 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  Future<void> _initHome() async {
-    await _load();
+  @override
+  void didUpdateWidget(covariant HomePage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.user != widget.user) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        unawaited(_initHome(forceRefreshBilling: true));
+      });
+    }
+  }
+
+  Future<void> _initHome({bool forceRefreshBilling = false}) async {
+    await _load(forceRefresh: forceRefreshBilling);
     await _refreshBannerVisibility(markShownIfVisible: true);
   }
 
@@ -96,9 +106,11 @@ class _HomePageState extends State<HomePage> {
     if (mounted) setState(() => _teacherBannerHidden = true);
   }
 
-  Future<void> _load() async {
+  Future<void> _load({bool forceRefresh = false}) async {
     try {
-      final billing = await getIt<BillingRepository>().getMyBilling();
+      final billing = await getIt<BillingRepository>().getMyBilling(
+        forceRefresh: forceRefresh,
+      );
       if (!mounted) return;
       setState(() => _billing = billing);
     } catch (_) {

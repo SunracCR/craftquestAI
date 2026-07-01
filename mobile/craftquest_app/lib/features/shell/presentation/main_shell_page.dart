@@ -57,15 +57,28 @@ class _MainShellPageState extends State<MainShellPage> {
   void didUpdateWidget(covariant MainShellPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     final wasTeacher = oldWidget.user.roles.contains('teacher');
-    if (wasTeacher && !_isTeacher) {
+    if (!wasTeacher && _isTeacher) {
       _pageCache.clear();
-      _visitedTabs.remove(2);
-      if (_index == 2) {
+      _visitedTabs
+        ..clear()
+        ..add(0)
+        ..add(_teacherTabIndex);
+      unawaited(
+        getIt<AppWarmupService>().start(prefetchTeacherDashboard: true),
+      );
+      if (_index != 0) {
         setState(() => _index = 0);
-      } else if (_index > 2) {
+      }
+    } else if (wasTeacher && !_isTeacher) {
+      _pageCache.clear();
+      _visitedTabs.remove(_teacherTabIndex);
+      if (_index == _teacherTabIndex) {
+        setState(() => _index = 0);
+      } else if (_index > _teacherTabIndex) {
         setState(() => _index = _index - 1);
       }
     } else if (oldWidget.user != widget.user) {
+      _pageCache.remove(0);
       _pageCache[_profileTabIndex] = ProfilePage(user: widget.user);
     }
   }
