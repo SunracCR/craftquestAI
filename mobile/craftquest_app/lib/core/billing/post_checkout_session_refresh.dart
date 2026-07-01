@@ -1,3 +1,4 @@
+import 'package:craftquest_app/core/billing/checkout_refresh_notifier.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/features/auth/data/auth_repository.dart';
 import 'package:craftquest_app/features/auth/presentation/auth_bloc.dart';
@@ -27,4 +28,8 @@ Future<void> refreshAppSessionAfterCheckout(BuildContext context) async {
   }
 
   await billingRepo.getMyBilling(forceRefresh: true);
+
+  if (context.mounted) {
+    getIt<CheckoutRefreshNotifier>().notifyCheckoutCompleted();
+  }
 }

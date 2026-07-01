@@ -1,3 +1,4 @@
+import 'package:craftquest_app/core/billing/checkout_refresh_notifier.dart';
 import 'package:craftquest_app/core/compliance/compliance_pref_cache.dart';
 import 'package:craftquest_app/core/compliance/age_collection_controller.dart';
 import 'package:craftquest_app/core/compliance/age_collection_storage.dart';
@@ -47,6 +48,7 @@ void configureDependencies() {
     return;
   }
 
+  getIt.registerLazySingleton(CheckoutRefreshNotifier.new);
   getIt.registerLazySingleton(TokenStorage.new);
   getIt.registerLazySingleton(SavedLoginCredentialsStorage.new);
   getIt.registerLazySingleton(GuestTokenStorage.new);

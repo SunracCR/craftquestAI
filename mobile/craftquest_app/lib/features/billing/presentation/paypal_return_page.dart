@@ -7,7 +7,6 @@ import 'package:craftquest_app/core/navigation/web_entry_url_cleanup.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
-import 'package:craftquest_app/core/utils/billing_display.dart';
 import 'package:craftquest_app/core/widgets/app_buttons.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
@@ -20,7 +19,7 @@ import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
-enum _PayPalReturnStatus { processing, success, error, cancelled }
+enum _PayPalReturnStatus { processing, error, cancelled }
 
 class PayPalReturnPage extends StatefulWidget {
   const PayPalReturnPage({
@@ -41,7 +40,6 @@ class _PayPalReturnPageState extends State<PayPalReturnPage> {
 
   _PayPalReturnStatus _status = _PayPalReturnStatus.processing;
   String? _message;
-  String? _successDetail;
   bool _continuing = false;
 
   @override
@@ -64,7 +62,6 @@ class _PayPalReturnPageState extends State<PayPalReturnPage> {
     setState(() {
       _status = _PayPalReturnStatus.processing;
       _message = null;
-      _successDetail = null;
     });
 
     try {
@@ -74,20 +71,13 @@ class _PayPalReturnPageState extends State<PayPalReturnPage> {
       if (widget.returnInfo.subscriptionId != null &&
           widget.returnInfo.subscriptionId!.isNotEmpty) {
         final subscriptionId = widget.returnInfo.subscriptionId!;
-        final activated = await _billingRepository.activatePayPalSubscription(
+        await _billingRepository.activatePayPalSubscription(
           subscriptionId,
           billingCycle: pending?.billingCycle,
         );
-        if (!mounted) return;
-        setState(() {
-          _status = _PayPalReturnStatus.success;
-          _message = l10n.paypalReturnSuccessSubscription;
-          _successDetail = BillingDisplay.localizedPlanName(
-            l10n,
-            code: activated.planCode,
-          );
-        });
-        await _paymentStore.clear();
+        await _handleCheckoutSuccess(
+          message: l10n.paypalReturnSuccessSubscription,
+        );
         return;
       }
 
@@ -103,47 +93,29 @@ class _PayPalReturnPageState extends State<PayPalReturnPage> {
         if (result.status != 'granted') {
           throw StateError(result.message ?? l10n.paypalReturnError);
         }
-        setState(() {
-          _status = _PayPalReturnStatus.success;
-          _message = l10n.paypalReturnSuccessPrep;
-        });
+        await _handleCheckoutSuccess(message: l10n.paypalReturnSuccessPrep);
       } else if (flow == PendingPayPalPaymentFlow.aiCredit) {
-        final captured =
-            await _billingRepository.capturePayPalAiCreditOrder(orderId);
+        await _billingRepository.capturePayPalAiCreditOrder(orderId);
         if (!mounted) return;
-        setState(() {
-          _status = _PayPalReturnStatus.success;
-          _message = l10n.paypalReturnSuccessCredits;
-          _successDetail = captured.creditsGranted.toString();
-        });
+        await _handleCheckoutSuccess(
+          message: l10n.paypalReturnSuccessCredits,
+        );
       } else if (flow == PendingPayPalPaymentFlow.subscription) {
-        final activated = await _billingRepository.activatePayPalSubscription(
+        await _billingRepository.activatePayPalSubscription(
           orderId,
           billingCycle: pending?.billingCycle,
         );
         if (!mounted) return;
-        setState(() {
-          _status = _PayPalReturnStatus.success;
-          _message = l10n.paypalReturnSuccessSubscription;
-          _successDetail = BillingDisplay.localizedPlanName(
-            l10n,
-            code: activated.planCode,
-          );
-        });
+        await _handleCheckoutSuccess(
+          message: l10n.paypalReturnSuccessSubscription,
+        );
       } else {
-        final captured = await _billingRepository.capturePayPalOrder(orderId);
+        await _billingRepository.capturePayPalOrder(orderId);
         if (!mounted) return;
-        setState(() {
-          _status = _PayPalReturnStatus.success;
-          _message = l10n.paypalReturnSuccessOrder;
-          _successDetail = BillingDisplay.localizedPlanName(
-            l10n,
-            code: captured.planCode,
-          );
-        });
+        await _handleCheckoutSuccess(
+          message: l10n.paypalReturnSuccessOrder,
+        );
       }
-
-      await _paymentStore.clear();
     } on DioException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -159,25 +131,36 @@ class _PayPalReturnPageState extends State<PayPalReturnPage> {
     }
   }
 
+  Future<void> _handleCheckoutSuccess({
+    required String message,
+  }) async {
+    if (!mounted) return;
+
+    await _paymentStore.clear();
+
+    if (mounted) {
+      await refreshAppSessionAfterCheckout(context);
+    }
+
+    clearWebEntryDeepLinkUrl();
+
+    if (!mounted) return;
+
+    AppSnackBars.showSuccess(message);
+    rootNavigatorKey.currentState?.popUntil((route) => route.isFirst);
+  }
+
   Future<void> _continue() async {
     if (_continuing) {
       return;
     }
     setState(() => _continuing = true);
 
-    if (_status == _PayPalReturnStatus.success && mounted) {
-      await refreshAppSessionAfterCheckout(context);
-    }
-
     await _paymentStore.clear();
     clearWebEntryDeepLinkUrl();
 
     if (!mounted) {
       return;
-    }
-
-    if (_status == _PayPalReturnStatus.success && _message != null) {
-      context.showSuccessSnackBar(_message!);
     }
 
     rootNavigatorKey.currentState?.popUntil((route) => route.isFirst);
@@ -205,16 +188,6 @@ class _PayPalReturnPageState extends State<PayPalReturnPage> {
           icon: Icons.cancel_outlined,
           iconColor: AppColors.textSecondary,
           title: l10n.paypalReturnCancelled,
-          primaryLabel: l10n.paypalReturnContinue,
-          primaryLoading: _continuing,
-          onPrimary: _continue,
-        );
-      case _PayPalReturnStatus.success:
-        return _ResultView(
-          icon: Icons.check_circle_outline_rounded,
-          iconColor: AppColors.accentMint,
-          title: _message ?? l10n.paypalReturnSuccessOrder,
-          subtitle: _successDetail,
           primaryLabel: l10n.paypalReturnContinue,
           primaryLoading: _continuing,
           onPrimary: _continue,

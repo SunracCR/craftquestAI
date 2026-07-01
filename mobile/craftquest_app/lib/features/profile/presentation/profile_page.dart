@@ -17,6 +17,7 @@ import 'package:craftquest_app/features/auth/data/auth_repository.dart';
 import 'package:craftquest_app/features/auth/data/models/auth_models.dart';
 import 'package:craftquest_app/features/auth/presentation/auth_bloc.dart';
 import 'package:craftquest_app/core/utils/billing_display.dart';
+import 'package:craftquest_app/core/billing/checkout_refresh_notifier.dart';
 import 'package:craftquest_app/features/billing/data/billing_repository.dart';
 import 'package:craftquest_app/features/billing/data/models/billing_models.dart';
 import 'package:craftquest_app/features/billing/presentation/teacher_upgrade_page.dart';
@@ -58,6 +59,7 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _savingName = false;
   UserBillingModel? _billing;
   bool _billingLoadScheduled = false;
+  late final CheckoutRefreshNotifier _checkoutRefresh;
 
   bool get _hasProPlan =>
       _billing?.plan.code.toLowerCase() == 'pro' ||
@@ -68,8 +70,20 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
+    _checkoutRefresh = getIt<CheckoutRefreshNotifier>()
+      ..addListener(_onCheckoutCompleted);
     _avatarId = widget.user.avatarId ?? AvatarOption.defaultId;
     unawaited(_loadStoredBirthDate());
+  }
+
+  @override
+  void dispose() {
+    _checkoutRefresh.removeListener(_onCheckoutCompleted);
+    super.dispose();
+  }
+
+  void _onCheckoutCompleted() {
+    unawaited(_loadBilling(forceRefresh: true));
   }
 
   Future<void> _loadStoredBirthDate() async {
@@ -107,9 +121,11 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
-  Future<void> _loadBilling() async {
+  Future<void> _loadBilling({bool forceRefresh = false}) async {
     try {
-      final billing = await _billingRepository.getMyBilling();
+      final billing = await _billingRepository.getMyBilling(
+        forceRefresh: forceRefresh,
+      );
       if (!mounted) return;
       setState(() => _billing = billing);
     } catch (_) {
@@ -138,6 +154,9 @@ class _ProfilePageState extends State<ProfilePage> {
     }
     if (oldWidget.user.displayName != widget.user.displayName) {
       _displayNameOverride = null;
+    }
+    if (oldWidget.user != widget.user) {
+      unawaited(_loadBilling(forceRefresh: true));
     }
   }
 

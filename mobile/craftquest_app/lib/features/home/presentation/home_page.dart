@@ -13,6 +13,7 @@ import 'package:craftquest_app/core/widgets/app_section_card.dart';
 import 'package:craftquest_app/core/widgets/app_section_title.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/core/utils/billing_display.dart';
+import 'package:craftquest_app/core/billing/checkout_refresh_notifier.dart';
 import 'package:craftquest_app/core/utils/home_teacher_banner_prefs.dart';
 import 'package:craftquest_app/features/auth/data/models/auth_models.dart';
 import 'package:craftquest_app/features/billing/data/billing_repository.dart';
@@ -43,6 +44,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   UserBillingModel? _billing;
   bool _teacherBannerHidden = true;
+  late final CheckoutRefreshNotifier _checkoutRefresh;
 
   bool get _showTeacherBanner =>
       !_teacherBannerHidden &&
@@ -57,9 +59,21 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    _checkoutRefresh = getIt<CheckoutRefreshNotifier>()
+      ..addListener(_onCheckoutCompleted);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(_initHome());
     });
+  }
+
+  @override
+  void dispose() {
+    _checkoutRefresh.removeListener(_onCheckoutCompleted);
+    super.dispose();
+  }
+
+  void _onCheckoutCompleted() {
+    unawaited(_initHome(forceRefreshBilling: true));
   }
 
   @override
