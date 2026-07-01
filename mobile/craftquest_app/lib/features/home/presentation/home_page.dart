@@ -73,6 +73,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _onCheckoutCompleted() {
+    final billing = _checkoutRefresh.latestBilling ??
+        getIt<BillingRepository>().cachedBilling;
+    if (billing != null && mounted) {
+      setState(() => _billing = billing);
+    }
     unawaited(_initHome(forceRefreshBilling: true));
   }
 
@@ -126,6 +131,12 @@ class _HomePageState extends State<HomePage> {
         forceRefresh: forceRefresh,
       );
       if (!mounted) return;
+      if (!forceRefresh &&
+          _billing != null &&
+          _billing!.plan.code.toLowerCase() != 'free' &&
+          billing.plan.code.toLowerCase() == 'free') {
+        return;
+      }
       setState(() => _billing = billing);
     } catch (_) {
       if (!mounted) return;

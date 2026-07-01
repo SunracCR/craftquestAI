@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:craftquest_app/core/billing/checkout_refresh_notifier.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/services/app_warmup_service.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
@@ -26,6 +27,7 @@ class _MainShellPageState extends State<MainShellPage> {
   int _index = 0;
   final Set<int> _visitedTabs = {0};
   final Map<int, Widget> _pageCache = {};
+  late final CheckoutRefreshNotifier _checkoutRefresh;
 
   static const int _prepTabIndex = 1;
   static const int _teacherTabIndex = 2;
@@ -39,6 +41,8 @@ class _MainShellPageState extends State<MainShellPage> {
   @override
   void initState() {
     super.initState();
+    _checkoutRefresh = getIt<CheckoutRefreshNotifier>()
+      ..addListener(_onCheckoutCompleted);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
         return;
@@ -50,6 +54,23 @@ class _MainShellPageState extends State<MainShellPage> {
         setState(() => _visitedTabs.add(_teacherTabIndex));
         _pageFor(_teacherTabIndex);
       }
+    });
+  }
+
+  @override
+  void dispose() {
+    _checkoutRefresh.removeListener(_onCheckoutCompleted);
+    super.dispose();
+  }
+
+  void _onCheckoutCompleted() {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _pageCache.remove(0);
+      _pageCache.remove(_profileTabIndex);
+      _index = 0;
     });
   }
 

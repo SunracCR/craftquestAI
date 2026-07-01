@@ -83,6 +83,11 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _onCheckoutCompleted() {
+    final billing = _checkoutRefresh.latestBilling ??
+        _billingRepository.cachedBilling;
+    if (billing != null && mounted) {
+      setState(() => _billing = billing);
+    }
     unawaited(_loadBilling(forceRefresh: true));
   }
 

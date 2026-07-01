@@ -13,11 +13,14 @@ class BillingRepository {
   UserBillingModel? _cachedBilling;
   DateTime? _cachedAt;
   Future<UserBillingModel>? _inFlightBilling;
+  int _fetchGeneration = 0;
 
   bool get hasFreshBillingCache =>
       _cachedBilling != null &&
       _cachedAt != null &&
       DateTime.now().difference(_cachedAt!) < _cacheTtl;
+
+  UserBillingModel? get cachedBilling => _cachedBilling;
 
   Future<UserBillingModel> getMyBilling({bool forceRefresh = false}) async {
     if (!forceRefresh &&
@@ -28,10 +31,11 @@ class BillingRepository {
     }
 
     if (forceRefresh) {
+      _fetchGeneration++;
       _inFlightBilling = null;
     }
 
-    _inFlightBilling ??= _fetchMyBilling().whenComplete(() {
+    _inFlightBilling ??= _fetchMyBilling(_fetchGeneration).whenComplete(() {
       _inFlightBilling = null;
     });
     return _inFlightBilling!;
@@ -40,15 +44,20 @@ class BillingRepository {
   void invalidateMyBillingCache() {
     _cachedBilling = null;
     _cachedAt = null;
+    _fetchGeneration++;
+    _inFlightBilling = null;
   }
 
-  Future<UserBillingModel> _fetchMyBilling() async {
+  Future<UserBillingModel> _fetchMyBilling(int generation) async {
     final response =
         await _apiClient.dio.get<Map<String, dynamic>>('/api/billing/me');
     final billing = UserBillingModel.fromJson(response.data!);
-    _cachedBilling = billing;
-    _cachedAt = DateTime.now();
-    return billing;
+    if (generation == _fetchGeneration) {
+      _cachedBilling = billing;
+      _cachedAt = DateTime.now();
+      return billing;
+    }
+    return _cachedBilling ?? billing;
   }
 
   Future<List<PurchaseHistoryItemModel>> getMyPurchases() async {

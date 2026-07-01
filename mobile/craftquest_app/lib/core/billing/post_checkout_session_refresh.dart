@@ -27,9 +27,9 @@ Future<void> refreshAppSessionAfterCheckout(BuildContext context) async {
     }
   }
 
-  await billingRepo.getMyBilling(forceRefresh: true);
+  final billing = await billingRepo.getMyBilling(forceRefresh: true);
 
   if (context.mounted) {
-    getIt<CheckoutRefreshNotifier>().notifyCheckoutCompleted();
+    getIt<CheckoutRefreshNotifier>().notifyCheckoutCompleted(billing: billing);
   }
 }
