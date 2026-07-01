@@ -137,7 +137,7 @@ BEGIN
             N'ai',
             @MonthlyAiCredits - @CurrentAiCredits,
             @MonthlyAiCredits,
-            N'admin_plan_assign',
+            N'admin_adjustment',
             @Now);
     END
 END
