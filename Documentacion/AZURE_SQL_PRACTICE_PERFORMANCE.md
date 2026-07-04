@@ -75,7 +75,7 @@ Interpretación:
 
 | Componente | Efecto |
 |------------|--------|
-| `DatabaseKeepWarmHostedService` | Lecturas ligeras cada 2 min para mantener páginas calientes |
+| `DatabaseKeepWarmHostedService` | Lecturas ligeras cada 2 min para mantener páginas calientes (quiz/practice **y tablas Prep+**) |
 | `PracticeQuestionLoader` | Consultas indexadas en lugar de 4 `Include` con split |
 | Inserción diferida de opciones | Sesión + nav + 1ª pregunta síncronos; resto en background |
 | Instrumentación por fases | Diagnóstico en logs |

@@ -1,6 +1,7 @@
 import 'package:craftquest_app/core/l10n/localized_message_holder.dart';
 import 'package:craftquest_app/core/network/api_client.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
+import 'package:flutter/foundation.dart';
 import 'package:craftquest_app/features/billing/data/models/billing_models.dart';
 import 'package:craftquest_app/features/prep_plus/data/models/prep_plus_models.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
@@ -60,8 +61,11 @@ class PrepPlusRepository {
   Future<void> prefetchCategories() async {
     try {
       await getCategories();
-    } catch (_) {
-      // Best effort.
+    } catch (e, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('PrepPlusRepository.prefetchCategories failed: $e');
+        debugPrint('$stackTrace');
+      }
     }
   }
 
@@ -69,8 +73,11 @@ class PrepPlusRepository {
   Future<void> prefetchMyAccesses() async {
     try {
       await getMyAccesses();
-    } catch (_) {
-      // Best effort.
+    } catch (e, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('PrepPlusRepository.prefetchMyAccesses failed: $e');
+        debugPrint('$stackTrace');
+      }
     }
   }
 

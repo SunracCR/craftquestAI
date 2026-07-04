@@ -14,6 +14,7 @@ public class QuizAccessConfiguration : IEntityTypeConfiguration<QuizAccess>
 
         builder.HasIndex(x => new { x.UserId, x.QuizId, x.ClassId, x.AssignmentId })
             .IsUnique();
+        builder.HasIndex(x => new { x.UserId, x.AccessType, x.PrepCatalogItemId });
 
         builder.HasOne(x => x.User)
             .WithMany()

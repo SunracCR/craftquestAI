@@ -86,6 +86,33 @@ public sealed class DatabaseKeepWarmHostedService(
             """,
             cancellationToken);
 
+        await dbContext.Database.ExecuteSqlRawAsync(
+            """
+            SELECT TOP 1 c.CategoryId
+            FROM catalog.PrepCategories c WITH (NOLOCK)
+            WHERE c.IsActive = 1
+            ORDER BY c.CategoryId
+            """,
+            cancellationToken);
+
+        await dbContext.Database.ExecuteSqlRawAsync(
+            """
+            SELECT TOP 1 i.CatalogItemId
+            FROM catalog.PrepCatalogItems i WITH (NOLOCK)
+            WHERE i.IsPublished = 1 AND i.IsDeleted = 0
+            ORDER BY i.CatalogItemId
+            """,
+            cancellationToken);
+
+        await dbContext.Database.ExecuteSqlRawAsync(
+            """
+            SELECT TOP 1 a.QuizAccessId
+            FROM sharing.QuizAccesses a WITH (NOLOCK)
+            WHERE a.AccessType = 'purchase' AND a.PrepCatalogItemId IS NOT NULL
+            ORDER BY a.GrantedAt DESC
+            """,
+            cancellationToken);
+
         logger.LogDebug("Database keep-warm cycle completed.");
     }
 }

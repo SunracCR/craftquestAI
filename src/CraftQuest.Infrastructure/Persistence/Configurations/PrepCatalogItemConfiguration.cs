@@ -14,6 +14,7 @@ public class PrepCatalogItemConfiguration : IEntityTypeConfiguration<PrepCatalog
         builder.Property(x => x.Description).HasMaxLength(2000);
         builder.Property(x => x.InstitutionTag).HasMaxLength(120);
         builder.HasIndex(x => x.QuizId).IsUnique();
+        builder.HasIndex(x => new { x.CategoryId, x.IsPublished, x.IsDeleted });
 
         builder.HasOne(x => x.Quiz)
             .WithMany()

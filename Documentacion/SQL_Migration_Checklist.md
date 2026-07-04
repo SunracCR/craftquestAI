@@ -37,6 +37,7 @@ Antes de ejecutar, comprueba la columna **Verificación**. Si ya cumple la condi
 | 61 | `AddEmailVerificationAndPasswordChange.sql` | Verificación de email (`pending`), `EmailVerifiedAt`, tokens de verificación y confirmación de cambio de contraseña | `COL_LENGTH('core.Users','EmailVerifiedAt')`; tablas `core.EmailVerificationTokens`, `core.PasswordChangeTokens`; `CK_Users_Status` incluye `pending` | ☐ | ☐ | ☐ |
 | 62 | `AddNotifications.sql` | Centro in-app, outbox fan-out, device tokens, preferencias | Tabla `core.Notifications`; `core.NotificationOutbox`; `core.DeviceTokens`; `core.NotificationPreferences` | ☐ | ☐ | ☐ |
 | 63 | `AddParentalConsent.sql` | Consentimiento parental (DOB, guardian, tokens) y estado `pending_parental_consent` | `COL_LENGTH('core.Users','DateOfBirth')`; tabla `core.ParentalConsentTokens`; `CK_Users_Status` incluye `pending_parental_consent` | ☐ | ☐ | ☐ |
+| 64 | `AlterIndexes_PrepPlus.sql` | Índices hub Prep+ (conteo por categoría y mis accesos) | `IX_PrepCatalogItems_CategoryId_IsPublished_IsDeleted`, `IX_QuizAccesses_UserId_AccessType_PrepCatalogItemId` | ☐ | ☐ | ☐ |
 
 ## Estrategia (ítem 58)
 

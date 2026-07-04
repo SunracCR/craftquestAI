@@ -6,17 +6,23 @@ using CraftQuest.Application.Models.Quizzes;
 using CraftQuest.Application.Models.Teacher;
 using CraftQuest.Application.Services;
 using CraftQuest.Application.Services.PrepPlus;
+using CraftQuest.Application.Options;
 using CraftQuest.Domain.Constants;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
+using CraftQuest.Infrastructure.Services.PrepPlus;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace CraftQuest.Infrastructure.Services;
 
 public class PrepPlusCatalogService(
     CraftQuestDbContext dbContext,
     IPrepPlusAccessService prepPlusAccessService,
-    IMediaService mediaService) : IPrepPlusCatalogService
+    IMediaService mediaService,
+    IOptions<PracticeOptions> practiceOptions,
+    ILogger<PrepPlusCatalogService> logger) : IPrepPlusCatalogService
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
@@ -26,22 +32,41 @@ public class PrepPlusCatalogService(
     public async Task<IReadOnlyList<PrepCategoryPublicDto>> GetPublicCategoryTreeAsync(
         CancellationToken cancellationToken = default)
     {
-        var publishedCounts = await dbContext.PrepCatalogItems
-            .AsNoTracking()
-            .Where(i => i.IsPublished && !i.IsDeleted)
-            .GroupBy(i => i.CategoryId)
-            .Select(g => new { CategoryId = g.Key, Count = g.Count() })
-            .ToDictionaryAsync(x => x.CategoryId, x => x.Count, cancellationToken);
+        var timing = new PrepPlusQueryTiming(
+            logger,
+            practiceOptions.Value.LogStartSessionTiming);
 
-        var all = await dbContext.PrepCategories
-            .AsNoTracking()
-            .Where(c => c.IsActive)
-            .OrderBy(c => c.SortOrder)
-            .ThenBy(c => c.Name)
-            .ToListAsync(cancellationToken);
+        Dictionary<Guid, int> publishedCounts;
+        using (timing.Phase("publishedCounts"))
+        {
+            publishedCounts = await dbContext.PrepCatalogItems
+                .AsNoTracking()
+                .Where(i => i.IsPublished && !i.IsDeleted)
+                .GroupBy(i => i.CategoryId)
+                .Select(g => new { CategoryId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.CategoryId, x => x.Count, cancellationToken);
+        }
 
-        var roots = all.Where(c => c.ParentCategoryId == null).ToList();
-        return roots.Select(r => MapPublicCategoryTree(r, all, publishedCounts)).ToList();
+        List<PrepCategory> all;
+        using (timing.Phase("loadCategories"))
+        {
+            all = await dbContext.PrepCategories
+                .AsNoTracking()
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.SortOrder)
+                .ThenBy(c => c.Name)
+                .ToListAsync(cancellationToken);
+        }
+
+        List<PrepCategory> roots;
+        using (timing.Phase("mapTree"))
+        {
+            roots = all.Where(c => c.ParentCategoryId == null).ToList();
+        }
+
+        var result = roots.Select(r => MapPublicCategoryTree(r, all, publishedCounts)).ToList();
+        timing.LogSummary("GetPublicCategoryTree", $"roots={result.Count}");
+        return result;
     }
 
     public async Task<IReadOnlyList<PrepCatalogBrowseItemDto>> BrowseCategoryItemsAsync(
@@ -455,15 +480,24 @@ public class PrepPlusCatalogService(
         Guid userId,
         CancellationToken cancellationToken = default)
     {
+        var timing = new PrepPlusQueryTiming(
+            logger,
+            practiceOptions.Value.LogStartSessionTiming);
+
         var now = DateTime.UtcNow;
-        var accesses = await dbContext.QuizAccesses
-            .AsNoTracking()
-            .Where(a => a.UserId == userId && a.AccessType == "purchase" && a.PrepCatalogItemId != null)
-            .OrderByDescending(a => a.GrantedAt)
-            .ToListAsync(cancellationToken);
+        List<QuizAccess> accesses;
+        using (timing.Phase("loadAccesses"))
+        {
+            accesses = await dbContext.QuizAccesses
+                .AsNoTracking()
+                .Where(a => a.UserId == userId && a.AccessType == "purchase" && a.PrepCatalogItemId != null)
+                .OrderByDescending(a => a.GrantedAt)
+                .ToListAsync(cancellationToken);
+        }
 
         if (accesses.Count == 0)
         {
+            timing.LogSummary("GetMyAccesses", "accessCount=0");
             return new PrepMyAccessesDto { Active = [], Expired = [] };
         }
 
@@ -472,52 +506,65 @@ public class PrepPlusCatalogService(
             .Distinct()
             .ToList();
 
-        var catalogItems = await dbContext.PrepCatalogItems
-            .AsNoTracking()
-            .Include(i => i.Quiz)
-            .Where(i => catalogItemIds.Contains(i.CatalogItemId))
-            .ToDictionaryAsync(i => i.CatalogItemId, cancellationToken);
+        Dictionary<Guid, PrepCatalogItem> catalogItems;
+        using (timing.Phase("loadCatalogItems"))
+        {
+            catalogItems = await dbContext.PrepCatalogItems
+                .AsNoTracking()
+                .Include(i => i.Quiz)
+                .Where(i => catalogItemIds.Contains(i.CatalogItemId))
+                .ToDictionaryAsync(i => i.CatalogItemId, cancellationToken);
+        }
 
         var quizIds = catalogItems.Values.Select(i => i.QuizId).Distinct().ToList();
-        var questionCounts = await dbContext.Questions
-            .Where(q => quizIds.Contains(q.QuizId))
-            .GroupBy(q => q.QuizId)
-            .Select(g => new { g.Key, Count = g.Count() })
-            .ToDictionaryAsync(x => x.Key, x => x.Count, cancellationToken);
+        Dictionary<Guid, int> questionCounts;
+        using (timing.Phase("questionCounts"))
+        {
+            questionCounts = await dbContext.Questions
+                .AsNoTracking()
+                .Where(q => quizIds.Contains(q.QuizId))
+                .GroupBy(q => q.QuizId)
+                .Select(g => new { g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.Key, x => x.Count, cancellationToken);
+        }
 
         var active = new List<PrepMyAccessItemDto>();
         var expired = new List<PrepMyAccessItemDto>();
 
-        foreach (var access in accesses)
+        using (timing.Phase("mapAccesses"))
         {
-            if (!catalogItems.TryGetValue(access.PrepCatalogItemId!.Value, out var item))
+            foreach (var access in accesses)
             {
-                continue;
-            }
+                if (!catalogItems.TryGetValue(access.PrepCatalogItemId!.Value, out var item))
+                {
+                    continue;
+                }
 
-            var dto = new PrepMyAccessItemDto
-            {
-                CatalogItemId = item.CatalogItemId,
-                QuizId = item.QuizId,
-                Title = item.TitleOverride ?? item.Quiz.Title,
-                QuestionCount = questionCounts.GetValueOrDefault(item.QuizId),
-                GrantedAt = access.GrantedAt,
-                ExpiresAt = access.ExpiresAt ?? access.GrantedAt,
-                CanPractice = access.ExpiresAt > now,
-                CanPurchase = CanPurchase(item, now),
-                LastPracticedAt = access.LastPracticedAt,
-            };
+                var dto = new PrepMyAccessItemDto
+                {
+                    CatalogItemId = item.CatalogItemId,
+                    QuizId = item.QuizId,
+                    Title = item.TitleOverride ?? item.Quiz.Title,
+                    QuestionCount = questionCounts.GetValueOrDefault(item.QuizId),
+                    GrantedAt = access.GrantedAt,
+                    ExpiresAt = access.ExpiresAt ?? access.GrantedAt,
+                    CanPractice = access.ExpiresAt > now,
+                    CanPurchase = CanPurchase(item, now),
+                    LastPracticedAt = access.LastPracticedAt,
+                };
 
-            if (access.ExpiresAt > now)
-            {
-                active.Add(dto);
-            }
-            else
-            {
-                expired.Add(dto);
+                if (access.ExpiresAt > now)
+                {
+                    active.Add(dto);
+                }
+                else
+                {
+                    expired.Add(dto);
+                }
             }
         }
 
+        timing.LogSummary("GetMyAccesses", $"accessCount={accesses.Count}");
         return new PrepMyAccessesDto
         {
             Active = active,
