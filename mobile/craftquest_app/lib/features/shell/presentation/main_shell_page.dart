@@ -84,9 +84,7 @@ class _MainShellPageState extends State<MainShellPage> {
         ..clear()
         ..add(0)
         ..add(_teacherTabIndex);
-      unawaited(
-        getIt<AppWarmupService>().start(prefetchTeacherDashboard: true),
-      );
+      getIt<AppWarmupService>().start(prefetchTeacherDashboard: true);
       if (_index != 0) {
         setState(() => _index = 0);
       }
