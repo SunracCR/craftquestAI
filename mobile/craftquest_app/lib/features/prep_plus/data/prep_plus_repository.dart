@@ -20,9 +20,13 @@ class PrepPlusRepository {
 
   static const _categoriesTtl = Duration(minutes: 10);
   static const _browseTtl = Duration(minutes: 2);
+  static const _myAccessesTtl = Duration(seconds: 60);
 
   _TimedCache<List<PrepCategoryModel>>? _categoriesCache;
+  _TimedCache<PrepMyAccessesModel>? _myAccessesCache;
   final Map<String, _TimedCache<List<PrepBrowseItemModel>>> _browseCache = {};
+  Future<List<PrepCategoryModel>>? _inFlightCategories;
+  Future<PrepMyAccessesModel>? _inFlightMyAccesses;
 
   Future<List<PrepCategoryModel>> getCategories({bool forceRefresh = false}) async {
     final cached = _categoriesCache;
@@ -32,6 +36,17 @@ class PrepPlusRepository {
       return cached.value;
     }
 
+    if (forceRefresh) {
+      _inFlightCategories = null;
+    }
+
+    _inFlightCategories ??= _fetchCategories().whenComplete(() {
+      _inFlightCategories = null;
+    });
+    return _inFlightCategories!;
+  }
+
+  Future<List<PrepCategoryModel>> _fetchCategories() async {
     final response =
         await _apiClient.dio.get<List<dynamic>>('/api/prep/categories');
     final categories = (response.data ?? [])
@@ -48,6 +63,20 @@ class PrepPlusRepository {
     } catch (_) {
       // Best effort.
     }
+  }
+
+  /// Precarga mis accesos en segundo plano (p. ej. al iniciar sesión).
+  Future<void> prefetchMyAccesses() async {
+    try {
+      await getMyAccesses();
+    } catch (_) {
+      // Best effort.
+    }
+  }
+
+  void invalidateMyAccessesCache() {
+    _myAccessesCache = null;
+    _inFlightMyAccesses = null;
   }
 
   Future<List<PrepBrowseItemModel>> browseCategoryItems({
@@ -168,11 +197,31 @@ class PrepPlusRepository {
     return PrepPreviewFinishResultModel.fromJson(response.data!);
   }
 
-  Future<PrepMyAccessesModel> getMyAccesses() async {
+  Future<PrepMyAccessesModel> getMyAccesses({bool forceRefresh = false}) async {
+    final cached = _myAccessesCache;
+    if (!forceRefresh &&
+        cached != null &&
+        DateTime.now().difference(cached.cachedAt) < _myAccessesTtl) {
+      return cached.value;
+    }
+
+    if (forceRefresh) {
+      _inFlightMyAccesses = null;
+    }
+
+    _inFlightMyAccesses ??= _fetchMyAccesses().whenComplete(() {
+      _inFlightMyAccesses = null;
+    });
+    return _inFlightMyAccesses!;
+  }
+
+  Future<PrepMyAccessesModel> _fetchMyAccesses() async {
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
       '/api/prep/my-accesses',
     );
-    return PrepMyAccessesModel.fromJson(response.data!);
+    final model = PrepMyAccessesModel.fromJson(response.data!);
+    _myAccessesCache = _TimedCache(model, DateTime.now());
+    return model;
   }
 
   Future<PrepCheckoutResultModel> checkout({
@@ -184,6 +233,7 @@ class PrepPlusRepository {
       data: {'offerId': offerId},
     );
     invalidateBrowseCache();
+    invalidateMyAccessesCache();
     return PrepCheckoutResultModel.fromJson(response.data!);
   }
 
@@ -204,6 +254,7 @@ class PrepPlusRepository {
       data: {'orderId': orderId},
     );
     invalidateBrowseCache();
+    invalidateMyAccessesCache();
     return PrepCheckoutResultModel.fromJson(response.data!);
   }
 
@@ -227,6 +278,7 @@ class PrepPlusRepository {
       },
     );
     invalidateBrowseCache();
+    invalidateMyAccessesCache();
     return PrepCheckoutResultModel.fromJson(response.data!);
   }
 

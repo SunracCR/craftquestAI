@@ -250,6 +250,25 @@
   "prepPlusBuyAction": "Buy access",
   "prepPlusGetFreeAccessAction": "Get free access",
   "prepPlusRenewAction": "Renew access",
+  "prepPlusExtendAccessAction": "Extend access",
+  "prepPlusExtendAccessCardSubtitle": "Add more days to your current access",
+  "prepPlusAccessCardNoAccessTitle": "You don't have access to this quiz yet",
+  "prepPlusAccessFromPrice": "From {price}",
+  "@prepPlusAccessFromPrice": {
+    "placeholders": { "price": { "type": "String" } }
+  },
+  "prepPlusAccessCountdownDays": "{days, plural, =0{Expires today} =1{Expires in 1 day} other{Expires in {days} days}}",
+  "@prepPlusAccessCountdownDays": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "prepPlusAccessCountdownHours": "{hours, plural, =1{Expires in 1 hour} other{Expires in {hours} hours}}",
+  "@prepPlusAccessCountdownHours": {
+    "placeholders": { "hours": { "type": "int" } }
+  },
+  "prepPlusAccessCountdownTimer": "Expires in {time}",
+  "@prepPlusAccessCountdownTimer": {
+    "placeholders": { "time": { "type": "String" } }
+  },
   "prepPlusAccessUntil": "Expires {date}",
   "@prepPlusAccessUntil": {
     "placeholders": { "date": { "type": "String" } }

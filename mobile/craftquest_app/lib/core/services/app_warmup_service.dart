@@ -24,6 +24,7 @@ class AppWarmupService {
     _started = true;
     unawaited(_soundService.warmUp());
     unawaited(_prepPlusRepository.prefetchCategories());
+    unawaited(_prepPlusRepository.prefetchMyAccesses());
     if (prefetchTeacherDashboard) {
       unawaited(_teacherDashboardRepository.prefetchDashboard());
     }

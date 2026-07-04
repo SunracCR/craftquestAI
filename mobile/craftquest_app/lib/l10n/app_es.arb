@@ -250,6 +250,25 @@
   "prepPlusBuyAction": "Comprar acceso",
   "prepPlusGetFreeAccessAction": "Obtener acceso gratis",
   "prepPlusRenewAction": "Renovar acceso",
+  "prepPlusExtendAccessAction": "Ampliar acceso",
+  "prepPlusExtendAccessCardSubtitle": "Suma más días a tu acceso actual",
+  "prepPlusAccessCardNoAccessTitle": "Aún no tienes acceso a este cuestionario",
+  "prepPlusAccessFromPrice": "Desde {price}",
+  "@prepPlusAccessFromPrice": {
+    "placeholders": { "price": { "type": "String" } }
+  },
+  "prepPlusAccessCountdownDays": "{days, plural, =0{Vence hoy} =1{Vence en 1 día} other{Vence en {days} días}}",
+  "@prepPlusAccessCountdownDays": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "prepPlusAccessCountdownHours": "{hours, plural, =1{Vence en 1 hora} other{Vence en {hours} horas}}",
+  "@prepPlusAccessCountdownHours": {
+    "placeholders": { "hours": { "type": "int" } }
+  },
+  "prepPlusAccessCountdownTimer": "Vence en {time}",
+  "@prepPlusAccessCountdownTimer": {
+    "placeholders": { "time": { "type": "String" } }
+  },
   "prepPlusAccessUntil": "Vence el {date}",
   "@prepPlusAccessUntil": {
     "placeholders": { "date": { "type": "String" } }

@@ -179,8 +179,9 @@ public class PrepPlusCatalogService(
         var now = DateTime.UtcNow;
         var access = await GetPurchaseAccessAsync(userId, item.CatalogItemId, item.QuizId, cancellationToken);
         var questionCount = await dbContext.Questions
+            .AsNoTracking()
             .CountAsync(q => q.QuizId == item.QuizId, cancellationToken);
-        var rootType = await GetRootCategoryTypeAsync(item.CategoryId, cancellationToken);
+        var rootType = await ResolveRootCategoryTypeAsync(item.Category, cancellationToken);
         var state = ResolveAccessState(access, now);
 
         return new PrepCatalogItemPublicDetailDto
@@ -609,15 +610,35 @@ public class PrepPlusCatalogService(
         }
     }
 
-    private async Task<string> GetRootCategoryTypeAsync(
-        Guid categoryId,
+    private async Task<string> ResolveRootCategoryTypeAsync(
+        PrepCategory category,
         CancellationToken cancellationToken)
     {
-        var current = await dbContext.PrepCategories
-            .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.CategoryId == categoryId, cancellationToken)
-            ?? throw new AppException("Category not found.", 404, PrepPlusErrorCodes.CategoryNotFound);
+        if (!category.ParentCategoryId.HasValue)
+        {
+            return category.CategoryType;
+        }
 
+        var parent = await dbContext.PrepCategories
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.CategoryId == category.ParentCategoryId.Value, cancellationToken)
+            ?? throw new AppException(
+                "Category hierarchy is broken.",
+                500,
+                PrepPlusErrorCodes.CategoryHierarchyBroken);
+
+        if (!parent.ParentCategoryId.HasValue)
+        {
+            return parent.CategoryType;
+        }
+
+        return await GetRootCategoryTypeFromAncestorAsync(parent, cancellationToken);
+    }
+
+    private async Task<string> GetRootCategoryTypeFromAncestorAsync(
+        PrepCategory current,
+        CancellationToken cancellationToken)
+    {
         while (current.ParentCategoryId.HasValue)
         {
             current = await dbContext.PrepCategories

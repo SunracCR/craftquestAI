@@ -65,11 +65,11 @@ class _PrepPlusHubPageState extends State<PrepPlusHubPage> {
     }
   }
 
-  Future<void> _loadAccesses() async {
+  Future<void> _loadAccesses({bool forceRefresh = false}) async {
     if (!mounted) return;
     setState(() => _loadingAccesses = true);
     try {
-      final accesses = await _repository.getMyAccesses();
+      final accesses = await _repository.getMyAccesses(forceRefresh: forceRefresh);
       if (!mounted) return;
       setState(() {
         _accesses = accesses;
@@ -84,7 +84,7 @@ class _PrepPlusHubPageState extends State<PrepPlusHubPage> {
   Future<void> _refreshAll() async {
     await Future.wait([
       _loadCategories(forceRefresh: true),
-      _loadAccesses(),
+      _loadAccesses(forceRefresh: true),
     ]);
   }
 

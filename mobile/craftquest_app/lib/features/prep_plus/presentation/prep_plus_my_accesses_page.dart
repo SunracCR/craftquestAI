@@ -41,13 +41,13 @@ class _PrepPlusMyAccessesPageState extends State<PrepPlusMyAccessesPage>
     super.dispose();
   }
 
-  Future<void> _load() async {
+  Future<void> _load({bool forceRefresh = false}) async {
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
-      final data = await _repository.getMyAccesses();
+      final data = await _repository.getMyAccesses(forceRefresh: forceRefresh);
       if (!mounted) return;
       setState(() {
         _accesses = data;
@@ -92,7 +92,7 @@ class _PrepPlusMyAccessesPageState extends State<PrepPlusMyAccessesPage>
               ? AppErrorView(
                   message: _error!,
                   retryLabel: l10n.retry,
-                  onRetry: _load,
+                  onRetry: () => _load(forceRefresh: true),
                 )
               : TabBarView(
                   controller: _tabController,
@@ -100,13 +100,13 @@ class _PrepPlusMyAccessesPageState extends State<PrepPlusMyAccessesPage>
                     _AccessList(
                       items: _accesses?.active ?? [],
                       emptyMessage: l10n.prepPlusMyAccessesActiveEmpty,
-                      onRefresh: _load,
+                      onRefresh: () => _load(forceRefresh: true),
                       expired: false,
                     ),
                     _AccessList(
                       items: _accesses?.expired ?? [],
                       emptyMessage: l10n.prepPlusMyAccessesExpiredEmpty,
-                      onRefresh: _load,
+                      onRefresh: () => _load(forceRefresh: true),
                       expired: true,
                     ),
                   ],
@@ -178,6 +178,7 @@ class _AccessList extends StatelessWidget {
                   MaterialPageRoute<void>(
                     builder: (_) => PrepPlusItemDetailPage(
                       catalogItemId: item.catalogItemId,
+                      initialFromAccess: item,
                     ),
                   ),
                 );

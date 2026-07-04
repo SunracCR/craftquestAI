@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/utils/country_flag_utils.dart';
 import 'package:flutter/material.dart';
@@ -45,17 +46,17 @@ class PrepPlusCountryFlag extends StatelessWidget {
           ? Center(
               child: Text(emoji, style: TextStyle(fontSize: size * 0.52)),
             )
-          : Image.network(
-              url,
+          : CachedNetworkImage(
+              imageUrl: url,
               fit: BoxFit.cover,
               width: size,
               height: size,
-              errorBuilder: (_, __, ___) => Center(
+              errorWidget: (_, __, ___) => Center(
                 child: Text(emoji, style: TextStyle(fontSize: size * 0.52)),
               ),
-              loadingBuilder: (context, child, progress) {
-                if (progress == null) {
-                  return child;
+              progressIndicatorBuilder: (context, _, progress) {
+                if (progress.progress == null) {
+                  return const SizedBox.shrink();
                 }
                 return Center(
                   child: SizedBox(
@@ -64,6 +65,7 @@ class PrepPlusCountryFlag extends StatelessWidget {
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       color: AppColors.accentGold.withValues(alpha: 0.8),
+                      value: progress.progress,
                     ),
                   ),
                 );

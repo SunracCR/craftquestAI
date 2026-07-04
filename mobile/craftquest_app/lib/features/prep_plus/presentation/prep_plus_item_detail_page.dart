@@ -22,6 +22,8 @@ import 'package:craftquest_app/features/prep_plus/data/models/prep_plus_models.d
 import 'package:craftquest_app/features/prep_plus/data/prep_plus_repository.dart';
 import 'package:craftquest_app/features/prep_plus/presentation/prep_plus_preview_page.dart';
 import 'package:craftquest_app/features/prep_plus/presentation/widgets/prep_plus_access_combo_card.dart';
+import 'package:craftquest_app/features/prep_plus/presentation/widgets/prep_plus_access_countdown_badge.dart';
+import 'package:craftquest_app/features/prep_plus/presentation/widgets/prep_plus_access_upsell_card.dart';
 import 'package:craftquest_app/features/practice/data/models/practice_models.dart';
 import 'package:craftquest_app/features/practice/data/practice_sound_preference_store.dart';
 import 'package:craftquest_app/features/practice/domain/practice_launch_options.dart';
@@ -40,9 +42,16 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PrepPlusItemDetailPage extends StatefulWidget {
-  const PrepPlusItemDetailPage({super.key, required this.catalogItemId});
+  const PrepPlusItemDetailPage({
+    super.key,
+    required this.catalogItemId,
+    this.initialFromAccess,
+  });
 
   final String catalogItemId;
+
+  /// Datos ya conocidos desde Mis accesos para pintar sin esperar al API.
+  final PrepMyAccessItemModel? initialFromAccess;
 
   @override
   State<PrepPlusItemDetailPage> createState() => _PrepPlusItemDetailPageState();
@@ -79,7 +88,19 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       _purchaseSub =
           InAppPurchase.instance.purchaseStream.listen(_onPurchaseUpdate);
     }
-    _load();
+    final initial = widget.initialFromAccess;
+    if (initial != null) {
+      _item = PrepItemDetailModel.fromAccessItem(initial);
+      _loading = false;
+      if (initial.canPractice) {
+        _warmPracticeLaunch(initial.quizId);
+        unawaited(_loadPracticePreferences(initial.quizId));
+        unawaited(_loadSoundPreferences());
+      }
+      unawaited(_load());
+    } else {
+      unawaited(_load(fullScreenLoading: true));
+    }
   }
 
   @override
@@ -88,33 +109,48 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
     super.dispose();
   }
 
-  Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+  Future<void> _load({bool fullScreenLoading = false}) async {
+    final hadItem = _item != null;
+    if (fullScreenLoading || !hadItem) {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    }
     try {
       final item = await _repository.getItem(widget.catalogItemId);
       if (!mounted) return;
       setState(() {
         _item = item;
-        _selectedOfferId = _defaultOfferId(item.offers);
+        _selectedOfferId ??= _defaultOfferId(item.offers);
         _loading = false;
       });
       if (item.canPractice) {
         _warmPracticeLaunch(item.quizId);
-        unawaited(_loadPracticePreferences(item.quizId));
-        unawaited(_loadSoundPreferences());
+        if (!hadItem) {
+          unawaited(_loadPracticePreferences(item.quizId));
+          unawaited(_loadSoundPreferences());
+        }
       }
     } on DioException catch (e) {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
+      if (hadItem) {
+        context.showErrorSnackBar(_repository.mapError(e, l10n));
+        return;
+      }
       setState(() {
         _error = _repository.mapError(e, l10n);
         _loading = false;
       });
     } catch (_) {
       if (!mounted) return;
+      if (hadItem) {
+        context.showErrorSnackBar(
+          DioErrorMapper.genericMessage(AppLocalizations.of(context)!),
+        );
+        return;
+      }
       setState(() {
         _error = DioErrorMapper.genericMessage(AppLocalizations.of(context)!);
         _loading = false;
@@ -468,6 +504,143 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
     }
   }
 
+  Future<void> _openAccessOptionsSheet() async {
+    final item = _item;
+    if (item == null || item.offers.isEmpty) return;
+
+    final l10n = AppLocalizations.of(context)!;
+    var sheetSelectedOfferId =
+        _selectedOfferId ?? _defaultOfferId(item.offers);
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppColors.radiusMd),
+        ),
+      ),
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            PrepAccessOfferModel? sheetOffer;
+            for (final o in item.offers) {
+              if (o.offerId == sheetSelectedOfferId) {
+                sheetOffer = o;
+                break;
+              }
+            }
+
+            final confirmLabel = item.canPractice
+                ? l10n.prepPlusExtendAccessAction
+                : item.userAccessState == 'expired'
+                    ? l10n.prepPlusRenewAction
+                    : (sheetOffer?.isFree ?? false)
+                        ? l10n.prepPlusGetFreeAccessAction
+                        : l10n.prepPlusBuyAction;
+
+            return SafeArea(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.viewInsetsOf(context).bottom,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: AppSpacing.sm),
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppColors.textSecondary.withValues(alpha: 0.35),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.md,
+                        AppSpacing.md,
+                        AppSpacing.md,
+                        AppSpacing.xs,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.prepPlusAccessCombosTitle,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            l10n.prepPlusAccessCombosSubtitle,
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 13,
+                              height: 1.35,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Flexible(
+                      child: ListView(
+                        shrinkWrap: true,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                        ),
+                        children: [
+                          for (final offer in item.offers)
+                            PrepPlusAccessComboCard(
+                              offer: offer,
+                              selected: sheetSelectedOfferId == offer.offerId,
+                              onTap: () => setSheetState(
+                                () => sheetSelectedOfferId = offer.offerId,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: AppPrimaryButton(
+                        label: confirmLabel,
+                        isLoading: _checkingOut,
+                        onPressed: _checkingOut || sheetOffer == null
+                            ? null
+                            : () async {
+                                final offer = sheetOffer!;
+                                setState(
+                                  () => _selectedOfferId = offer.offerId,
+                                );
+                                Navigator.of(sheetContext).pop();
+                                if (offer.isFree) {
+                                  await _checkoutFree();
+                                } else {
+                                  await _buyPaid(offer);
+                                }
+                              },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -481,7 +654,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
               ? AppErrorView(
                   message: _error!,
                   retryLabel: l10n.retry,
-                  onRetry: _load,
+                  onRetry: () => _load(fullScreenLoading: true),
                 )
               : _item == null
                   ? const SizedBox.shrink()
@@ -510,27 +683,29 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
                                       ),
                                 ),
                                 const SizedBox(height: AppSpacing.xs),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.category_outlined,
-                                      size: 16,
-                                      color: AppColors.textSecondary
-                                          .withValues(alpha: 0.9),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Expanded(
-                                      child: Text(
-                                        _item!.categoryName,
-                                        style: const TextStyle(
-                                          color: AppColors.textSecondary,
-                                          fontSize: 13,
+                                if (_item!.categoryName.isNotEmpty)
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.category_outlined,
+                                        size: 16,
+                                        color: AppColors.textSecondary
+                                            .withValues(alpha: 0.9),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Expanded(
+                                        child: Text(
+                                          _item!.categoryName,
+                                          style: const TextStyle(
+                                            color: AppColors.textSecondary,
+                                            fontSize: 13,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: AppSpacing.sm),
+                                    ],
+                                  ),
+                                if (_item!.categoryName.isNotEmpty)
+                                  const SizedBox(height: AppSpacing.sm),
                                 Text(
                                   l10n.prepPlusQuestionCount(_item!.questionCount),
                                   style: const TextStyle(
@@ -553,42 +728,60 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
                                   Padding(
                                     padding:
                                         const EdgeInsets.only(top: AppSpacing.sm),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: AppSpacing.sm,
-                                        vertical: AppSpacing.xs,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: (_item!.canPractice
-                                                ? AppColors.accentMint
-                                                : AppColors.textSecondary)
-                                            .withValues(alpha: 0.12),
-                                        borderRadius: BorderRadius.circular(
-                                          AppColors.radiusSm,
-                                        ),
-                                        border: Border.all(
-                                          color: (_item!.canPractice
+                                    child: Wrap(
+                                      spacing: AppSpacing.xs,
+                                      runSpacing: AppSpacing.xs,
+                                      crossAxisAlignment:
+                                          WrapCrossAlignment.center,
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: AppSpacing.sm,
+                                            vertical: AppSpacing.xs,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: (_item!.canPractice
+                                                    ? AppColors.accentMint
+                                                    : AppColors.textSecondary)
+                                                .withValues(alpha: 0.12),
+                                            borderRadius: BorderRadius.circular(
+                                              AppColors.radiusSm,
+                                            ),
+                                            border: Border.all(
+                                              color: (_item!.canPractice
+                                                      ? AppColors.accentMint
+                                                      : AppColors.inputBorder)
+                                                  .withValues(alpha: 0.4),
+                                            ),
+                                          ),
+                                          child: Text(
+                                            _item!.canPractice
+                                                ? l10n.prepPlusAccessUntil(
+                                                    _formatDate(
+                                                      _item!.accessExpiresAt!,
+                                                    ),
+                                                  )
+                                                : l10n.prepPlusAccessExpired,
+                                            style: TextStyle(
+                                              color: _item!.canPractice
                                                   ? AppColors.accentMint
-                                                  : AppColors.inputBorder)
-                                              .withValues(alpha: 0.4),
+                                                  : AppColors.textSecondary,
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 13,
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                      child: Text(
-                                        _item!.canPractice
-                                            ? l10n.prepPlusAccessUntil(
-                                                _formatDate(
-                                                  _item!.accessExpiresAt!,
-                                                ),
-                                              )
-                                            : l10n.prepPlusAccessExpired,
-                                        style: TextStyle(
-                                          color: _item!.canPractice
-                                              ? AppColors.accentMint
-                                              : AppColors.textSecondary,
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 13,
-                                        ),
-                                      ),
+                                        if (_item!.canPractice &&
+                                            PrepPlusAccessCountdown.shouldShow(
+                                              canPractice: _item!.canPractice,
+                                              accessExpiresAt:
+                                                  _item!.accessExpiresAt,
+                                            ))
+                                          PrepPlusAccessCountdownBadge(
+                                            expiresAt: _item!.accessExpiresAt!,
+                                            onTap: _openAccessOptionsSheet,
+                                          ),
+                                      ],
                                     ),
                                   ),
                               ],
@@ -671,7 +864,8 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
                         ],
                         if (_item!.offers.isNotEmpty &&
                             (_item!.canPurchase ||
-                                _item!.userAccessState == 'expired')) ...[
+                                _item!.userAccessState == 'expired' ||
+                                _item!.canPractice)) ...[
                           Padding(
                             padding: const EdgeInsets.fromLTRB(
                               AppSpacing.md,
@@ -679,44 +873,15 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
                               AppSpacing.md,
                               AppSpacing.xs,
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  l10n.prepPlusAccessCombosTitle,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
-                                      ?.copyWith(
-                                        color: AppColors.textPrimary,
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  l10n.prepPlusAccessCombosSubtitle,
-                                  style: const TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 13,
-                                    height: 1.35,
-                                  ),
-                                ),
-                              ],
+                            child: PrepPlusAccessUpsellCard(
+                              userAccessState: _item!.userAccessState,
+                              canPractice: _item!.canPractice,
+                              accessExpiresAt: _item!.accessExpiresAt,
+                              offers: _item!.offers,
+                              formatDate: _formatDate,
+                              onTap: _openAccessOptionsSheet,
                             ),
                           ),
-                          for (final offer in _item!.offers)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.md,
-                              ),
-                              child: PrepPlusAccessComboCard(
-                                offer: offer,
-                                selected: _selectedOfferId == offer.offerId,
-                                onTap: () => setState(
-                                  () => _selectedOfferId = offer.offerId,
-                                ),
-                              ),
-                            ),
                         ],
                         if (!_item!.canPurchase && _item!.userAccessState == 'none')
                           Padding(
@@ -818,35 +983,8 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       return AppBottomActionBar(
         children: [
           AppPrimaryButton(
-          label: l10n.prepPlusPracticeAction,
-          onPressed: () => _startPractice(item),
-        ),
-        ],
-      );
-    }
-
-    if ((item.canPurchase || item.userAccessState == 'expired') &&
-        _selectedOffer != null &&
-        _pendingPayPalOrderId == null) {
-      final offer = _selectedOffer!;
-      return AppBottomActionBar(
-        children: [
-          AppPrimaryButton(
-            label: item.userAccessState == 'expired'
-                ? l10n.prepPlusRenewAction
-                : (offer.isFree
-                    ? l10n.prepPlusGetFreeAccessAction
-                    : l10n.prepPlusBuyAction),
-            isLoading: _checkingOut,
-            onPressed: _checkingOut
-                ? null
-                : () async {
-                    if (offer.isFree) {
-                      await _checkoutFree();
-                    } else {
-                      await _buyPaid(offer);
-                    }
-                  },
+            label: l10n.prepPlusPracticeAction,
+            onPressed: () => _startPractice(item),
           ),
         ],
       );

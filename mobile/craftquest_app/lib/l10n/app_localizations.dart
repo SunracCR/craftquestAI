@@ -1102,6 +1102,27 @@ abstract class AppLocalizations {
   /// **'Renovar acceso'**
   String get prepPlusRenewAction;
 
+  /// No description provided for @prepPlusExtendAccessAction.
+  String get prepPlusExtendAccessAction;
+
+  /// No description provided for @prepPlusExtendAccessCardSubtitle.
+  String get prepPlusExtendAccessCardSubtitle;
+
+  /// No description provided for @prepPlusAccessCardNoAccessTitle.
+  String get prepPlusAccessCardNoAccessTitle;
+
+  /// No description provided for @prepPlusAccessFromPrice.
+  String prepPlusAccessFromPrice(String price);
+
+  /// No description provided for @prepPlusAccessCountdownDays.
+  String prepPlusAccessCountdownDays(int days);
+
+  /// No description provided for @prepPlusAccessCountdownHours.
+  String prepPlusAccessCountdownHours(int hours);
+
+  /// No description provided for @prepPlusAccessCountdownTimer.
+  String prepPlusAccessCountdownTimer(String time);
+
   /// No description provided for @prepPlusAccessUntil.
   ///
   /// In es, this message translates to:

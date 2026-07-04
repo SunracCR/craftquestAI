@@ -603,6 +603,50 @@ class AppLocalizationsPt extends AppLocalizations {
   String get prepPlusRenewAction => 'Renovar acesso';
 
   @override
+  String get prepPlusExtendAccessAction => 'Estender acesso';
+
+  @override
+  String get prepPlusExtendAccessCardSubtitle =>
+      'Adicione mais dias ao seu acesso atual';
+
+  @override
+  String get prepPlusAccessCardNoAccessTitle =>
+      'Você ainda não tem acesso a este questionário';
+
+  @override
+  String prepPlusAccessFromPrice(String price) {
+    return 'A partir de $price';
+  }
+
+  @override
+  String prepPlusAccessCountdownDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Vence em $days dias',
+      one: 'Vence em 1 dia',
+      zero: 'Expira hoje',
+    );
+    return _temp0;
+  }
+
+  @override
+  String prepPlusAccessCountdownHours(int hours) {
+    String _temp0 = intl.Intl.pluralLogic(
+      hours,
+      locale: localeName,
+      other: 'Vence em $hours horas',
+      one: 'Vence em 1 hora',
+    );
+    return _temp0;
+  }
+
+  @override
+  String prepPlusAccessCountdownTimer(String time) {
+    return 'Vence em $time';
+  }
+
+  @override
   String prepPlusAccessUntil(String date) {
     return 'Vence em $date';
   }

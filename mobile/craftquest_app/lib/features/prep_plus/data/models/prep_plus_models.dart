@@ -182,6 +182,23 @@ class PrepItemDetailModel {
     );
   }
 
+  /// Vista parcial desde un acceso activo/expirado (pintado instantáneo en detalle).
+  factory PrepItemDetailModel.fromAccessItem(PrepMyAccessItemModel access) {
+    return PrepItemDetailModel(
+      catalogItemId: access.catalogItemId,
+      quizId: access.quizId,
+      title: access.title,
+      categoryId: '',
+      categoryName: '',
+      rootCategoryType: 'geographic',
+      questionCount: access.questionCount,
+      canPurchase: access.canPurchase,
+      userAccessState: access.canPractice ? 'active' : 'expired',
+      accessExpiresAt: access.expiresAt,
+      canPractice: access.canPractice,
+    );
+  }
+
   final String catalogItemId;
   final String quizId;
   final String title;
