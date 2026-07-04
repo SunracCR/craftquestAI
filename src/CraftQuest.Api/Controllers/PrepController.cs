@@ -11,7 +11,8 @@ namespace CraftQuest.Api.Controllers;
 [Authorize]
 public class PrepController(
     IPrepPlusCatalogService prepPlusCatalogService,
-    IPrepPlusPaymentService prepPlusPaymentService) : ApiControllerBase
+    IPrepPlusPaymentService prepPlusPaymentService,
+    IPrepReferralService prepReferralService) : ApiControllerBase
 {
     [HttpGet("categories")]
     [ProducesResponseType(typeof(IReadOnlyList<PrepCategoryPublicDto>), StatusCodes.Status200OK)]
@@ -46,6 +47,27 @@ public class PrepController(
             take,
             cancellationToken);
         return Ok(items);
+    }
+
+    [HttpGet("items/by-slug/{slug}")]
+    [ProducesResponseType(typeof(PrepCatalogItemSlugDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetItemBySlug(string slug, CancellationToken cancellationToken)
+    {
+        var result = await prepPlusCatalogService.ResolveCatalogItemIdBySlugAsync(slug, cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpGet("items/{catalogItemId:guid}/referral-code")]
+    [ProducesResponseType(typeof(PrepReferralCodeDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetReferralCode(
+        Guid catalogItemId,
+        CancellationToken cancellationToken)
+    {
+        var result = await prepReferralService.GetOrCreateReferralCodeAsync(
+            GetUserId(),
+            catalogItemId,
+            cancellationToken);
+        return Ok(result);
     }
 
     [HttpGet("items/{catalogItemId:guid}")]
@@ -115,6 +137,7 @@ public class PrepController(
             GetUserId(),
             catalogItemId,
             request.OfferId,
+            request.ReferralCode,
             cancellationToken);
         return Ok(result);
     }

@@ -18,6 +18,7 @@ import 'package:craftquest_app/core/services/sound_service.dart';
 import 'package:craftquest_app/core/widgets/app_section_title.dart';
 import 'package:craftquest_app/features/analytics/presentation/quiz_analytics_page.dart';
 import 'package:craftquest_app/features/billing/data/pending_paypal_payment_store.dart';
+import 'package:craftquest_app/features/prep_plus/data/pending_prep_referral_store.dart';
 import 'package:craftquest_app/features/prep_plus/data/models/prep_plus_models.dart';
 import 'package:craftquest_app/features/prep_plus/data/prep_plus_repository.dart';
 import 'package:craftquest_app/features/prep_plus/presentation/prep_plus_preview_page.dart';
@@ -39,6 +40,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PrepPlusItemDetailPage extends StatefulWidget {
@@ -61,6 +63,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
   static const _bestValueDurationDays = 183;
 
   final _repository = getIt<PrepPlusRepository>();
+  final _referralStore = getIt<PendingPrepReferralStore>();
   final _preferencesRepository = getIt<PracticePreferencesRepository>();
   final _soundPreferenceStore = getIt<PracticeSoundPreferenceStore>();
   PrepItemDetailModel? _item;
@@ -314,6 +317,47 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
     return null;
   }
 
+  Future<String?> _referralCodeForPurchase() async {
+    final pending = await _referralStore.read();
+    if (pending == null) {
+      return null;
+    }
+
+    final itemSlug = _item?.slug;
+    if (itemSlug != null && itemSlug == pending.slug) {
+      return pending.referralCode;
+    }
+
+    return null;
+  }
+
+  Future<void> _clearReferralIfMatched() async {
+    final pending = await _referralStore.read();
+    if (pending == null) {
+      return;
+    }
+
+    final itemSlug = _item?.slug;
+    if (itemSlug != null && itemSlug == pending.slug) {
+      await _referralStore.clear();
+    }
+  }
+
+  Future<void> _shareItem() async {
+    final l10n = AppLocalizations.of(context)!;
+    final title = _item?.title ?? l10n.prepPlusItemDetailTitle;
+    try {
+      final referral =
+          await _repository.getOrCreateReferralCode(widget.catalogItemId);
+      if (!mounted) return;
+      final message = l10n.prepPlusShareLinkMessage(title, referral.shareUrl);
+      await Share.share(message);
+    } on DioException catch (e) {
+      if (!mounted) return;
+      context.showErrorSnackBar(_repository.mapError(e, l10n));
+    }
+  }
+
   Future<void> _checkoutFree() async {
     final offer = _selectedOffer;
     if (offer == null) return;
@@ -370,9 +414,11 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
     final l10n = AppLocalizations.of(context)!;
     setState(() => _checkingOut = true);
     try {
+      final referralCode = await _referralCodeForPurchase();
       final order = await _repository.createPayPalOrder(
         catalogItemId: widget.catalogItemId,
         offerId: offer.offerId,
+        referralCode: referralCode,
       );
       if (!mounted) return;
 
@@ -383,6 +429,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
         if (!mounted) return;
         context.showSuccessSnackBar(l10n.prepPlusAccessGranted);
         setState(() => _pendingPayPalOrderId = null);
+        await _clearReferralIfMatched();
         await _load();
         return;
       }
@@ -426,6 +473,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       if (result.status == 'granted') {
         context.showSuccessSnackBar(l10n.prepPlusAccessGranted);
         setState(() => _pendingPayPalOrderId = null);
+        await _clearReferralIfMatched();
         await _load();
       }
     } on DioException catch (e) {
@@ -474,6 +522,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
               ? 'app_store'
               : 'google_play';
           final token = purchase.verificationData.serverVerificationData;
+          final referralCode = await _referralCodeForPurchase();
           final result = await _repository.verifyMobilePurchase(
             catalogItemId: widget.catalogItemId,
             offerId: offer.offerId,
@@ -481,6 +530,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
             productId: purchase.productID,
             purchaseToken: token.isNotEmpty ? token : purchase.purchaseID ?? '',
             transactionId: purchase.purchaseID,
+            referralCode: referralCode,
           );
           if (purchase.pendingCompletePurchase) {
             await InAppPurchase.instance.completePurchase(purchase);
@@ -488,6 +538,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
           if (!mounted) return;
           if (result.status == 'granted') {
             context.showSuccessSnackBar(l10n.prepPlusAccessGranted);
+            await _clearReferralIfMatched();
             await _load();
           }
         } catch (e) {
@@ -646,7 +697,18 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
     final l10n = AppLocalizations.of(context)!;
 
     return EdgeAwareScaffold(
-      appBar: craftQuestAppBar(title: _item?.title ?? l10n.prepPlusItemDetailTitle),
+      appBar: craftQuestAppBar(
+        title: _item?.title ?? l10n.prepPlusItemDetailTitle,
+        actions: _item == null
+            ? null
+            : [
+                IconButton(
+                  icon: const Icon(Icons.share_outlined),
+                  tooltip: l10n.prepPlusShareAction,
+                  onPressed: _shareItem,
+                ),
+              ],
+      ),
       bottomBar: _buildBottomBar(l10n),
       body: _loading
           ? const AppLoadingView()

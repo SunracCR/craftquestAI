@@ -18,5 +18,10 @@ public class PurchaseConfiguration : IEntityTypeConfiguration<Purchase>
         builder.Property(x => x.Status).HasMaxLength(30);
         builder.Property(x => x.BillingCycle).HasMaxLength(20);
         builder.Property(x => x.Amount).HasPrecision(12, 2);
+
+        builder.HasOne(x => x.PrepReferralCode)
+            .WithMany()
+            .HasForeignKey(x => x.PrepReferralCodeId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

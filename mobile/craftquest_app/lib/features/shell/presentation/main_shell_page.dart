@@ -10,6 +10,7 @@ import 'package:craftquest_app/features/home/presentation/home_page.dart';
 import 'package:craftquest_app/features/notifications/presentation/notifications_cubit.dart';
 import 'package:craftquest_app/features/prep_plus/presentation/prep_plus_hub_page.dart';
 import 'package:craftquest_app/features/profile/presentation/profile_page.dart';
+import 'package:craftquest_app/features/shell/presentation/main_shell_tab_signal.dart';
 import 'package:craftquest_app/features/teacher/presentation/teacher_hub_page.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -28,8 +29,8 @@ class _MainShellPageState extends State<MainShellPage> {
   final Set<int> _visitedTabs = {0};
   final Map<int, Widget> _pageCache = {};
   late final CheckoutRefreshNotifier _checkoutRefresh;
+  late final MainShellTabSignal _tabSignal;
 
-  static const int _prepTabIndex = 1;
   static const int _teacherTabIndex = 2;
 
   bool get _isTeacher => widget.user.roles.contains('teacher');
@@ -43,6 +44,7 @@ class _MainShellPageState extends State<MainShellPage> {
     super.initState();
     _checkoutRefresh = getIt<CheckoutRefreshNotifier>()
       ..addListener(_onCheckoutCompleted);
+    _tabSignal = getIt<MainShellTabSignal>()..addListener(_onTabRequested);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
         return;
@@ -60,6 +62,7 @@ class _MainShellPageState extends State<MainShellPage> {
   @override
   void dispose() {
     _checkoutRefresh.removeListener(_onCheckoutCompleted);
+    _tabSignal.removeListener(_onTabRequested);
     super.dispose();
   }
 
@@ -67,11 +70,24 @@ class _MainShellPageState extends State<MainShellPage> {
     if (!mounted) {
       return;
     }
+    if (!_checkoutRefresh.lastAffectsHomeTab) {
+      return;
+    }
     setState(() {
       _pageCache.remove(0);
       _pageCache.remove(_profileTabIndex);
       _index = 0;
     });
+  }
+
+  void _onTabRequested() {
+    if (!mounted) {
+      return;
+    }
+    final tab = _tabSignal.consume();
+    if (tab != null) {
+      _selectTab(tab);
+    }
   }
 
   @override
@@ -102,7 +118,7 @@ class _MainShellPageState extends State<MainShellPage> {
     }
   }
 
-  void _goToPrepTab() => _selectTab(_prepTabIndex);
+  void _goToPrepTab() => _selectTab(kPrepPlusTabIndex);
 
   void _selectTab(int value) {
     if (value == 0) {
@@ -188,7 +204,7 @@ class _MainShellPageState extends State<MainShellPage> {
 
     final safeIndex = _index.clamp(0, _pageCount - 1);
     final isTeacherTab = _isTeacher && safeIndex == 2;
-    final isPrepTab = safeIndex == _prepTabIndex;
+    final isPrepTab = safeIndex == kPrepPlusTabIndex;
 
     return Scaffold(
       backgroundColor: AppColors.background,

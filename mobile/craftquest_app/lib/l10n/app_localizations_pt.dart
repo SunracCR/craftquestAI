@@ -647,6 +647,25 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get prepPlusShareAction => 'Compartilhar';
+
+  @override
+  String prepPlusShareLinkMessage(String title, String url) {
+    return 'Veja este curso Prep+:\n$title\n$url';
+  }
+
+  @override
+  String get prepPlusPublicPreviewSignIn => 'Entrar para comprar';
+
+  @override
+  String prepPlusPublicPreviewQuestions(int count) {
+    if (count == 1) {
+      return '1 pergunta';
+    }
+    return '$count perguntas';
+  }
+
+  @override
   String prepPlusAccessUntil(String date) {
     return 'Vence em $date';
   }

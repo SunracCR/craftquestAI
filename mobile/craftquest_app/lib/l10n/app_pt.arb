@@ -269,6 +269,19 @@
   "@prepPlusAccessCountdownTimer": {
     "placeholders": { "time": { "type": "String" } }
   },
+  "prepPlusShareAction": "Compartilhar",
+  "prepPlusShareLinkMessage": "Veja este curso Prep+:\n{title}\n{url}",
+  "@prepPlusShareLinkMessage": {
+    "placeholders": {
+      "title": { "type": "String" },
+      "url": { "type": "String" }
+    }
+  },
+  "prepPlusPublicPreviewSignIn": "Entrar para comprar",
+  "prepPlusPublicPreviewQuestions": "{count, plural, =1{1 pergunta} other{{count} perguntas}}",
+  "@prepPlusPublicPreviewQuestions": {
+    "placeholders": { "count": { "type": "int" } }
+  },
   "prepPlusAccessUntil": "Vence em {date}",
   "@prepPlusAccessUntil": {
     "placeholders": { "date": { "type": "String" } }

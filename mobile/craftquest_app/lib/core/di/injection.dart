@@ -23,6 +23,7 @@ import 'package:craftquest_app/features/analytics/data/analytics_repository.dart
 import 'package:craftquest_app/features/media/data/media_repository.dart';
 import 'package:craftquest_app/features/billing/data/billing_repository.dart';
 import 'package:craftquest_app/features/billing/data/pending_paypal_payment_store.dart';
+import 'package:craftquest_app/features/prep_plus/data/pending_prep_referral_store.dart';
 import 'package:craftquest_app/features/sharing/data/sharing_repository.dart';
 import 'package:craftquest_app/features/teacher/data/teacher_assignment_repository.dart';
 import 'package:craftquest_app/features/teacher/data/teacher_class_repository.dart';
@@ -37,6 +38,7 @@ import 'package:craftquest_app/features/prep_plus/data/prep_plus_admin_repositor
 import 'package:craftquest_app/features/prep_plus/data/prep_plus_repository.dart';
 import 'package:craftquest_app/features/notifications/data/notification_repository.dart';
 import 'package:craftquest_app/features/notifications/presentation/notifications_cubit.dart';
+import 'package:craftquest_app/features/shell/presentation/main_shell_tab_signal.dart';
 import 'package:craftquest_app/core/services/push_notification_service.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -49,6 +51,7 @@ void configureDependencies() {
   }
 
   getIt.registerLazySingleton(CheckoutRefreshNotifier.new);
+  getIt.registerLazySingleton(MainShellTabSignal.new);
   getIt.registerLazySingleton(TokenStorage.new);
   getIt.registerLazySingleton(SavedLoginCredentialsStorage.new);
   getIt.registerLazySingleton(GuestTokenStorage.new);
@@ -90,6 +93,7 @@ void configureDependencies() {
       getIt<SoundService>(),
       getIt<TeacherDashboardRepository>(),
       getIt<PrepPlusRepository>(),
+      getIt<BillingRepository>(),
     ),
   );
   getIt.registerLazySingleton(() => ImportRepository(getIt<ApiClient>()));
@@ -101,6 +105,9 @@ void configureDependencies() {
   getIt.registerLazySingleton(() => BillingRepository(getIt<ApiClient>()));
   getIt.registerLazySingleton(
     () => PendingPayPalPaymentStore(SharedPreferences.getInstance()),
+  );
+  getIt.registerLazySingleton(
+    () => PendingPrepReferralStore(SharedPreferences.getInstance()),
   );
   getIt.registerLazySingleton(() => SharingRepository(getIt<ApiClient>()));
   getIt.registerLazySingleton(() => AiRepository(getIt<ApiClient>()));

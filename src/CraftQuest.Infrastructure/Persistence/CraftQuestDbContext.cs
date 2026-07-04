@@ -55,6 +55,8 @@ public class CraftQuestDbContext(DbContextOptions<CraftQuestDbContext> options) 
     public DbSet<PrepCatalogItem> PrepCatalogItems => Set<PrepCatalogItem>();
     public DbSet<PrepAccessOffer> PrepAccessOffers => Set<PrepAccessOffer>();
     public DbSet<PrepSampleQuestion> PrepSampleQuestions => Set<PrepSampleQuestion>();
+    public DbSet<PrepReferralCode> PrepReferralCodes => Set<PrepReferralCode>();
+    public DbSet<PrepReferralConversion> PrepReferralConversions => Set<PrepReferralConversion>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

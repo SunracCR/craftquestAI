@@ -1123,6 +1123,18 @@ abstract class AppLocalizations {
   /// No description provided for @prepPlusAccessCountdownTimer.
   String prepPlusAccessCountdownTimer(String time);
 
+  /// No description provided for @prepPlusShareAction.
+  String get prepPlusShareAction;
+
+  /// No description provided for @prepPlusShareLinkMessage.
+  String prepPlusShareLinkMessage(String title, String url);
+
+  /// No description provided for @prepPlusPublicPreviewSignIn.
+  String get prepPlusPublicPreviewSignIn;
+
+  /// No description provided for @prepPlusPublicPreviewQuestions.
+  String prepPlusPublicPreviewQuestions(int count);
+
   /// No description provided for @prepPlusAccessUntil.
   ///
   /// In es, this message translates to:

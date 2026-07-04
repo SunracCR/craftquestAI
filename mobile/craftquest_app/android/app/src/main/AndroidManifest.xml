@@ -46,6 +46,10 @@
                 <data
                     android:scheme="https"
                     android:host="api.craftquestai.com"
+                    android:pathPrefix="/prep"/>
+                <data
+                    android:scheme="https"
+                    android:host="api.craftquestai.com"
                     android:pathPrefix="/verify-email"/>
                 <data
                     android:scheme="https"
@@ -63,6 +67,9 @@
                 <data
                     android:scheme="craftquest"
                     android:host="join"/>
+                <data
+                    android:scheme="craftquest"
+                    android:host="prep"/>
                 <data
                     android:scheme="craftquest"
                     android:host="verify-email"/>

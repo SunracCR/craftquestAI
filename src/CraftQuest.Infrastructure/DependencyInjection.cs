@@ -136,6 +136,7 @@ public static class DependencyInjection
         services.AddScoped<IPrepPlusAccessService, PrepPlusAccessService>();
         services.AddScoped<IPrepPlusCatalogService, PrepPlusCatalogService>();
         services.AddScoped<IPrepPlusPaymentService, PrepPlusPaymentService>();
+        services.AddScoped<IPrepReferralService, PrepReferralService>();
         services.AddHttpClient<PayPalApiClient>((sp, client) =>
         {
             var paymentOptions = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<PaymentOptions>>().Value;

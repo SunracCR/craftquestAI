@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:craftquest_app/features/auth/presentation/account_link_launch.dart';
 import 'package:craftquest_app/features/auth/presentation/join_launch.dart';
+import 'package:craftquest_app/features/prep_plus/presentation/prep_referral_launch.dart';
 import 'package:flutter/foundation.dart';
 
 /// Captures join and account deep links for routing.
@@ -13,10 +14,13 @@ class DeepLinkService {
   StreamSubscription<Uri>? _subscription;
   String? _pendingJoinCode;
   PendingAccountLink? _pendingAccountLink;
+  PendingPrepReferralLink? _pendingPrepReferral;
 
   String? get pendingJoinCode => _pendingJoinCode;
 
   PendingAccountLink? get pendingAccountLink => _pendingAccountLink;
+
+  PendingPrepReferralLink? get pendingPrepReferral => _pendingPrepReferral;
 
   String? consumePendingJoinCode() {
     final code = _pendingJoinCode;
@@ -30,16 +34,30 @@ class DeepLinkService {
     return link;
   }
 
+  PendingPrepReferralLink? consumePendingPrepReferral() {
+    final link = _pendingPrepReferral;
+    _pendingPrepReferral = null;
+    return link;
+  }
+
   void clearPendingLinks() {
     _pendingJoinCode = null;
     _pendingAccountLink = null;
+    _pendingPrepReferral = null;
   }
 
   Future<void> initialize({
     void Function(String code)? onJoinCode,
     void Function(PendingAccountLink link)? onAccountLink,
+    void Function(PendingPrepReferralLink link)? onPrepReferral,
   }) async {
     if (kIsWeb) {
+      final webPrepReferral = readWebPrepReferral();
+      if (webPrepReferral != null) {
+        _pendingPrepReferral = webPrepReferral;
+        onPrepReferral?.call(webPrepReferral);
+      }
+
       final webCode = readWebJoinCode();
       if (webCode != null) {
         _pendingJoinCode = webCode;
@@ -56,9 +74,9 @@ class DeepLinkService {
 
     try {
       final initial = await _appLinks.getInitialLink();
-      _captureUri(initial, onJoinCode, onAccountLink);
+      _captureUri(initial, onJoinCode, onAccountLink, onPrepReferral);
       _subscription = _appLinks.uriLinkStream.listen(
-        (uri) => _captureUri(uri, onJoinCode, onAccountLink),
+        (uri) => _captureUri(uri, onJoinCode, onAccountLink, onPrepReferral),
       );
     } catch (_) {
       // Deep links are best-effort on unsupported platforms.
@@ -74,11 +92,19 @@ class DeepLinkService {
     Uri? uri,
     void Function(String code)? onJoinCode,
     void Function(PendingAccountLink link)? onAccountLink,
+    void Function(PendingPrepReferralLink link)? onPrepReferral,
   ) {
     final accountLink = parseAccountLink(uri);
     if (accountLink != null) {
       _pendingAccountLink = accountLink;
       onAccountLink?.call(accountLink);
+      return;
+    }
+
+    final prepReferral = parsePrepReferral(uri);
+    if (prepReferral != null) {
+      _pendingPrepReferral = prepReferral;
+      onPrepReferral?.call(prepReferral);
       return;
     }
 
@@ -186,6 +212,43 @@ class DeepLinkService {
     if (!RegExp(r'^CQ-\d{6}$').hasMatch(normalized)) {
       return null;
     }
+    return normalized;
+  }
+
+  static PendingPrepReferralLink? parsePrepReferral(Uri? uri) {
+    if (uri == null) {
+      return null;
+    }
+
+    String? slug;
+    final referralCode = _normalizePrepReferralCode(uri.queryParameters['ref']);
+
+    if (uri.scheme == 'craftquest' && uri.host.toLowerCase() == 'prep') {
+      slug = uri.pathSegments.isNotEmpty
+          ? uri.pathSegments.first.trim().toLowerCase()
+          : null;
+    } else if (uri.pathSegments.length >= 2 &&
+        uri.pathSegments.first.toLowerCase() == 'prep') {
+      slug = uri.pathSegments[1].trim().toLowerCase();
+    }
+
+    if (slug == null || slug.isEmpty) {
+      return null;
+    }
+
+    return PendingPrepReferralLink(slug: slug, referralCode: referralCode);
+  }
+
+  static String? _normalizePrepReferralCode(String? raw) {
+    if (raw == null || raw.trim().isEmpty) {
+      return null;
+    }
+
+    final normalized = raw.trim().toUpperCase();
+    if (!RegExp(r'^PR-\d{6}$').hasMatch(normalized)) {
+      return null;
+    }
+
     return normalized;
   }
 }

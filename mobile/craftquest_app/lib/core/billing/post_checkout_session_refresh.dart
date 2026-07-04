@@ -7,7 +7,10 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Tras un checkout (PayPal, mock, etc.): renueva JWT, perfil/roles y billing en caché.
-Future<void> refreshAppSessionAfterCheckout(BuildContext context) async {
+Future<void> refreshAppSessionAfterCheckout(
+  BuildContext context, {
+  bool affectsHomeTab = true,
+}) async {
   final authRepo = getIt<AuthRepository>();
   final billingRepo = getIt<BillingRepository>();
 
@@ -30,6 +33,9 @@ Future<void> refreshAppSessionAfterCheckout(BuildContext context) async {
   final billing = await billingRepo.getMyBilling(forceRefresh: true);
 
   if (context.mounted) {
-    getIt<CheckoutRefreshNotifier>().notifyCheckoutCompleted(billing: billing);
+    getIt<CheckoutRefreshNotifier>().notifyCheckoutCompleted(
+      billing: billing,
+      affectsHomeTab: affectsHomeTab,
+    );
   }
 }

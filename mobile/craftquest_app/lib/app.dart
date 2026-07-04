@@ -29,7 +29,13 @@ import 'package:craftquest_app/features/guest/presentation/guest_shell_page.dart
 import 'package:craftquest_app/core/services/push_notification_service.dart';
 import 'package:craftquest_app/features/notifications/presentation/notifications_cubit.dart';
 import 'package:craftquest_app/features/sharing/presentation/redeem_code_page.dart';
+import 'package:craftquest_app/features/prep_plus/data/pending_prep_referral_store.dart';
+import 'package:craftquest_app/features/prep_plus/data/prep_plus_repository.dart';
+import 'package:craftquest_app/features/prep_plus/presentation/prep_plus_item_detail_page.dart';
+import 'package:craftquest_app/features/prep_plus/presentation/prep_plus_public_preview_page.dart';
+import 'package:craftquest_app/features/prep_plus/presentation/prep_referral_launch.dart';
 import 'package:craftquest_app/features/shell/presentation/main_shell_page.dart';
+import 'package:craftquest_app/features/shell/presentation/main_shell_tab_signal.dart';
 import 'package:craftquest_app/core/services/deep_link_service.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -151,6 +157,7 @@ class _AuthGateState extends State<_AuthGate> {
   final _handledJoinCodes = <String>{};
   final _handledAccountLinks = <String>{};
   final _handledPayPalReturns = <String>{};
+  final _handledPrepReferrals = <String>{};
 
   @override
   void initState() {
@@ -162,6 +169,7 @@ class _AuthGateState extends State<_AuthGate> {
           _scheduleDeepLinkRoute();
         },
         onAccountLink: (_) => _scheduleDeepLinkRoute(),
+        onPrepReferral: (_) => _scheduleDeepLinkRoute(),
       ),
     );
     WidgetsBinding.instance.addPostFrameCallback((_) => _scheduleDeepLinkRoute());
@@ -171,6 +179,7 @@ class _AuthGateState extends State<_AuthGate> {
     _handledJoinCodes.clear();
     _handledAccountLinks.clear();
     _handledPayPalReturns.clear();
+    _handledPrepReferrals.clear();
     getIt<DeepLinkService>().clearPendingLinks();
     clearWebEntryDeepLinkUrl();
   }
@@ -205,6 +214,18 @@ class _AuthGateState extends State<_AuthGate> {
             ),
           );
         }
+      }
+      return;
+    }
+
+    final prepReferral =
+        deepLinkService.pendingPrepReferral ?? readWebPrepReferral();
+    if (prepReferral != null) {
+      final referralKey = prepReferral.dedupeKey;
+      if (!_handledPrepReferrals.contains(referralKey)) {
+        _handledPrepReferrals.add(referralKey);
+        deepLinkService.consumePendingPrepReferral();
+        unawaited(_routePrepReferral(prepReferral, authState));
       }
       return;
     }
@@ -262,6 +283,79 @@ class _AuthGateState extends State<_AuthGate> {
     );
   }
 
+  Future<void> _routePrepReferral(
+    PendingPrepReferralLink link,
+    AuthState authState,
+  ) async {
+    await getIt<PendingPrepReferralStore>().save(
+      PendingPrepReferral(
+        slug: link.slug,
+        referralCode: link.referralCode,
+        capturedAt: DateTime.now().toUtc(),
+      ),
+    );
+
+    clearWebEntryDeepLinkUrl();
+
+    if (!mounted) {
+      return;
+    }
+
+    if (authState is AuthAuthenticated) {
+      await _openPrepReferralTarget(link.slug);
+      return;
+    }
+
+    rootNavigatorKey.currentState?.push(
+      MaterialPageRoute<void>(
+        builder: (_) => PrepPlusPublicPreviewPage(slug: link.slug),
+      ),
+    );
+  }
+
+  Future<void> _resumePendingPrepReferralAfterAuth() async {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! AuthAuthenticated) {
+      return;
+    }
+
+    final pending = await getIt<PendingPrepReferralStore>().read();
+    if (pending == null || pending.slug.isEmpty || !mounted) {
+      return;
+    }
+
+    await _openPrepReferralTarget(pending.slug);
+  }
+
+  Future<void> _openPrepReferralTarget(String slug) async {
+    try {
+      final resolved =
+          await getIt<PrepPlusRepository>().resolveCatalogItemIdBySlug(slug);
+      if (!mounted) {
+        return;
+      }
+
+      getIt<MainShellTabSignal>().requestTab(kPrepPlusTabIndex);
+      rootNavigatorKey.currentState?.popUntil((route) => route.isFirst);
+      rootNavigatorKey.currentState?.push(
+        MaterialPageRoute<void>(
+          builder: (_) => PrepPlusItemDetailPage(
+            catalogItemId: resolved.catalogItemId,
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      rootNavigatorKey.currentState?.push(
+        MaterialPageRoute<void>(
+          builder: (_) => PrepPlusPublicPreviewPage(slug: slug),
+        ),
+      );
+    }
+  }
+
   Widget _accountLinkPage(PendingAccountLink link) {
     switch (link.kind) {
       case AccountLinkKind.verifyEmail:
@@ -317,6 +411,7 @@ class _AuthGateState extends State<_AuthGate> {
               );
               // Notificaciones y push: solo en _AuthenticatedShell.initState.
               _scheduleDeepLinkRoute();
+              unawaited(_resumePendingPrepReferralAfterAuth());
             });
           },
         ),

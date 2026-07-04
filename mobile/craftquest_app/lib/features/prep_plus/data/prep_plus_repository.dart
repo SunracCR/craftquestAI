@@ -244,13 +244,40 @@ class PrepPlusRepository {
     return PrepCheckoutResultModel.fromJson(response.data!);
   }
 
+  Future<PrepPublicPreviewModel> getPublicPreview(String slug) async {
+    final response = await _apiClient.dio.get<Map<String, dynamic>>(
+      '/api/prep/public/items/$slug',
+    );
+    return PrepPublicPreviewModel.fromJson(response.data!);
+  }
+
+  Future<PrepCatalogItemSlugModel> resolveCatalogItemIdBySlug(String slug) async {
+    final response = await _apiClient.dio.get<Map<String, dynamic>>(
+      '/api/prep/items/by-slug/$slug',
+    );
+    return PrepCatalogItemSlugModel.fromJson(response.data!);
+  }
+
+  Future<PrepReferralCodeModel> getOrCreateReferralCode(
+    String catalogItemId,
+  ) async {
+    final response = await _apiClient.dio.get<Map<String, dynamic>>(
+      '/api/prep/items/$catalogItemId/referral-code',
+    );
+    return PrepReferralCodeModel.fromJson(response.data!);
+  }
+
   Future<PayPalOrderModel> createPayPalOrder({
     required String catalogItemId,
     required String offerId,
+    String? referralCode,
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/api/prep/items/$catalogItemId/paypal/create-order',
-      data: {'offerId': offerId},
+      data: {
+        'offerId': offerId,
+        if (referralCode != null) 'referralCode': referralCode,
+      },
     );
     return PayPalOrderModel.fromJson(response.data!);
   }
@@ -272,6 +299,7 @@ class PrepPlusRepository {
     required String productId,
     required String purchaseToken,
     String? transactionId,
+    String? referralCode,
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/api/prep/mobile/verify-purchase',
@@ -282,6 +310,7 @@ class PrepPlusRepository {
         'productId': productId,
         'purchaseToken': purchaseToken,
         if (transactionId != null) 'transactionId': transactionId,
+        if (referralCode != null) 'referralCode': referralCode,
       },
     );
     invalidateBrowseCache();

@@ -645,6 +645,25 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get prepPlusShareAction => 'Share';
+
+  @override
+  String prepPlusShareLinkMessage(String title, String url) {
+    return 'Check out this Prep+ course:\n$title\n$url';
+  }
+
+  @override
+  String get prepPlusPublicPreviewSignIn => 'Sign in to purchase';
+
+  @override
+  String prepPlusPublicPreviewQuestions(int count) {
+    if (count == 1) {
+      return '1 question';
+    }
+    return '$count questions';
+  }
+
+  @override
   String prepPlusAccessUntil(String date) {
     return 'Expires $date';
   }

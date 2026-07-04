@@ -15,6 +15,8 @@ import 'package:craftquest_app/features/billing/data/billing_repository.dart';
 import 'package:craftquest_app/features/billing/data/pending_paypal_payment_store.dart';
 import 'package:craftquest_app/features/billing/presentation/paypal_return_launch.dart';
 import 'package:craftquest_app/features/prep_plus/data/prep_plus_repository.dart';
+import 'package:craftquest_app/features/prep_plus/presentation/prep_plus_item_detail_page.dart';
+import 'package:craftquest_app/features/shell/presentation/main_shell_tab_signal.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -41,6 +43,7 @@ class _PayPalReturnPageState extends State<PayPalReturnPage> {
   _PayPalReturnStatus _status = _PayPalReturnStatus.processing;
   String? _message;
   bool _continuing = false;
+  PendingPayPalPayment? _pending;
 
   @override
   void initState() {
@@ -49,6 +52,11 @@ class _PayPalReturnPageState extends State<PayPalReturnPage> {
   }
 
   Future<void> _completeReturn() async {
+    final pending = await _paymentStore.read();
+    if (mounted) {
+      setState(() => _pending = pending);
+    }
+
     if (widget.returnInfo.isCancel) {
       await _paymentStore.clear();
       if (!mounted) return;
@@ -65,7 +73,6 @@ class _PayPalReturnPageState extends State<PayPalReturnPage> {
     });
 
     try {
-      final pending = await _paymentStore.read();
       final l10n = AppLocalizations.of(context)!;
 
       if (widget.returnInfo.subscriptionId != null &&
@@ -73,7 +80,7 @@ class _PayPalReturnPageState extends State<PayPalReturnPage> {
         final subscriptionId = widget.returnInfo.subscriptionId!;
         await _billingRepository.activatePayPalSubscription(
           subscriptionId,
-          billingCycle: pending?.billingCycle,
+          billingCycle: _pending?.billingCycle,
         );
         await _handleCheckoutSuccess(
           message: l10n.paypalReturnSuccessSubscription,
@@ -81,12 +88,12 @@ class _PayPalReturnPageState extends State<PayPalReturnPage> {
         return;
       }
 
-      final orderId = widget.returnInfo.token ?? pending?.id;
+      final orderId = widget.returnInfo.token ?? _pending?.id;
       if (orderId == null || orderId.isEmpty) {
         throw StateError(l10n.paypalReturnError);
       }
 
-      final flow = pending?.flow ?? PendingPayPalPaymentFlow.billingOrder;
+      final flow = _pending?.flow ?? PendingPayPalPaymentFlow.billingOrder;
       if (flow == PendingPayPalPaymentFlow.prep) {
         final result = await _prepRepository.capturePayPalOrder(orderId);
         if (!mounted) return;
@@ -103,7 +110,7 @@ class _PayPalReturnPageState extends State<PayPalReturnPage> {
       } else if (flow == PendingPayPalPaymentFlow.subscription) {
         await _billingRepository.activatePayPalSubscription(
           orderId,
-          billingCycle: pending?.billingCycle,
+          billingCycle: _pending?.billingCycle,
         );
         if (!mounted) return;
         await _handleCheckoutSuccess(
@@ -136,10 +143,15 @@ class _PayPalReturnPageState extends State<PayPalReturnPage> {
   }) async {
     if (!mounted) return;
 
+    final isPrep = _pending?.flow == PendingPayPalPaymentFlow.prep;
+
     await _paymentStore.clear();
 
     if (mounted) {
-      await refreshAppSessionAfterCheckout(context);
+      await refreshAppSessionAfterCheckout(
+        context,
+        affectsHomeTab: !isPrep,
+      );
     }
 
     clearWebEntryDeepLinkUrl();
@@ -147,7 +159,29 @@ class _PayPalReturnPageState extends State<PayPalReturnPage> {
     if (!mounted) return;
 
     AppSnackBars.showSuccess(message);
-    rootNavigatorKey.currentState?.popUntil((route) => route.isFirst);
+    _returnToOrigin();
+  }
+
+  void _returnToOrigin() {
+    final catalogItemId = _pending?.catalogItemId;
+    final isPrepReturn = _pending?.flow == PendingPayPalPaymentFlow.prep &&
+        catalogItemId != null &&
+        catalogItemId.isNotEmpty;
+
+    if (isPrepReturn) {
+      getIt<MainShellTabSignal>().requestTab(kPrepPlusTabIndex);
+    }
+
+    final navigator = rootNavigatorKey.currentState;
+    navigator?.popUntil((route) => route.isFirst);
+
+    if (isPrepReturn) {
+      navigator?.push(
+        MaterialPageRoute<void>(
+          builder: (_) => PrepPlusItemDetailPage(catalogItemId: catalogItemId!),
+        ),
+      );
+    }
   }
 
   Future<void> _continue() async {
@@ -163,7 +197,7 @@ class _PayPalReturnPageState extends State<PayPalReturnPage> {
       return;
     }
 
-    rootNavigatorKey.currentState?.popUntil((route) => route.isFirst);
+    _returnToOrigin();
   }
 
   @override

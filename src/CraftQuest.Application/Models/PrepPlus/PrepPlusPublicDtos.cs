@@ -20,6 +20,7 @@ public sealed class PrepCatalogBrowseItemDto
 {
     public required Guid CatalogItemId { get; init; }
     public required Guid QuizId { get; init; }
+    public string? Slug { get; init; }
     public required string Title { get; init; }
     public string? Description { get; init; }
     public required int QuestionCount { get; init; }
@@ -37,6 +38,7 @@ public sealed class PrepCatalogItemPublicDetailDto
 {
     public required Guid CatalogItemId { get; init; }
     public required Guid QuizId { get; init; }
+    public string? Slug { get; init; }
     public required string Title { get; init; }
     public string? Description { get; init; }
     public required Guid CategoryId { get; init; }
@@ -112,6 +114,7 @@ public class PrepCheckoutRequest
 public class PrepPayPalCreateOrderRequest
 {
     public Guid OfferId { get; set; }
+    public string? ReferralCode { get; set; }
 }
 
 public class PrepMobilePurchaseRequest
@@ -122,6 +125,7 @@ public class PrepMobilePurchaseRequest
     public required string ProductId { get; set; }
     public required string PurchaseToken { get; set; }
     public string? TransactionId { get; set; }
+    public string? ReferralCode { get; set; }
 }
 
 public sealed class PrepCheckoutResultDto

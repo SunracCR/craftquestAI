@@ -16,6 +16,7 @@ public class PrepPlusPaymentService(
     CraftQuestDbContext dbContext,
     PayPalApiClient payPalApiClient,
     IPrepPlusAccessService prepPlusAccessService,
+    IPrepReferralService prepReferralService,
     IOptions<PaymentOptions> options) : IPrepPlusPaymentService
 {
     private const string ProductType = "prep_access";
@@ -24,6 +25,7 @@ public class PrepPlusPaymentService(
         Guid userId,
         Guid catalogItemId,
         Guid offerId,
+        string? referralCode = null,
         CancellationToken cancellationToken = default)
     {
         var (item, offer) = await GetOfferContextAsync(
@@ -38,6 +40,11 @@ public class PrepPlusPaymentService(
                 400,
                 PrepPlusErrorCodes.OfferIsFree);
         }
+
+        var referralCodeId = await prepReferralService.ResolveReferralCodeIdAsync(
+            referralCode,
+            catalogItemId,
+            cancellationToken);
 
         var purchaseId = Guid.NewGuid();
         var now = DateTime.UtcNow;
@@ -58,6 +65,7 @@ public class PrepPlusPaymentService(
                 offer.CurrencyCode,
                 "pending",
                 now,
+                referralCodeId,
                 cancellationToken);
 
             return new PayPalCreateOrderResponse
@@ -85,6 +93,7 @@ public class PrepPlusPaymentService(
             offer.CurrencyCode,
             "pending",
             now,
+            referralCodeId,
             cancellationToken);
 
         return new PayPalCreateOrderResponse
@@ -170,6 +179,10 @@ public class PrepPlusPaymentService(
         var providerCode = platform == "google_play" ? "google_play" : "app_store";
         var transactionId = request.TransactionId ?? request.PurchaseToken;
         var productCode = BuildProductCode(request.CatalogItemId, request.OfferId);
+        var referralCodeId = await prepReferralService.ResolveReferralCodeIdAsync(
+            request.ReferralCode,
+            request.CatalogItemId,
+            cancellationToken);
 
         var existing = await dbContext.Purchases
             .FirstOrDefaultAsync(
@@ -194,11 +207,16 @@ public class PrepPlusPaymentService(
             CurrencyCode = offer.CurrencyCode,
             Status = "pending",
             CreatedAt = DateTime.UtcNow,
+            PrepReferralCodeId = referralCodeId,
         };
 
         if (existing is null)
         {
             dbContext.Purchases.Add(purchase);
+        }
+        else if (referralCodeId.HasValue && existing.PrepReferralCodeId is null)
+        {
+            existing.PrepReferralCodeId = referralCodeId;
         }
 
         return await FulfillPurchaseAsync(purchase, cancellationToken);
@@ -232,6 +250,12 @@ public class PrepPlusPaymentService(
             cancellationToken);
 
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        await prepReferralService.ApplyReferralRewardIfApplicableAsync(
+            purchase,
+            catalogItemId,
+            offer.CatalogItem.QuizId,
+            cancellationToken);
 
         return new PrepCheckoutResultDto
         {
@@ -306,6 +330,7 @@ public class PrepPlusPaymentService(
         string currencyCode,
         string status,
         DateTime createdAt,
+        Guid? prepReferralCodeId,
         CancellationToken cancellationToken)
     {
         dbContext.Purchases.Add(new Purchase
@@ -320,6 +345,7 @@ public class PrepPlusPaymentService(
             CurrencyCode = currencyCode,
             Status = status,
             CreatedAt = createdAt,
+            PrepReferralCodeId = prepReferralCodeId,
         });
 
         await dbContext.SaveChangesAsync(cancellationToken);

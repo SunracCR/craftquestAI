@@ -123,6 +123,8 @@ public class JoinController(
                     {
                         "/join",
                         "/join/*",
+                        "/prep",
+                        "/prep/*",
                         "/verify-email/*",
                         "/reset-password/*",
                         "/confirm-password-change/*",

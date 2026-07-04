@@ -14,6 +14,8 @@ public class Purchase
     public string? BillingCycle { get; set; }
     public DateTime? PurchasedAt { get; set; }
     public DateTime CreatedAt { get; set; }
+    public Guid? PrepReferralCodeId { get; set; }
 
     public User User { get; set; } = null!;
+    public PrepReferralCode? PrepReferralCode { get; set; }
 }

@@ -213,6 +213,7 @@ public class PrepPlusCatalogService(
         {
             CatalogItemId = item.CatalogItemId,
             QuizId = item.QuizId,
+            Slug = item.Slug,
             Title = item.TitleOverride ?? item.Quiz.Title,
             Description = item.Description ?? item.Quiz.Description,
             CategoryId = item.CategoryId,
@@ -626,6 +627,71 @@ public class PrepPlusCatalogService(
         };
     }
 
+    public async Task<PrepPublicPreviewDto?> GetPublicPreviewBySlugAsync(
+        string slug,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedSlug = slug.Trim().ToLowerInvariant();
+        var item = await dbContext.PrepCatalogItems
+            .AsNoTracking()
+            .Include(i => i.Quiz)
+            .Include(i => i.Category)
+            .Include(i => i.AccessOffers)
+            .FirstOrDefaultAsync(
+                i => i.Slug == normalizedSlug && i.IsPublished && !i.IsDeleted,
+                cancellationToken);
+
+        if (item is null)
+        {
+            return null;
+        }
+
+        var questionCount = await dbContext.Questions
+            .AsNoTracking()
+            .CountAsync(q => q.QuizId == item.QuizId, cancellationToken);
+        var rootType = await ResolveRootCategoryTypeAsync(item.Category, cancellationToken);
+        var activeOffers = item.AccessOffers.Where(o => o.IsActive).ToList();
+        var paidOffers = activeOffers.Where(o => !o.IsFree && o.PriceAmount > 0).ToList();
+        var bestOffer = activeOffers.OrderBy(o => o.DurationDays).FirstOrDefault();
+
+        return new PrepPublicPreviewDto
+        {
+            CatalogItemId = item.CatalogItemId,
+            Slug = normalizedSlug,
+            Title = item.TitleOverride ?? item.Quiz.Title,
+            Description = item.Description ?? item.Quiz.Description,
+            CategoryName = item.Category.Name,
+            RootCategoryType = rootType,
+            QuestionCount = questionCount,
+            HasFreeOffer = activeOffers.Any(o => o.IsFree),
+            LowestPaidPrice = paidOffers.Count == 0 ? null : paidOffers.Min(o => o.PriceAmount),
+            CurrencyCode = paidOffers.FirstOrDefault()?.CurrencyCode ?? bestOffer?.CurrencyCode,
+            BestOfferDurationDays = bestOffer?.DurationDays,
+        };
+    }
+
+    public async Task<PrepCatalogItemSlugDto> ResolveCatalogItemIdBySlugAsync(
+        string slug,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedSlug = slug.Trim().ToLowerInvariant();
+        var item = await dbContext.PrepCatalogItems
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                i => i.Slug == normalizedSlug && i.IsPublished && !i.IsDeleted,
+                cancellationToken)
+            ?? throw new AppException(
+                "Catalog item not found.",
+                404,
+                PrepPlusErrorCodes.CatalogItemNotFound);
+
+        return new PrepCatalogItemSlugDto
+        {
+            CatalogItemId = item.CatalogItemId,
+            Slug = normalizedSlug,
+        };
+    }
+
     private async Task<PrepCatalogItem> LoadPublishedItemAsync(
         Guid catalogItemId,
         CancellationToken cancellationToken)
@@ -769,6 +835,7 @@ public class PrepPlusCatalogService(
         {
             CatalogItemId = item.CatalogItemId,
             QuizId = item.QuizId,
+            Slug = item.Slug,
             Title = item.TitleOverride ?? item.Quiz.Title,
             Description = item.Description ?? item.Quiz.Description,
             QuestionCount = questionCount,

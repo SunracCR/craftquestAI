@@ -51,6 +51,7 @@ class PrepBrowseItemModel {
   const PrepBrowseItemModel({
     required this.catalogItemId,
     required this.quizId,
+    this.slug,
     required this.title,
     this.description,
     required this.questionCount,
@@ -69,6 +70,7 @@ class PrepBrowseItemModel {
     return PrepBrowseItemModel(
       catalogItemId: json['catalogItemId'] as String,
       quizId: json['quizId'] as String,
+      slug: json['slug'] as String?,
       title: json['title'] as String,
       description: json['description'] as String?,
       questionCount: json['questionCount'] as int? ?? 0,
@@ -87,6 +89,7 @@ class PrepBrowseItemModel {
 
   final String catalogItemId;
   final String quizId;
+  final String? slug;
   final String title;
   final String? description;
   final int questionCount;
@@ -136,6 +139,7 @@ class PrepItemDetailModel {
   const PrepItemDetailModel({
     required this.catalogItemId,
     required this.quizId,
+    this.slug,
     required this.title,
     this.description,
     required this.categoryId,
@@ -158,6 +162,7 @@ class PrepItemDetailModel {
     return PrepItemDetailModel(
       catalogItemId: json['catalogItemId'] as String,
       quizId: json['quizId'] as String,
+      slug: json['slug'] as String?,
       title: json['title'] as String,
       description: json['description'] as String?,
       categoryId: json['categoryId'] as String,
@@ -201,6 +206,7 @@ class PrepItemDetailModel {
 
   final String catalogItemId;
   final String quizId;
+  final String? slug;
   final String title;
   final String? description;
   final String categoryId;
@@ -538,4 +544,85 @@ class PrepCheckoutResultModel {
   final DateTime? accessExpiresAt;
   final bool requiresPayment;
   final String? message;
+}
+
+class PrepReferralCodeModel {
+  const PrepReferralCodeModel({
+    required this.code,
+    required this.shareUrl,
+    required this.slug,
+  });
+
+  factory PrepReferralCodeModel.fromJson(Map<String, dynamic> json) {
+    return PrepReferralCodeModel(
+      code: json['code'] as String,
+      shareUrl: json['shareUrl'] as String,
+      slug: json['slug'] as String,
+    );
+  }
+
+  final String code;
+  final String shareUrl;
+  final String slug;
+}
+
+class PrepPublicPreviewModel {
+  const PrepPublicPreviewModel({
+    required this.catalogItemId,
+    required this.slug,
+    required this.title,
+    this.description,
+    required this.categoryName,
+    required this.rootCategoryType,
+    required this.questionCount,
+    required this.hasFreeOffer,
+    this.lowestPaidPrice,
+    this.currencyCode,
+    this.bestOfferDurationDays,
+  });
+
+  factory PrepPublicPreviewModel.fromJson(Map<String, dynamic> json) {
+    return PrepPublicPreviewModel(
+      catalogItemId: json['catalogItemId'] as String,
+      slug: json['slug'] as String,
+      title: json['title'] as String,
+      description: json['description'] as String?,
+      categoryName: json['categoryName'] as String,
+      rootCategoryType: json['rootCategoryType'] as String,
+      questionCount: json['questionCount'] as int? ?? 0,
+      hasFreeOffer: json['hasFreeOffer'] as bool? ?? false,
+      lowestPaidPrice: (json['lowestPaidPrice'] as num?)?.toDouble(),
+      currencyCode: json['currencyCode'] as String?,
+      bestOfferDurationDays: json['bestOfferDurationDays'] as int?,
+    );
+  }
+
+  final String catalogItemId;
+  final String slug;
+  final String title;
+  final String? description;
+  final String categoryName;
+  final String rootCategoryType;
+  final int questionCount;
+  final bool hasFreeOffer;
+  final double? lowestPaidPrice;
+  final String? currencyCode;
+  final int? bestOfferDurationDays;
+}
+
+class PrepCatalogItemSlugModel {
+  const PrepCatalogItemSlugModel({
+    required this.catalogItemId,
+    required this.slug,
+  });
+
+  factory PrepCatalogItemSlugModel.fromJson(Map<String, dynamic> json) {
+    return PrepCatalogItemSlugModel(
+      catalogItemId: json['catalogItemId'] as String,
+      slug: json['slug'] as String,
+    );
+  }
+
+  final String catalogItemId;
+  final String slug;
 }

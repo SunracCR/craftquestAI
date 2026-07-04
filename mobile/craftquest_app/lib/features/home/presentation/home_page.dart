@@ -45,6 +45,7 @@ class _HomePageState extends State<HomePage> {
   UserBillingModel? _billing;
   bool _teacherBannerHidden = true;
   late final CheckoutRefreshNotifier _checkoutRefresh;
+  late final BillingRepository _billingRepository;
 
   bool get _showTeacherBanner =>
       !_teacherBannerHidden &&
@@ -59,6 +60,8 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    _billingRepository = getIt<BillingRepository>();
+    _billing = _billingRepository.cachedBilling;
     _checkoutRefresh = getIt<CheckoutRefreshNotifier>()
       ..addListener(_onCheckoutCompleted);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -74,7 +77,7 @@ class _HomePageState extends State<HomePage> {
 
   void _onCheckoutCompleted() {
     final billing = _checkoutRefresh.latestBilling ??
-        getIt<BillingRepository>().cachedBilling;
+        _billingRepository.cachedBilling;
     if (billing != null && mounted) {
       setState(() => _billing = billing);
     }
@@ -127,7 +130,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _load({bool forceRefresh = false}) async {
     try {
-      final billing = await getIt<BillingRepository>().getMyBilling(
+      final billing = await _billingRepository.getMyBilling(
         forceRefresh: forceRefresh,
       );
       if (!mounted) return;
@@ -350,8 +353,8 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
                   ),
+                  const SizedBox(height: AppSpacing.lg),
                   if (_billing != null) ...[
-                    const SizedBox(height: AppSpacing.lg),
                     AppSectionTitle(
                       title: l10n.billingPlanLabel(planLabel!),
                     ),
@@ -389,7 +392,7 @@ class _HomePageState extends State<HomePage> {
                                       children: [
                                         Expanded(
                                           child: Text(
-                                            planLabel,
+                                            planLabel!,
                                             style: Theme.of(context)
                                                 .textTheme
                                                 .titleLarge
@@ -492,7 +495,8 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                     ),
-                  ],
+                  ] else
+                    _BillingCardSkeleton(planTitle: l10n.billingPlanChipLabel),
                   const SizedBox(height: AppSpacing.xl),
                 ],
               ),
@@ -509,6 +513,99 @@ class _HomePageState extends State<HomePage> {
         endIndent: AppSpacing.md,
         color: AppColors.textSecondary.withValues(alpha: 0.12),
       );
+}
+
+class _BillingCardSkeleton extends StatefulWidget {
+  const _BillingCardSkeleton({required this.planTitle});
+
+  final String planTitle;
+
+  @override
+  State<_BillingCardSkeleton> createState() => _BillingCardSkeletonState();
+}
+
+class _BillingCardSkeletonState extends State<_BillingCardSkeleton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  Widget _bar({required double width, required double height}) {
+    return FadeTransition(
+      opacity: Tween<double>(begin: 0.35, end: 0.7).animate(
+        CurvedAnimation(parent: _pulse, curve: Curves.easeInOut),
+      ),
+      child: Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: AppColors.textSecondary.withValues(alpha: 0.22),
+          borderRadius: BorderRadius.circular(6),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AppSectionTitle(title: '${widget.planTitle}…'),
+        const SizedBox(height: AppSpacing.xs),
+        AppSectionCard(
+          variant: AppCardVariant.highlight,
+          padding: EdgeInsets.zero,
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.textSecondary.withValues(alpha: 0.12),
+                    borderRadius: const BorderRadius.horizontal(
+                      left: Radius.circular(AppColors.radiusSm),
+                    ),
+                  ),
+                  child: const SizedBox(width: 4),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: AppColors.paddingMd,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _bar(width: 140, height: 22),
+                        const SizedBox(height: AppSpacing.sm),
+                        _bar(width: double.infinity, height: 14),
+                        const SizedBox(height: AppSpacing.sm),
+                        _bar(width: 180, height: 14),
+                        const SizedBox(height: AppSpacing.md),
+                        _bar(width: double.infinity, height: AppSpacing.buttonHeight),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _TeacherProminentBanner extends StatelessWidget {

@@ -42,4 +42,12 @@ public interface IPrepPlusCatalogService
         Guid catalogItemId,
         PrepCheckoutRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<PrepPublicPreviewDto?> GetPublicPreviewBySlugAsync(
+        string slug,
+        CancellationToken cancellationToken = default);
+
+    Task<PrepCatalogItemSlugDto> ResolveCatalogItemIdBySlugAsync(
+        string slug,
+        CancellationToken cancellationToken = default);
 }

@@ -27,6 +27,7 @@ import 'package:craftquest_app/features/analytics/presentation/quiz_analytics_pa
 import 'package:craftquest_app/features/practice/presentation/my_practice_attempts_page.dart';
 import 'package:craftquest_app/features/teacher/presentation/teacher_attempts_page.dart';
 import 'package:craftquest_app/features/practice/data/models/practice_models.dart';
+import 'package:craftquest_app/features/practice/data/models/practice_preferences_models.dart';
 import 'package:craftquest_app/features/practice/data/practice_preferences_repository.dart';
 import 'package:craftquest_app/features/practice/data/practice_repository.dart';
 import 'package:craftquest_app/features/practice/data/practice_sound_preference_store.dart';
@@ -100,6 +101,24 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
   bool _quizModificationLocked = false;
   int? _maxQuizzes;
   int _quizzesCreated = 0;
+  Future<QuizPracticePreferenceModel>? _practicePreferencesPrefetch;
+  Future<PracticeActiveSessionModel?>? _activeSessionPrefetch;
+
+  void _warmPracticeUiPrefetch() {
+    _practicePreferencesPrefetch =
+        _preferencesRepository.getPreferences(widget.quizId);
+    _activeSessionPrefetch =
+        _practiceRepository.getActiveSessionForQuiz(widget.quizId);
+    unawaited(_prefetchSoundPreferences());
+  }
+
+  Future<void> _prefetchSoundPreferences() async {
+    try {
+      final prefs = await _soundPreferenceStore.load();
+      if (!mounted) return;
+      setState(() => _enableSoundEffects = prefs.enableSoundEffects);
+    } catch (_) {}
+  }
 
   @override
   void initState() {
@@ -109,6 +128,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
     _titleFocusNode = FocusNode();
     _titleFocusNode.addListener(_onTitleFocusChange);
     _publicationStatus = widget.publicationStatus;
+    _warmPracticeUiPrefetch();
     scheduleInitialScreenLoad(_refreshQuestionCount);
     if (widget.isOwner) {
       _loadBillingEntitlements();
@@ -273,10 +293,14 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
 
   Future<void> _loadPracticePreferences(int loadId) async {
     if (!mounted || isStaleScreenLoad(loadId)) return;
-    setState(() => _loadingPreferences = true);
+    final needsSpinner = _practicePreferencesPrefetch == null;
+    if (needsSpinner) {
+      setState(() => _loadingPreferences = true);
+    }
     try {
-      final prefs =
-          await _preferencesRepository.getPreferences(widget.quizId);
+      final prefs = await (_practicePreferencesPrefetch ??
+          _preferencesRepository.getPreferences(widget.quizId));
+      _practicePreferencesPrefetch = null;
       if (!mounted || isStaleScreenLoad(loadId)) return;
       setState(() {
         _showTimer = prefs.showElapsedTimer;
@@ -404,9 +428,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
           }
         });
       }
-      scheduleInitialScreenLoad(
-        () => unawaited(_syncPracticeUiIfNeeded(loadId)),
-      );
+      unawaited(_syncPracticeUiIfNeeded(loadId));
     } on DioException catch (e) {
       if (!mounted || isStaleScreenLoad(loadId)) return;
       if (showLoading) {
@@ -468,7 +490,8 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
     if (_activePractice != null) {
       return Future.value(_activePractice);
     }
-    return _practiceRepository.getActiveSessionForQuiz(widget.quizId);
+    return _activeSessionPrefetch ??
+        _practiceRepository.getActiveSessionForQuiz(widget.quizId);
   }
 
   Future<void> _loadActivePractice([int? loadId]) async {
@@ -479,8 +502,9 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
       return;
     }
     try {
-      final active =
-          await _practiceRepository.getActiveSessionForQuiz(widget.quizId);
+      final active = await (_activeSessionPrefetch ??
+          _practiceRepository.getActiveSessionForQuiz(widget.quizId));
+      _activeSessionPrefetch = null;
       if (!mounted) return;
       if (loadId != null && isStaleScreenLoad(loadId)) return;
       setState(() => _activePractice = active);

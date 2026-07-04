@@ -269,6 +269,19 @@
   "@prepPlusAccessCountdownTimer": {
     "placeholders": { "time": { "type": "String" } }
   },
+  "prepPlusShareAction": "Share",
+  "prepPlusShareLinkMessage": "Check out this Prep+ course:\n{title}\n{url}",
+  "@prepPlusShareLinkMessage": {
+    "placeholders": {
+      "title": { "type": "String" },
+      "url": { "type": "String" }
+    }
+  },
+  "prepPlusPublicPreviewSignIn": "Sign in to purchase",
+  "prepPlusPublicPreviewQuestions": "{count, plural, =1{1 question} other{{count} questions}}",
+  "@prepPlusPublicPreviewQuestions": {
+    "placeholders": { "count": { "type": "int" } }
+  },
   "prepPlusAccessUntil": "Expires {date}",
   "@prepPlusAccessUntil": {
     "placeholders": { "date": { "type": "String" } }

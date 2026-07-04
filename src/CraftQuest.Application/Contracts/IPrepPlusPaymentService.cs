@@ -9,6 +9,7 @@ public interface IPrepPlusPaymentService
         Guid userId,
         Guid catalogItemId,
         Guid offerId,
+        string? referralCode = null,
         CancellationToken cancellationToken = default);
 
     Task<PrepCheckoutResultDto> CapturePayPalOrderAsync(
