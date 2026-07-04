@@ -22,7 +22,6 @@ import 'package:craftquest_app/features/ai_generation/presentation/ai_generation
 import 'package:craftquest_app/features/imports/data/models/import_models.dart';
 import 'package:craftquest_app/features/imports/presentation/excel_import_page.dart';
 import 'package:craftquest_app/features/imports/presentation/import_preview_page.dart';
-import 'package:craftquest_app/features/imports/presentation/import_questions_page.dart';
 import 'package:craftquest_app/features/analytics/presentation/quiz_analytics_page.dart';
 import 'package:craftquest_app/features/practice/presentation/my_practice_attempts_page.dart';
 import 'package:craftquest_app/features/teacher/presentation/teacher_attempts_page.dart';
@@ -839,11 +838,6 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
               title: Text(l10n.importExcelAction),
               onTap: () => Navigator.pop(ctx, 'excel'),
             ),
-            ListTile(
-              leading: const Icon(Icons.description_outlined),
-              title: Text(l10n.importQuestionsTitle),
-              onTap: () => Navigator.pop(ctx, 'text'),
-            ),
           ],
         ),
       ),
@@ -860,12 +854,11 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
         ),
       );
     } else {
-      final page = choice == 'excel'
-          ? ExcelImportPage(quizId: widget.quizId, quizTitle: _quizTitle)
-          : ImportQuestionsPage(quizId: widget.quizId, quizTitle: _quizTitle);
-
       await Navigator.of(context).push<bool>(
-        MaterialPageRoute<bool>(builder: (_) => page),
+        MaterialPageRoute<bool>(
+          builder: (_) =>
+              ExcelImportPage(quizId: widget.quizId, quizTitle: _quizTitle),
+        ),
       );
     }
     if (!mounted) return;

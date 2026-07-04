@@ -270,7 +270,7 @@
     "placeholders": { "time": { "type": "String" } }
   },
   "prepPlusShareAction": "Compartilhar",
-  "prepPlusShareLinkMessage": "Veja este curso Prep+:\n{title}\n{url}",
+  "prepPlusShareLinkMessage": "🎯 O repaso definitivo para o exame! Pratique com o questionário de {title} no Prep+ e garanta essa nota. 🚀\n👇 Entra aqui:\n{url}",
   "@prepPlusShareLinkMessage": {
     "placeholders": {
       "title": { "type": "String" },

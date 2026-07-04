@@ -2,7 +2,6 @@ import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/features/ai_generation/presentation/ai_generation_hub_page.dart';
 import 'package:craftquest_app/features/imports/presentation/excel_import_page.dart';
-import 'package:craftquest_app/features/imports/presentation/import_questions_page.dart';
 import 'package:craftquest_app/features/quizzes/data/models/quiz_models.dart';
 import 'package:craftquest_app/features/quizzes/presentation/add_question_page.dart';
 import 'package:craftquest_app/features/quizzes/presentation/create_quiz_page.dart';
@@ -77,40 +76,10 @@ abstract final class QuizContentSetupFlow {
     required String quizId,
     required String quizTitle,
   }) async {
-    final l10n = AppLocalizations.of(context)!;
-    final choice = await showModalBottomSheet<String>(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.table_chart_outlined),
-              title: Text(l10n.importExcelAction),
-              onTap: () => Navigator.pop(ctx, 'excel'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.description_outlined),
-              title: Text(l10n.importQuestionsTitle),
-              onTap: () => Navigator.pop(ctx, 'text'),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    if (!context.mounted || choice == null) return;
-
-    final page = choice == 'excel'
-        ? ExcelImportPage(quizId: quizId, quizTitle: quizTitle)
-        : ImportQuestionsPage(quizId: quizId, quizTitle: quizTitle);
-
     await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(builder: (_) => page),
+      MaterialPageRoute<void>(
+        builder: (_) => ExcelImportPage(quizId: quizId, quizTitle: quizTitle),
+      ),
     );
   }
 }

@@ -270,7 +270,7 @@
     "placeholders": { "time": { "type": "String" } }
   },
   "prepPlusShareAction": "Share",
-  "prepPlusShareLinkMessage": "Check out this Prep+ course:\n{title}\n{url}",
+  "prepPlusShareLinkMessage": "🎯 The ultimate exam review! Practice with the {title} quiz on Prep+ and ace your grade. 🚀\n👇 Start here:\n{url}",
   "@prepPlusShareLinkMessage": {
     "placeholders": {
       "title": { "type": "String" },

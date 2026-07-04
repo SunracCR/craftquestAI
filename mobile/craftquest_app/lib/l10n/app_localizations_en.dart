@@ -649,7 +649,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String prepPlusShareLinkMessage(String title, String url) {
-    return 'Check out this Prep+ course:\n$title\n$url';
+    return '🎯 The ultimate exam review! Practice with the $title quiz on Prep+ and ace your grade. 🚀\n👇 Start here:\n$url';
   }
 
   @override
