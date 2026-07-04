@@ -25,7 +25,8 @@
     "AppStoreUrl": "https://apps.apple.com/app/idPENDIENTE",
     "AndroidPackageName": "com.craftquestai.craftquestai_app",
     "AndroidSha256Fingerprints": [],
-    "IosAppIds": []
+    "IosAppIds": [],
+    "DefaultOgImageUrl": "https://app.craftquestai.com/icons/Icon-512.png"
   },
   "Email": {
     "Enabled": true,

@@ -16,6 +16,7 @@ namespace CraftQuest.Infrastructure.Services;
 public class PrepReferralService(
     CraftQuestDbContext dbContext,
     IPrepPlusAccessService prepPlusAccessService,
+    IMediaService mediaService,
     IOptions<JoinLinkOptions> joinLinkOptions,
     ILogger<PrepReferralService> logger) : IPrepReferralService
 {
@@ -240,7 +241,20 @@ public class PrepReferralService(
             CategoryName = item.Category.Name,
             LowestPaidPrice = paidOffers.Count > 0 ? paidOffers.Min(o => o.PriceAmount) : null,
             CurrencyCode = paidOffers.FirstOrDefault()?.CurrencyCode ?? bestOffer?.CurrencyCode,
+            CoverMediaUrl = BuildCoverMediaUrl(item.CoverMediaId),
         };
+    }
+
+    private string? BuildCoverMediaUrl(Guid? coverMediaId)
+    {
+        if (coverMediaId is null)
+        {
+            return null;
+        }
+
+        return PrepReferralLinkUrlBuilder.ToAbsoluteUrl(
+            _joinLinkOptions,
+            mediaService.BuildPublicUrl(coverMediaId.Value));
     }
 
     private Task<bool> CatalogItemHasPaidOffersAsync(

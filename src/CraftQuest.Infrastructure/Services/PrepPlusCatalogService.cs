@@ -668,6 +668,9 @@ public class PrepPlusCatalogService(
             LowestPaidPrice = paidOffers.Count == 0 ? null : paidOffers.Min(o => o.PriceAmount),
             CurrencyCode = paidOffers.FirstOrDefault()?.CurrencyCode ?? bestOffer?.CurrencyCode,
             BestOfferDurationDays = bestOffer?.DurationDays,
+            CoverMediaUrl = item.CoverMediaId is Guid coverMediaId
+                ? mediaService.BuildPublicUrl(coverMediaId)
+                : null,
         };
     }
 

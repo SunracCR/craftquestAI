@@ -21,4 +21,7 @@ public class JoinLinkOptions
 
     /// <summary>Apple app IDs in TEAMID.bundleId format for Universal Links.</summary>
     public List<string> IosAppIds { get; set; } = [];
+
+    /// <summary>Absolute URL for Open Graph when a Prep+ item has no cover image.</summary>
+    public string? DefaultOgImageUrl { get; set; }
 }

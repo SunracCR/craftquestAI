@@ -41,4 +41,21 @@ public static class PrepReferralLinkUrlBuilder
         var normalizedCode = referralCode.Trim().ToUpperInvariant();
         return $"craftquest://prep/{Uri.EscapeDataString(normalizedSlug)}?ref={Uri.EscapeDataString(normalizedCode)}";
     }
+
+    public static string ToAbsoluteUrl(JoinLinkOptions options, string pathOrAbsolute)
+    {
+        if (string.IsNullOrWhiteSpace(pathOrAbsolute))
+        {
+            return pathOrAbsolute;
+        }
+
+        if (pathOrAbsolute.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+            || pathOrAbsolute.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            return pathOrAbsolute;
+        }
+
+        var path = pathOrAbsolute.StartsWith('/') ? pathOrAbsolute : $"/{pathOrAbsolute}";
+        return $"{options.LinkBaseUrl.TrimEnd('/')}{path}";
+    }
 }

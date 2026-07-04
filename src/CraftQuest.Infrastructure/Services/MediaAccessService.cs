@@ -42,6 +42,11 @@ public class MediaAccessService(CraftQuestDbContext dbContext) : IMediaAccessSer
             return;
         }
 
+        if (await IsPublishedPrepCoverAsync(mediaAssetId, cancellationToken))
+        {
+            return;
+        }
+
         throw new AppException("You do not have access to this media asset.", 403);
     }
 
@@ -144,4 +149,13 @@ public class MediaAccessService(CraftQuestDbContext dbContext) : IMediaAccessSer
                     && o.Question.QuizId == visit.QuizId,
                 cancellationToken);
     }
+
+    private Task<bool> IsPublishedPrepCoverAsync(
+        Guid mediaAssetId,
+        CancellationToken cancellationToken) =>
+        dbContext.PrepCatalogItems
+            .AsNoTracking()
+            .AnyAsync(
+                i => i.CoverMediaId == mediaAssetId && i.IsPublished && !i.IsDeleted,
+                cancellationToken);
 }

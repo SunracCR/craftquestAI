@@ -50,8 +50,21 @@ public static class PrepLandingPageRenderer
             ? $"{options.LinkBaseUrl.TrimEnd('/')}/prep/{Uri.EscapeDataString(preview.Slug)}"
             : shareUrl;
 
+        var ogImageUrl = ResolveOgImageUrl(options, preview);
+        var encodedOgImageUrl = WebUtility.HtmlEncode(ogImageUrl);
+        var ogImageTags = $"""
+              <meta property="og:image" content="{encodedOgImageUrl}" />
+              <meta property="og:image:alt" content="{encodedTitle}" />
+              <meta name="twitter:image" content="{encodedOgImageUrl}" />
+              """;
+
+        var coverBlock = string.IsNullOrWhiteSpace(preview.CoverMediaUrl)
+            ? string.Empty
+            : $"""<img class="cover" src="{WebUtility.HtmlEncode(preview.CoverMediaUrl)}" alt="{encodedTitle}" />""";
+
         var body = $"""
             <main class="card">
+              {coverBlock}
               <p class="brand">CraftQuestAI · Preparación+</p>
               <p class="eyebrow">{WebUtility.HtmlEncode(labels.PrepPlusLabel)}</p>
               <h1>{encodedTitle}</h1>
@@ -78,6 +91,7 @@ public static class PrepLandingPageRenderer
               <meta property="og:url" content="{WebUtility.HtmlEncode(ogUrl)}" />
               <meta property="og:type" content="website" />
               <meta name="twitter:card" content="summary_large_image" />
+              {ogImageTags}
               {LandingStyles}
             </head>
             <body>
@@ -115,6 +129,14 @@ public static class PrepLandingPageRenderer
                   padding: 28px 24px;
                   box-shadow: 0 18px 50px rgba(0,0,0,0.35);
                 }
+                .cover {
+                  display: block;
+                  width: 100%;
+                  max-height: 220px;
+                  object-fit: cover;
+                  border-radius: 14px;
+                  margin: 0 0 18px;
+                }
                 .brand { color: var(--accent); font-size: 0.85rem; margin: 0 0 8px; }
                 .eyebrow { color: var(--muted); font-size: 0.8rem; margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.06em; }
                 h1 { margin: 0 0 8px; font-size: 1.6rem; line-height: 1.2; }
@@ -133,6 +155,23 @@ public static class PrepLandingPageRenderer
 
     private static string FormatPrice(decimal amount, string? currencyCode) =>
         $"{currencyCode ?? "USD"} {amount:0.##}";
+
+    private static string ResolveOgImageUrl(
+        JoinLinkOptions options,
+        PrepReferralLandingPreviewDto preview)
+    {
+        if (!string.IsNullOrWhiteSpace(preview.CoverMediaUrl))
+        {
+            return preview.CoverMediaUrl;
+        }
+
+        if (!string.IsNullOrWhiteSpace(options.DefaultOgImageUrl))
+        {
+            return options.DefaultOgImageUrl.Trim();
+        }
+
+        return $"{options.WebAppUrl.TrimEnd('/')}/icons/Icon-512.png";
+    }
 
     private static PrepLabels ResolveLabels(string? acceptLanguage)
     {
