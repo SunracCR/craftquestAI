@@ -8,6 +8,7 @@ using CraftQuest.Domain.Constants;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace CraftQuest.Infrastructure.Services;
@@ -15,9 +16,11 @@ namespace CraftQuest.Infrastructure.Services;
 public class PrepReferralService(
     CraftQuestDbContext dbContext,
     IPrepPlusAccessService prepPlusAccessService,
-    IOptions<JoinLinkOptions> joinLinkOptions) : IPrepReferralService
+    IOptions<JoinLinkOptions> joinLinkOptions,
+    ILogger<PrepReferralService> logger) : IPrepReferralService
 {
     private const int RewardDays = 30;
+    private const string PrepAccessProductType = "prep_access";
     private readonly JoinLinkOptions _joinLinkOptions = joinLinkOptions.Value;
 
     public async Task<PrepReferralCodeDto> GetOrCreateReferralCodeAsync(
@@ -81,6 +84,11 @@ public class PrepReferralService(
             return null;
         }
 
+        if (!await CatalogItemHasPaidOffersAsync(catalogItemId, cancellationToken))
+        {
+            return null;
+        }
+
         var entity = await dbContext.PrepReferralCodes
             .AsNoTracking()
             .FirstOrDefaultAsync(
@@ -100,12 +108,26 @@ public class PrepReferralService(
     {
         if (purchase.PrepReferralCodeId is null)
         {
+            logger.LogDebug(
+                "Prep referral reward skipped for purchase {PurchaseId}: no referral code on purchase.",
+                purchase.PurchaseId);
+            return;
+        }
+
+        if (purchase.Amount <= 0)
+        {
+            logger.LogInformation(
+                "Prep referral reward skipped for purchase {PurchaseId}: zero-amount purchase.",
+                purchase.PurchaseId);
             return;
         }
 
         if (await dbContext.PrepReferralConversions
                 .AnyAsync(c => c.PurchaseId == purchase.PurchaseId, cancellationToken))
         {
+            logger.LogDebug(
+                "Prep referral reward skipped for purchase {PurchaseId}: conversion already recorded.",
+                purchase.PurchaseId);
             return;
         }
 
@@ -117,23 +139,31 @@ public class PrepReferralService(
 
         if (referral is null || !referral.IsActive || referral.CatalogItemId != catalogItemId)
         {
+            logger.LogWarning(
+                "Prep referral reward skipped for purchase {PurchaseId}: referral code missing, inactive, or item mismatch.",
+                purchase.PurchaseId);
             return;
         }
 
         if (referral.ReferrerUserId == purchase.UserId)
         {
+            logger.LogInformation(
+                "Prep referral reward skipped for purchase {PurchaseId}: self-referral.",
+                purchase.PurchaseId);
             return;
         }
 
-        var referrerHadPurchase = await dbContext.QuizAccesses
-            .AnyAsync(
-                a => a.UserId == referral.ReferrerUserId
-                    && a.AccessType == "purchase"
-                    && a.PrepCatalogItemId == catalogItemId,
-                cancellationToken);
-
-        if (!referrerHadPurchase)
+        if (!await ReferrerIsEligibleForRewardAsync(
+                referral.ReferrerUserId,
+                catalogItemId,
+                quizId,
+                cancellationToken))
         {
+            logger.LogInformation(
+                "Prep referral reward skipped for purchase {PurchaseId}: referrer {ReferrerUserId} has no prior purchase access for catalog item {CatalogItemId}.",
+                purchase.PurchaseId,
+                referral.ReferrerUserId,
+                catalogItemId);
             return;
         }
 
@@ -143,6 +173,9 @@ public class PrepReferralService(
                     && c.CatalogItemId == catalogItemId,
                 cancellationToken))
         {
+            logger.LogInformation(
+                "Prep referral reward skipped for purchase {PurchaseId}: duplicate referrer/buyer/item conversion.",
+                purchase.PurchaseId);
             return;
         }
 
@@ -167,6 +200,13 @@ public class PrepReferralService(
         });
 
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        logger.LogInformation(
+            "Prep referral reward granted: referrer {ReferrerUserId} +{RewardDays}d on catalog item {CatalogItemId} from purchase {PurchaseId}.",
+            referral.ReferrerUserId,
+            RewardDays,
+            catalogItemId,
+            purchase.PurchaseId);
     }
 
     public async Task<PrepReferralLandingPreviewDto?> GetLandingPreviewAsync(
@@ -201,6 +241,40 @@ public class PrepReferralService(
             LowestPaidPrice = paidOffers.Count > 0 ? paidOffers.Min(o => o.PriceAmount) : null,
             CurrencyCode = paidOffers.FirstOrDefault()?.CurrencyCode ?? bestOffer?.CurrencyCode,
         };
+    }
+
+    private Task<bool> CatalogItemHasPaidOffersAsync(
+        Guid catalogItemId,
+        CancellationToken cancellationToken) =>
+        dbContext.PrepAccessOffers.AnyAsync(
+            o => o.CatalogItemId == catalogItemId
+                && o.IsActive
+                && !o.IsFree
+                && o.PriceAmount > 0,
+            cancellationToken);
+
+    private async Task<bool> ReferrerIsEligibleForRewardAsync(
+        Guid referrerUserId,
+        Guid catalogItemId,
+        Guid quizId,
+        CancellationToken cancellationToken)
+    {
+        if (await dbContext.QuizAccesses.AnyAsync(
+                a => a.UserId == referrerUserId
+                    && a.AccessType == "purchase"
+                    && (a.PrepCatalogItemId == catalogItemId || a.QuizId == quizId),
+                cancellationToken))
+        {
+            return true;
+        }
+
+        var productPrefix = $"{catalogItemId:N}|";
+        return await dbContext.Purchases.AnyAsync(
+            p => p.UserId == referrerUserId
+                && p.ProductType == PrepAccessProductType
+                && p.Status == "validated"
+                && p.ProductCode.StartsWith(productPrefix),
+            cancellationToken);
     }
 
     private PrepReferralCodeDto MapReferralDto(string code, string slug) =>

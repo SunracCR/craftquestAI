@@ -317,18 +317,35 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
     return null;
   }
 
-  Future<String?> _referralCodeForPurchase() async {
-    final pending = await _referralStore.read();
-    if (pending == null) {
-      return null;
+  bool _pendingReferralMatchesItem(PendingPrepReferral pending) {
+    if (pending.catalogItemId != null &&
+        pending.catalogItemId == widget.catalogItemId) {
+      return true;
     }
 
     final itemSlug = _item?.slug;
-    if (itemSlug != null && itemSlug == pending.slug) {
-      return pending.referralCode;
+    if (itemSlug == null || itemSlug.isEmpty) {
+      return false;
     }
 
-    return null;
+    return itemSlug.toLowerCase() == pending.slug.toLowerCase();
+  }
+
+  Future<String?> _referralCodeForPurchase() async {
+    final pending = await _referralStore.read();
+    if (pending == null || pending.referralCode == null) {
+      return null;
+    }
+
+    if (!_pendingReferralMatchesItem(pending)) {
+      return null;
+    }
+
+    if (!pending.rewardEligible) {
+      return null;
+    }
+
+    return pending.referralCode;
   }
 
   Future<void> _clearReferralIfMatched() async {
@@ -337,8 +354,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       return;
     }
 
-    final itemSlug = _item?.slug;
-    if (itemSlug != null && itemSlug == pending.slug) {
+    if (_pendingReferralMatchesItem(pending)) {
       await _referralStore.clear();
     }
   }

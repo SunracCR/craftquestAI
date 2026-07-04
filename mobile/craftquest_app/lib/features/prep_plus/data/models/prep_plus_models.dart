@@ -576,6 +576,7 @@ class PrepPublicPreviewModel {
     required this.rootCategoryType,
     required this.questionCount,
     required this.hasFreeOffer,
+    required this.referralRewardsEligible,
     this.lowestPaidPrice,
     this.currencyCode,
     this.bestOfferDurationDays,
@@ -591,6 +592,7 @@ class PrepPublicPreviewModel {
       rootCategoryType: json['rootCategoryType'] as String,
       questionCount: json['questionCount'] as int? ?? 0,
       hasFreeOffer: json['hasFreeOffer'] as bool? ?? false,
+      referralRewardsEligible: json['referralRewardsEligible'] as bool? ?? false,
       lowestPaidPrice: (json['lowestPaidPrice'] as num?)?.toDouble(),
       currencyCode: json['currencyCode'] as String?,
       bestOfferDurationDays: json['bestOfferDurationDays'] as int?,
@@ -605,6 +607,7 @@ class PrepPublicPreviewModel {
   final String rootCategoryType;
   final int questionCount;
   final bool hasFreeOffer;
+  final bool referralRewardsEligible;
   final double? lowestPaidPrice;
   final String? currencyCode;
   final int? bestOfferDurationDays;

@@ -17,6 +17,7 @@ public sealed class PrepPublicPreviewDto
     public required string RootCategoryType { get; init; }
     public required int QuestionCount { get; init; }
     public required bool HasFreeOffer { get; init; }
+    public required bool ReferralRewardsEligible { get; init; }
     public decimal? LowestPaidPrice { get; init; }
     public string? CurrencyCode { get; init; }
     public int? BestOfferDurationDays { get; init; }

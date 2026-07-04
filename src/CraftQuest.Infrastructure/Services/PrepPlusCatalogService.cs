@@ -664,6 +664,7 @@ public class PrepPlusCatalogService(
             RootCategoryType = rootType,
             QuestionCount = questionCount,
             HasFreeOffer = activeOffers.Any(o => o.IsFree),
+            ReferralRewardsEligible = paidOffers.Count > 0,
             LowestPaidPrice = paidOffers.Count == 0 ? null : paidOffers.Min(o => o.PriceAmount),
             CurrencyCode = paidOffers.FirstOrDefault()?.CurrencyCode ?? bestOffer?.CurrencyCode,
             BestOfferDurationDays = bestOffer?.DurationDays,

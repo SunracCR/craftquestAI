@@ -7,24 +7,32 @@ class PendingPrepReferral {
     required this.slug,
     this.referralCode,
     required this.capturedAt,
+    this.catalogItemId,
+    this.rewardEligible = true,
   });
 
   final String slug;
   final String? referralCode;
   final DateTime capturedAt;
+  final String? catalogItemId;
+  final bool rewardEligible;
 
   Map<String, dynamic> toJson() => {
         'slug': slug,
         if (referralCode != null) 'referralCode': referralCode,
+        if (catalogItemId != null) 'catalogItemId': catalogItemId,
         'capturedAt': capturedAt.toUtc().toIso8601String(),
+        'rewardEligible': rewardEligible,
       };
 
   factory PendingPrepReferral.fromJson(Map<String, dynamic> json) {
     return PendingPrepReferral(
       slug: json['slug'] as String? ?? '',
       referralCode: json['referralCode'] as String?,
+      catalogItemId: json['catalogItemId'] as String?,
       capturedAt: DateTime.tryParse(json['capturedAt'] as String? ?? '') ??
           DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
+      rewardEligible: json['rewardEligible'] as bool? ?? true,
     );
   }
 }

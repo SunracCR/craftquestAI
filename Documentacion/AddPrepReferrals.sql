@@ -16,7 +16,7 @@ BEGIN
 END
 GO
 
-UPDATE i SET Slug = LEFT(LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(NULLIF(LTRIM(RTRIM(i.TitleOverride)), N''), q.Title), N' ', N'-'), N'á', N'a'), N'é', N'e'), N'í', N'i'), N'ó', N'o'), N'ú', N'u'), N'ñ', N'n'), N'ü', N'u'), N'Á', N'a'), N'É', N'e'), N'Í', N'i'), N'Ó', N'o'), N'Ú', N'u'), N'Ñ', N'n'), 120) + N'-' + LEFT(REPLACE(CAST(i.CatalogItemId AS NVARCHAR(36)), N'-', N''), 8)
+UPDATE i SET Slug = LEFT(LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(NULLIF(LTRIM(RTRIM(i.TitleOverride)), N''), q.Title), N' ', N'-'), N'á', N'a'), N'é', N'e'), N'í', N'i'), N'ó', N'o'), N'ú', N'u'), N'ñ', N'n'), N'ü', N'u'), N'Á', N'a'), N'É', N'e'), N'Í', N'i'), N'Ó', N'o'), N'Ú', N'u'), N'Ñ', N'n')), 120) + N'-' + LEFT(REPLACE(CAST(i.CatalogItemId AS NVARCHAR(36)), N'-', N''), 8)
 FROM catalog.PrepCatalogItems i INNER JOIN quiz.Quizzes q ON q.QuizId = i.QuizId WHERE i.Slug IS NULL;
 GO
 
@@ -30,7 +30,7 @@ BEGIN
         CreatedAt DATETIME2 NOT NULL,
         IsActive BIT NOT NULL CONSTRAINT DF_PrepReferralCodes_IsActive DEFAULT (1),
         CONSTRAINT FK_PrepReferralCodes_CatalogItem FOREIGN KEY (CatalogItemId) REFERENCES catalog.PrepCatalogItems (CatalogItemId),
-        CONSTRAINT FK_PrepReferralCodes_ReferrerUser FOREIGN KEY (ReferrerUserId) REFERENCES auth.Users (UserId)
+        CONSTRAINT FK_PrepReferralCodes_ReferrerUser FOREIGN KEY (ReferrerUserId) REFERENCES core.Users (UserId)
     );
     CREATE UNIQUE NONCLUSTERED INDEX UX_PrepReferralCodes_Code ON catalog.PrepReferralCodes (Code);
     CREATE UNIQUE NONCLUSTERED INDEX UX_PrepReferralCodes_Referrer_CatalogItem ON catalog.PrepReferralCodes (ReferrerUserId, CatalogItemId);
@@ -49,8 +49,8 @@ BEGIN
         RewardDaysGranted INT NOT NULL CONSTRAINT DF_PrepReferralConversions_RewardDays DEFAULT (30),
         CreatedAt DATETIME2 NOT NULL,
         CONSTRAINT FK_PrepReferralConversions_ReferralCode FOREIGN KEY (ReferralCodeId) REFERENCES catalog.PrepReferralCodes (ReferralCodeId),
-        CONSTRAINT FK_PrepReferralConversions_ReferrerUser FOREIGN KEY (ReferrerUserId) REFERENCES auth.Users (UserId),
-        CONSTRAINT FK_PrepReferralConversions_BuyerUser FOREIGN KEY (BuyerUserId) REFERENCES auth.Users (UserId),
+        CONSTRAINT FK_PrepReferralConversions_ReferrerUser FOREIGN KEY (ReferrerUserId) REFERENCES core.Users (UserId),
+        CONSTRAINT FK_PrepReferralConversions_BuyerUser FOREIGN KEY (BuyerUserId) REFERENCES core.Users (UserId),
         CONSTRAINT FK_PrepReferralConversions_CatalogItem FOREIGN KEY (CatalogItemId) REFERENCES catalog.PrepCatalogItems (CatalogItemId),
         CONSTRAINT FK_PrepReferralConversions_Purchase FOREIGN KEY (PurchaseId) REFERENCES billing.Purchases (PurchaseId)
     );

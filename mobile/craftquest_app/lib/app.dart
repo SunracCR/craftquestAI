@@ -287,11 +287,31 @@ class _AuthGateState extends State<_AuthGate> {
     PendingPrepReferralLink link,
     AuthState authState,
   ) async {
+    String? catalogItemId;
+    try {
+      final resolved =
+          await getIt<PrepPlusRepository>().resolveCatalogItemIdBySlug(link.slug);
+      catalogItemId = resolved.catalogItemId;
+    } catch (_) {
+      catalogItemId = null;
+    }
+
+    var rewardEligible = true;
+    try {
+      final preview =
+          await getIt<PrepPlusRepository>().getPublicPreview(link.slug);
+      rewardEligible = preview.referralRewardsEligible;
+    } catch (_) {
+      rewardEligible = true;
+    }
+
     await getIt<PendingPrepReferralStore>().save(
       PendingPrepReferral(
         slug: link.slug,
         referralCode: link.referralCode,
+        catalogItemId: catalogItemId,
         capturedAt: DateTime.now().toUtc(),
+        rewardEligible: rewardEligible,
       ),
     );
 

@@ -251,11 +251,14 @@ public class PrepPlusPaymentService(
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        await prepReferralService.ApplyReferralRewardIfApplicableAsync(
-            purchase,
-            catalogItemId,
-            offer.CatalogItem.QuizId,
-            cancellationToken);
+        if (!offer.IsFree && offer.PriceAmount > 0 && purchase.Amount > 0)
+        {
+            await prepReferralService.ApplyReferralRewardIfApplicableAsync(
+                purchase,
+                catalogItemId,
+                offer.CatalogItem.QuizId,
+                cancellationToken);
+        }
 
         return new PrepCheckoutResultDto
         {
