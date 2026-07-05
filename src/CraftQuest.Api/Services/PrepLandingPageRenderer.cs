@@ -47,11 +47,13 @@ public static class PrepLandingPageRenderer
             : string.Empty;
 
         var ogUrl = string.IsNullOrWhiteSpace(referralCode)
-            ? $"{options.LinkBaseUrl.TrimEnd('/')}/prep/{Uri.EscapeDataString(preview.Slug)}"
+            ? PrepReferralLinkUrlBuilder.BuildPublicLandingUrl(options, preview.Slug)
             : shareUrl;
 
         var ogImageUrl = ResolveOgImageUrl(options, preview);
         var encodedOgImageUrl = WebUtility.HtmlEncode(ogImageUrl);
+        var brandIconUrl = WebUtility.HtmlEncode(PrepReferralLinkUrlBuilder.ResolveBrandIconUrl(options));
+        var faviconUrl = WebUtility.HtmlEncode(PrepReferralLinkUrlBuilder.ResolveFaviconUrl(options));
         var ogImageType = WebUtility.HtmlEncode(
             string.IsNullOrWhiteSpace(preview.CoverContentType)
                 ? "image/jpeg"
@@ -72,7 +74,10 @@ public static class PrepLandingPageRenderer
         var body = $"""
             <main class="card">
               {coverBlock}
-              <p class="brand">CraftQuestAI · Preparación+</p>
+              <div class="brand-row">
+                <img class="brand-icon" src="{brandIconUrl}" alt="CraftQuestAI" width="32" height="32" />
+                <p class="brand">CraftQuestAI · Preparación+</p>
+              </div>
               <p class="eyebrow">{WebUtility.HtmlEncode(labels.PrepPlusLabel)}</p>
               <h1>{encodedTitle}</h1>
               <p class="subtitle">{encodedCategory}</p>
@@ -93,6 +98,9 @@ public static class PrepLandingPageRenderer
               <meta charset="utf-8" />
               <meta name="viewport" content="width=device-width, initial-scale=1" />
               <title>{encodedTitle} · CraftQuestAI</title>
+              <link rel="icon" type="image/png" sizes="32x32" href="{faviconUrl}" />
+              <link rel="apple-touch-icon" href="{brandIconUrl}" />
+              <meta property="og:site_name" content="CraftQuestAI" />
               <meta property="og:title" content="{encodedTitle}" />
               <meta property="og:description" content="{encodedDescription}" />
               <meta property="og:url" content="{WebUtility.HtmlEncode(ogUrl)}" />
@@ -144,7 +152,19 @@ public static class PrepLandingPageRenderer
                   border-radius: 14px;
                   margin: 0 0 18px;
                 }
-                .brand { color: var(--accent); font-size: 0.85rem; margin: 0 0 8px; }
+                .brand-row {
+                  display: flex;
+                  align-items: center;
+                  gap: 10px;
+                  margin: 0 0 8px;
+                }
+                .brand-icon {
+                  width: 32px;
+                  height: 32px;
+                  border-radius: 8px;
+                  flex-shrink: 0;
+                }
+                .brand { color: var(--accent); font-size: 0.85rem; margin: 0; }
                 .eyebrow { color: var(--muted); font-size: 0.8rem; margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.06em; }
                 h1 { margin: 0 0 8px; font-size: 1.6rem; line-height: 1.2; }
                 .subtitle { margin: 0 0 12px; color: var(--muted); }

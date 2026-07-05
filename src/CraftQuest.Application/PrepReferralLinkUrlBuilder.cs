@@ -9,17 +9,22 @@ public static class PrepReferralLinkUrlBuilder
 
     public static bool IsValidCodeFormat(string code) => CodeFormat.IsMatch(code.Trim().ToUpperInvariant());
 
+    public static string ResolvePrepPublicBaseUrl(JoinLinkOptions options) =>
+        string.IsNullOrWhiteSpace(options.PublicSiteUrl)
+            ? options.LinkBaseUrl.TrimEnd('/')
+            : options.PublicSiteUrl.TrimEnd('/');
+
     public static string BuildPublicLandingUrl(JoinLinkOptions options, string slug)
     {
         var normalizedSlug = slug.Trim().ToLowerInvariant();
-        var baseUrl = options.LinkBaseUrl.TrimEnd('/');
+        var baseUrl = ResolvePrepPublicBaseUrl(options);
         return $"{baseUrl}/prep/{Uri.EscapeDataString(normalizedSlug)}";
     }
 
     public static string BuildPublicCoverUrl(JoinLinkOptions options, string slug)
     {
         var normalizedSlug = slug.Trim().ToLowerInvariant();
-        var baseUrl = options.LinkBaseUrl.TrimEnd('/');
+        var baseUrl = ResolvePrepPublicBaseUrl(options);
         return $"{baseUrl}/prep/{Uri.EscapeDataString(normalizedSlug)}/cover";
     }
 
@@ -29,7 +34,7 @@ public static class PrepReferralLinkUrlBuilder
     public static string BuildPublicShareImageUrl(JoinLinkOptions options, string slug)
     {
         var normalizedSlug = slug.Trim().ToLowerInvariant();
-        var baseUrl = options.LinkBaseUrl.TrimEnd('/');
+        var baseUrl = ResolvePrepPublicBaseUrl(options);
         return $"{baseUrl}/prep/{Uri.EscapeDataString(normalizedSlug)}/share-image.jpg";
     }
 
@@ -37,7 +42,7 @@ public static class PrepReferralLinkUrlBuilder
     {
         var normalizedSlug = slug.Trim().ToLowerInvariant();
         var normalizedCode = referralCode.Trim().ToUpperInvariant();
-        var baseUrl = options.LinkBaseUrl.TrimEnd('/');
+        var baseUrl = ResolvePrepPublicBaseUrl(options);
         return $"{baseUrl}/prep/{Uri.EscapeDataString(normalizedSlug)}?ref={Uri.EscapeDataString(normalizedCode)}";
     }
 
@@ -82,4 +87,22 @@ public static class PrepReferralLinkUrlBuilder
         var path = pathOrAbsolute.StartsWith('/') ? pathOrAbsolute : $"/{pathOrAbsolute}";
         return $"{options.LinkBaseUrl.TrimEnd('/')}{path}";
     }
+
+    public static string ResolveBrandIconUrl(JoinLinkOptions options)
+    {
+        if (!string.IsNullOrWhiteSpace(options.BrandIconUrl))
+        {
+            return options.BrandIconUrl.Trim();
+        }
+
+        if (!string.IsNullOrWhiteSpace(options.DefaultOgImageUrl))
+        {
+            return options.DefaultOgImageUrl.Trim();
+        }
+
+        return $"{options.WebAppUrl.TrimEnd('/')}/icons/Icon-192.png";
+    }
+
+    public static string ResolveFaviconUrl(JoinLinkOptions options) =>
+        $"{options.WebAppUrl.TrimEnd('/')}/favicon-32.png?v=2";
 }
