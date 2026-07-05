@@ -651,7 +651,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String prepPlusShareLinkMessage(String title, String url) {
-    return '🎯 O repaso definitivo para o exame! Pratique com o questionário de $title no Prep+ e garanta essa nota. 🚀\n👇 Entra aqui:\n$url';
+    return '🎯 O repaso definitivo para o exame! Pratique com o questionário de $title no CraftQuestAI e garanta essa nota. 🚀\n👇 Entra aqui:\n$url';
   }
 
   @override
@@ -4142,7 +4142,39 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get prepAdminCoverImageHint =>
-      'Exibida na landing pública e ao compartilhar o link do item.';
+      'Usada na landing e ao compartilhar nas redes. Ao enviar, é salva no item automaticamente.';
+
+  @override
+  String get prepAdminCoverSaved => 'Capa salva no item.';
+
+  @override
+  String get prepAdminCoverRemoved => 'Capa removida do item.';
+
+  @override
+  String get prepAdminCoverSaving => 'Salvando capa…';
+
+  @override
+  String get prepAdminCoverSavedStatus => 'Capa salva no catálogo';
+
+  @override
+  String get prepAdminCoverNotSavedStatus =>
+      'Não foi possível confirmar o salvamento. Toque em «Salvar metadados».';
+
+  @override
+  String get prepAdminCoverUploadedPendingCreate =>
+      'Imagem enviada. Será salva ao criar o item.';
+
+  @override
+  String get prepAdminCoverWillSaveOnCreate =>
+      'Será salva ao tocar em «Criar item».';
+
+  @override
+  String get prepAdminCoverSaveNeedsCategory =>
+      'Selecione uma subcategoria antes de salvar a capa.';
+
+  @override
+  String get prepAdminShareLinkNoCover =>
+      'Envie uma capa para que a imagem apareça ao compartilhar nas redes.';
 
   @override
   String get prepAdminShareLinkSection => 'Link para compartilhar';

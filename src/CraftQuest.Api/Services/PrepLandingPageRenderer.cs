@@ -52,10 +52,17 @@ public static class PrepLandingPageRenderer
 
         var ogImageUrl = ResolveOgImageUrl(options, preview);
         var encodedOgImageUrl = WebUtility.HtmlEncode(ogImageUrl);
+        var ogImageType = WebUtility.HtmlEncode(
+            string.IsNullOrWhiteSpace(preview.CoverContentType)
+                ? "image/jpeg"
+                : preview.CoverContentType);
         var ogImageTags = $"""
               <meta property="og:image" content="{encodedOgImageUrl}" />
+              <meta property="og:image:secure_url" content="{encodedOgImageUrl}" />
+              <meta property="og:image:type" content="{ogImageType}" />
               <meta property="og:image:alt" content="{encodedTitle}" />
               <meta name="twitter:image" content="{encodedOgImageUrl}" />
+              <link rel="image_src" href="{encodedOgImageUrl}" />
               """;
 
         var coverBlock = string.IsNullOrWhiteSpace(preview.CoverMediaUrl)

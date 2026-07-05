@@ -1,5 +1,6 @@
 using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Exceptions;
+using CraftQuest.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -73,6 +74,7 @@ public class MediaController(
         var (stream, contentType, fileName) =
             await mediaService.OpenReadAsync(mediaAssetId, cancellationToken);
 
-        return File(stream, contentType, fileName);
+        SocialPreviewImageResult.ApplySocialCacheHeaders(Response, null);
+        return SocialPreviewImageResult.FromStream(stream, contentType);
     }
 }

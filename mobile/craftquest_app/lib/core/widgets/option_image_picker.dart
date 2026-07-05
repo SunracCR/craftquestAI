@@ -21,12 +21,14 @@ class OptionImagePicker extends StatefulWidget {
     this.mediaAssetId,
     this.onChanged,
     this.previewHeight = AppMediaDisplay.optionImageHeight,
+    this.showUploadSuccessSnackBar = true,
   });
 
   final String label;
   final String? mediaAssetId;
   final ValueChanged<String?>? onChanged;
   final double previewHeight;
+  final bool showUploadSuccessSnackBar;
 
   @override
   State<OptionImagePicker> createState() => _OptionImagePickerState();
@@ -140,7 +142,9 @@ class _OptionImagePickerState extends State<OptionImagePicker> {
       });
       widget.onChanged?.call(_mediaAssetId);
       if (!mounted) return;
-      context.showSuccessSnackBar(l10n.imageAttachedSuccess);
+      if (widget.showUploadSuccessSnackBar) {
+        context.showSuccessSnackBar(l10n.imageAttachedSuccess);
+      }
     } on DioException catch (e) {
       if (kDebugMode) {
         debugPrint(

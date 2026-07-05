@@ -1,4 +1,5 @@
 using System.Text.Json;
+using CraftQuest.Application;
 using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Exceptions;
 using CraftQuest.Application.Models.PrepPlus;
@@ -22,8 +23,10 @@ public class PrepPlusCatalogService(
     IPrepPlusAccessService prepPlusAccessService,
     IMediaService mediaService,
     IOptions<PracticeOptions> practiceOptions,
+    IOptions<JoinLinkOptions> joinLinkOptions,
     ILogger<PrepPlusCatalogService> logger) : IPrepPlusCatalogService
 {
+    private readonly JoinLinkOptions _joinLinkOptions = joinLinkOptions.Value;
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
     private static readonly HashSet<string> ValidPriceFilters = ["all", "free", "paid"];
@@ -668,8 +671,8 @@ public class PrepPlusCatalogService(
             LowestPaidPrice = paidOffers.Count == 0 ? null : paidOffers.Min(o => o.PriceAmount),
             CurrencyCode = paidOffers.FirstOrDefault()?.CurrencyCode ?? bestOffer?.CurrencyCode,
             BestOfferDurationDays = bestOffer?.DurationDays,
-            CoverMediaUrl = item.CoverMediaId is Guid coverMediaId
-                ? mediaService.BuildPublicUrl(coverMediaId)
+            CoverMediaUrl = item.CoverMediaId is not null && !string.IsNullOrWhiteSpace(item.Slug)
+                ? PrepReferralLinkUrlBuilder.BuildPublicShareImageUrl(_joinLinkOptions, item.Slug)
                 : null,
         };
     }

@@ -232,6 +232,15 @@ public class PrepReferralService(
         var activeOffers = item.AccessOffers.Where(o => o.IsActive).ToList();
         var paidOffers = activeOffers.Where(o => !o.IsFree && o.PriceAmount > 0).ToList();
         var bestOffer = activeOffers.OrderBy(o => o.DurationDays).FirstOrDefault();
+        string? coverContentType = null;
+        if (item.CoverMediaId is Guid coverMediaId)
+        {
+            coverContentType = await dbContext.MediaAssets
+                .AsNoTracking()
+                .Where(m => m.MediaAssetId == coverMediaId && m.Status == "active")
+                .Select(m => m.ContentType)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
 
         return new PrepReferralLandingPreviewDto
         {
@@ -241,20 +250,58 @@ public class PrepReferralService(
             CategoryName = item.Category.Name,
             LowestPaidPrice = paidOffers.Count > 0 ? paidOffers.Min(o => o.PriceAmount) : null,
             CurrencyCode = paidOffers.FirstOrDefault()?.CurrencyCode ?? bestOffer?.CurrencyCode,
-            CoverMediaUrl = BuildCoverMediaUrl(item.CoverMediaId),
+            CoverMediaUrl = BuildCoverMediaUrl(normalizedSlug, item.CoverMediaId),
+            CoverContentType = coverContentType,
         };
     }
 
-    private string? BuildCoverMediaUrl(Guid? coverMediaId)
+    public async Task<(Stream Stream, string ContentType, long? FileSizeBytes)?> OpenPublishedCoverAsync(
+        string slug,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedSlug = slug.Trim().ToLowerInvariant();
+        var item = await dbContext.PrepCatalogItems
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                i => i.Slug == normalizedSlug && i.IsPublished && !i.IsDeleted,
+                cancellationToken);
+
+        if (item?.CoverMediaId is not Guid coverMediaId)
+        {
+            return null;
+        }
+
+        var asset = await dbContext.MediaAssets
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                m => m.MediaAssetId == coverMediaId && m.Status == "active",
+                cancellationToken);
+
+        if (asset is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            var (stream, contentType, _) =
+                await mediaService.OpenReadAsync(coverMediaId, cancellationToken);
+            return (stream, contentType, asset.FileSizeBytes);
+        }
+        catch (AppException ex) when (ex.StatusCode == 404)
+        {
+            return null;
+        }
+    }
+
+    private string? BuildCoverMediaUrl(string slug, Guid? coverMediaId)
     {
         if (coverMediaId is null)
         {
             return null;
         }
 
-        return PrepReferralLinkUrlBuilder.ToAbsoluteUrl(
-            _joinLinkOptions,
-            mediaService.BuildPublicUrl(coverMediaId.Value));
+        return PrepReferralLinkUrlBuilder.BuildPublicShareImageUrl(_joinLinkOptions, slug);
     }
 
     private Task<bool> CatalogItemHasPaidOffersAsync(

@@ -6878,8 +6878,38 @@ abstract class AppLocalizations {
   /// No description provided for @prepAdminCoverImageHint.
   ///
   /// In es, this message translates to:
-  /// **'Se muestra en la landing pública y al compartir el enlace del ítem.'**
+  /// **'Se usa en la landing y al compartir en redes. Al subirla se guarda en el ítem automáticamente.'**
   String get prepAdminCoverImageHint;
+
+  /// No description provided for @prepAdminCoverSaved.
+  String get prepAdminCoverSaved;
+
+  /// No description provided for @prepAdminCoverRemoved.
+  String get prepAdminCoverRemoved;
+
+  /// No description provided for @prepAdminCoverSaving.
+  String get prepAdminCoverSaving;
+
+  /// No description provided for @prepAdminCoverSavedStatus.
+  String get prepAdminCoverSavedStatus;
+
+  /// No description provided for @prepAdminCoverNotSavedStatus.
+  String get prepAdminCoverNotSavedStatus;
+
+  /// No description provided for @prepAdminCoverUploadedPendingCreate.
+  String get prepAdminCoverUploadedPendingCreate;
+
+  /// No description provided for @prepAdminCoverWillSaveOnCreate.
+  String get prepAdminCoverWillSaveOnCreate;
+
+  /// No description provided for @prepAdminCoverSaveNeedsCategory.
+  String get prepAdminCoverSaveNeedsCategory;
+
+  /// No description provided for @prepAdminShareLinkNoCover.
+  ///
+  /// In es, this message translates to:
+  /// **'Sube una portada para que aparezca la imagen al compartir en redes.'**
+  String get prepAdminShareLinkNoCover;
 
   /// No description provided for @prepAdminShareLinkSection.
   ///

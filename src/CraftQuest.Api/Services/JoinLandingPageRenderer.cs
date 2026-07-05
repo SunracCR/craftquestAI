@@ -45,6 +45,23 @@ public static class JoinLandingPageRenderer
         return JoinDeviceKind.Desktop;
     }
 
+    public static bool IsSocialPreviewCrawler(string? userAgent)
+    {
+        if (string.IsNullOrWhiteSpace(userAgent))
+        {
+            return false;
+        }
+
+        return userAgent.Contains("facebookexternalhit", StringComparison.OrdinalIgnoreCase)
+            || userAgent.Contains("Facebot", StringComparison.OrdinalIgnoreCase)
+            || userAgent.Contains("Twitterbot", StringComparison.OrdinalIgnoreCase)
+            || userAgent.Contains("LinkedInBot", StringComparison.OrdinalIgnoreCase)
+            || userAgent.Contains("WhatsApp", StringComparison.OrdinalIgnoreCase)
+            || userAgent.Contains("Slackbot", StringComparison.OrdinalIgnoreCase)
+            || userAgent.Contains("TelegramBot", StringComparison.OrdinalIgnoreCase)
+            || userAgent.Contains("Discordbot", StringComparison.OrdinalIgnoreCase);
+    }
+
     public static string RenderGenericLanding(JoinLinkOptions options, string? acceptLanguage)
     {
         var labels = ResolveLabels(acceptLanguage);

@@ -39,4 +39,5 @@ public sealed class PrepReferralLandingPreviewDto
     public decimal? LowestPaidPrice { get; init; }
     public string? CurrencyCode { get; init; }
     public string? CoverMediaUrl { get; init; }
+    public string? CoverContentType { get; init; }
 }

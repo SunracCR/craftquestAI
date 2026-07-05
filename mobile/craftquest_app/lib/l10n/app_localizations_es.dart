@@ -654,7 +654,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String prepPlusShareLinkMessage(String title, String url) {
-    return '🎯 ¡El repaso definitivo para el examen! Practica con el cuestionario de $title en Preparación+ y asegura esa nota. 🚀\n👇 Entra aquí:\n$url';
+    return '🎯 ¡El repaso definitivo para el examen! Practica con el cuestionario de $title en CraftQuestAI y asegura esa nota. 🚀\n👇 Entra aquí:\n$url';
   }
 
   @override
@@ -4148,7 +4148,39 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get prepAdminCoverImageHint =>
-      'Se muestra en la landing pública y al compartir el enlace del ítem.';
+      'Se usa en la landing y al compartir en redes. Al subirla se guarda en el ítem automáticamente.';
+
+  @override
+  String get prepAdminCoverSaved => 'Portada guardada en el ítem.';
+
+  @override
+  String get prepAdminCoverRemoved => 'Portada eliminada del ítem.';
+
+  @override
+  String get prepAdminCoverSaving => 'Guardando portada…';
+
+  @override
+  String get prepAdminCoverSavedStatus => 'Portada guardada en el catálogo';
+
+  @override
+  String get prepAdminCoverNotSavedStatus =>
+      'No se pudo confirmar el guardado. Pulsa «Guardar metadatos».';
+
+  @override
+  String get prepAdminCoverUploadedPendingCreate =>
+      'Imagen subida. Se guardará al crear el ítem.';
+
+  @override
+  String get prepAdminCoverWillSaveOnCreate =>
+      'Se guardará cuando pulses «Crear ítem».';
+
+  @override
+  String get prepAdminCoverSaveNeedsCategory =>
+      'Selecciona una subcategoría antes de guardar la portada.';
+
+  @override
+  String get prepAdminShareLinkNoCover =>
+      'Sube una portada para que aparezca la imagen al compartir en redes.';
 
   @override
   String get prepAdminShareLinkSection => 'Enlace para compartir';

@@ -20,6 +20,10 @@ public interface IPrepReferralService
         string slug,
         CancellationToken cancellationToken = default);
 
+    Task<(Stream Stream, string ContentType, long? FileSizeBytes)?> OpenPublishedCoverAsync(
+        string slug,
+        CancellationToken cancellationToken = default);
+
     Task<Guid?> ResolveReferralCodeIdAsync(
         string? referralCode,
         Guid catalogItemId,

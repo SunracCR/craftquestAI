@@ -37,7 +37,10 @@ public class PrepLandingController(
             normalizedReferral = null;
         }
 
-        var device = JoinLandingPageRenderer.DetectDevice(Request.Headers.UserAgent.ToString());
+        var userAgent = Request.Headers.UserAgent.ToString();
+        var device = JoinLandingPageRenderer.IsSocialPreviewCrawler(userAgent)
+            ? JoinDeviceKind.Desktop
+            : JoinLandingPageRenderer.DetectDevice(userAgent);
         var html = PrepLandingPageRenderer.Render(
             joinLinkOptions.Value,
             preview,
@@ -46,5 +49,22 @@ public class PrepLandingController(
             Request.Headers.AcceptLanguage.ToString());
 
         return Content(html, "text/html; charset=utf-8");
+    }
+
+    [HttpGet("/prep/{slug}/cover")]
+    [HttpGet("/prep/{slug}/share-image.jpg")]
+    [AllowAnonymous]
+    [ResponseCache(Duration = 86400, Location = ResponseCacheLocation.Any)]
+    public async Task<IActionResult> PrepCover(string slug, CancellationToken cancellationToken)
+    {
+        var result = await prepReferralService.OpenPublishedCoverAsync(slug, cancellationToken);
+        if (result is null)
+        {
+            return NotFound();
+        }
+
+        var (stream, contentType, fileSizeBytes) = result.Value;
+        SocialPreviewImageResult.ApplySocialCacheHeaders(Response, fileSizeBytes);
+        return SocialPreviewImageResult.FromStream(stream, contentType, fileSizeBytes);
     }
 }

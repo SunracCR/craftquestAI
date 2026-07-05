@@ -270,7 +270,7 @@
     "placeholders": { "time": { "type": "String" } }
   },
   "prepPlusShareAction": "Compartilhar",
-  "prepPlusShareLinkMessage": "🎯 O repaso definitivo para o exame! Pratique com o questionário de {title} no Prep+ e garanta essa nota. 🚀\n👇 Entra aqui:\n{url}",
+  "prepPlusShareLinkMessage": "🎯 O repaso definitivo para o exame! Pratique com o questionário de {title} no CraftQuestAI e garanta essa nota. 🚀\n👇 Entra aqui:\n{url}",
   "@prepPlusShareLinkMessage": {
     "placeholders": {
       "title": { "type": "String" },
@@ -1864,7 +1864,16 @@
   "prepAdminTagsLabel": "Etiquetas",
   "prepAdminTagsHint": "Separadas por vírgulas",
   "prepAdminCoverImageLabel": "Capa (imagem)",
-  "prepAdminCoverImageHint": "Exibida na landing pública e ao compartilhar o link do item.",
+  "prepAdminCoverImageHint": "Usada na landing e ao compartilhar nas redes. Ao enviar, é salva no item automaticamente.",
+  "prepAdminCoverSaved": "Capa salva no item.",
+  "prepAdminCoverRemoved": "Capa removida do item.",
+  "prepAdminCoverSaving": "Salvando capa…",
+  "prepAdminCoverSavedStatus": "Capa salva no catálogo",
+  "prepAdminCoverNotSavedStatus": "Não foi possível confirmar o salvamento. Toque em «Salvar metadados».",
+  "prepAdminCoverUploadedPendingCreate": "Imagem enviada. Será salva ao criar o item.",
+  "prepAdminCoverWillSaveOnCreate": "Será salva ao tocar em «Criar item».",
+  "prepAdminCoverSaveNeedsCategory": "Selecione uma subcategoria antes de salvar a capa.",
+  "prepAdminShareLinkNoCover": "Envie uma capa para que a imagem apareça ao compartilhar nas redes.",
   "prepAdminShareLinkSection": "Link para compartilhar",
   "prepAdminShareLinkHint": "Use nas redes sociais. Ao abrir, mostra a landing pública com a prévia do item.",
   "prepAdminShareLinkUnavailable": "Publique o item para obter o link de compartilhamento.",

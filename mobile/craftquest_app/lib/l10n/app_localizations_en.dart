@@ -649,7 +649,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String prepPlusShareLinkMessage(String title, String url) {
-    return '🎯 The ultimate exam review! Practice with the $title quiz on Prep+ and ace your grade. 🚀\n👇 Start here:\n$url';
+    return '🎯 The ultimate exam review! Practice with the $title quiz on CraftQuestAI and ace your grade. 🚀\n👇 Start here:\n$url';
   }
 
   @override
@@ -4116,7 +4116,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get prepAdminCoverImageHint =>
-      'Shown on the public landing page and when sharing the item link.';
+      'Used on the landing page and when sharing on social media. Uploading saves it to the item automatically.';
+
+  @override
+  String get prepAdminCoverSaved => 'Cover saved to the item.';
+
+  @override
+  String get prepAdminCoverRemoved => 'Cover removed from the item.';
+
+  @override
+  String get prepAdminCoverSaving => 'Saving cover…';
+
+  @override
+  String get prepAdminCoverSavedStatus => 'Cover saved to the catalog';
+
+  @override
+  String get prepAdminCoverNotSavedStatus =>
+      'Could not confirm the save. Tap «Save metadata».';
+
+  @override
+  String get prepAdminCoverUploadedPendingCreate =>
+      'Image uploaded. It will be saved when you create the item.';
+
+  @override
+  String get prepAdminCoverWillSaveOnCreate =>
+      'It will be saved when you tap «Create item».';
+
+  @override
+  String get prepAdminCoverSaveNeedsCategory =>
+      'Select a subcategory before saving the cover.';
+
+  @override
+  String get prepAdminShareLinkNoCover =>
+      'Upload a cover image so it appears when sharing on social media.';
 
   @override
   String get prepAdminShareLinkSection => 'Share link';

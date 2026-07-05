@@ -16,6 +16,23 @@ public static class PrepReferralLinkUrlBuilder
         return $"{baseUrl}/prep/{Uri.EscapeDataString(normalizedSlug)}";
     }
 
+    public static string BuildPublicCoverUrl(JoinLinkOptions options, string slug)
+    {
+        var normalizedSlug = slug.Trim().ToLowerInvariant();
+        var baseUrl = options.LinkBaseUrl.TrimEnd('/');
+        return $"{baseUrl}/prep/{Uri.EscapeDataString(normalizedSlug)}/cover";
+    }
+
+    /// <summary>
+    /// URL with a file extension for Open Graph crawlers (Facebook, WhatsApp, etc.).
+    /// </summary>
+    public static string BuildPublicShareImageUrl(JoinLinkOptions options, string slug)
+    {
+        var normalizedSlug = slug.Trim().ToLowerInvariant();
+        var baseUrl = options.LinkBaseUrl.TrimEnd('/');
+        return $"{baseUrl}/prep/{Uri.EscapeDataString(normalizedSlug)}/share-image.jpg";
+    }
+
     public static string BuildShareUrl(JoinLinkOptions options, string slug, string referralCode)
     {
         var normalizedSlug = slug.Trim().ToLowerInvariant();

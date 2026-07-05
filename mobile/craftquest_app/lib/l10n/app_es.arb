@@ -270,7 +270,7 @@
     "placeholders": { "time": { "type": "String" } }
   },
   "prepPlusShareAction": "Compartir",
-  "prepPlusShareLinkMessage": "🎯 ¡El repaso definitivo para el examen! Practica con el cuestionario de {title} en Preparación+ y asegura esa nota. 🚀\n👇 Entra aquí:\n{url}",
+  "prepPlusShareLinkMessage": "🎯 ¡El repaso definitivo para el examen! Practica con el cuestionario de {title} en CraftQuestAI y asegura esa nota. 🚀\n👇 Entra aquí:\n{url}",
   "@prepPlusShareLinkMessage": {
     "placeholders": {
       "title": { "type": "String" },
@@ -1916,7 +1916,16 @@
   "prepAdminTagsLabel": "Etiquetas",
   "prepAdminTagsHint": "Separadas por comas",
   "prepAdminCoverImageLabel": "Portada (imagen)",
-  "prepAdminCoverImageHint": "Se muestra en la landing pública y al compartir el enlace del ítem.",
+  "prepAdminCoverImageHint": "Se usa en la landing y al compartir en redes. Al subirla se guarda en el ítem automáticamente.",
+  "prepAdminCoverSaved": "Portada guardada en el ítem.",
+  "prepAdminCoverRemoved": "Portada eliminada del ítem.",
+  "prepAdminCoverSaving": "Guardando portada…",
+  "prepAdminCoverSavedStatus": "Portada guardada en el catálogo",
+  "prepAdminCoverNotSavedStatus": "No se pudo confirmar el guardado. Pulsa «Guardar metadatos».",
+  "prepAdminCoverUploadedPendingCreate": "Imagen subida. Se guardará al crear el ítem.",
+  "prepAdminCoverWillSaveOnCreate": "Se guardará cuando pulses «Crear ítem».",
+  "prepAdminCoverSaveNeedsCategory": "Selecciona una subcategoría antes de guardar la portada.",
+  "prepAdminShareLinkNoCover": "Sube una portada para que aparezca la imagen al compartir en redes.",
   "prepAdminShareLinkSection": "Enlace para compartir",
   "prepAdminShareLinkHint": "Úsalo en redes sociales. Al abrirlo se muestra la landing con vista previa del ítem.",
   "prepAdminShareLinkUnavailable": "Publica el ítem para obtener el enlace de compartir.",

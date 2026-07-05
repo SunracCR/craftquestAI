@@ -270,7 +270,7 @@
     "placeholders": { "time": { "type": "String" } }
   },
   "prepPlusShareAction": "Share",
-  "prepPlusShareLinkMessage": "🎯 The ultimate exam review! Practice with the {title} quiz on Prep+ and ace your grade. 🚀\n👇 Start here:\n{url}",
+  "prepPlusShareLinkMessage": "🎯 The ultimate exam review! Practice with the {title} quiz on CraftQuestAI and ace your grade. 🚀\n👇 Start here:\n{url}",
   "@prepPlusShareLinkMessage": {
     "placeholders": {
       "title": { "type": "String" },
@@ -1865,7 +1865,16 @@
   "prepAdminTagsLabel": "Tags",
   "prepAdminTagsHint": "Comma-separated",
   "prepAdminCoverImageLabel": "Cover image",
-  "prepAdminCoverImageHint": "Shown on the public landing page and when sharing the item link.",
+  "prepAdminCoverImageHint": "Used on the landing page and when sharing on social media. Uploading saves it to the item automatically.",
+  "prepAdminCoverSaved": "Cover saved to the item.",
+  "prepAdminCoverRemoved": "Cover removed from the item.",
+  "prepAdminCoverSaving": "Saving cover…",
+  "prepAdminCoverSavedStatus": "Cover saved to the catalog",
+  "prepAdminCoverNotSavedStatus": "Could not confirm the save. Tap «Save metadata».",
+  "prepAdminCoverUploadedPendingCreate": "Image uploaded. It will be saved when you create the item.",
+  "prepAdminCoverWillSaveOnCreate": "It will be saved when you tap «Create item».",
+  "prepAdminCoverSaveNeedsCategory": "Select a subcategory before saving the cover.",
+  "prepAdminShareLinkNoCover": "Upload a cover image so it appears when sharing on social media.",
   "prepAdminShareLinkSection": "Share link",
   "prepAdminShareLinkHint": "Use on social media. Opening it shows the public landing preview for this item.",
   "prepAdminShareLinkUnavailable": "Publish the item to get the share link.",

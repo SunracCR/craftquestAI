@@ -199,6 +199,169 @@ class _PrepPlusAdminItemEditPageState extends State<PrepPlusAdminItemEditPage> {
       .where((t) => t.isNotEmpty)
       .toList();
 
+  Map<String, dynamic> _buildMetadataPayload() => {
+        'categoryId': _categoryId,
+        'titleOverride':
+            _titleCtrl.text.trim().isEmpty ? null : _titleCtrl.text.trim(),
+        'description': _descriptionCtrl.text.trim().isEmpty
+            ? null
+            : _descriptionCtrl.text.trim(),
+        'coverMediaId': _coverMediaId,
+        'tags': _parseTags(),
+        'institutionTag': _showInstitutionTag
+            ? (_institutionCtrl.text.trim().isEmpty
+                ? null
+                : _institutionCtrl.text.trim())
+            : null,
+        'listingStartsAt': _listingStartsAt?.toUtc().toIso8601String(),
+        'listingEndsAt': _listingEndsAt?.toUtc().toIso8601String(),
+      };
+
+  bool get _coverPersistedOnServer =>
+      _coverMediaId != null &&
+      _coverMediaId!.isNotEmpty &&
+      _coverMediaId == _item?.coverMediaId;
+
+  Future<void> _onCoverMediaChanged(String? id) async {
+    final previousId = _item?.coverMediaId;
+    setState(() => _coverMediaId = id);
+    if (widget.isCreate) {
+      if (!mounted) return;
+      context.showSuccessSnackBar(
+        AppLocalizations.of(context)!.prepAdminCoverUploadedPendingCreate,
+      );
+      return;
+    }
+    if (widget.catalogItemId == null || _categoryId == null) {
+      if (!mounted) return;
+      context.showErrorSnackBar(
+        AppLocalizations.of(context)!.prepAdminCoverSaveNeedsCategory,
+      );
+      setState(() => _coverMediaId = previousId);
+      return;
+    }
+    final saved = await _persistMetadata(
+      showSuccessSnackBar: false,
+      successMessage: id == null
+          ? AppLocalizations.of(context)!.prepAdminCoverRemoved
+          : AppLocalizations.of(context)!.prepAdminCoverSaved,
+    );
+    if (!saved && mounted) {
+      setState(() => _coverMediaId = previousId);
+    }
+  }
+
+  Future<bool> _persistMetadata({
+    bool showSuccessSnackBar = true,
+    String? successMessage,
+  }) async {
+    if (widget.isCreate || widget.catalogItemId == null || _categoryId == null) {
+      return false;
+    }
+    setState(() => _saving = true);
+    try {
+      final updated = await _repo.updateItem(
+        widget.catalogItemId!,
+        _buildMetadataPayload(),
+      );
+      if (!mounted) return false;
+      _bindItem(updated, _subcategories);
+      _changed = true;
+      if (showSuccessSnackBar || successMessage != null) {
+        context.showSuccessSnackBar(
+          successMessage ?? AppLocalizations.of(context)!.prepAdminMetadataSaved,
+        );
+      }
+      setState(() {});
+      return true;
+    } on DioException catch (e) {
+      if (!mounted) return false;
+      context.showErrorSnackBar(
+        _repo.mapError(e, AppLocalizations.of(context)!),
+      );
+      return false;
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Widget _buildCoverSaveStatus(AppLocalizations l10n) {
+    if (_coverMediaId == null || _coverMediaId!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    if (_saving) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+        child: Row(
+          children: [
+            const SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Expanded(
+              child: Text(
+                l10n.prepAdminCoverSaving,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    if (widget.isCreate) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+        child: Text(
+          l10n.prepAdminCoverWillSaveOnCreate,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.tertiary,
+            fontSize: 12,
+          ),
+        ),
+      );
+    }
+    if (_coverPersistedOnServer) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+        child: Row(
+          children: [
+            Icon(
+              Icons.check_circle_outline,
+              size: 16,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Expanded(
+              child: Text(
+                l10n.prepAdminCoverSavedStatus,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: Text(
+        l10n.prepAdminCoverNotSavedStatus,
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.error,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+
   String _itemDisplayTitle(AppLocalizations l10n) {
     final override = _titleCtrl.text.trim();
     if (override.isNotEmpty) {
@@ -239,6 +402,17 @@ class _PrepPlusAdminItemEditPageState extends State<PrepPlusAdminItemEditPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 if (shareUrl != null && shareUrl.isNotEmpty) ...[
+                  if (_coverMediaId == null || _coverMediaId!.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      child: Text(
+                        l10n.prepAdminShareLinkNoCover,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
                   SelectableText(
                     shareUrl,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -324,28 +498,17 @@ class _PrepPlusAdminItemEditPageState extends State<PrepPlusAdminItemEditPage> {
       context.showErrorSnackBar(l10n.prepAdminSelectCategoryError);
       return;
     }
-    setState(() => _saving = true);
-    try {
-      if (widget.isCreate) {
-        if (_selectedQuizId == null) {
-          if (mounted) setState(() => _saving = false);
-          context.showErrorSnackBar(l10n.prepAdminSelectQuizError);
-          return;
-        }
+    if (widget.isCreate) {
+      if (_selectedQuizId == null) {
+        context.showErrorSnackBar(l10n.prepAdminSelectQuizError);
+        return;
+      }
+      setState(() => _saving = true);
+      try {
         final created = await _repo.createItem({
           'quizId': _selectedQuizId,
           'categoryId': _categoryId,
-          'titleOverride':
-              _titleCtrl.text.trim().isEmpty ? null : _titleCtrl.text.trim(),
-          'description': _descriptionCtrl.text.trim().isEmpty
-              ? null
-              : _descriptionCtrl.text.trim(),
-          'coverMediaId': _coverMediaId,
-          'tags': _parseTags(),
-          if (_showInstitutionTag && _institutionCtrl.text.trim().isNotEmpty)
-            'institutionTag': _institutionCtrl.text.trim(),
-          'listingStartsAt': _listingStartsAt?.toUtc().toIso8601String(),
-          'listingEndsAt': _listingEndsAt?.toUtc().toIso8601String(),
+          ..._buildMetadataPayload(),
         });
         if (!mounted) return;
         _changed = true;
@@ -357,37 +520,16 @@ class _PrepPlusAdminItemEditPageState extends State<PrepPlusAdminItemEditPage> {
             ),
           ),
         );
-        return;
+      } on DioException catch (e) {
+        if (!mounted) return;
+        context.showErrorSnackBar(_repo.mapError(e));
+      } finally {
+        if (mounted) setState(() => _saving = false);
       }
-
-      final updated = await _repo.updateItem(widget.catalogItemId!, {
-        'categoryId': _categoryId,
-        'titleOverride':
-            _titleCtrl.text.trim().isEmpty ? null : _titleCtrl.text.trim(),
-        'description': _descriptionCtrl.text.trim().isEmpty
-            ? null
-            : _descriptionCtrl.text.trim(),
-        'coverMediaId': _coverMediaId,
-        'tags': _parseTags(),
-        'institutionTag': _showInstitutionTag
-            ? (_institutionCtrl.text.trim().isEmpty
-                ? null
-                : _institutionCtrl.text.trim())
-            : null,
-        'listingStartsAt': _listingStartsAt?.toUtc().toIso8601String(),
-        'listingEndsAt': _listingEndsAt?.toUtc().toIso8601String(),
-      });
-      if (!mounted) return;
-      _bindItem(updated, _subcategories);
-      _changed = true;
-      context.showSuccessSnackBar(l10n.prepAdminMetadataSaved);
-      setState(() {});
-    } on DioException catch (e) {
-      if (!mounted) return;
-      context.showErrorSnackBar(_repo.mapError(e));
-    } finally {
-      if (mounted) setState(() => _saving = false);
+      return;
     }
+
+    await _persistMetadata();
   }
 
   Future<void> _saveOffers() async {
@@ -696,10 +838,10 @@ class _PrepPlusAdminItemEditPageState extends State<PrepPlusAdminItemEditPage> {
                                 label: l10n.prepAdminCoverImageLabel,
                                 mediaAssetId: _coverMediaId,
                                 previewHeight: AppMediaDisplay.questionImageHeight,
-                                onChanged: _saving
-                                    ? null
-                                    : (id) => setState(() => _coverMediaId = id),
+                                showUploadSuccessSnackBar: false,
+                                onChanged: _saving ? null : _onCoverMediaChanged,
                               ),
+                              _buildCoverSaveStatus(l10n),
                               Padding(
                                 padding: const EdgeInsets.only(
                                   left: AppSpacing.xs,
