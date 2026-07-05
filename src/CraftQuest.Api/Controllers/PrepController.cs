@@ -50,6 +50,7 @@ public class PrepController(
     }
 
     [HttpGet("items/by-slug/{slug}")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(PrepCatalogItemSlugDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetItemBySlug(string slug, CancellationToken cancellationToken)
     {

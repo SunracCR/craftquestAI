@@ -288,20 +288,14 @@ class _AuthGateState extends State<_AuthGate> {
     AuthState authState,
   ) async {
     String? catalogItemId;
-    try {
-      final resolved =
-          await getIt<PrepPlusRepository>().resolveCatalogItemIdBySlug(link.slug);
-      catalogItemId = resolved.catalogItemId;
-    } catch (_) {
-      catalogItemId = null;
-    }
-
     var rewardEligible = true;
     try {
       final preview =
           await getIt<PrepPlusRepository>().getPublicPreview(link.slug);
+      catalogItemId = preview.catalogItemId;
       rewardEligible = preview.referralRewardsEligible;
     } catch (_) {
+      catalogItemId = null;
       rewardEligible = true;
     }
 
@@ -349,8 +343,11 @@ class _AuthGateState extends State<_AuthGate> {
 
   Future<void> _openPrepReferralTarget(String slug) async {
     try {
-      final resolved =
-          await getIt<PrepPlusRepository>().resolveCatalogItemIdBySlug(slug);
+      final pending = await getIt<PendingPrepReferralStore>().read();
+      final catalogItemId = pending?.catalogItemId?.isNotEmpty == true
+          ? pending!.catalogItemId!
+          : (await getIt<PrepPlusRepository>().resolveCatalogItemIdBySlug(slug))
+              .catalogItemId;
       if (!mounted) {
         return;
       }
@@ -360,7 +357,7 @@ class _AuthGateState extends State<_AuthGate> {
       rootNavigatorKey.currentState?.push(
         MaterialPageRoute<void>(
           builder: (_) => PrepPlusItemDetailPage(
-            catalogItemId: resolved.catalogItemId,
+            catalogItemId: catalogItemId,
           ),
         ),
       );
