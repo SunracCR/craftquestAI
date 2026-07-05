@@ -4138,6 +4138,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get prepAdminTagsHint => 'Separadas por vírgulas';
 
   @override
+  String get prepAdminCoverImageLabel => 'Capa (imagem)';
+
+  @override
+  String get prepAdminCoverImageHint =>
+      'Exibida na landing pública e ao compartilhar o link do item.';
+
+  @override
   String get prepAdminListingStartLabel => 'Início da venda';
 
   @override

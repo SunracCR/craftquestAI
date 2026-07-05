@@ -1864,6 +1864,8 @@
   "prepAdminTitleOverrideLabel": "Catalog title (optional)",
   "prepAdminTagsLabel": "Tags",
   "prepAdminTagsHint": "Comma-separated",
+  "prepAdminCoverImageLabel": "Cover image",
+  "prepAdminCoverImageHint": "Shown on the public landing page and when sharing the item link.",
   "prepAdminListingStartLabel": "Sale starts",
   "prepAdminListingEndLabel": "Sale ends",
   "prepAdminOptionalDate": "Not set",

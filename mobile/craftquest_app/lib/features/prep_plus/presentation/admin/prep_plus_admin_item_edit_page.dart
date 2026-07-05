@@ -4,9 +4,11 @@ import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_section_card.dart';
 import 'package:craftquest_app/core/widgets/app_section_title.dart';
+import 'package:craftquest_app/core/theme/app_media_display.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
+import 'package:craftquest_app/core/widgets/option_image_picker.dart';
 import 'package:craftquest_app/features/prep_plus/data/prep_plus_admin_models.dart';
 import 'package:craftquest_app/features/prep_plus/data/prep_plus_admin_repository.dart';
 import 'package:craftquest_app/features/prep_plus/presentation/admin/prep_plus_admin_sample_picker_sheet.dart';
@@ -74,6 +76,7 @@ class _PrepPlusAdminItemEditPageState extends State<PrepPlusAdminItemEditPage> {
   late List<_OfferDraft> _offers;
   DateTime? _listingStartsAt;
   DateTime? _listingEndsAt;
+  String? _coverMediaId;
   bool _loading = true;
   bool _saving = false;
   String? _error;
@@ -152,6 +155,7 @@ class _PrepPlusAdminItemEditPageState extends State<PrepPlusAdminItemEditPage> {
     _tagsCtrl.text = item.tags.join(', ');
     _listingStartsAt = item.listingStartsAt;
     _listingEndsAt = item.listingEndsAt;
+    _coverMediaId = item.coverMediaId;
     _sampleQuestionIds =
         item.sampleQuestions.map((s) => s.questionId).toList();
     _offers = _durations.map((days) {
@@ -250,6 +254,7 @@ class _PrepPlusAdminItemEditPageState extends State<PrepPlusAdminItemEditPage> {
           'description': _descriptionCtrl.text.trim().isEmpty
               ? null
               : _descriptionCtrl.text.trim(),
+          'coverMediaId': _coverMediaId,
           'tags': _parseTags(),
           if (_showInstitutionTag && _institutionCtrl.text.trim().isNotEmpty)
             'institutionTag': _institutionCtrl.text.trim(),
@@ -276,6 +281,7 @@ class _PrepPlusAdminItemEditPageState extends State<PrepPlusAdminItemEditPage> {
         'description': _descriptionCtrl.text.trim().isEmpty
             ? null
             : _descriptionCtrl.text.trim(),
+        'coverMediaId': _coverMediaId,
         'tags': _parseTags(),
         'institutionTag': _showInstitutionTag
             ? (_institutionCtrl.text.trim().isEmpty
@@ -598,6 +604,27 @@ class _PrepPlusAdminItemEditPageState extends State<PrepPlusAdminItemEditPage> {
                                   labelText: l10n.prepAdminDescriptionLabel,
                                 ),
                                 maxLines: 3,
+                              ),
+                              OptionImagePicker(
+                                label: l10n.prepAdminCoverImageLabel,
+                                mediaAssetId: _coverMediaId,
+                                previewHeight: AppMediaDisplay.questionImageHeight,
+                                onChanged: _saving
+                                    ? null
+                                    : (id) => setState(() => _coverMediaId = id),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  left: AppSpacing.xs,
+                                  bottom: AppSpacing.sm,
+                                ),
+                                child: Text(
+                                  l10n.prepAdminCoverImageHint,
+                                  style: const TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 12,
+                                  ),
+                                ),
                               ),
                               if (_showInstitutionTag)
                                 TextField(

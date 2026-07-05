@@ -6869,6 +6869,18 @@ abstract class AppLocalizations {
   /// **'Separadas por comas'**
   String get prepAdminTagsHint;
 
+  /// No description provided for @prepAdminCoverImageLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Portada (imagen)'**
+  String get prepAdminCoverImageLabel;
+
+  /// No description provided for @prepAdminCoverImageHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Se muestra en la landing pública y al compartir el enlace del ítem.'**
+  String get prepAdminCoverImageHint;
+
   /// No description provided for @prepAdminListingStartLabel.
   ///
   /// In es, this message translates to:

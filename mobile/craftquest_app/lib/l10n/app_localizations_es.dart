@@ -4144,6 +4144,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get prepAdminTagsHint => 'Separadas por comas';
 
   @override
+  String get prepAdminCoverImageLabel => 'Portada (imagen)';
+
+  @override
+  String get prepAdminCoverImageHint =>
+      'Se muestra en la landing pública y al compartir el enlace del ítem.';
+
+  @override
   String get prepAdminListingStartLabel => 'Inicio de venta';
 
   @override

@@ -180,6 +180,7 @@ class PrepAdminItemDetailModel {
     required this.categoryType,
     this.titleOverride,
     this.description,
+    this.coverMediaId,
     this.institutionTag,
     this.listingStartsAt,
     this.listingEndsAt,
@@ -204,6 +205,7 @@ class PrepAdminItemDetailModel {
       categoryType: json['categoryType'] as String,
       titleOverride: json['titleOverride'] as String?,
       description: json['description'] as String?,
+      coverMediaId: json['coverMediaId'] as String?,
       institutionTag: json['institutionTag'] as String?,
       listingStartsAt: json['listingStartsAt'] != null
           ? DateTime.parse(json['listingStartsAt'] as String)
@@ -232,6 +234,7 @@ class PrepAdminItemDetailModel {
   final String categoryType;
   final String? titleOverride;
   final String? description;
+  final String? coverMediaId;
   final String? institutionTag;
   final DateTime? listingStartsAt;
   final DateTime? listingEndsAt;

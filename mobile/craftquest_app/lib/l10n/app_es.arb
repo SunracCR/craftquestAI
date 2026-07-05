@@ -1915,6 +1915,8 @@
   "prepAdminTitleOverrideLabel": "Título en catálogo (opcional)",
   "prepAdminTagsLabel": "Etiquetas",
   "prepAdminTagsHint": "Separadas por comas",
+  "prepAdminCoverImageLabel": "Portada (imagen)",
+  "prepAdminCoverImageHint": "Se muestra en la landing pública y al compartir el enlace del ítem.",
   "prepAdminListingStartLabel": "Inicio de venta",
   "prepAdminListingEndLabel": "Fin de venta",
   "prepAdminOptionalDate": "Sin definir",

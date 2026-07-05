@@ -1863,6 +1863,8 @@
   "prepAdminTitleOverrideLabel": "Título no catálogo (opcional)",
   "prepAdminTagsLabel": "Etiquetas",
   "prepAdminTagsHint": "Separadas por vírgulas",
+  "prepAdminCoverImageLabel": "Capa (imagem)",
+  "prepAdminCoverImageHint": "Exibida na landing pública e ao compartilhar o link do item.",
   "prepAdminListingStartLabel": "Início da venda",
   "prepAdminListingEndLabel": "Fim da venda",
   "prepAdminOptionalDate": "Não definido",
