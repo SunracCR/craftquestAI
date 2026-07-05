@@ -59,14 +59,6 @@
                     android:scheme="https"
                     android:host="api.craftquestai.com"
                     android:pathPrefix="/confirm-password-change"/>
-                <data
-                    android:scheme="https"
-                    android:host="craftquestai.com"
-                    android:pathPrefix="/prep"/>
-                <data
-                    android:scheme="https"
-                    android:host="www.craftquestai.com"
-                    android:pathPrefix="/prep"/>
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>

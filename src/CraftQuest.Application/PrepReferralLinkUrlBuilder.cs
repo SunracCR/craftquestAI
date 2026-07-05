@@ -10,9 +10,7 @@ public static class PrepReferralLinkUrlBuilder
     public static bool IsValidCodeFormat(string code) => CodeFormat.IsMatch(code.Trim().ToUpperInvariant());
 
     public static string ResolvePrepPublicBaseUrl(JoinLinkOptions options) =>
-        string.IsNullOrWhiteSpace(options.PublicSiteUrl)
-            ? options.LinkBaseUrl.TrimEnd('/')
-            : options.PublicSiteUrl.TrimEnd('/');
+        options.LinkBaseUrl.TrimEnd('/');
 
     public static string BuildPublicLandingUrl(JoinLinkOptions options, string slug)
     {

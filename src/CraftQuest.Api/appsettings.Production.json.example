@@ -21,7 +21,6 @@
   "JoinLinks": {
     "LinkBaseUrl": "https://api.craftquestai.com",
     "WebAppUrl": "https://app.craftquestai.com",
-    "PublicSiteUrl": "https://craftquestai.com",
     "PlayStoreUrl": "https://play.google.com/store/apps/details?id=com.craftquestai.craftquestai_app",
     "AppStoreUrl": "https://apps.apple.com/app/idPENDIENTE",
     "AndroidPackageName": "com.craftquestai.craftquestai_app",

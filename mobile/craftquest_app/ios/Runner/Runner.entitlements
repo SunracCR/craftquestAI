@@ -9,8 +9,6 @@
 	<key>com.apple.developer.associated-domains</key>
 	<array>
 		<string>applinks:api.craftquestai.com</string>
-		<string>applinks:craftquestai.com</string>
-		<string>applinks:www.craftquestai.com</string>
 	</array>
 </dict>
 </plist>
