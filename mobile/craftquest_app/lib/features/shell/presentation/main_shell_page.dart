@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:craftquest_app/core/billing/checkout_refresh_notifier.dart';
 import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/features/prep_plus/data/pending_prep_referral_store.dart';
 import 'package:craftquest_app/core/services/app_warmup_service.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/widgets/user_avatar.dart';
@@ -45,12 +46,15 @@ class _MainShellPageState extends State<MainShellPage> {
     _checkoutRefresh = getIt<CheckoutRefreshNotifier>()
       ..addListener(_onCheckoutCompleted);
     _tabSignal = getIt<MainShellTabSignal>()..addListener(_onTabRequested);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) {
         return;
       }
+      final pendingPrep = await getIt<PendingPrepReferralStore>().read();
       getIt<AppWarmupService>().start(
         prefetchTeacherDashboard: _isTeacher,
+        deferPrepPrefetch:
+            pendingPrep != null && pendingPrep.slug.isNotEmpty,
       );
       if (_isTeacher) {
         setState(() => _visitedTabs.add(_teacherTabIndex));

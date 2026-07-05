@@ -20,15 +20,20 @@ class AppWarmupService {
   final BillingRepository _billingRepository;
   bool _started = false;
 
-  void start({required bool prefetchTeacherDashboard}) {
+  void start({
+    required bool prefetchTeacherDashboard,
+    bool deferPrepPrefetch = false,
+  }) {
     if (_started) {
       return;
     }
     _started = true;
     unawaited(_soundService.warmUp());
     unawaited(_billingRepository.getMyBilling());
-    unawaited(_prepPlusRepository.prefetchCategories());
-    unawaited(_prepPlusRepository.prefetchMyAccesses());
+    if (!deferPrepPrefetch) {
+      unawaited(_prepPlusRepository.prefetchCategories());
+      unawaited(_prepPlusRepository.prefetchMyAccesses());
+    }
     if (prefetchTeacherDashboard) {
       unawaited(_teacherDashboardRepository.prefetchDashboard());
     }

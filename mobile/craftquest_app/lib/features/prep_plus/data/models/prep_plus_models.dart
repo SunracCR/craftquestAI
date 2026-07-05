@@ -204,6 +204,24 @@ class PrepItemDetailModel {
     );
   }
 
+  /// Vista parcial desde preview pública (pintado instantáneo tras login por referido).
+  factory PrepItemDetailModel.fromPublicPreview(PrepPublicPreviewModel preview) {
+    return PrepItemDetailModel(
+      catalogItemId: preview.catalogItemId,
+      quizId: '',
+      slug: preview.slug,
+      title: preview.title,
+      description: preview.description,
+      categoryId: '',
+      categoryName: preview.categoryName,
+      rootCategoryType: preview.rootCategoryType,
+      questionCount: preview.questionCount,
+      canPurchase: true,
+      userAccessState: 'none',
+      canPractice: false,
+    );
+  }
+
   final String catalogItemId;
   final String quizId;
   final String? slug;

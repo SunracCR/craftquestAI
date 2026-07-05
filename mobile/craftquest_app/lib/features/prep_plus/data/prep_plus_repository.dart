@@ -22,12 +22,18 @@ class PrepPlusRepository {
   static const _categoriesTtl = Duration(minutes: 10);
   static const _browseTtl = Duration(minutes: 2);
   static const _myAccessesTtl = Duration(seconds: 60);
+  static const _publicPreviewTtl = Duration(minutes: 5);
+  static const _itemDetailTtl = Duration(seconds: 60);
 
   _TimedCache<List<PrepCategoryModel>>? _categoriesCache;
   _TimedCache<PrepMyAccessesModel>? _myAccessesCache;
   final Map<String, _TimedCache<List<PrepBrowseItemModel>>> _browseCache = {};
+  final Map<String, _TimedCache<PrepPublicPreviewModel>> _publicPreviewCache = {};
+  final Map<String, _TimedCache<PrepItemDetailModel>> _itemDetailCache = {};
   Future<List<PrepCategoryModel>>? _inFlightCategories;
   Future<PrepMyAccessesModel>? _inFlightMyAccesses;
+  final Map<String, Future<PrepPublicPreviewModel>> _inFlightPublicPreviews = {};
+  final Map<String, Future<PrepItemDetailModel>> _inFlightItems = {};
 
   Future<List<PrepCategoryModel>> getCategories({bool forceRefresh = false}) async {
     final cached = _categoriesCache;
@@ -168,11 +174,74 @@ class PrepPlusRepository {
     ].join('|');
   }
 
-  Future<PrepItemDetailModel> getItem(String catalogItemId) async {
+  PrepPublicPreviewModel? peekPublicPreview(String slug) {
+    final normalizedSlug = slug.trim().toLowerCase();
+    final cached = _publicPreviewCache[normalizedSlug];
+    if (cached != null &&
+        DateTime.now().difference(cached.cachedAt) < _publicPreviewTtl) {
+      return cached.value;
+    }
+    return null;
+  }
+
+  PrepItemDetailModel? peekItem(String catalogItemId) {
+    final cached = _itemDetailCache[catalogItemId];
+    if (cached != null &&
+        DateTime.now().difference(cached.cachedAt) < _itemDetailTtl) {
+      return cached.value;
+    }
+    return null;
+  }
+
+  Future<void> prefetchPublicPreview(String slug) async {
+    try {
+      await getPublicPreview(slug);
+    } catch (e, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('PrepPlusRepository.prefetchPublicPreview failed: $e');
+        debugPrint('$stackTrace');
+      }
+    }
+  }
+
+  Future<void> prefetchItem(String catalogItemId) async {
+    try {
+      await getItem(catalogItemId);
+    } catch (e, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('PrepPlusRepository.prefetchItem failed: $e');
+        debugPrint('$stackTrace');
+      }
+    }
+  }
+
+  Future<PrepItemDetailModel> getItem(
+    String catalogItemId, {
+    bool forceRefresh = false,
+  }) async {
+    if (!forceRefresh) {
+      final cached = peekItem(catalogItemId);
+      if (cached != null) {
+        return cached;
+      }
+    } else {
+      _inFlightItems.remove(catalogItemId);
+    }
+
+    _inFlightItems[catalogItemId] ??=
+        _fetchItem(catalogItemId).whenComplete(() {
+      _inFlightItems.remove(catalogItemId);
+    });
+    return _inFlightItems[catalogItemId]!;
+  }
+
+  Future<PrepItemDetailModel> _fetchItem(String catalogItemId) async {
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
       '/api/prep/items/$catalogItemId',
     );
-    return PrepItemDetailModel.fromJson(response.data!);
+    final item = PrepItemDetailModel.fromJson(response.data!);
+    _itemDetailCache[catalogItemId] = _TimedCache(item, DateTime.now());
+    return item;
   }
 
   Future<PrepPreviewModel> getPreview(String catalogItemId) async {
@@ -244,11 +313,35 @@ class PrepPlusRepository {
     return PrepCheckoutResultModel.fromJson(response.data!);
   }
 
-  Future<PrepPublicPreviewModel> getPublicPreview(String slug) async {
+  Future<PrepPublicPreviewModel> getPublicPreview(
+    String slug, {
+    bool forceRefresh = false,
+  }) async {
+    final normalizedSlug = slug.trim().toLowerCase();
+
+    if (!forceRefresh) {
+      final cached = peekPublicPreview(normalizedSlug);
+      if (cached != null) {
+        return cached;
+      }
+    } else {
+      _inFlightPublicPreviews.remove(normalizedSlug);
+    }
+
+    _inFlightPublicPreviews[normalizedSlug] ??=
+        _fetchPublicPreview(normalizedSlug).whenComplete(() {
+      _inFlightPublicPreviews.remove(normalizedSlug);
+    });
+    return _inFlightPublicPreviews[normalizedSlug]!;
+  }
+
+  Future<PrepPublicPreviewModel> _fetchPublicPreview(String slug) async {
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
       '/api/prep/public/items/$slug',
     );
-    return PrepPublicPreviewModel.fromJson(response.data!);
+    final preview = PrepPublicPreviewModel.fromJson(response.data!);
+    _publicPreviewCache[slug] = _TimedCache(preview, DateTime.now());
+    return preview;
   }
 
   Future<PrepCatalogItemSlugModel> resolveCatalogItemIdBySlug(String slug) async {

@@ -29,6 +29,7 @@ import 'package:craftquest_app/features/guest/presentation/guest_shell_page.dart
 import 'package:craftquest_app/core/services/push_notification_service.dart';
 import 'package:craftquest_app/features/notifications/presentation/notifications_cubit.dart';
 import 'package:craftquest_app/features/sharing/presentation/redeem_code_page.dart';
+import 'package:craftquest_app/features/prep_plus/data/models/prep_plus_models.dart';
 import 'package:craftquest_app/features/prep_plus/data/pending_prep_referral_store.dart';
 import 'package:craftquest_app/features/prep_plus/data/prep_plus_repository.dart';
 import 'package:craftquest_app/features/prep_plus/presentation/prep_plus_item_detail_page.dart';
@@ -287,25 +288,13 @@ class _AuthGateState extends State<_AuthGate> {
     PendingPrepReferralLink link,
     AuthState authState,
   ) async {
-    String? catalogItemId;
-    var rewardEligible = true;
-    try {
-      final preview =
-          await getIt<PrepPlusRepository>().getPublicPreview(link.slug);
-      catalogItemId = preview.catalogItemId;
-      rewardEligible = preview.referralRewardsEligible;
-    } catch (_) {
-      catalogItemId = null;
-      rewardEligible = true;
-    }
-
+    final capturedAt = DateTime.now().toUtc();
     await getIt<PendingPrepReferralStore>().save(
       PendingPrepReferral(
         slug: link.slug,
         referralCode: link.referralCode,
-        catalogItemId: catalogItemId,
-        capturedAt: DateTime.now().toUtc(),
-        rewardEligible: rewardEligible,
+        capturedAt: capturedAt,
+        rewardEligible: true,
       ),
     );
 
@@ -316,15 +305,48 @@ class _AuthGateState extends State<_AuthGate> {
     }
 
     if (authState is AuthAuthenticated) {
-      await _openPrepReferralTarget(link.slug);
+      unawaited(_openPrepReferralTarget(link.slug));
+      unawaited(_refreshPendingPrepReferralMetadata(link, capturedAt));
       return;
     }
 
+    final repo = getIt<PrepPlusRepository>();
+    final initialPreview = repo.peekPublicPreview(link.slug);
+
     rootNavigatorKey.currentState?.push(
       MaterialPageRoute<void>(
-        builder: (_) => PrepPlusPublicPreviewPage(slug: link.slug),
+        builder: (_) => PrepPlusPublicPreviewPage(
+          slug: link.slug,
+          initialPreview: initialPreview,
+        ),
       ),
     );
+
+    unawaited(_refreshPendingPrepReferralMetadata(link, capturedAt));
+  }
+
+  Future<void> _refreshPendingPrepReferralMetadata(
+    PendingPrepReferralLink link,
+    DateTime capturedAt,
+  ) async {
+    try {
+      final preview =
+          await getIt<PrepPlusRepository>().getPublicPreview(link.slug);
+      await getIt<PendingPrepReferralStore>().save(
+        PendingPrepReferral(
+          slug: link.slug,
+          referralCode: link.referralCode,
+          catalogItemId: preview.catalogItemId,
+          capturedAt: capturedAt,
+          rewardEligible: preview.referralRewardsEligible,
+        ),
+      );
+      unawaited(
+        getIt<PrepPlusRepository>().prefetchItem(preview.catalogItemId),
+      );
+    } catch (_) {
+      // La preview page puede reintentar; no bloquear navegación.
+    }
   }
 
   Future<void> _resumePendingPrepReferralAfterAuth() async {
@@ -343,24 +365,36 @@ class _AuthGateState extends State<_AuthGate> {
 
   Future<void> _openPrepReferralTarget(String slug) async {
     try {
+      final repo = getIt<PrepPlusRepository>();
       final pending = await getIt<PendingPrepReferralStore>().read();
       final catalogItemId = pending?.catalogItemId?.isNotEmpty == true
           ? pending!.catalogItemId!
-          : (await getIt<PrepPlusRepository>().resolveCatalogItemIdBySlug(slug))
-              .catalogItemId;
+          : (await repo.resolveCatalogItemIdBySlug(slug)).catalogItemId;
+
+      final cachedPreview = repo.peekPublicPreview(slug);
+      final cachedItem = repo.peekItem(catalogItemId);
+      final initialFromPreview = cachedItem ??
+          (cachedPreview != null
+              ? PrepItemDetailModel.fromPublicPreview(cachedPreview)
+              : null);
+
+      if (cachedItem == null) {
+        unawaited(repo.prefetchItem(catalogItemId));
+      }
+
       if (!mounted) {
         return;
       }
 
-      getIt<MainShellTabSignal>().requestTab(kPrepPlusTabIndex);
-      rootNavigatorKey.currentState?.popUntil((route) => route.isFirst);
       rootNavigatorKey.currentState?.push(
         MaterialPageRoute<void>(
           builder: (_) => PrepPlusItemDetailPage(
             catalogItemId: catalogItemId,
+            initialFromPreview: initialFromPreview,
           ),
         ),
       );
+      getIt<MainShellTabSignal>().requestTab(kPrepPlusTabIndex);
     } catch (_) {
       if (!mounted) {
         return;
@@ -411,7 +445,7 @@ class _AuthGateState extends State<_AuthGate> {
               return;
             }
             final user = state.user;
-            WidgetsBinding.instance.addPostFrameCallback((_) {
+            WidgetsBinding.instance.addPostFrameCallback((_) async {
               // Register/login guest hacen push sobre el navigator raíz; hay que
               // sacarlos aunque el home ya sea MainShellPage.
               rootNavigatorKey.currentState?.popUntil((route) => route.isFirst);
@@ -427,8 +461,13 @@ class _AuthGateState extends State<_AuthGate> {
                 ),
               );
               // Notificaciones y push: solo en _AuthenticatedShell.initState.
-              _scheduleDeepLinkRoute();
-              unawaited(_resumePendingPrepReferralAfterAuth());
+              final pendingPrep =
+                  await getIt<PendingPrepReferralStore>().read();
+              if (pendingPrep != null && pendingPrep.slug.isNotEmpty) {
+                unawaited(_resumePendingPrepReferralAfterAuth());
+              } else {
+                _scheduleDeepLinkRoute();
+              }
             });
           },
         ),

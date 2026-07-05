@@ -48,12 +48,16 @@ class PrepPlusItemDetailPage extends StatefulWidget {
     super.key,
     required this.catalogItemId,
     this.initialFromAccess,
+    this.initialFromPreview,
   });
 
   final String catalogItemId;
 
   /// Datos ya conocidos desde Mis accesos para pintar sin esperar al API.
   final PrepMyAccessItemModel? initialFromAccess;
+
+  /// Datos parciales desde preview pública (referido Prep+).
+  final PrepItemDetailModel? initialFromPreview;
 
   @override
   State<PrepPlusItemDetailPage> createState() => _PrepPlusItemDetailPageState();
@@ -92,6 +96,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
           InAppPurchase.instance.purchaseStream.listen(_onPurchaseUpdate);
     }
     final initial = widget.initialFromAccess;
+    final previewInitial = widget.initialFromPreview;
     if (initial != null) {
       _item = PrepItemDetailModel.fromAccessItem(initial);
       _loading = false;
@@ -100,6 +105,10 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
         unawaited(_loadPracticePreferences(initial.quizId));
         unawaited(_loadSoundPreferences());
       }
+      unawaited(_load());
+    } else if (previewInitial != null) {
+      _item = previewInitial;
+      _loading = false;
       unawaited(_load());
     } else {
       unawaited(_load(fullScreenLoading: true));

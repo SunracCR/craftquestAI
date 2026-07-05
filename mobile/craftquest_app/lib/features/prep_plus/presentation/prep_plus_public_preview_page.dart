@@ -15,9 +15,14 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 class PrepPlusPublicPreviewPage extends StatefulWidget {
-  const PrepPlusPublicPreviewPage({super.key, required this.slug});
+  const PrepPlusPublicPreviewPage({
+    super.key,
+    required this.slug,
+    this.initialPreview,
+  });
 
   final String slug;
+  final PrepPublicPreviewModel? initialPreview;
 
   @override
   State<PrepPlusPublicPreviewPage> createState() =>
@@ -34,14 +39,21 @@ class _PrepPlusPublicPreviewPageState extends State<PrepPlusPublicPreviewPage> {
   @override
   void initState() {
     super.initState();
+    final initial = widget.initialPreview;
+    if (initial != null) {
+      _preview = initial;
+      _loading = false;
+    }
     unawaited(_load());
   }
 
   Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+    if (_preview == null) {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    }
     try {
       final preview = await _repository.getPublicPreview(widget.slug);
       if (!mounted) return;
@@ -51,12 +63,18 @@ class _PrepPlusPublicPreviewPageState extends State<PrepPlusPublicPreviewPage> {
       });
     } on DioException catch (e) {
       if (!mounted) return;
+      if (_preview != null) {
+        return;
+      }
       setState(() {
         _error = _repository.mapError(e, AppLocalizations.of(context));
         _loading = false;
       });
     } catch (_) {
       if (!mounted) return;
+      if (_preview != null) {
+        return;
+      }
       setState(() {
         _error = AppLocalizations.of(context)!.prepPlusNotAvailableForPurchase;
         _loading = false;
@@ -65,6 +83,11 @@ class _PrepPlusPublicPreviewPageState extends State<PrepPlusPublicPreviewPage> {
   }
 
   void _openLogin() {
+    final catalogItemId = _preview?.catalogItemId;
+    if (catalogItemId != null && catalogItemId.isNotEmpty) {
+      unawaited(_repository.prefetchItem(catalogItemId));
+    }
+
     rootNavigatorKey.currentState?.push(
       MaterialPageRoute<void>(builder: (_) => const LoginPage()),
     );
