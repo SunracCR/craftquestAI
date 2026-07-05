@@ -1,17 +1,23 @@
 using System.Text.Json;
+using CraftQuest.Application;
 using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Exceptions;
 using CraftQuest.Application.Models.PrepPlus;
+using CraftQuest.Application.Options;
 using CraftQuest.Domain.Constants;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace CraftQuest.Infrastructure.Services;
 
-public class PrepPlusAdminService(CraftQuestDbContext dbContext) : IPrepPlusAdminService
+public class PrepPlusAdminService(
+    CraftQuestDbContext dbContext,
+    IOptions<JoinLinkOptions> joinLinkOptions) : IPrepPlusAdminService
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+    private readonly JoinLinkOptions _joinLinkOptions = joinLinkOptions.Value;
 
     public async Task<IReadOnlyList<PrepCategoryDto>> GetCategoryTreeAsync(
         bool includeInactive = false,
@@ -507,6 +513,7 @@ public class PrepPlusAdminService(CraftQuestDbContext dbContext) : IPrepPlusAdmi
             ?? throw new AppException("Catalog item not found.", 404, PrepPlusErrorCodes.CatalogItemNotFound);
 
         await ValidatePublishableAsync(entity, cancellationToken);
+        await EnsureSlugAsync(entity, cancellationToken);
 
         entity.IsPublished = true;
         entity.PublishedAt = DateTime.UtcNow;
@@ -802,6 +809,15 @@ public class PrepPlusAdminService(CraftQuestDbContext dbContext) : IPrepPlusAdmi
             .CountAsync(q => q.QuizId == item.QuizId, cancellationToken);
         var categoryType = await GetRootCategoryTypeAsync(item.CategoryId, cancellationToken);
 
+        var slug = string.IsNullOrWhiteSpace(item.Slug)
+            ? null
+            : item.Slug.Trim().ToLowerInvariant();
+        string? publicShareUrl = null;
+        if (item.IsPublished && slug is not null)
+        {
+            publicShareUrl = PrepReferralLinkUrlBuilder.BuildPublicLandingUrl(_joinLinkOptions, slug);
+        }
+
         return new PrepCatalogItemDetailDto
         {
             CatalogItemId = item.CatalogItemId,
@@ -812,6 +828,8 @@ public class PrepPlusAdminService(CraftQuestDbContext dbContext) : IPrepPlusAdmi
             CategoryType = categoryType,
             TitleOverride = item.TitleOverride,
             Description = item.Description,
+            Slug = slug,
+            PublicShareUrl = publicShareUrl,
             CoverMediaId = item.CoverMediaId,
             Tags = DeserializeTags(item.TagsJson),
             InstitutionTag = item.InstitutionTag,
@@ -922,6 +940,32 @@ public class PrepPlusAdminService(CraftQuestDbContext dbContext) : IPrepPlusAdmi
         }
 
         return subtree;
+    }
+
+    private async Task<string> EnsureSlugAsync(
+        PrepCatalogItem item,
+        CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrWhiteSpace(item.Slug))
+        {
+            return item.Slug.Trim().ToLowerInvariant();
+        }
+
+        var title = item.TitleOverride ?? item.Quiz.Title;
+        var baseSlug = PrepSlugHelper.GenerateFromTitle(title, item.CatalogItemId);
+        var slug = baseSlug;
+        var suffix = 1;
+
+        while (await dbContext.PrepCatalogItems.AnyAsync(
+                   i => i.Slug == slug && i.CatalogItemId != item.CatalogItemId,
+                   cancellationToken))
+        {
+            slug = $"{baseSlug}-{suffix}";
+            suffix++;
+        }
+
+        item.Slug = slug;
+        return slug;
     }
 
     private static string NormalizeSlug(string slug) =>

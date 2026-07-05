@@ -6881,6 +6881,24 @@ abstract class AppLocalizations {
   /// **'Se muestra en la landing pública y al compartir el enlace del ítem.'**
   String get prepAdminCoverImageHint;
 
+  /// No description provided for @prepAdminShareLinkSection.
+  ///
+  /// In es, this message translates to:
+  /// **'Enlace para compartir'**
+  String get prepAdminShareLinkSection;
+
+  /// No description provided for @prepAdminShareLinkHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Úsalo en redes sociales. Al abrirlo se muestra la landing con vista previa del ítem.'**
+  String get prepAdminShareLinkHint;
+
+  /// No description provided for @prepAdminShareLinkUnavailable.
+  ///
+  /// In es, this message translates to:
+  /// **'Publica el ítem para obtener el enlace de compartir.'**
+  String get prepAdminShareLinkUnavailable;
+
   /// No description provided for @prepAdminListingStartLabel.
   ///
   /// In es, this message translates to:

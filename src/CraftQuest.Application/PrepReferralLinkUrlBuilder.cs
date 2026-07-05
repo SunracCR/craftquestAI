@@ -9,6 +9,13 @@ public static class PrepReferralLinkUrlBuilder
 
     public static bool IsValidCodeFormat(string code) => CodeFormat.IsMatch(code.Trim().ToUpperInvariant());
 
+    public static string BuildPublicLandingUrl(JoinLinkOptions options, string slug)
+    {
+        var normalizedSlug = slug.Trim().ToLowerInvariant();
+        var baseUrl = options.LinkBaseUrl.TrimEnd('/');
+        return $"{baseUrl}/prep/{Uri.EscapeDataString(normalizedSlug)}";
+    }
+
     public static string BuildShareUrl(JoinLinkOptions options, string slug, string referralCode)
     {
         var normalizedSlug = slug.Trim().ToLowerInvariant();

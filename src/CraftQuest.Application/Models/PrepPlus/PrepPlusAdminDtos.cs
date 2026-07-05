@@ -83,6 +83,8 @@ public sealed class PrepCatalogItemDetailDto
     public required string CategoryType { get; init; }
     public string? TitleOverride { get; init; }
     public string? Description { get; init; }
+    public string? Slug { get; init; }
+    public string? PublicShareUrl { get; init; }
     public Guid? CoverMediaId { get; init; }
     public IReadOnlyList<string> Tags { get; init; } = [];
     public string? InstitutionTag { get; init; }

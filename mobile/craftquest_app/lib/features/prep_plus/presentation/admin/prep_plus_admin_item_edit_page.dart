@@ -15,7 +15,9 @@ import 'package:craftquest_app/features/prep_plus/presentation/admin/prep_plus_a
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 
 class PrepPlusAdminItemEditPage extends StatefulWidget {
   const PrepPlusAdminItemEditPage({super.key, this.catalogItemId});
@@ -196,6 +198,90 @@ class _PrepPlusAdminItemEditPageState extends State<PrepPlusAdminItemEditPage> {
       .map((t) => t.trim())
       .where((t) => t.isNotEmpty)
       .toList();
+
+  String _itemDisplayTitle(AppLocalizations l10n) {
+    final override = _titleCtrl.text.trim();
+    if (override.isNotEmpty) {
+      return override;
+    }
+    return _item?.quizTitle ?? l10n.prepPlusItemDetailTitle;
+  }
+
+  Future<void> _copyShareLink(String url) async {
+    await Clipboard.setData(ClipboardData(text: url));
+    if (!mounted) return;
+    context.showSuccessSnackBar(AppLocalizations.of(context)!.shareCodeLinkCopied);
+  }
+
+  Future<void> _sharePublicLink(String url) async {
+    final l10n = AppLocalizations.of(context)!;
+    final message = l10n.prepPlusShareLinkMessage(_itemDisplayTitle(l10n), url);
+    await Share.share(message);
+  }
+
+  Widget _buildShareLinkSection(AppLocalizations l10n) {
+    if (widget.isCreate || _item == null) {
+      return const SizedBox.shrink();
+    }
+
+    final shareUrl = _item!.publicShareUrl;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: AppSectionTitle(title: l10n.prepAdminShareLinkSection),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          child: AppSectionCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (shareUrl != null && shareUrl.isNotEmpty) ...[
+                  SelectableText(
+                    shareUrl,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    l10n.prepAdminShareLinkHint,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Wrap(
+                    spacing: AppSpacing.xs,
+                    runSpacing: AppSpacing.xs,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () => _copyShareLink(shareUrl),
+                        icon: const Icon(Icons.link_rounded, size: 18),
+                        label: Text(l10n.shareCodeCopyLinkAction),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () => _sharePublicLink(shareUrl),
+                        icon: const Icon(Icons.share_outlined, size: 18),
+                        label: Text(l10n.shareCodeShareLinkAction),
+                      ),
+                    ],
+                  ),
+                ] else
+                  Text(
+                    l10n.prepAdminShareLinkUnavailable,
+                    style: const TextStyle(color: AppColors.textSecondary),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
   String _durationLabel(int days, AppLocalizations l10n) {
     return switch (days) {
@@ -514,6 +600,7 @@ class _PrepPlusAdminItemEditPageState extends State<PrepPlusAdminItemEditPage> {
                               ),
                             ),
                           ),
+                        _buildShareLinkSection(l10n),
                       ],
                       Padding(
                         padding: const EdgeInsets.all(AppSpacing.md),

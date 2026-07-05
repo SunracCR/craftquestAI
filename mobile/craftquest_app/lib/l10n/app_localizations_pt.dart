@@ -4145,6 +4145,17 @@ class AppLocalizationsPt extends AppLocalizations {
       'Exibida na landing pública e ao compartilhar o link do item.';
 
   @override
+  String get prepAdminShareLinkSection => 'Link para compartilhar';
+
+  @override
+  String get prepAdminShareLinkHint =>
+      'Use nas redes sociais. Ao abrir, mostra a landing pública com a prévia do item.';
+
+  @override
+  String get prepAdminShareLinkUnavailable =>
+      'Publique o item para obter o link de compartilhamento.';
+
+  @override
   String get prepAdminListingStartLabel => 'Início da venda';
 
   @override
