@@ -381,10 +381,6 @@ class _AuthGateState extends State<_AuthGate> {
               ? PrepItemDetailModel.fromPublicPreview(cachedPreview)
               : null);
 
-      if (cachedItem == null) {
-        unawaited(repo.prefetchItem(catalogItemId));
-      }
-
       if (!mounted) {
         return;
       }
@@ -452,6 +448,7 @@ class _AuthGateState extends State<_AuthGate> {
               // Register/login guest hacen push sobre el navigator raíz; hay que
               // sacarlos aunque el home ya sea MainShellPage.
               rootNavigatorKey.currentState?.popUntil((route) => route.isFirst);
+              rootScaffoldMessengerKey.currentState?.hideCurrentSnackBar();
               if (!context.mounted) {
                 return;
               }

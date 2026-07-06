@@ -32,6 +32,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   final AuthRepository _repository;
   final SavedLoginCredentialsStorage _savedLoginStorage;
+  int _oauthAttemptSerial = 0;
+  bool _oauthSignInInFlight = false;
 
   Future<void> _onSessionChecked(
     AuthSessionChecked event,
@@ -120,10 +122,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthOAuthSignInRequested event,
     Emitter<AuthState> emit,
   ) async {
+    if (state is AuthAuthenticated || _oauthSignInInFlight) {
+      return;
+    }
+
     // No emitir AuthLoading: _AuthGate reemplazaría toda la app y desmontaría guest/registro.
     if (state is AuthFailure) {
       emit(const AuthUnauthenticated());
     }
+
+    _oauthSignInInFlight = true;
+    final attempt = ++_oauthAttemptSerial;
 
     try {
       final AuthResponseModel response;
@@ -136,7 +145,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           displayName: event.displayName,
         );
       } else {
+        if (attempt != _oauthAttemptSerial) {
+          return;
+        }
         emit(_loginFailure(DioErrorMapper.genericMessage()));
+        return;
+      }
+
+      if (attempt != _oauthAttemptSerial) {
         return;
       }
 
@@ -144,9 +160,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       _resetSessionExpiredFlag();
       await _savedLoginStorage.clear();
     } on DioException catch (e) {
+      if (attempt != _oauthAttemptSerial) {
+        return;
+      }
       emit(_loginFailure(_repository.mapError(e)));
     } catch (_) {
+      if (attempt != _oauthAttemptSerial) {
+        return;
+      }
       emit(_loginFailure(DioErrorMapper.genericMessage()));
+    } finally {
+      _oauthSignInInFlight = false;
     }
   }
 

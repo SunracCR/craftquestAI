@@ -41,6 +41,7 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
   bool _busy = false;
   bool _apiAppleConfigured = false;
   int _signInGeneration = 0;
+  String? _lastSubmittedOAuthIdToken;
 
   static bool get _supportsGoogleUi =>
       kIsWeb ||
@@ -80,9 +81,24 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
     if (state is AuthAuthenticated || state is AuthFailure) {
       setState(() => _busy = false);
     }
-    if (state is AuthFailure) {
-      AppSnackBars.showError(state.message);
+    if (state is AuthAuthenticated) {
+      _lastSubmittedOAuthIdToken = null;
+      return;
     }
+    if (state is AuthFailure) {
+      unawaited(_maybeShowOAuthFailure(state.message));
+    }
+  }
+
+  Future<void> _maybeShowOAuthFailure(String message) async {
+    await Future<void>.delayed(const Duration(milliseconds: 150));
+    if (!mounted) {
+      return;
+    }
+    if (_authBloc?.state is AuthAuthenticated) {
+      return;
+    }
+    AppSnackBars.showError(message);
   }
 
   @override
@@ -175,6 +191,11 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
     if (!mounted || _busy || !widget.enabled) {
       return;
     }
+    if (_lastSubmittedOAuthIdToken == credentials.idToken) {
+      return;
+    }
+    _lastSubmittedOAuthIdToken = credentials.idToken;
+    setState(() => _busy = true);
     unawaited(
       _signIn(
         obtainCredentials: () async => credentials,

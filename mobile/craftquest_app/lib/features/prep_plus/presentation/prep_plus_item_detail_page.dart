@@ -148,7 +148,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
       if (hadItem) {
-        context.showErrorSnackBar(_repository.mapError(e, l10n));
+        // Vista parcial (referido/acceso): no alarmar si el refresh en background falla.
         return;
       }
       setState(() {
@@ -158,9 +158,6 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
     } catch (_) {
       if (!mounted) return;
       if (hadItem) {
-        context.showErrorSnackBar(
-          DioErrorMapper.genericMessage(AppLocalizations.of(context)!),
-        );
         return;
       }
       setState(() {
