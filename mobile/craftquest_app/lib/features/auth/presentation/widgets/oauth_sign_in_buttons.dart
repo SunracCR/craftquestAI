@@ -195,7 +195,6 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
       return;
     }
     _lastSubmittedOAuthIdToken = credentials.idToken;
-    setState(() => _busy = true);
     unawaited(
       _signIn(
         obtainCredentials: () async => credentials,

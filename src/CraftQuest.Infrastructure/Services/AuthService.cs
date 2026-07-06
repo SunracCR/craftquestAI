@@ -996,7 +996,47 @@ public class AuthService(
         });
 
         dbContext.Users.Add(newUser);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (IsDuplicateUserEmailConstraint(ex))
+        {
+            dbContext.Entry(newUser).State = EntityState.Detached;
+
+            var racedUser = await dbContext.Users
+                .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+                .Include(u => u.AuthProviders)
+                .FirstOrDefaultAsync(
+                    u => u.EmailNormalized == normalizedEmail,
+                    cancellationToken);
+
+            if (racedUser is null)
+            {
+                throw;
+            }
+
+            if (racedUser.Status == "pending")
+            {
+                throw new AuthException(
+                    "Email address is not verified.",
+                    403,
+                    "EMAIL_NOT_VERIFIED");
+            }
+
+            if (racedUser.Status != "active")
+            {
+                throw new AuthException("User account is not active.", 403);
+            }
+
+            await EnsureAuthProviderLinkAsync(
+                racedUser,
+                providerCode,
+                subject,
+                cancellationToken);
+            return BuildAuthResponse(racedUser);
+        }
 
         try
         {
@@ -1011,6 +1051,14 @@ public class AuthService(
         }
 
         return BuildAuthResponse(newUser);
+    }
+
+    private static bool IsDuplicateUserEmailConstraint(DbUpdateException ex)
+    {
+        var message = ex.InnerException?.Message ?? ex.Message;
+        return message.Contains("UQ_Users_EmailNormalized", StringComparison.OrdinalIgnoreCase)
+            || (message.Contains("duplicate key", StringComparison.OrdinalIgnoreCase)
+                && message.Contains("Users", StringComparison.OrdinalIgnoreCase));
     }
 
     private async Task EnsureAuthProviderLinkAsync(
