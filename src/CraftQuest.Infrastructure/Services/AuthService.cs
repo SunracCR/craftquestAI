@@ -11,6 +11,7 @@ using CraftQuest.Infrastructure.Email;
 using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace CraftQuest.Infrastructure.Services;
@@ -24,7 +25,8 @@ public class AuthService(
     IAppleIdTokenValidator appleIdTokenValidator,
     IOptions<PasswordResetOptions> passwordResetOptions,
     IOptions<JoinLinkOptions> joinLinkOptions,
-    IOptions<ExternalAuthOptions> externalAuthOptions) : IAuthService
+    IOptions<ExternalAuthOptions> externalAuthOptions,
+    ILogger<AuthService> logger) : IAuthService
 {
     private const int MinimumAgeWithoutParentalConsent = 13;
 
@@ -995,7 +997,18 @@ public class AuthService(
 
         dbContext.Users.Add(newUser);
         await dbContext.SaveChangesAsync(cancellationToken);
-        await billingService.AssignFreePlanAsync(userId, cancellationToken);
+
+        try
+        {
+            await billingService.AssignFreePlanAsync(userId, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "Failed to assign free plan after external sign-in for user {UserId}",
+                userId);
+        }
 
         return BuildAuthResponse(newUser);
     }

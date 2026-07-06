@@ -205,6 +205,11 @@ class PrepPlusRepository {
   }
 
   Future<void> prefetchItem(String catalogItemId) async {
+    final accessToken = await _apiClient.tokenStorage.getAccessToken();
+    if (accessToken == null || accessToken.isEmpty) {
+      return;
+    }
+
     try {
       await getItem(catalogItemId);
     } catch (e, stackTrace) {

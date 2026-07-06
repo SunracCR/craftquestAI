@@ -83,11 +83,6 @@ class _PrepPlusPublicPreviewPageState extends State<PrepPlusPublicPreviewPage> {
   }
 
   void _openLogin() {
-    final catalogItemId = _preview?.catalogItemId;
-    if (catalogItemId != null && catalogItemId.isNotEmpty) {
-      unawaited(_repository.prefetchItem(catalogItemId));
-    }
-
     rootNavigatorKey.currentState?.push(
       MaterialPageRoute<void>(builder: (_) => const LoginPage()),
     );

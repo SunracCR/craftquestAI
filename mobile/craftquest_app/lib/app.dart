@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:craftquest_app/core/compliance/age_collection_gate.dart';
 import 'package:craftquest_app/core/compliance/parental_consent_gate.dart';
 import 'package:craftquest_app/core/auth/session_expired_notifier.dart';
+import 'package:craftquest_app/core/auth/token_storage.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/l10n/localized_message_holder.dart';
 import 'package:craftquest_app/core/navigation/app_keys.dart';
@@ -341,9 +342,6 @@ class _AuthGateState extends State<_AuthGate> {
           rewardEligible: preview.referralRewardsEligible,
         ),
       );
-      unawaited(
-        getIt<PrepPlusRepository>().prefetchItem(preview.catalogItemId),
-      );
     } catch (_) {
       // La preview page puede reintentar; no bloquear navegación.
     }
@@ -357,6 +355,11 @@ class _AuthGateState extends State<_AuthGate> {
 
     final pending = await getIt<PendingPrepReferralStore>().read();
     if (pending == null || pending.slug.isEmpty || !mounted) {
+      return;
+    }
+
+    final accessToken = await getIt<TokenStorage>().getAccessToken();
+    if (accessToken == null || accessToken.isEmpty) {
       return;
     }
 
