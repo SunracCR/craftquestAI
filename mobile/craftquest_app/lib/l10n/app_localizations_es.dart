@@ -630,7 +630,7 @@ class AppLocalizationsEs extends AppLocalizations {
       one: 'Vence en 1 día',
       zero: 'Vence hoy',
     );
-    return _temp0;
+    return '$_temp0';
   }
 
   @override
@@ -641,7 +641,7 @@ class AppLocalizationsEs extends AppLocalizations {
       other: 'Vence en $hours horas',
       one: 'Vence en 1 hora',
     );
-    return _temp0;
+    return '$_temp0';
   }
 
   @override
@@ -662,10 +662,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String prepPlusPublicPreviewQuestions(int count) {
-    if (count == 1) {
-      return '1 pregunta';
-    }
-    return '$count preguntas';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count preguntas',
+      one: '1 pregunta',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2116,16 +2119,14 @@ class AppLocalizationsEs extends AppLocalizations {
       'Suscripción activada correctamente.';
 
   @override
-  String get paypalReturnSuccessPrep =>
-      'Acceso Prep+ concedido correctamente.';
+  String get paypalReturnSuccessPrep => 'Acceso Prep+ concedido correctamente.';
 
   @override
   String get paypalReturnSuccessCredits =>
       'Créditos de IA añadidos a tu cuenta.';
 
   @override
-  String get paypalReturnSuccessOrder =>
-      'Pago completado correctamente.';
+  String get paypalReturnSuccessOrder => 'Pago completado correctamente.';
 
   @override
   String get paypalReturnError =>

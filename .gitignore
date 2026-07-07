@@ -20,3 +20,5 @@ mobile/**/.flutter-plugins-dependencies
 
 google-services.json
 GoogleService-Info.plist
+mobile/craftquest_app/android/key.properties
+mobile/craftquest_app/android/**/*.jks

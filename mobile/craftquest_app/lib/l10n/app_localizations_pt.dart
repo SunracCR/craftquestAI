@@ -625,9 +625,9 @@ class AppLocalizationsPt extends AppLocalizations {
       locale: localeName,
       other: 'Vence em $days dias',
       one: 'Vence em 1 dia',
-      zero: 'Expira hoje',
+      zero: 'Vence hoje',
     );
-    return _temp0;
+    return '$_temp0';
   }
 
   @override
@@ -638,7 +638,7 @@ class AppLocalizationsPt extends AppLocalizations {
       other: 'Vence em $hours horas',
       one: 'Vence em 1 hora',
     );
-    return _temp0;
+    return '$_temp0';
   }
 
   @override
@@ -659,10 +659,13 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String prepPlusPublicPreviewQuestions(int count) {
-    if (count == 1) {
-      return '1 pergunta';
-    }
-    return '$count perguntas';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count perguntas',
+      one: '1 pergunta',
+    );
+    return '$_temp0';
   }
 
   @override

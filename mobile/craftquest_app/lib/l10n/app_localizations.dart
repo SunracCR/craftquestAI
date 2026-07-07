@@ -1103,36 +1103,69 @@ abstract class AppLocalizations {
   String get prepPlusRenewAction;
 
   /// No description provided for @prepPlusExtendAccessAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Ampliar acceso'**
   String get prepPlusExtendAccessAction;
 
   /// No description provided for @prepPlusExtendAccessCardSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Suma más días a tu acceso actual'**
   String get prepPlusExtendAccessCardSubtitle;
 
   /// No description provided for @prepPlusAccessCardNoAccessTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no tienes acceso a este cuestionario'**
   String get prepPlusAccessCardNoAccessTitle;
 
   /// No description provided for @prepPlusAccessFromPrice.
+  ///
+  /// In es, this message translates to:
+  /// **'Desde {price}'**
   String prepPlusAccessFromPrice(String price);
 
   /// No description provided for @prepPlusAccessCountdownDays.
+  ///
+  /// In es, this message translates to:
+  /// **'{days, plural, =0{Vence hoy} =1{Vence en 1 día} other{Vence en {days} días}}'**
   String prepPlusAccessCountdownDays(int days);
 
   /// No description provided for @prepPlusAccessCountdownHours.
+  ///
+  /// In es, this message translates to:
+  /// **'{hours, plural, =1{Vence en 1 hora} other{Vence en {hours} horas}}'**
   String prepPlusAccessCountdownHours(int hours);
 
   /// No description provided for @prepPlusAccessCountdownTimer.
+  ///
+  /// In es, this message translates to:
+  /// **'Vence en {time}'**
   String prepPlusAccessCountdownTimer(String time);
 
   /// No description provided for @prepPlusShareAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartir'**
   String get prepPlusShareAction;
 
   /// No description provided for @prepPlusShareLinkMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'🎯 ¡El repaso definitivo para el examen! Practica con el cuestionario de {title} en CraftQuestAI y asegura esa nota. 🚀\n👇 Entra aquí:\n{url}'**
   String prepPlusShareLinkMessage(String title, String url);
 
   /// No description provided for @prepPlusPublicPreviewSignIn.
+  ///
+  /// In es, this message translates to:
+  /// **'Iniciar sesión para comprar'**
   String get prepPlusPublicPreviewSignIn;
 
   /// No description provided for @prepPlusPublicPreviewQuestions.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 pregunta} other{{count} preguntas}}'**
   String prepPlusPublicPreviewQuestions(int count);
 
   /// No description provided for @prepPlusAccessUntil.
@@ -6882,27 +6915,51 @@ abstract class AppLocalizations {
   String get prepAdminCoverImageHint;
 
   /// No description provided for @prepAdminCoverSaved.
+  ///
+  /// In es, this message translates to:
+  /// **'Portada guardada en el ítem.'**
   String get prepAdminCoverSaved;
 
   /// No description provided for @prepAdminCoverRemoved.
+  ///
+  /// In es, this message translates to:
+  /// **'Portada eliminada del ítem.'**
   String get prepAdminCoverRemoved;
 
   /// No description provided for @prepAdminCoverSaving.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardando portada…'**
   String get prepAdminCoverSaving;
 
   /// No description provided for @prepAdminCoverSavedStatus.
+  ///
+  /// In es, this message translates to:
+  /// **'Portada guardada en el catálogo'**
   String get prepAdminCoverSavedStatus;
 
   /// No description provided for @prepAdminCoverNotSavedStatus.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo confirmar el guardado. Pulsa «Guardar metadatos».'**
   String get prepAdminCoverNotSavedStatus;
 
   /// No description provided for @prepAdminCoverUploadedPendingCreate.
+  ///
+  /// In es, this message translates to:
+  /// **'Imagen subida. Se guardará al crear el ítem.'**
   String get prepAdminCoverUploadedPendingCreate;
 
   /// No description provided for @prepAdminCoverWillSaveOnCreate.
+  ///
+  /// In es, this message translates to:
+  /// **'Se guardará cuando pulses «Crear ítem».'**
   String get prepAdminCoverWillSaveOnCreate;
 
   /// No description provided for @prepAdminCoverSaveNeedsCategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Selecciona una subcategoría antes de guardar la portada.'**
   String get prepAdminCoverSaveNeedsCategory;
 
   /// No description provided for @prepAdminShareLinkNoCover.

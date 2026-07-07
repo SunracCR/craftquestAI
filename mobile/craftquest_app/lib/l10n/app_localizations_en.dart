@@ -625,7 +625,7 @@ class AppLocalizationsEn extends AppLocalizations {
       one: 'Expires in 1 day',
       zero: 'Expires today',
     );
-    return _temp0;
+    return '$_temp0';
   }
 
   @override
@@ -636,7 +636,7 @@ class AppLocalizationsEn extends AppLocalizations {
       other: 'Expires in $hours hours',
       one: 'Expires in 1 hour',
     );
-    return _temp0;
+    return '$_temp0';
   }
 
   @override
@@ -657,10 +657,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String prepPlusPublicPreviewQuestions(int count) {
-    if (count == 1) {
-      return '1 question';
-    }
-    return '$count questions';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count questions',
+      one: '1 question',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2101,8 +2104,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paypalReturnSuccessPrep => 'Prep+ access granted successfully.';
 
   @override
-  String get paypalReturnSuccessCredits =>
-      'AI credits added to your account.';
+  String get paypalReturnSuccessCredits => 'AI credits added to your account.';
 
   @override
   String get paypalReturnSuccessOrder => 'Payment completed successfully.';

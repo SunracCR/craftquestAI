@@ -1,0 +1,7 @@
+## Copia este archivo como "key.properties" (sin .example) en esta misma carpeta (mobile/craftquest_app/android/).
+## NUNCA subas key.properties ni el .jks a git: ya estan ignorados en android/.gitignore.
+
+storePassword=TU_STORE_PASSWORD
+keyPassword=TU_KEY_PASSWORD
+keyAlias=craftquestai
+storeFile=../craftquestai-release.jks
