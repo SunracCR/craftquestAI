@@ -126,6 +126,7 @@
   "oauthGoogleWebOriginHint": " No Google Cloud (cliente Web), adicione origens JavaScript autorizadas: https://app.craftquestai.com, http://localhost:7357 e http://127.0.0.1:7357.",
   "oauthGooglePeopleApiHint": " Ative a People API no Google Cloud (mesmo projeto do Client ID): https://console.cloud.google.com/apis/library/people.googleapis.com",
   "oauthGoogleNotConfigured": "O login com Google não está configurado. Defina ExternalAuth:Google:WebClientId na API ou GOOGLE_SERVER_CLIENT_ID ao executar o app.",
+  "oauthGoogleAndroidSigningHint": " No Google Cloud Console → Credenciais → cliente OAuth Android (com.craftquestai.craftquestai_app), adicione o SHA-1 da chave de assinatura do Play Console (App signing key), não apenas o do keystore local.",
   "oauthAppleNotConfigured": "O login com Apple não está configurado no servidor (ExternalAuth:Apple:BundleId).",
   "oauthAppleNotAvailable": "Entrar com Apple não está disponível neste dispositivo.",
   "oauthAppleWebNotConfigured": "Apple na web exige Services ID e WebRedirectUri na API (ExternalAuth:Apple). Registe-os na Apple Developer.",

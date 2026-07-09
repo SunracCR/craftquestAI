@@ -291,6 +291,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'O login com Google não está configurado. Defina ExternalAuth:Google:WebClientId na API ou GOOGLE_SERVER_CLIENT_ID ao executar o app.';
 
   @override
+  String get oauthGoogleAndroidSigningHint =>
+      ' No Google Cloud Console → Credenciais → cliente OAuth Android (com.craftquestai.craftquestai_app), adicione o SHA-1 da chave de assinatura do Play Console (App signing key), não apenas o do keystore local.';
+
+  @override
   String get oauthAppleNotConfigured =>
       'O login com Apple não está configurado no servidor (ExternalAuth:Apple:BundleId).';
 

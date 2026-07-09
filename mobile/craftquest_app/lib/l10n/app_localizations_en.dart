@@ -291,6 +291,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Google sign-in is not configured. Set ExternalAuth:Google:WebClientId on the API or GOOGLE_SERVER_CLIENT_ID when running the app.';
 
   @override
+  String get oauthGoogleAndroidSigningHint =>
+      ' In Google Cloud Console → Credentials → Android OAuth client (com.craftquestai.craftquestai_app), add the Play Console App signing key SHA-1, not only your local upload keystore SHA-1.';
+
+  @override
   String get oauthAppleNotConfigured =>
       'Apple sign-in is not configured on the server (ExternalAuth:Apple:BundleId).';
 

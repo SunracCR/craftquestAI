@@ -13,6 +13,7 @@ import 'package:craftquest_app/features/auth/presentation/widgets/oauth_google_w
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
@@ -318,23 +319,54 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
       if (!context.mounted || generation != _signInGeneration) return;
       setState(() => _busy = false);
       final detail = e.toString();
-      var hint = '';
-      if (detail.contains('people.googleapis.com') ||
-          detail.contains('People API') ||
-          detail.contains('SERVICE_DISABLED')) {
-        hint = l10n.oauthGooglePeopleApiHint;
-      } else if (kIsWeb &&
-          (detail.contains('origin') ||
-              detail.contains('Origin') ||
-              detail.contains('popup') ||
-              detail.contains('FedCM'))) {
-        hint = l10n.oauthGoogleWebOriginHint;
-      }
+      final hint = _oauthFailureHint(
+        error: e,
+        detail: detail,
+        provider: provider,
+        l10n: l10n,
+      );
       final message = kDebugMode && detail.isNotEmpty
           ? '${l10n.oauthSignInFailed}$hint\n$detail'
           : '${l10n.oauthSignInFailed}$hint';
       AppSnackBars.showError(message);
     }
+  }
+
+  static String _oauthFailureHint({
+    required Object error,
+    required String detail,
+    required String provider,
+    required AppLocalizations l10n,
+  }) {
+    if (provider == 'google' &&
+        !kIsWeb &&
+        defaultTargetPlatform == TargetPlatform.android) {
+      if (error is PlatformException) {
+        final message = error.message ?? '';
+        if (error.code == 'sign_in_failed' &&
+            (message.contains('10') ||
+                message.toUpperCase().contains('DEVELOPER_ERROR'))) {
+          return l10n.oauthGoogleAndroidSigningHint;
+        }
+      }
+      if (detail.contains('id token') || detail.contains('id_token')) {
+        return l10n.oauthGoogleAndroidSigningHint;
+      }
+    }
+
+    if (detail.contains('people.googleapis.com') ||
+        detail.contains('People API') ||
+        detail.contains('SERVICE_DISABLED')) {
+      return l10n.oauthGooglePeopleApiHint;
+    }
+    if (kIsWeb &&
+        (detail.contains('origin') ||
+            detail.contains('Origin') ||
+            detail.contains('popup') ||
+            detail.contains('FedCM'))) {
+      return l10n.oauthGoogleWebOriginHint;
+    }
+    return '';
   }
 
   @override

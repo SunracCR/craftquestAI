@@ -592,6 +592,12 @@ abstract class AppLocalizations {
   /// **'Google no está configurado. Añade ExternalAuth:Google:WebClientId en la API o GOOGLE_SERVER_CLIENT_ID al ejecutar la app.'**
   String get oauthGoogleNotConfigured;
 
+  /// No description provided for @oauthGoogleAndroidSigningHint.
+  ///
+  /// In es, this message translates to:
+  /// **' En Google Cloud Console → Credenciales → cliente OAuth Android (com.craftquestai.craftquestai_app), añade el SHA-1 de firma de Play Console (App signing key), no solo el de tu keystore local.'**
+  String get oauthGoogleAndroidSigningHint;
+
   /// No description provided for @oauthAppleNotConfigured.
   ///
   /// In es, this message translates to:
