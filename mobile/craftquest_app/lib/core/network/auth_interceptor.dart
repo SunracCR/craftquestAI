@@ -78,6 +78,14 @@ class AuthInterceptor extends Interceptor {
       return;
     }
 
+    // Sin Authorization (p. ej. push antes de login): no intentar refresh ni cerrar sesión.
+    final authHeader = err.requestOptions.headers['Authorization'] ??
+        err.requestOptions.headers['authorization'];
+    if (authHeader == null || authHeader.toString().isEmpty) {
+      handler.next(err);
+      return;
+    }
+
     final refreshResult = await _refreshTokens();
     if (refreshResult != RefreshResult.success) {
       if (refreshResult == RefreshResult.authFailure) {

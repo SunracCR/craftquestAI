@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:craftquest_app/core/auth/token_storage.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/navigation/app_keys.dart';
 import 'package:craftquest_app/features/notifications/data/notification_repository.dart';
@@ -39,7 +40,6 @@ class PushNotificationService {
 
     await _setupLocalNotifications();
     await _requestPermissions();
-    await _registerTokenWithBackend();
     _listenForTokenRefresh();
     _listenForForegroundMessages();
     _listenForOpenedApp();
@@ -106,28 +106,45 @@ class PushNotificationService {
 
   Future<void> _registerTokenWithBackend() async {
     try {
+      if (!await _hasAuthenticatedSession()) {
+        return;
+      }
+
       final token = await FirebaseMessaging.instance.getToken();
       if (token == null || token.isEmpty || token == _currentToken) {
         return;
       }
-      _currentToken = token;
       final platform = Platform.isIOS
           ? 'ios'
           : Platform.isAndroid
               ? 'android'
               : 'web';
       await _repository.registerDeviceToken(token: token, platform: platform);
+      _currentToken = token;
     } catch (_) {
       // Best effort.
     }
   }
 
+  Future<bool> _hasAuthenticatedSession() async {
+    final storage = getIt<TokenStorage>();
+    final access = await storage.getAccessToken();
+    if (access != null && access.isNotEmpty) {
+      return true;
+    }
+    final refresh = await storage.getRefreshToken();
+    return refresh != null && refresh.isNotEmpty;
+  }
+
   void _listenForTokenRefresh() {
     FirebaseMessaging.instance.onTokenRefresh.listen((token) async {
-      _currentToken = token;
       try {
+        if (!await _hasAuthenticatedSession()) {
+          return;
+        }
         final platform = Platform.isIOS ? 'ios' : 'android';
         await _repository.registerDeviceToken(token: token, platform: platform);
+        _currentToken = token;
       } catch (_) {}
     });
   }
