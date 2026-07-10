@@ -6,8 +6,6 @@ public class AiGenerationOptions
 
     public long MaxUploadBytes { get; set; } = 26_214_400;
     public int MaxPagesPerMaterial { get; set; } = 120;
-    public int MaxPagesPerGeneration { get; set; } = 30;
-    public int MaxWordsPerGeneration { get; set; } = 12_000;
     public int MaxQuestionsPerGeneration { get; set; } = 40;
     public int RetentionDays { get; set; } = 3;
     public string[] AllowedExtensions { get; set; } = [".pdf", ".docx"];

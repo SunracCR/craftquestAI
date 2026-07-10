@@ -217,7 +217,6 @@ abstract final class ApiErrorMapper {
       'MATERIAL_NEEDS_OCR' => l10n.errorMaterialNeedsOcrGuidance,
       'MATERIAL_PAGE_LIMIT_EXCEEDED' => l10n.errorMaterialPageLimitGuidance(
           _asInt(data['maxPages']) ?? AiGenerationLimits.maxPagesPerMaterial,
-          AiGenerationLimits.maxPagesPerGeneration,
         ),
       'MATERIAL_TOO_LARGE' => l10n.errorMaterialTooLargeGuidance,
       _ => null,

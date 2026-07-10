@@ -222,8 +222,6 @@ class QuizGenerationParameters {
     this.strictSourceOnly = true,
     this.includeExplanations = true,
     this.preset,
-    this.pageFrom = 0,
-    this.pageTo = 0,
   });
 
   final String? targetQuizId;
@@ -236,8 +234,6 @@ class QuizGenerationParameters {
   final bool strictSourceOnly;
   final bool includeExplanations;
   final String? preset;
-  final int pageFrom;
-  final int pageTo;
 
   Map<String, dynamic> toJson() => {
         if (targetQuizId != null) 'targetQuizId': targetQuizId,
@@ -250,8 +246,6 @@ class QuizGenerationParameters {
         'strictSourceOnly': strictSourceOnly,
         'includeExplanations': includeExplanations,
         if (preset != null) 'preset': preset,
-        if (pageFrom > 0) 'pageFrom': pageFrom,
-        if (pageTo > 0) 'pageTo': pageTo,
       };
 }
 
@@ -263,6 +257,7 @@ class QuizGenerationEstimateModel {
     required this.maxSelectableQuestions,
     required this.wordsInScope,
     required this.generationLanguage,
+    this.documentSizeSurcharge = 0,
   });
 
   factory QuizGenerationEstimateModel.fromJson(Map<String, dynamic> json) {
@@ -275,6 +270,7 @@ class QuizGenerationEstimateModel {
           json['maxSelectableQuestions'] as int? ?? importable,
       wordsInScope: json['wordsInScope'] as int,
       generationLanguage: json['generationLanguage'] as String? ?? 'en',
+      documentSizeSurcharge: json['documentSizeSurcharge'] as int? ?? 0,
     );
   }
 
@@ -284,6 +280,7 @@ class QuizGenerationEstimateModel {
   final int maxSelectableQuestions;
   final int wordsInScope;
   final String generationLanguage;
+  final int documentSizeSurcharge;
 }
 
 class StartQuizGenerationResult {

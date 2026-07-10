@@ -1076,30 +1076,27 @@
   "deleteStudyMaterialAction": "Delete",
   "studyMaterialDeletedMessage": "Material deleted",
   "aiGenerationUploadTitle": "Upload material",
-  "aiGenerationUploadSubtitle": "Upload a PDF or Word file with copyable text. You will choose the page scope before generating the quiz.",
+  "aiGenerationUploadSubtitle": "Upload a PDF or Word file with copyable text. The AI will use the full document to generate the quiz.",
   "aiGenerationUploadHeroDrop": "Drag your PDF or Word file here",
   "aiGenerationUploadHeroPick": "or choose a file from your device",
   "aiGenerationUploadFormatGuideTitle": "Format tips and limits",
   "aiGenerationUploadHint": "PDF or DOCX with selectable text, not scanned images (max 25 MB)",
-  "aiGenerationUploadLimitsHint": "Up to {maxPagesPerFile} pages per file · up to {maxPagesPerGeneration} pages per generation",
+  "aiGenerationUploadLimitsHint": "Up to {maxPagesPerFile} pages per file",
   "@aiGenerationUploadLimitsHint": {
     "placeholders": {
-      "maxPagesPerFile": { "type": "int" },
-      "maxPagesPerGeneration": { "type": "int" }
+      "maxPagesPerFile": { "type": "int" }
     }
   },
-  "aiGenerationUploadLimitsSteps": "If your document is longer, split it into several files (each with {maxPagesPerFile} pages or fewer) or export only the chapter you need. You can then generate quizzes in chunks of up to {maxPagesPerGeneration} pages.",
+  "aiGenerationUploadLimitsSteps": "If your document is longer, split it into several files (each with {maxPagesPerFile} pages or fewer) or export only the chapter you need.",
   "@aiGenerationUploadLimitsSteps": {
     "placeholders": {
-      "maxPagesPerFile": { "type": "int" },
-      "maxPagesPerGeneration": { "type": "int" }
+      "maxPagesPerFile": { "type": "int" }
     }
   },
-  "errorMaterialPageLimitGuidance": "What you can do: split the PDF or Word into parts of {maxPagesPerFile} pages or fewer (by chapter or section) and upload them separately. For each file, generate the quiz using up to {maxPagesPerGeneration} pages at a time.",
+  "errorMaterialPageLimitGuidance": "What you can do: split the PDF or Word into parts of {maxPagesPerFile} pages or fewer (by chapter or section) and upload them separately.",
   "@errorMaterialPageLimitGuidance": {
     "placeholders": {
-      "maxPagesPerFile": { "type": "int" },
-      "maxPagesPerGeneration": { "type": "int" }
+      "maxPagesPerFile": { "type": "int" }
     }
   },
   "aiGenerationUploadAnotherFileAction": "Upload another file",
@@ -1115,35 +1112,18 @@
   "aiGenerationReviewTextSave": "Save and continue",
   "aiGenerationReviewTextAction": "Review text",
   "aiGenerationOutlineTitle": "Material scope",
-  "aiGenerationPageRange": "Pages {from}–{to}",
-  "@aiGenerationPageRange": {
-    "placeholders": { "from": { "type": "int" }, "to": { "type": "int" } }
-  },
-  "aiGenerationPageRangeOfTotal": "Pages {from}–{to} of {total}",
-  "@aiGenerationPageRangeOfTotal": {
-    "placeholders": {
-      "from": { "type": "int" },
-      "to": { "type": "int" },
-      "total": { "type": "int" }
-    }
-  },
-  "aiGenerationPageRangeHelp": "Choose which pages from the document will be used to generate the quiz. Drag each end of the slider to narrow the range.",
-  "aiGenerationPageRangeSelectedCount": "{count, plural, =1{1 page in this range} other{{count} pages in this range}}",
-  "@aiGenerationPageRangeSelectedCount": {
-    "placeholders": { "count": { "type": "int" } }
-  },
-  "aiGenerationPageRangeOverLimit": "Maximum {max} pages per generation. Narrow the selected range.",
-  "@aiGenerationPageRangeOverLimit": {
-    "placeholders": { "max": { "type": "int" } }
-  },
-  "aiGenerationWordsInScopePurpose": "The AI will generate questions from approximately {words} words in that range.",
+  "aiGenerationWordsInScopePurpose": "The AI will generate questions from approximately {words} words in the full document.",
   "@aiGenerationWordsInScopePurpose": {
     "placeholders": { "words": { "type": "int" } }
   },
   "aiGenerationTopicHint": "Optional focus (topic or section)",
-  "aiGenerationWordsInScope": "{words} words in scope",
+  "aiGenerationWordsInScope": "{words} words in the document",
   "@aiGenerationWordsInScope": {
     "placeholders": { "words": { "type": "int" } }
+  },
+  "aiGenerationDocumentSizeSurcharge": "Large document: +{credits} credits",
+  "@aiGenerationDocumentSizeSurcharge": {
+    "placeholders": { "credits": { "type": "int" } }
   },
   "aiGenerationParamsTitle": "Generation settings",
   "aiGenerationMaterialLanguageNotice": "Questions will be generated in {language} based on the material's language.",

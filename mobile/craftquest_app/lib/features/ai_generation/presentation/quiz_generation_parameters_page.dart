@@ -5,7 +5,6 @@ import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_bottom_bar.dart';
 import 'package:craftquest_app/core/widgets/app_buttons.dart';
-import 'package:craftquest_app/core/widgets/app_section_card.dart';
 import 'package:craftquest_app/core/widgets/app_section_title.dart';
 import 'package:craftquest_app/core/network/api_error_mapper.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
@@ -40,7 +39,8 @@ class QuizGenerationParametersPage extends StatefulWidget {
       _QuizGenerationParametersPageState();
 }
 
-class _QuizGenerationParametersPageState extends State<QuizGenerationParametersPage> {
+class _QuizGenerationParametersPageState
+    extends State<QuizGenerationParametersPage> {
   static const _minQuestions = 5;
   static const _absoluteMaxQuestions = 40;
   static const _estimateDebounce = Duration(milliseconds: 400);
@@ -49,8 +49,6 @@ class _QuizGenerationParametersPageState extends State<QuizGenerationParametersP
   final _topicController = TextEditingController();
   Timer? _estimateTimer;
   late StudyMaterialDetailModel _detail;
-  late int _pageFrom;
-  late int _pageTo;
   late int _questionCount;
   String _difficulty = 'mixed';
   late String _language;
@@ -94,8 +92,11 @@ class _QuizGenerationParametersPageState extends State<QuizGenerationParametersP
     }
   }
 
-  static int _previewCredits(int questionCount) =>
-      2 + (questionCount / 10).ceil();
+  int _previewCredits(int questionCount) =>
+      AiGenerationLimits.previewGenerationCredits(
+        questionCount,
+        _detail.pageCount ?? 0,
+      );
 
   static String _normalizeLanguageCode(String? code) {
     final normalized = code?.trim().toLowerCase();
@@ -118,8 +119,6 @@ class _QuizGenerationParametersPageState extends State<QuizGenerationParametersP
   void initState() {
     super.initState();
     _detail = widget.detail;
-    _pageFrom = _detail.selectionPageFrom ?? 1;
-    _pageTo = _detail.selectionPageTo ?? _detail.pageCount ?? _pageFrom;
     if (_detail.selectionTopic != null) {
       _topicController.text = _detail.selectionTopic!;
     }
@@ -135,32 +134,7 @@ class _QuizGenerationParametersPageState extends State<QuizGenerationParametersP
     super.dispose();
   }
 
-  bool get _hidePageRange =>
-      _detail.editedExtractedText != null &&
-      _detail.editedExtractedText!.trim().isNotEmpty;
-
-  int _wordsInRange() {
-    if (_detail.editedExtractedText != null &&
-        _detail.editedExtractedText!.trim().isNotEmpty) {
-      return _detail.wordCount ?? 0;
-    }
-    return _detail.pages
-        .where((p) => p.pageNumber >= _pageFrom && p.pageNumber <= _pageTo)
-        .fold<int>(0, (sum, p) => sum + p.wordCount);
-  }
-
-  void _onPageRangeChanged(RangeValues values) {
-    final maxPage = _detail.pageCount ?? 1;
-    setState(() {
-      _pageFrom = values.start.round().clamp(1, maxPage);
-      _pageTo = values.end.round().clamp(_pageFrom, maxPage);
-    });
-  }
-
-  void _onPageRangeChangeEnd(RangeValues values) {
-    _onPageRangeChanged(values);
-    _scheduleEstimateReload();
-  }
+  int _wordsInDocument() => _detail.wordCount ?? 0;
 
   String _typeLabel(AppLocalizations l10n, String type) {
     return switch (type) {
@@ -179,8 +153,6 @@ class _QuizGenerationParametersPageState extends State<QuizGenerationParametersP
       language: _language,
       difficulty: _difficulty,
       allowedQuestionTypes: _allowedQuestionTypes.toList(),
-      pageFrom: _pageFrom,
-      pageTo: _pageTo,
       topicFocus: topic.isEmpty ? null : topic,
       includeExplanations: _includeExplanations,
     );
@@ -246,8 +218,6 @@ class _QuizGenerationParametersPageState extends State<QuizGenerationParametersP
       final topic = _topicController.text.trim();
       final updatedDetail = await _repository.updateSelection(
         studyMaterialId: widget.studyMaterialId,
-        pageFrom: _pageFrom,
-        pageTo: _pageTo,
         topic: topic,
       );
       _detail = updatedDetail;
@@ -313,147 +283,10 @@ class _QuizGenerationParametersPageState extends State<QuizGenerationParametersP
     );
   }
 
-  bool get _isPageRangeOverLimit {
-    if (_hidePageRange) return false;
-    return (_pageTo - _pageFrom + 1) > AiGenerationLimits.maxPagesPerGeneration;
-  }
-
-  Widget _buildPageRangeSelector(AppLocalizations l10n, ThemeData theme) {
-    final maxPage = _detail.pageCount ?? 1;
-    final selectedCount = _pageTo - _pageFrom + 1;
-    final overLimit =
-        selectedCount > AiGenerationLimits.maxPagesPerGeneration;
-    final words = _wordsInRange();
-
-    return AppSectionCard(
-      variant: AppCardVariant.highlight,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            l10n.aiGenerationPageRangeHelp,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: AppColors.textSecondary,
-              height: 1.45,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            l10n.aiGenerationPageRangeOfTotal(_pageFrom, _pageTo, maxPage),
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: AppColors.accent.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: AppColors.accent.withValues(alpha: 0.35),
-              ),
-            ),
-            child: Text(
-              l10n.aiGenerationPageRangeSelectedCount(selectedCount),
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: AppColors.accent,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          RangeSlider(
-            values: RangeValues(
-              _pageFrom.toDouble(),
-              _pageTo.toDouble().clamp(
-                    _pageFrom.toDouble(),
-                    maxPage.toDouble(),
-                  ),
-            ),
-            min: 1,
-            max: maxPage.toDouble(),
-            divisions: maxPage > 1 ? maxPage - 1 : 1,
-            activeColor: AppColors.accent,
-            inactiveColor: AppColors.textSecondary.withValues(alpha: 0.25),
-            onChanged: _onPageRangeChanged,
-            onChangeEnd: _onPageRangeChangeEnd,
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '1',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                Text(
-                  '$maxPage',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (maxPage > AiGenerationLimits.maxPagesPerGeneration) ...[
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              l10n.aiGenerationUploadLimitsHint(
-                AiGenerationLimits.maxPagesPerMaterial,
-                AiGenerationLimits.maxPagesPerGeneration,
-              ),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: AppColors.accentGold,
-                height: 1.4,
-              ),
-            ),
-          ],
-          if (overLimit) ...[
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              l10n.aiGenerationPageRangeOverLimit(
-                AiGenerationLimits.maxPagesPerGeneration,
-              ),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: AppColors.error,
-                fontWeight: FontWeight.w600,
-                height: 1.4,
-              ),
-            ),
-          ],
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(
-                Icons.auto_stories_outlined,
-                size: 18,
-                color: AppColors.accentCool.withValues(alpha: 0.9),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Text(
-                  l10n.aiGenerationWordsInScopePurpose(words),
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textPrimary,
-                    height: 1.4,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildScopeSection(AppLocalizations l10n, ThemeData theme) {
+    final words = _wordsInDocument();
+    final pageCount = _detail.pageCount;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -465,6 +298,15 @@ class _QuizGenerationParametersPageState extends State<QuizGenerationParametersP
             fontWeight: FontWeight.w700,
           ),
         ),
+        if (pageCount != null) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            l10n.aiGenerationWordsInScope(words),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
         if (_detail.needsOcr) ...[
           const SizedBox(height: AppSpacing.sm),
           Text(
@@ -475,18 +317,14 @@ class _QuizGenerationParametersPageState extends State<QuizGenerationParametersP
           ),
         ],
         const SizedBox(height: AppSpacing.md),
-        if (!_hidePageRange) ...[
-          _buildPageRangeSelector(l10n, theme),
-          const SizedBox(height: AppSpacing.md),
-        ] else ...[
-          Text(
-            l10n.aiGenerationWordsInScopePurpose(_wordsInRange()),
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: AppColors.textSecondary,
-            ),
+        Text(
+          l10n.aiGenerationWordsInScopePurpose(words),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: AppColors.textSecondary,
+            height: 1.4,
           ),
-          const SizedBox(height: AppSpacing.md),
-        ],
+        ),
+        const SizedBox(height: AppSpacing.md),
         TextField(
           controller: _topicController,
           style: theme.textTheme.bodyMedium?.copyWith(
@@ -555,6 +393,9 @@ class _QuizGenerationParametersPageState extends State<QuizGenerationParametersP
     final displayCredits = _estimate != null && !_refreshingEstimate
         ? _estimate!.creditsRequired
         : _previewCredits(_questionCount);
+    final surcharge = _estimate != null && !_refreshingEstimate
+        ? _estimate!.documentSizeSurcharge
+        : AiGenerationLimits.documentSizeSurcharge(_detail.pageCount ?? 0);
 
     return Container(
       decoration: BoxDecoration(
@@ -599,34 +440,49 @@ class _QuizGenerationParametersPageState extends State<QuizGenerationParametersP
               child: AnimatedOpacity(
                 opacity: _refreshingEstimate ? 0.55 : 1,
                 duration: const Duration(milliseconds: 200),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.auto_awesome_rounded,
-                      size: 18,
-                      color: AppColors.accentCool.withValues(alpha: 0.9),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: Text(
-                        l10n.aiGenerationCreditsCost(
-                          displayCredits,
-                          _estimate?.aiCreditsAvailable ?? 0,
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.auto_awesome_rounded,
+                          size: 18,
+                          color: AppColors.accentCool.withValues(alpha: 0.9),
                         ),
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textPrimary,
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Text(
+                            l10n.aiGenerationCreditsCost(
+                              displayCredits,
+                              _estimate?.aiCreditsAvailable ?? 0,
+                            ),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                        if (_refreshingEstimate)
+                          const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.accent,
+                            ),
+                          ),
+                      ],
+                    ),
+                    if (surcharge > 0) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        l10n.aiGenerationDocumentSizeSurcharge(surcharge),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppColors.accentGold,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ),
-                    if (_refreshingEstimate)
-                      const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.accent,
-                        ),
-                      ),
+                    ],
                   ],
                 ),
               ),
@@ -653,8 +509,7 @@ class _QuizGenerationParametersPageState extends State<QuizGenerationParametersP
             isLoading: _starting,
             onPressed: _starting ||
                     _allowedQuestionTypes.isEmpty ||
-                    _loadingEstimate ||
-                    _isPageRangeOverLimit
+                    _loadingEstimate
                 ? null
                 : _start,
           ),
@@ -708,10 +563,22 @@ class _QuizGenerationParametersPageState extends State<QuizGenerationParametersP
             initialValue: _difficulty,
             decoration: InputDecoration(labelText: l10n.aiGenerationDifficulty),
             items: [
-              DropdownMenuItem(value: 'easy', child: Text(l10n.aiGenerationDifficultyEasy)),
-              DropdownMenuItem(value: 'medium', child: Text(l10n.aiGenerationDifficultyMedium)),
-              DropdownMenuItem(value: 'hard', child: Text(l10n.aiGenerationDifficultyHard)),
-              DropdownMenuItem(value: 'mixed', child: Text(l10n.aiGenerationDifficultyMixed)),
+              DropdownMenuItem(
+                value: 'easy',
+                child: Text(l10n.aiGenerationDifficultyEasy),
+              ),
+              DropdownMenuItem(
+                value: 'medium',
+                child: Text(l10n.aiGenerationDifficultyMedium),
+              ),
+              DropdownMenuItem(
+                value: 'hard',
+                child: Text(l10n.aiGenerationDifficultyHard),
+              ),
+              DropdownMenuItem(
+                value: 'mixed',
+                child: Text(l10n.aiGenerationDifficultyMixed),
+              ),
             ],
             onChanged: (v) {
               if (v == null) return;

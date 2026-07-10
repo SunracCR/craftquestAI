@@ -301,28 +301,9 @@ public class StudyMaterialService(
             throw new AppException("Material is not ready for selection.", 400);
         }
 
-        if (request.PageFrom < 1 || request.PageTo < request.PageFrom)
-        {
-            throw new AppException("Invalid page range.", 400);
-        }
-
-        if (material.PageCount.HasValue && request.PageTo > material.PageCount.Value)
-        {
-            throw new AppException("Page range exceeds document length.", 400);
-        }
-
-        var maxPages = generationOptions.Value.MaxPagesPerGeneration;
-        if (request.PageTo - request.PageFrom + 1 > maxPages)
-        {
-            throw new AppException(
-                $"Page range exceeds maximum of {maxPages} pages per generation.",
-                400,
-                "GENERATION_PAGE_RANGE_TOO_LARGE",
-                new Dictionary<string, object?> { ["maxPages"] = maxPages });
-        }
-
-        material.SelectionPageFrom = request.PageFrom;
-        material.SelectionPageTo = request.PageTo;
+        var pageCount = material.PageCount ?? 1;
+        material.SelectionPageFrom = 1;
+        material.SelectionPageTo = pageCount;
         material.SelectionTopic = string.IsNullOrWhiteSpace(request.Topic)
             ? null
             : request.Topic.Trim();
@@ -467,10 +448,8 @@ public class StudyMaterialService(
             })
             .ToList();
 
-        var wordsInDefaultSelection = EstimateWordsInRange(
-            material,
-            material.SelectionPageFrom ?? 1,
-            material.SelectionPageTo ?? material.PageCount ?? 1);
+        var wordsInDocument = material.WordCount
+            ?? EstimateWordsInRange(material, 1, material.PageCount ?? 1);
 
         return new StudyMaterialDetailDto
         {
@@ -498,7 +477,7 @@ public class StudyMaterialService(
                 .ToList(),
             EstimatedMaxQuestions = Math.Min(
                 generationOptions.Value.MaxQuestionsPerGeneration,
-                Math.Max(5, wordsInDefaultSelection / 150)),
+                Math.Max(5, wordsInDocument / 150)),
             RequiresTextReview = material.NeedsOcr && string.IsNullOrWhiteSpace(material.EditedExtractedText),
             EditedExtractedText = material.EditedExtractedText,
             LanguageCode = material.LanguageCode,
@@ -626,9 +605,7 @@ public class StudyMaterialService(
         if (material.SelectionPageFrom is null && result.Pages.Count > 0)
         {
             material.SelectionPageFrom = 1;
-            material.SelectionPageTo = Math.Min(
-                result.Pages.Count,
-                generationOptions.Value.MaxPagesPerGeneration);
+            material.SelectionPageTo = result.Pages.Count;
         }
     }
 

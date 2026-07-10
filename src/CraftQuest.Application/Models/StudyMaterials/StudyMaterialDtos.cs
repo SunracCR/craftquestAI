@@ -70,7 +70,5 @@ public sealed class StudyMaterialUploadResultDto
 
 public sealed class UpdateStudyMaterialSelectionRequest
 {
-    public int PageFrom { get; set; }
-    public int PageTo { get; set; }
     public string? Topic { get; set; }
 }

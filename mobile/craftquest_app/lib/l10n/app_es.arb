@@ -1075,30 +1075,27 @@
   "deleteStudyMaterialAction": "Eliminar",
   "studyMaterialDeletedMessage": "Material eliminado",
   "aiGenerationUploadTitle": "Subir material",
-  "aiGenerationUploadSubtitle": "Sube un PDF o Word con texto copiable. Revisarás el alcance de páginas antes de generar el cuestionario.",
+  "aiGenerationUploadSubtitle": "Sube un PDF o Word con texto copiable. La IA usará el documento completo para generar el cuestionario.",
   "aiGenerationUploadHeroDrop": "Arrastra tu PDF o Word aquí",
   "aiGenerationUploadHeroPick": "o elige un archivo desde tu dispositivo",
   "aiGenerationUploadFormatGuideTitle": "Consejos y límites de formato",
   "aiGenerationUploadHint": "PDF o DOCX con texto seleccionable, no escaneados (máx. 25 MB)",
-  "aiGenerationUploadLimitsHint": "Hasta {maxPagesPerFile} páginas por archivo · hasta {maxPagesPerGeneration} páginas por generación",
+  "aiGenerationUploadLimitsHint": "Hasta {maxPagesPerFile} páginas por archivo",
   "@aiGenerationUploadLimitsHint": {
     "placeholders": {
-      "maxPagesPerFile": { "type": "int" },
-      "maxPagesPerGeneration": { "type": "int" }
+      "maxPagesPerFile": { "type": "int" }
     }
   },
-  "aiGenerationUploadLimitsSteps": "Si el documento es más largo, divídelo en varios archivos (cada uno con {maxPagesPerFile} páginas o menos) o exporta solo el capítulo que necesitas. Después podrás generar el cuestionario por tramos de hasta {maxPagesPerGeneration} páginas.",
+  "aiGenerationUploadLimitsSteps": "Si el documento es más largo, divídelo en varios archivos (cada uno con {maxPagesPerFile} páginas o menos) o exporta solo el capítulo que necesitas.",
   "@aiGenerationUploadLimitsSteps": {
     "placeholders": {
-      "maxPagesPerFile": { "type": "int" },
-      "maxPagesPerGeneration": { "type": "int" }
+      "maxPagesPerFile": { "type": "int" }
     }
   },
-  "errorMaterialPageLimitGuidance": "Qué puedes hacer: divide el PDF o Word en partes de {maxPagesPerFile} páginas o menos (por capítulos o bloques) y súbelas por separado. En cada material, genera el quiz eligiendo hasta {maxPagesPerGeneration} páginas a la vez.",
+  "errorMaterialPageLimitGuidance": "Qué puedes hacer: divide el PDF o Word en partes de {maxPagesPerFile} páginas o menos (por capítulos o bloques) y súbelas por separado.",
   "@errorMaterialPageLimitGuidance": {
     "placeholders": {
-      "maxPagesPerFile": { "type": "int" },
-      "maxPagesPerGeneration": { "type": "int" }
+      "maxPagesPerFile": { "type": "int" }
     }
   },
   "aiGenerationUploadAnotherFileAction": "Subir otro archivo",
@@ -1114,35 +1111,18 @@
   "aiGenerationReviewTextSave": "Guardar y continuar",
   "aiGenerationReviewTextAction": "Revisar texto",
   "aiGenerationOutlineTitle": "Alcance del material",
-  "aiGenerationPageRange": "Páginas {from}–{to}",
-  "@aiGenerationPageRange": {
-    "placeholders": { "from": { "type": "int" }, "to": { "type": "int" } }
-  },
-  "aiGenerationPageRangeOfTotal": "Páginas {from}–{to} de {total}",
-  "@aiGenerationPageRangeOfTotal": {
-    "placeholders": {
-      "from": { "type": "int" },
-      "to": { "type": "int" },
-      "total": { "type": "int" }
-    }
-  },
-  "aiGenerationPageRangeHelp": "Elige qué páginas del documento usarán para generar el cuestionario. Arrastra cada extremo del control para acotar el tramo.",
-  "aiGenerationPageRangeSelectedCount": "{count, plural, =1{1 página en este tramo} other{{count} páginas en este tramo}}",
-  "@aiGenerationPageRangeSelectedCount": {
-    "placeholders": { "count": { "type": "int" } }
-  },
-  "aiGenerationPageRangeOverLimit": "Máximo {max} páginas por generación. Reduce el tramo seleccionado.",
-  "@aiGenerationPageRangeOverLimit": {
-    "placeholders": { "max": { "type": "int" } }
-  },
-  "aiGenerationWordsInScopePurpose": "La IA generará preguntas a partir de aproximadamente {words} palabras en ese tramo.",
+  "aiGenerationWordsInScopePurpose": "La IA generará preguntas a partir de aproximadamente {words} palabras del documento completo.",
   "@aiGenerationWordsInScopePurpose": {
     "placeholders": { "words": { "type": "int" } }
   },
   "aiGenerationTopicHint": "Enfoque opcional (tema o apartado)",
-  "aiGenerationWordsInScope": "{words} palabras en el alcance",
+  "aiGenerationWordsInScope": "{words} palabras en el documento",
   "@aiGenerationWordsInScope": {
     "placeholders": { "words": { "type": "int" } }
+  },
+  "aiGenerationDocumentSizeSurcharge": "Documento extenso: +{credits} créditos",
+  "@aiGenerationDocumentSizeSurcharge": {
+    "placeholders": { "credits": { "type": "int" } }
   },
   "aiGenerationParamsTitle": "Parámetros de generación",
   "aiGenerationMaterialLanguageNotice": "Las preguntas se generarán en {language} según el idioma del material.",

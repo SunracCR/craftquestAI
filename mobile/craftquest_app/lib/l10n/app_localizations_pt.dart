@@ -2277,7 +2277,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get aiGenerationUploadSubtitle =>
-      'Envie um PDF ou Word com texto copiavel. Revisara o alcance de paginas antes de gerar o questionario.';
+      'Envie um PDF ou Word com texto copiavel. A IA usara o documento completo para gerar o questionario.';
 
   @override
   String get aiGenerationUploadHeroDrop => 'Arraste o seu PDF ou Word aqui';
@@ -2294,27 +2294,18 @@ class AppLocalizationsPt extends AppLocalizations {
       'PDF ou DOCX com texto selecionavel, nao digitalizados (max. 25 MB)';
 
   @override
-  String aiGenerationUploadLimitsHint(
-    int maxPagesPerFile,
-    int maxPagesPerGeneration,
-  ) {
-    return 'Ate $maxPagesPerFile paginas por ficheiro · ate $maxPagesPerGeneration paginas por geracao';
+  String aiGenerationUploadLimitsHint(int maxPagesPerFile) {
+    return 'Ate $maxPagesPerFile paginas por ficheiro';
   }
 
   @override
-  String aiGenerationUploadLimitsSteps(
-    int maxPagesPerFile,
-    int maxPagesPerGeneration,
-  ) {
-    return 'Se o documento for maior, divida-o em varios ficheiros (cada um com $maxPagesPerFile paginas ou menos) ou exporte apenas o capitulo necessario. Depois pode gerar questionarios em blocos de ate $maxPagesPerGeneration paginas.';
+  String aiGenerationUploadLimitsSteps(int maxPagesPerFile) {
+    return 'Se o documento for maior, divida-o em varios ficheiros (cada um com $maxPagesPerFile paginas ou menos) ou exporte apenas o capitulo necessario.';
   }
 
   @override
-  String errorMaterialPageLimitGuidance(
-    int maxPagesPerFile,
-    int maxPagesPerGeneration,
-  ) {
-    return 'O que pode fazer: divida o PDF ou Word em partes de $maxPagesPerFile paginas ou menos (por capitulos ou blocos) e envie-as separadamente. Em cada material, gere o questionario escolhendo ate $maxPagesPerGeneration paginas de cada vez.';
+  String errorMaterialPageLimitGuidance(int maxPagesPerFile) {
+    return 'O que pode fazer: divida o PDF ou Word em partes de $maxPagesPerFile paginas ou menos (por capitulos ou blocos) e envie-as separadamente.';
   }
 
   @override
@@ -2359,38 +2350,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String get aiGenerationOutlineTitle => 'Alcance do material';
 
   @override
-  String aiGenerationPageRange(int from, int to) {
-    return 'Paginas $from–$to';
-  }
-
-  @override
-  String aiGenerationPageRangeOfTotal(int from, int to, int total) {
-    return 'Paginas $from–$to de $total';
-  }
-
-  @override
-  String get aiGenerationPageRangeHelp =>
-      'Escolha quais paginas do documento serao usadas para gerar o questionario. Arraste cada extremo do controle para limitar o trecho.';
-
-  @override
-  String aiGenerationPageRangeSelectedCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count paginas neste trecho',
-      one: '1 pagina neste trecho',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String aiGenerationPageRangeOverLimit(int max) {
-    return 'Maximo de $max paginas por geracao. Reduza o trecho selecionado.';
-  }
-
-  @override
   String aiGenerationWordsInScopePurpose(int words) {
-    return 'A IA gerara perguntas a partir de aproximadamente $words palavras nesse trecho.';
+    return 'A IA gerara perguntas a partir de aproximadamente $words palavras do documento completo.';
   }
 
   @override
@@ -2398,7 +2359,12 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String aiGenerationWordsInScope(int words) {
-    return '$words palavras no alcance';
+    return '$words palavras no documento';
+  }
+
+  @override
+  String aiGenerationDocumentSizeSurcharge(int credits) {
+    return 'Documento extenso: +$credits creditos';
   }
 
   @override

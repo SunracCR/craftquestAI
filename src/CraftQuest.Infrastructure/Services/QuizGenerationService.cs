@@ -54,7 +54,12 @@ public class QuizGenerationService(
         StudyMaterialService.ApplyGenerationLanguage(material, parameters, pageFrom, pageTo);
         await dbContext.SaveChangesAsync(cancellationToken);
         var words = StudyMaterialService.EstimateWordsInRange(material, pageFrom, pageTo);
-        var credits = AiOptions.CalculateGenerationCredits(parameters.QuestionCount, aiOptions.Value);
+        var pageCount = material.PageCount ?? 0;
+        var credits = AiOptions.CalculateGenerationCredits(
+            parameters.QuestionCount,
+            pageCount,
+            aiOptions.Value);
+        var documentSizeSurcharge = AiOptions.CalculateDocumentSizeSurcharge(pageCount, aiOptions.Value);
 
         var planCapacity = await ResolveImportableCountAsync(
             userId,
@@ -77,6 +82,7 @@ public class QuizGenerationService(
             MaxSelectableQuestions = maxSelectable,
             WordsInScope = words,
             GenerationLanguage = parameters.Language,
+            DocumentSizeSurcharge = documentSizeSurcharge,
         };
     }
 
@@ -112,6 +118,7 @@ public class QuizGenerationService(
                     ?? parameters;
             var existingCredits = AiOptions.CalculateGenerationCredits(
                 existingParams.QuestionCount,
+                material.PageCount ?? 0,
                 aiOptions.Value);
 
             return new StartQuizGenerationResultDto
@@ -127,7 +134,6 @@ public class QuizGenerationService(
         var (pageFrom, pageTo) = ResolvePageRange(material, parameters);
         StudyMaterialService.ApplyGenerationLanguage(material, parameters, pageFrom, pageTo);
         await dbContext.SaveChangesAsync(cancellationToken);
-        ValidateGenerationScope(material, pageFrom, pageTo);
         parameters.QuestionCount = await CapQuestionCountAsync(
             parameters.QuestionCount,
             userId,
@@ -140,15 +146,10 @@ public class QuizGenerationService(
             throw new AppException("No text found in the selected scope.", 400, "GENERATION_SCOPE_EMPTY");
         }
 
-        if (words > generationOptions.Value.MaxWordsPerGeneration)
-        {
-            throw new AppException(
-                "Selected text exceeds the maximum allowed for one generation.",
-                400,
-                "GENERATION_SCOPE_TOO_LARGE");
-        }
-
-        var credits = AiOptions.CalculateGenerationCredits(parameters.QuestionCount, aiOptions.Value);
+        var credits = AiOptions.CalculateGenerationCredits(
+            parameters.QuestionCount,
+            material.PageCount ?? 0,
+            aiOptions.Value);
         await billingService.EnsureHasAiCreditsAsync(userId, credits, cancellationToken);
 
         if (parameters.TargetQuizId is null)
@@ -230,7 +231,20 @@ public class QuizGenerationService(
         var parameters = JsonSerializer.Deserialize<QuizGenerationParametersDto>(job.InputJson, JsonOptions)
             ?? throw new AppException("Invalid generation parameters.", 400);
 
-        var credits = AiOptions.CalculateGenerationCredits(parameters.QuestionCount, aiOptions.Value);
+        var pageCount = 0;
+        if (job.StudyMaterialId is Guid materialId)
+        {
+            pageCount = await dbContext.StudyMaterials
+                .AsNoTracking()
+                .Where(m => m.StudyMaterialId == materialId)
+                .Select(m => m.PageCount ?? 0)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        var credits = AiOptions.CalculateGenerationCredits(
+            parameters.QuestionCount,
+            pageCount,
+            aiOptions.Value);
         await billingService.EnsureHasAiCreditsAsync(userId, credits, cancellationToken);
 
         job.Status = "pending";
@@ -426,6 +440,7 @@ public class QuizGenerationService(
 
             var credits = AiOptions.CalculateGenerationCredits(
                 document.Questions.Count,
+                material.PageCount ?? 0,
                 aiOptions.Value);
 
             await jobProgress.UpdateAsync(AiJobStages.Importing, 88, jobToken);
@@ -737,19 +752,9 @@ public class QuizGenerationService(
             return (1, 1);
         }
 
-        var pageFrom = parameters.PageFrom > 0
-            ? parameters.PageFrom
-            : material.SelectionPageFrom ?? 1;
-        var pageTo = parameters.PageTo > 0
-            ? parameters.PageTo
-            : material.SelectionPageTo ?? material.PageCount ?? pageFrom;
-
-        if (pageTo < pageFrom)
-        {
-            throw new AppException("Invalid page range.", 400);
-        }
-
-        return (pageFrom, pageTo);
+        // Always use the full document; client pageFrom/pageTo are ignored.
+        var pageTo = material.PageCount ?? 1;
+        return (1, Math.Max(1, pageTo));
     }
 
     private async Task EnsureQuizOwnerAsync(
@@ -780,32 +785,6 @@ public class QuizGenerationService(
                 "Gemini API key is not configured for quiz generation.",
                 503,
                 "AI_NOT_CONFIGURED");
-        }
-    }
-
-    private void ValidateGenerationScope(
-        StudyMaterial material,
-        int pageFrom,
-        int pageTo)
-    {
-        if (!string.IsNullOrWhiteSpace(material.EditedExtractedText))
-        {
-            return;
-        }
-
-        if (material.PageCount.HasValue && pageTo > material.PageCount.Value)
-        {
-            throw new AppException("Page range exceeds document length.", 400);
-        }
-
-        var maxPages = generationOptions.Value.MaxPagesPerGeneration;
-        if (pageTo - pageFrom + 1 > maxPages)
-        {
-            throw new AppException(
-                $"Page range exceeds maximum of {maxPages} pages per generation.",
-                400,
-                "GENERATION_PAGE_RANGE_TOO_LARGE",
-                new Dictionary<string, object?> { ["maxPages"] = maxPages });
         }
     }
 

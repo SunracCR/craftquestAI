@@ -81,7 +81,6 @@ class _StudyMaterialOutlinePageState extends State<StudyMaterialOutlinePage> {
                 (pageLimit
                     ? l10n.errorMaterialPageLimitGuidance(
                         AiGenerationLimits.maxPagesPerMaterial,
-                        AiGenerationLimits.maxPagesPerGeneration,
                       )
                     : null);
           });

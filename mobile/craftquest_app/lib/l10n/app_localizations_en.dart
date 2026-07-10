@@ -2259,7 +2259,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiGenerationUploadSubtitle =>
-      'Upload a PDF or Word file with copyable text. You will choose the page scope before generating the quiz.';
+      'Upload a PDF or Word file with copyable text. The AI will use the full document to generate the quiz.';
 
   @override
   String get aiGenerationUploadHeroDrop => 'Drag your PDF or Word file here';
@@ -2275,27 +2275,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'PDF or DOCX with selectable text, not scanned images (max 25 MB)';
 
   @override
-  String aiGenerationUploadLimitsHint(
-    int maxPagesPerFile,
-    int maxPagesPerGeneration,
-  ) {
-    return 'Up to $maxPagesPerFile pages per file · up to $maxPagesPerGeneration pages per generation';
+  String aiGenerationUploadLimitsHint(int maxPagesPerFile) {
+    return 'Up to $maxPagesPerFile pages per file';
   }
 
   @override
-  String aiGenerationUploadLimitsSteps(
-    int maxPagesPerFile,
-    int maxPagesPerGeneration,
-  ) {
-    return 'If your document is longer, split it into several files (each with $maxPagesPerFile pages or fewer) or export only the chapter you need. You can then generate quizzes in chunks of up to $maxPagesPerGeneration pages.';
+  String aiGenerationUploadLimitsSteps(int maxPagesPerFile) {
+    return 'If your document is longer, split it into several files (each with $maxPagesPerFile pages or fewer) or export only the chapter you need.';
   }
 
   @override
-  String errorMaterialPageLimitGuidance(
-    int maxPagesPerFile,
-    int maxPagesPerGeneration,
-  ) {
-    return 'What you can do: split the PDF or Word into parts of $maxPagesPerFile pages or fewer (by chapter or section) and upload them separately. For each file, generate the quiz using up to $maxPagesPerGeneration pages at a time.';
+  String errorMaterialPageLimitGuidance(int maxPagesPerFile) {
+    return 'What you can do: split the PDF or Word into parts of $maxPagesPerFile pages or fewer (by chapter or section) and upload them separately.';
   }
 
   @override
@@ -2340,38 +2331,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiGenerationOutlineTitle => 'Material scope';
 
   @override
-  String aiGenerationPageRange(int from, int to) {
-    return 'Pages $from–$to';
-  }
-
-  @override
-  String aiGenerationPageRangeOfTotal(int from, int to, int total) {
-    return 'Pages $from–$to of $total';
-  }
-
-  @override
-  String get aiGenerationPageRangeHelp =>
-      'Choose which pages from the document will be used to generate the quiz. Drag each end of the slider to narrow the range.';
-
-  @override
-  String aiGenerationPageRangeSelectedCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count pages in this range',
-      one: '1 page in this range',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String aiGenerationPageRangeOverLimit(int max) {
-    return 'Maximum $max pages per generation. Narrow the selected range.';
-  }
-
-  @override
   String aiGenerationWordsInScopePurpose(int words) {
-    return 'The AI will generate questions from approximately $words words in that range.';
+    return 'The AI will generate questions from approximately $words words in the full document.';
   }
 
   @override
@@ -2379,7 +2340,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String aiGenerationWordsInScope(int words) {
-    return '$words words in scope';
+    return '$words words in the document';
+  }
+
+  @override
+  String aiGenerationDocumentSizeSurcharge(int credits) {
+    return 'Large document: +$credits credits';
   }
 
   @override

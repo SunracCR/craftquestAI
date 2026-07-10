@@ -1075,30 +1075,27 @@
   "deleteStudyMaterialAction": "Eliminar",
   "studyMaterialDeletedMessage": "Material eliminado",
   "aiGenerationUploadTitle": "Enviar material",
-  "aiGenerationUploadSubtitle": "Envie um PDF ou Word com texto copiavel. Revisara o alcance de paginas antes de gerar o questionario.",
+  "aiGenerationUploadSubtitle": "Envie um PDF ou Word com texto copiavel. A IA usara o documento completo para gerar o questionario.",
   "aiGenerationUploadHeroDrop": "Arraste o seu PDF ou Word aqui",
   "aiGenerationUploadHeroPick": "ou escolha um ficheiro no seu dispositivo",
   "aiGenerationUploadFormatGuideTitle": "Dicas e limites de formato",
   "aiGenerationUploadHint": "PDF ou DOCX com texto selecionavel, nao digitalizados (max. 25 MB)",
-  "aiGenerationUploadLimitsHint": "Ate {maxPagesPerFile} paginas por ficheiro · ate {maxPagesPerGeneration} paginas por geracao",
+  "aiGenerationUploadLimitsHint": "Ate {maxPagesPerFile} paginas por ficheiro",
   "@aiGenerationUploadLimitsHint": {
     "placeholders": {
-      "maxPagesPerFile": { "type": "int" },
-      "maxPagesPerGeneration": { "type": "int" }
+      "maxPagesPerFile": { "type": "int" }
     }
   },
-  "aiGenerationUploadLimitsSteps": "Se o documento for maior, divida-o em varios ficheiros (cada um com {maxPagesPerFile} paginas ou menos) ou exporte apenas o capitulo necessario. Depois pode gerar questionarios em blocos de ate {maxPagesPerGeneration} paginas.",
+  "aiGenerationUploadLimitsSteps": "Se o documento for maior, divida-o em varios ficheiros (cada um com {maxPagesPerFile} paginas ou menos) ou exporte apenas o capitulo necessario.",
   "@aiGenerationUploadLimitsSteps": {
     "placeholders": {
-      "maxPagesPerFile": { "type": "int" },
-      "maxPagesPerGeneration": { "type": "int" }
+      "maxPagesPerFile": { "type": "int" }
     }
   },
-  "errorMaterialPageLimitGuidance": "O que pode fazer: divida o PDF ou Word em partes de {maxPagesPerFile} paginas ou menos (por capitulos ou blocos) e envie-as separadamente. Em cada material, gere o questionario escolhendo ate {maxPagesPerGeneration} paginas de cada vez.",
+  "errorMaterialPageLimitGuidance": "O que pode fazer: divida o PDF ou Word em partes de {maxPagesPerFile} paginas ou menos (por capitulos ou blocos) e envie-as separadamente.",
   "@errorMaterialPageLimitGuidance": {
     "placeholders": {
-      "maxPagesPerFile": { "type": "int" },
-      "maxPagesPerGeneration": { "type": "int" }
+      "maxPagesPerFile": { "type": "int" }
     }
   },
   "aiGenerationUploadAnotherFileAction": "Enviar outro ficheiro",
@@ -1114,35 +1111,18 @@
   "aiGenerationReviewTextSave": "Guardar e continuar",
   "aiGenerationReviewTextAction": "Rever texto",
   "aiGenerationOutlineTitle": "Alcance do material",
-  "aiGenerationPageRange": "Paginas {from}–{to}",
-  "@aiGenerationPageRange": {
-    "placeholders": { "from": { "type": "int" }, "to": { "type": "int" } }
-  },
-  "aiGenerationPageRangeOfTotal": "Paginas {from}–{to} de {total}",
-  "@aiGenerationPageRangeOfTotal": {
-    "placeholders": {
-      "from": { "type": "int" },
-      "to": { "type": "int" },
-      "total": { "type": "int" }
-    }
-  },
-  "aiGenerationPageRangeHelp": "Escolha quais paginas do documento serao usadas para gerar o questionario. Arraste cada extremo do controle para limitar o trecho.",
-  "aiGenerationPageRangeSelectedCount": "{count, plural, =1{1 pagina neste trecho} other{{count} paginas neste trecho}}",
-  "@aiGenerationPageRangeSelectedCount": {
-    "placeholders": { "count": { "type": "int" } }
-  },
-  "aiGenerationPageRangeOverLimit": "Maximo de {max} paginas por geracao. Reduza o trecho selecionado.",
-  "@aiGenerationPageRangeOverLimit": {
-    "placeholders": { "max": { "type": "int" } }
-  },
-  "aiGenerationWordsInScopePurpose": "A IA gerara perguntas a partir de aproximadamente {words} palavras nesse trecho.",
+  "aiGenerationWordsInScopePurpose": "A IA gerara perguntas a partir de aproximadamente {words} palavras do documento completo.",
   "@aiGenerationWordsInScopePurpose": {
     "placeholders": { "words": { "type": "int" } }
   },
   "aiGenerationTopicHint": "Foco opcional (tema ou seccao)",
-  "aiGenerationWordsInScope": "{words} palavras no alcance",
+  "aiGenerationWordsInScope": "{words} palavras no documento",
   "@aiGenerationWordsInScope": {
     "placeholders": { "words": { "type": "int" } }
+  },
+  "aiGenerationDocumentSizeSurcharge": "Documento extenso: +{credits} creditos",
+  "@aiGenerationDocumentSizeSurcharge": {
+    "placeholders": { "credits": { "type": "int" } }
   },
   "aiGenerationParamsTitle": "Parametros de geracao",
   "aiGenerationMaterialLanguageNotice": "As perguntas serao geradas em {language} conforme o idioma do material.",

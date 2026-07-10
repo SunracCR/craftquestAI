@@ -3777,7 +3777,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiGenerationUploadSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Sube un PDF o Word con texto copiable. Revisarás el alcance de páginas antes de generar el cuestionario.'**
+  /// **'Sube un PDF o Word con texto copiable. La IA usará el documento completo para generar el cuestionario.'**
   String get aiGenerationUploadSubtitle;
 
   /// No description provided for @aiGenerationUploadHeroDrop.
@@ -3807,29 +3807,20 @@ abstract class AppLocalizations {
   /// No description provided for @aiGenerationUploadLimitsHint.
   ///
   /// In es, this message translates to:
-  /// **'Hasta {maxPagesPerFile} páginas por archivo · hasta {maxPagesPerGeneration} páginas por generación'**
-  String aiGenerationUploadLimitsHint(
-    int maxPagesPerFile,
-    int maxPagesPerGeneration,
-  );
+  /// **'Hasta {maxPagesPerFile} páginas por archivo'**
+  String aiGenerationUploadLimitsHint(int maxPagesPerFile);
 
   /// No description provided for @aiGenerationUploadLimitsSteps.
   ///
   /// In es, this message translates to:
-  /// **'Si el documento es más largo, divídelo en varios archivos (cada uno con {maxPagesPerFile} páginas o menos) o exporta solo el capítulo que necesitas. Después podrás generar el cuestionario por tramos de hasta {maxPagesPerGeneration} páginas.'**
-  String aiGenerationUploadLimitsSteps(
-    int maxPagesPerFile,
-    int maxPagesPerGeneration,
-  );
+  /// **'Si el documento es más largo, divídelo en varios archivos (cada uno con {maxPagesPerFile} páginas o menos) o exporta solo el capítulo que necesitas.'**
+  String aiGenerationUploadLimitsSteps(int maxPagesPerFile);
 
   /// No description provided for @errorMaterialPageLimitGuidance.
   ///
   /// In es, this message translates to:
-  /// **'Qué puedes hacer: divide el PDF o Word en partes de {maxPagesPerFile} páginas o menos (por capítulos o bloques) y súbelas por separado. En cada material, genera el quiz eligiendo hasta {maxPagesPerGeneration} páginas a la vez.'**
-  String errorMaterialPageLimitGuidance(
-    int maxPagesPerFile,
-    int maxPagesPerGeneration,
-  );
+  /// **'Qué puedes hacer: divide el PDF o Word en partes de {maxPagesPerFile} páginas o menos (por capítulos o bloques) y súbelas por separado.'**
+  String errorMaterialPageLimitGuidance(int maxPagesPerFile);
 
   /// No description provided for @aiGenerationUploadAnotherFileAction.
   ///
@@ -3909,40 +3900,10 @@ abstract class AppLocalizations {
   /// **'Alcance del material'**
   String get aiGenerationOutlineTitle;
 
-  /// No description provided for @aiGenerationPageRange.
-  ///
-  /// In es, this message translates to:
-  /// **'Páginas {from}–{to}'**
-  String aiGenerationPageRange(int from, int to);
-
-  /// No description provided for @aiGenerationPageRangeOfTotal.
-  ///
-  /// In es, this message translates to:
-  /// **'Páginas {from}–{to} de {total}'**
-  String aiGenerationPageRangeOfTotal(int from, int to, int total);
-
-  /// No description provided for @aiGenerationPageRangeHelp.
-  ///
-  /// In es, this message translates to:
-  /// **'Elige qué páginas del documento usarán para generar el cuestionario. Arrastra cada extremo del control para acotar el tramo.'**
-  String get aiGenerationPageRangeHelp;
-
-  /// No description provided for @aiGenerationPageRangeSelectedCount.
-  ///
-  /// In es, this message translates to:
-  /// **'{count, plural, =1{1 página en este tramo} other{{count} páginas en este tramo}}'**
-  String aiGenerationPageRangeSelectedCount(int count);
-
-  /// No description provided for @aiGenerationPageRangeOverLimit.
-  ///
-  /// In es, this message translates to:
-  /// **'Máximo {max} páginas por generación. Reduce el tramo seleccionado.'**
-  String aiGenerationPageRangeOverLimit(int max);
-
   /// No description provided for @aiGenerationWordsInScopePurpose.
   ///
   /// In es, this message translates to:
-  /// **'La IA generará preguntas a partir de aproximadamente {words} palabras en ese tramo.'**
+  /// **'La IA generará preguntas a partir de aproximadamente {words} palabras del documento completo.'**
   String aiGenerationWordsInScopePurpose(int words);
 
   /// No description provided for @aiGenerationTopicHint.
@@ -3954,8 +3915,14 @@ abstract class AppLocalizations {
   /// No description provided for @aiGenerationWordsInScope.
   ///
   /// In es, this message translates to:
-  /// **'{words} palabras en el alcance'**
+  /// **'{words} palabras en el documento'**
   String aiGenerationWordsInScope(int words);
+
+  /// No description provided for @aiGenerationDocumentSizeSurcharge.
+  ///
+  /// In es, this message translates to:
+  /// **'Documento extenso: +{credits} créditos'**
+  String aiGenerationDocumentSizeSurcharge(int credits);
 
   /// No description provided for @aiGenerationParamsTitle.
   ///

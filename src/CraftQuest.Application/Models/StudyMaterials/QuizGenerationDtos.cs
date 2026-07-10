@@ -13,7 +13,9 @@ public sealed class QuizGenerationParametersDto
     public bool StrictSourceOnly { get; set; } = true;
     public bool IncludeExplanations { get; set; }
     public string? Preset { get; set; }
+    /// <summary>Ignored by the server; generation always uses the full document.</summary>
     public int PageFrom { get; set; }
+    /// <summary>Ignored by the server; generation always uses the full document.</summary>
     public int PageTo { get; set; }
 }
 
@@ -28,6 +30,8 @@ public sealed class QuizGenerationEstimateDto
     public required int WordsInScope { get; init; }
     /// <summary>Resolved from study material text (not UI locale).</summary>
     public required string GenerationLanguage { get; init; }
+    /// <summary>Extra credits charged for medium/large documents (0, 1, or 2).</summary>
+    public int DocumentSizeSurcharge { get; init; }
 }
 
 public sealed class StartQuizGenerationResultDto

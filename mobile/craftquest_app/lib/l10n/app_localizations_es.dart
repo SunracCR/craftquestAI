@@ -2278,7 +2278,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get aiGenerationUploadSubtitle =>
-      'Sube un PDF o Word con texto copiable. Revisarás el alcance de páginas antes de generar el cuestionario.';
+      'Sube un PDF o Word con texto copiable. La IA usará el documento completo para generar el cuestionario.';
 
   @override
   String get aiGenerationUploadHeroDrop => 'Arrastra tu PDF o Word aquí';
@@ -2296,27 +2296,18 @@ class AppLocalizationsEs extends AppLocalizations {
       'PDF o DOCX con texto seleccionable, no escaneados (máx. 25 MB)';
 
   @override
-  String aiGenerationUploadLimitsHint(
-    int maxPagesPerFile,
-    int maxPagesPerGeneration,
-  ) {
-    return 'Hasta $maxPagesPerFile páginas por archivo · hasta $maxPagesPerGeneration páginas por generación';
+  String aiGenerationUploadLimitsHint(int maxPagesPerFile) {
+    return 'Hasta $maxPagesPerFile páginas por archivo';
   }
 
   @override
-  String aiGenerationUploadLimitsSteps(
-    int maxPagesPerFile,
-    int maxPagesPerGeneration,
-  ) {
-    return 'Si el documento es más largo, divídelo en varios archivos (cada uno con $maxPagesPerFile páginas o menos) o exporta solo el capítulo que necesitas. Después podrás generar el cuestionario por tramos de hasta $maxPagesPerGeneration páginas.';
+  String aiGenerationUploadLimitsSteps(int maxPagesPerFile) {
+    return 'Si el documento es más largo, divídelo en varios archivos (cada uno con $maxPagesPerFile páginas o menos) o exporta solo el capítulo que necesitas.';
   }
 
   @override
-  String errorMaterialPageLimitGuidance(
-    int maxPagesPerFile,
-    int maxPagesPerGeneration,
-  ) {
-    return 'Qué puedes hacer: divide el PDF o Word en partes de $maxPagesPerFile páginas o menos (por capítulos o bloques) y súbelas por separado. En cada material, genera el quiz eligiendo hasta $maxPagesPerGeneration páginas a la vez.';
+  String errorMaterialPageLimitGuidance(int maxPagesPerFile) {
+    return 'Qué puedes hacer: divide el PDF o Word en partes de $maxPagesPerFile páginas o menos (por capítulos o bloques) y súbelas por separado.';
   }
 
   @override
@@ -2361,38 +2352,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get aiGenerationOutlineTitle => 'Alcance del material';
 
   @override
-  String aiGenerationPageRange(int from, int to) {
-    return 'Páginas $from–$to';
-  }
-
-  @override
-  String aiGenerationPageRangeOfTotal(int from, int to, int total) {
-    return 'Páginas $from–$to de $total';
-  }
-
-  @override
-  String get aiGenerationPageRangeHelp =>
-      'Elige qué páginas del documento usarán para generar el cuestionario. Arrastra cada extremo del control para acotar el tramo.';
-
-  @override
-  String aiGenerationPageRangeSelectedCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count páginas en este tramo',
-      one: '1 página en este tramo',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String aiGenerationPageRangeOverLimit(int max) {
-    return 'Máximo $max páginas por generación. Reduce el tramo seleccionado.';
-  }
-
-  @override
   String aiGenerationWordsInScopePurpose(int words) {
-    return 'La IA generará preguntas a partir de aproximadamente $words palabras en ese tramo.';
+    return 'La IA generará preguntas a partir de aproximadamente $words palabras del documento completo.';
   }
 
   @override
@@ -2400,7 +2361,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String aiGenerationWordsInScope(int words) {
-    return '$words palabras en el alcance';
+    return '$words palabras en el documento';
+  }
+
+  @override
+  String aiGenerationDocumentSizeSurcharge(int credits) {
+    return 'Documento extenso: +$credits créditos';
   }
 
   @override

@@ -62,15 +62,11 @@ class StudyMaterialRepository {
 
   Future<StudyMaterialDetailModel> updateSelection({
     required String studyMaterialId,
-    required int pageFrom,
-    required int pageTo,
     String? topic,
   }) async {
     final response = await _apiClient.dio.patch<Map<String, dynamic>>(
       '/api/study-materials/$studyMaterialId/selection',
       data: {
-        'pageFrom': pageFrom,
-        'pageTo': pageTo,
         if (topic != null && topic.isNotEmpty) 'topic': topic,
       },
     );

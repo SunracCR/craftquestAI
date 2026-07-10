@@ -246,7 +246,6 @@ class StudyMaterialUploadConstraintChips extends StatelessWidget {
         Text(
           l10n.aiGenerationUploadLimitsHint(
             AiGenerationLimits.maxPagesPerMaterial,
-            AiGenerationLimits.maxPagesPerGeneration,
           ),
           style: theme.textTheme.bodySmall?.copyWith(
             color: AppColors.textSecondary,
@@ -316,7 +315,6 @@ class StudyMaterialUploadFormatGuide extends StatelessWidget {
               iconColor: AppColors.accentGold,
               text: l10n.aiGenerationUploadLimitsHint(
                 AiGenerationLimits.maxPagesPerMaterial,
-                AiGenerationLimits.maxPagesPerGeneration,
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -325,7 +323,6 @@ class StudyMaterialUploadFormatGuide extends StatelessWidget {
               iconColor: AppColors.accentCool,
               text: l10n.aiGenerationUploadLimitsSteps(
                 AiGenerationLimits.maxPagesPerMaterial,
-                AiGenerationLimits.maxPagesPerGeneration,
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
