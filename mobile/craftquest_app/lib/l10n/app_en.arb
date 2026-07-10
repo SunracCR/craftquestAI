@@ -779,6 +779,15 @@
   "teacherReviewLegend": "Red = incorrect selected answer · Green = correct selected answer · Light bulb = correct answer not selected",
   "teacherReviewYourAnswerTag": "Your answer",
   "teacherReviewCorrectAnswerTag": "Correct answer",
+  "sessionReviewFilterAll": "All",
+  "sessionReviewFilterIncorrect": "Failed only",
+  "sessionReviewIncorrectCount": "{count} failed",
+  "@sessionReviewIncorrectCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "sessionReviewNoIncorrectQuestions": "No failed questions in this attempt.",
+  "teacherAssignmentSortDefault": "Default order",
+  "teacherAssignmentSortByBestScore": "Best score first",
   "billingPlanLabel": "Plan: {plan}",
   "@billingPlanLabel": {
     "placeholders": { "plan": { "type": "String" } }

@@ -12,6 +12,7 @@ import 'package:craftquest_app/features/auth/presentation/verify_email_pending_p
 import 'package:craftquest_app/features/auth/presentation/forgot_password_page.dart';
 import 'package:craftquest_app/features/auth/presentation/widgets/oauth_sign_in_buttons.dart';
 import 'package:craftquest_app/features/auth/presentation/register_page.dart';
+import 'package:craftquest_app/features/auth/presentation/widgets/auth_language_selector.dart';
 import 'package:craftquest_app/features/auth/presentation/widgets/auth_premium_background.dart';
 import 'package:craftquest_app/features/auth/presentation/widgets/auth_premium_header.dart';
 import 'package:craftquest_app/features/auth/presentation/widgets/guest_practice_promo_card.dart';
@@ -167,7 +168,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  static const double _loginLogoSize = 152;
+  static const double _loginLogoSize = 168;
   static const double _loginMaxWidth = 420;
 
   @override
@@ -179,247 +180,255 @@ class _LoginPageState extends State<LoginPage> {
       resizeToAvoidBottomInset: true,
       body: AuthPremiumBackground(
         child: SafeArea(
-          child: BlocBuilder<AuthBloc, AuthState>(
-            builder: (context, state) {
-              final isLoading = _isSubmitting;
+          child: Stack(
+            children: [
+              BlocBuilder<AuthBloc, AuthState>(
+                builder: (context, state) {
+                  final isLoading = _isSubmitting;
 
-              return LayoutBuilder(
-                builder: (context, constraints) {
-                  final viewInsets = MediaQuery.viewInsetsOf(context);
-                  final keyboardOpen = viewInsets.bottom > 0;
-                  final horizontalPadding = AppSpacing.md;
-                  final maxFormWidth = _loginMaxWidth.clamp(
-                    0.0,
-                    constraints.maxWidth - horizontalPadding * 2,
-                  );
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      final viewInsets = MediaQuery.viewInsetsOf(context);
+                      const horizontalPadding = AppSpacing.md;
+                      final maxFormWidth = _loginMaxWidth.clamp(
+                        0.0,
+                        constraints.maxWidth - horizontalPadding * 2,
+                      );
 
-                  final form = Form(
-                    key: _formKey,
-                    child: AuthPremiumCard(
-                      dense: true,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          AuthPremiumHeader(
-                            dense: true,
-                            logoSize: _loginLogoSize,
-                            title: l10n.loginTitle,
-                            subtitle: l10n.loginSubtitle,
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                            AutofillGroup(
-                              child: Column(
-                                children: [
-                                  TextFormField(
-                                    controller: _emailController,
-                                    keyboardType: TextInputType.emailAddress,
-                                    autofillHints: const [AutofillHints.username],
-                                    enabled: !isLoading,
-                                    textInputAction: TextInputAction.next,
-                                    decoration: _fieldDecoration(
-                                      label: l10n.emailLabel,
-                                      icon: Icons.mail_outline_rounded,
+                      final form = Form(
+                        key: _formKey,
+                        child: AuthPremiumCard(
+                          dense: true,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              AuthPremiumHeader(
+                                dense: true,
+                                logoSize: _loginLogoSize,
+                                title: l10n.loginTitle,
+                              ),
+                              const SizedBox(height: AppSpacing.lg),
+                              AutofillGroup(
+                                child: Column(
+                                  children: [
+                                    TextFormField(
+                                      controller: _emailController,
+                                      keyboardType: TextInputType.emailAddress,
+                                      autofillHints: const [
+                                        AutofillHints.username,
+                                      ],
+                                      enabled: !isLoading,
+                                      textInputAction: TextInputAction.next,
+                                      decoration: _fieldDecoration(
+                                        label: l10n.emailLabel,
+                                        icon: Icons.mail_outline_rounded,
+                                      ),
+                                      validator: (value) {
+                                        if (value == null ||
+                                            value.trim().isEmpty) {
+                                          return l10n.fieldRequired;
+                                        }
+                                        return null;
+                                      },
                                     ),
-                                    validator: (value) {
-                                      if (value == null ||
-                                          value.trim().isEmpty) {
-                                        return l10n.fieldRequired;
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  const SizedBox(height: AppSpacing.sm),
-                                  TextFormField(
-                                    controller: _passwordController,
-                                    obscureText: _obscurePassword,
-                                    autofillHints: const [AutofillHints.password],
-                                    enabled: !isLoading,
-                                    textInputAction: TextInputAction.done,
-                                    onFieldSubmitted: (_) => _submit(),
-                                    decoration: _fieldDecoration(
-                                      label: l10n.passwordLabel,
-                                      icon: Icons.lock_outline_rounded,
-                                      suffix: IconButton(
-                                        onPressed: isLoading
-                                            ? null
-                                            : () {
-                                                setState(() {
-                                                  _obscurePassword =
-                                                      !_obscurePassword;
-                                                });
-                                              },
-                                        icon: Icon(
-                                          _obscurePassword
-                                              ? Icons.visibility_outlined
-                                              : Icons.visibility_off_outlined,
-                                          size: 22,
-                                          color: AppColors.textSecondary,
+                                    const SizedBox(height: AppSpacing.sm),
+                                    TextFormField(
+                                      controller: _passwordController,
+                                      obscureText: _obscurePassword,
+                                      autofillHints: const [
+                                        AutofillHints.password,
+                                      ],
+                                      enabled: !isLoading,
+                                      textInputAction: TextInputAction.done,
+                                      onFieldSubmitted: (_) => _submit(),
+                                      decoration: _fieldDecoration(
+                                        label: l10n.passwordLabel,
+                                        icon: Icons.lock_outline_rounded,
+                                        suffix: IconButton(
+                                          onPressed: isLoading
+                                              ? null
+                                              : () {
+                                                  setState(() {
+                                                    _obscurePassword =
+                                                        !_obscurePassword;
+                                                  });
+                                                },
+                                          icon: Icon(
+                                            _obscurePassword
+                                                ? Icons.visibility_outlined
+                                                : Icons.visibility_off_outlined,
+                                            size: 22,
+                                            color: AppColors.textSecondary,
+                                          ),
                                         ),
                                       ),
+                                      validator: (value) {
+                                        if (value == null ||
+                                            value.length < 8) {
+                                          return l10n.passwordMinLength;
+                                        }
+                                        return null;
+                                      },
                                     ),
-                                    validator: (value) {
-                                      if (value == null || value.length < 8) {
-                                        return l10n.passwordMinLength;
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton(
-                                style: TextButton.styleFrom(
-                                  padding: EdgeInsets.zero,
-                                  minimumSize: Size.zero,
-                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                ),
-                                onPressed: isLoading
-                                    ? null
-                                    : () {
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute<void>(
-                                            builder: (_) =>
-                                                const ForgotPasswordPage(),
-                                          ),
-                                        );
-                                      },
-                                child: Text(
-                                  l10n.forgotPasswordLink,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelMedium
-                                      ?.copyWith(color: AppColors.accent),
+                                  ],
                                 ),
                               ),
-                            ),
-                            _RememberCredentialsTile(
-                              value: _rememberLogin,
-                              label: l10n.loginRememberCredentials,
-                              enabled: !isLoading,
-                              onChanged: (value) {
-                                setState(() => _rememberLogin = value);
-                              },
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            AppGradientPrimaryButton(
-                              label: l10n.loginAction,
-                              icon: Icons.login_rounded,
-                              isLoading: isLoading,
-                              onPressed: _submit,
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            OAuthSignInButtons(enabled: !isLoading),
-                            const SizedBox(height: AppSpacing.sm),
-                            Divider(
-                              height: 1,
-                              color: AppColors.textSecondary.withValues(alpha: 0.2),
-                            ),
-                            const SizedBox(height: AppSpacing.xs),
-                            Center(
-                              child: TextButton(
-                                style: TextButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: AppSpacing.xs,
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton(
+                                  style: TextButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    minimumSize: Size.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
                                   ),
-                                  minimumSize: Size.zero,
-                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                ),
-                                onPressed: isLoading
-                                    ? null
-                                    : () {
-                                        final authBloc =
-                                            context.read<AuthBloc>();
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute<void>(
-                                            builder: (_) => BlocProvider.value(
-                                              value: authBloc,
-                                              child: const RegisterPage(),
+                                  onPressed: isLoading
+                                      ? null
+                                      : () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute<void>(
+                                              builder: (_) =>
+                                                  const ForgotPasswordPage(),
                                             ),
-                                          ),
-                                        );
-                                      },
-                                child: Text(
-                                  l10n.goToRegister,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelLarge
-                                      ?.copyWith(
-                                        color: AppColors.accent,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                          );
+                                        },
+                                  child: Text(
+                                    l10n.forgotPasswordLink,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelMedium
+                                        ?.copyWith(color: AppColors.accent),
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-                            const GuestPracticePromoCard(compact: true),
-                            const LegalLinksRow(),
-                            Center(
-                              child: TextButton(
-                                onPressed: () async {
-                                  await BirthDateCorrection
-                                      .requestFullAgeScreen();
+                              _RememberCredentialsTile(
+                                value: _rememberLogin,
+                                label: l10n.loginRememberCredentials,
+                                enabled: !isLoading,
+                                onChanged: (value) {
+                                  setState(() => _rememberLogin = value);
                                 },
-                                child: Text(
-                                  l10n.correctBirthDateLoginHint,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelMedium
-                                      ?.copyWith(
-                                        color: AppColors.textSecondary,
-                                      ),
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              AppGradientPrimaryButton(
+                                label: l10n.loginAction,
+                                icon: Icons.login_rounded,
+                                isLoading: isLoading,
+                                onPressed: _submit,
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              OAuthSignInButtons(enabled: !isLoading),
+                              const SizedBox(height: AppSpacing.sm),
+                              Divider(
+                                height: 1,
+                                color: AppColors.textSecondary
+                                    .withValues(alpha: 0.2),
+                              ),
+                              const SizedBox(height: AppSpacing.xs),
+                              Center(
+                                child: TextButton(
+                                  style: TextButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: AppSpacing.xs,
+                                    ),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  onPressed: isLoading
+                                      ? null
+                                      : () {
+                                          final authBloc =
+                                              context.read<AuthBloc>();
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute<void>(
+                                              builder: (_) =>
+                                                  BlocProvider.value(
+                                                value: authBloc,
+                                                child: const RegisterPage(),
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                  child: Text(
+                                    l10n.goToRegister,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelLarge
+                                        ?.copyWith(
+                                          color: AppColors.accent,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                  ),
                                 ),
                               ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  );
-
-                  final sizedForm = SizedBox(
-                    width: maxFormWidth,
-                    child: form,
-                  );
-
-                  if (keyboardOpen) {
-                    return SingleChildScrollView(
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      padding: EdgeInsets.fromLTRB(
-                        horizontalPadding,
-                        AppSpacing.xs,
-                        horizontalPadding,
-                        AppSpacing.xs + viewInsets.bottom,
-                      ),
-                      child: Center(child: sizedForm),
-                    );
-                  }
-
-                  final verticalPadding = AppSpacing.sm;
-                  final maxBodyHeight =
-                      constraints.maxHeight - verticalPadding * 2;
-                  return Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: horizontalPadding,
-                      vertical: verticalPadding,
-                    ),
-                    child: Center(
-                      child: SizedBox(
-                        width: maxFormWidth,
-                        height: maxBodyHeight,
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.center,
-                          child: sizedForm,
+                              const SizedBox(height: AppSpacing.sm),
+                              Divider(
+                                height: 1,
+                                color: AppColors.textSecondary
+                                    .withValues(alpha: 0.15),
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              const GuestPracticePromoCard(compact: true),
+                              const LegalLinksRow(),
+                              Center(
+                                child: TextButton(
+                                  onPressed: () async {
+                                    await BirthDateCorrection
+                                        .requestFullAgeScreen();
+                                  },
+                                  child: Text(
+                                    l10n.correctBirthDateLoginHint,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelMedium
+                                        ?.copyWith(
+                                          color: AppColors.textSecondary,
+                                        ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+
+                      return SingleChildScrollView(
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        physics: const ClampingScrollPhysics(),
+                        padding: EdgeInsets.fromLTRB(
+                          horizontalPadding,
+                          AppSpacing.sm,
+                          horizontalPadding,
+                          AppSpacing.sm + viewInsets.bottom,
+                        ),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: (constraints.maxHeight -
+                                    AppSpacing.sm * 2 -
+                                    viewInsets.bottom)
+                                .clamp(0.0, double.infinity),
+                          ),
+                          child: Center(
+                            child: SizedBox(
+                              width: maxFormWidth,
+                              child: form,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   );
                 },
-              );
-            },
+              ),
+              const Positioned(
+                top: AppSpacing.sm,
+                right: AppSpacing.sm,
+                child: AuthLanguageSelector(),
+              ),
+            ],
           ),
         ),
       ),

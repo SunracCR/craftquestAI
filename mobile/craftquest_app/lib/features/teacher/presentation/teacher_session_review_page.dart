@@ -29,6 +29,7 @@ class TeacherSessionReviewPage extends StatefulWidget {
     this.guestToken,
     this.initialQuestionSnapshotId,
     this.initialReview,
+    this.initialIncorrectOnly = false,
   });
 
   final String sessionId;
@@ -39,6 +40,7 @@ class TeacherSessionReviewPage extends StatefulWidget {
   final String? guestToken;
   final String? initialQuestionSnapshotId;
   final TeacherPracticeReviewModel? initialReview;
+  final bool initialIncorrectOnly;
 
   @override
   State<TeacherSessionReviewPage> createState() =>
@@ -53,10 +55,12 @@ class _TeacherSessionReviewPageState extends State<TeacherSessionReviewPage> {
   bool _loading = true;
   String? _error;
   bool _didScrollToInitialQuestion = false;
+  bool _showIncorrectOnly = false;
 
   @override
   void initState() {
     super.initState();
+    _showIncorrectOnly = widget.initialIncorrectOnly;
     if (widget.initialReview != null) {
       _review = widget.initialReview;
       _loading = false;
@@ -260,6 +264,21 @@ class _TeacherSessionReviewPageState extends State<TeacherSessionReviewPage> {
   GlobalKey _anchorKeyFor(String practiceQuestionSnapshotId) =>
       _questionAnchorKeys.putIfAbsent(practiceQuestionSnapshotId, GlobalKey.new);
 
+  bool _isIncorrectQuestion(TeacherQuestionReviewModel question) =>
+      question.isCorrect != true;
+
+  List<TeacherQuestionReviewModel> _visibleQuestions(
+    TeacherPracticeReviewModel review,
+  ) {
+    if (!_showIncorrectOnly) {
+      return review.questions;
+    }
+    return review.questions.where(_isIncorrectQuestion).toList();
+  }
+
+  int _incorrectQuestionCount(TeacherPracticeReviewModel review) =>
+      review.questions.where(_isIncorrectQuestion).length;
+
   void _scheduleScrollToInitialQuestion() {
     final targetId = widget.initialQuestionSnapshotId;
     if (targetId == null || _didScrollToInitialQuestion) {
@@ -312,6 +331,10 @@ class _TeacherSessionReviewPageState extends State<TeacherSessionReviewPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final review = _review;
+    final visibleQuestions =
+        review == null ? const <TeacherQuestionReviewModel>[] : _visibleQuestions(review);
+    final incorrectCount =
+        review == null ? 0 : _incorrectQuestionCount(review);
 
     return EdgeAwareScaffold(
       appBar: craftQuestAppBar(
@@ -354,8 +377,43 @@ class _TeacherSessionReviewPageState extends State<TeacherSessionReviewPage> {
                           const SizedBox(height: 8),
                           AppMetaText(text: l10n.teacherReviewLegend),
                         ],
+                        const SizedBox(height: 12),
+                        SegmentedButton<bool>(
+                          segments: [
+                            ButtonSegment(
+                              value: false,
+                              label: Text(l10n.sessionReviewFilterAll),
+                              icon: const Icon(Icons.list_alt_rounded, size: 18),
+                            ),
+                            ButtonSegment(
+                              value: true,
+                              label: Text(l10n.sessionReviewFilterIncorrect),
+                              icon: const Icon(Icons.error_outline_rounded, size: 18),
+                            ),
+                          ],
+                          selected: {_showIncorrectOnly},
+                          onSelectionChanged: (selection) {
+                            setState(() {
+                              _showIncorrectOnly = selection.first;
+                            });
+                          },
+                        ),
+                        if (_showIncorrectOnly) ...[
+                          const SizedBox(height: 8),
+                          AppMetaText(
+                            text: l10n.sessionReviewIncorrectCount(incorrectCount),
+                          ),
+                        ],
                         const SizedBox(height: 16),
-                        ...review.questions.map((q) {
+                        if (visibleQuestions.isEmpty)
+                          AppSectionCard(
+                            child: Text(
+                              l10n.sessionReviewNoIncorrectQuestions,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          )
+                        else
+                        ...visibleQuestions.map((q) {
                           final highlightTarget =
                               widget.initialQuestionSnapshotId ==
                                   q.practiceQuestionSnapshotId;

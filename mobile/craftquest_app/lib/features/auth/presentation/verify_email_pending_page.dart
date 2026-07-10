@@ -6,6 +6,7 @@ import 'package:craftquest_app/core/widgets/app_buttons.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/features/auth/data/auth_repository.dart';
+import 'package:craftquest_app/features/auth/presentation/auth_entry_navigation.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -82,7 +83,7 @@ class _VerifyEmailPendingPageState extends State<VerifyEmailPendingPage> {
           ),
           const SizedBox(height: AppSpacing.md),
           TextButton(
-            onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+            onPressed: () => returnToLogin(context),
             child: Text(l10n.backToLogin),
           ),
         ],

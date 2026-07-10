@@ -1,6 +1,8 @@
 import 'package:craftquest_app/core/config/legal_urls.dart';
+import 'package:craftquest_app/core/l10n/localized_message_holder.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
+import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -8,10 +10,29 @@ import 'package:url_launcher/url_launcher.dart';
 
 /// Abre una URL legal en el navegador externo.
 Future<void> openLegalUrl(String url) async {
-  final uri = Uri.parse(url);
-  if (await canLaunchUrl(uri)) {
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  final uri = Uri.tryParse(url);
+  if (uri == null || !uri.hasScheme) {
+    _showOpenUrlError();
+    return;
   }
+
+  try {
+    final launched = await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    );
+    if (!launched) {
+      _showOpenUrlError();
+    }
+  } catch (_) {
+    _showOpenUrlError();
+  }
+}
+
+void _showOpenUrlError() {
+  final message = LocalizedMessageHolder.current?.genericRequestErrorMessage ??
+      'No se pudo abrir el enlace. Inténtalo de nuevo.';
+  AppSnackBars.showError(message);
 }
 
 /// Texto con enlaces a Términos y Política de Privacidad (registro).

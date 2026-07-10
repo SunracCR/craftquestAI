@@ -4,6 +4,7 @@ import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_buttons.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/features/auth/data/auth_repository.dart';
+import 'package:craftquest_app/features/auth/presentation/auth_entry_navigation.dart';
 import 'package:craftquest_app/features/auth/presentation/widgets/auth_premium_background.dart';
 import 'package:craftquest_app/features/auth/presentation/widgets/auth_premium_header.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
@@ -44,7 +45,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       context.showSuccessSnackBar(
         AppLocalizations.of(context)!.forgotPasswordSuccess,
       );
-      Navigator.of(context).pop();
+      returnToLogin(context);
     } on DioException catch (e) {
       if (!mounted) {
         return;
@@ -76,7 +77,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: IconButton(
-                  onPressed: () => Navigator.of(context).maybePop(),
+                  onPressed: () => returnToLogin(context),
                   icon: const Icon(Icons.arrow_back_rounded),
                   color: AppColors.textPrimary,
                 ),

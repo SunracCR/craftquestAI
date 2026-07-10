@@ -12,7 +12,9 @@ import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/locale/locale_controller.dart';
 import 'package:craftquest_app/core/theme/app_theme.dart';
 import 'package:craftquest_app/core/widgets/app_connectivity_overlay.dart';
+import 'package:craftquest_app/features/auth/data/auth_repository.dart';
 import 'package:craftquest_app/features/auth/presentation/auth_bloc.dart';
+import 'package:craftquest_app/features/auth/presentation/auth_entry_navigation.dart';
 import 'package:craftquest_app/features/auth/presentation/join_launch.dart';
 import 'package:craftquest_app/features/auth/data/models/auth_models.dart';
 import 'package:craftquest_app/features/auth/presentation/account_link_launch.dart';
@@ -40,6 +42,7 @@ import 'package:craftquest_app/features/shell/presentation/main_shell_page.dart'
 import 'package:craftquest_app/features/shell/presentation/main_shell_tab_signal.dart';
 import 'package:craftquest_app/core/services/deep_link_service.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -235,6 +238,17 @@ class _AuthGateState extends State<_AuthGate> {
     final accountLink =
         deepLinkService.pendingAccountLink ?? readWebAccountLink();
     if (accountLink != null) {
+      if (authState is AuthAuthenticated) {
+        clearWebEntryDeepLinkUrl();
+        deepLinkService.consumePendingAccountLink();
+        return;
+      }
+
+      // En web la ruta de entrada ya se muestra como `home` del AuthGate.
+      if (kIsWeb && readWebAccountLink() != null) {
+        return;
+      }
+
       final linkKey = '${accountLink.kind.name}:${accountLink.token}';
       if (!_handledAccountLinks.contains(linkKey)) {
         _handledAccountLinks.add(linkKey);
@@ -435,15 +449,19 @@ class _AuthGateState extends State<_AuthGate> {
         ),
         BlocListener<AuthBloc, AuthState>(
           listenWhen: (previous, current) =>
-              current is AuthAuthenticated &&
-              (previous is AuthUnauthenticated ||
-                  previous is AuthFailure ||
-                  previous is AuthEmailVerificationPending),
+              previous is AuthLoading &&
+              current is AuthUnauthenticated,
+          listener: (context, _) => _scheduleDeepLinkRoute(),
+        ),
+        BlocListener<AuthBloc, AuthState>(
+          listenWhen: (previous, current) =>
+              current is AuthAuthenticated && previous is! AuthAuthenticated,
           listener: (context, state) {
             if (state is! AuthAuthenticated) {
               return;
             }
             final user = state.user;
+            clearWebEntryDeepLinkUrl();
             WidgetsBinding.instance.addPostFrameCallback((_) async {
               // Register/login guest hacen push sobre el navigator raíz; hay que
               // sacarlos aunque el home ya sea MainShellPage.
@@ -455,11 +473,21 @@ class _AuthGateState extends State<_AuthGate> {
               unawaited(
                 context.read<GuestSessionCubit>().clearLocalSession(),
               );
-              unawaited(
-                getIt<LocaleController>().applyFromProfile(
-                  user.preferredLanguage,
-                ),
-              );
+              final localeController = getIt<LocaleController>();
+              if (localeController.hasManualOverride) {
+                final code = localeController.locale?.languageCode;
+                if (code != null && code != user.preferredLanguage) {
+                  unawaited(
+                    getIt<AuthRepository>().updateProfile(
+                      preferredLanguage: code,
+                    ),
+                  );
+                }
+              } else {
+                unawaited(
+                  localeController.applyFromProfile(user.preferredLanguage),
+                );
+              }
               // Notificaciones y push: solo en _AuthenticatedShell.initState.
               final pendingPrep =
                   await getIt<PendingPrepReferralStore>().read();
@@ -488,7 +516,9 @@ class _AuthGateState extends State<_AuthGate> {
           },
         ),
       ],
-      child: BlocBuilder<AuthBloc, AuthState>(
+      child: ListenableBuilder(
+        listenable: getIt<WebAuthEntryNotifier>(),
+        builder: (context, _) => BlocBuilder<AuthBloc, AuthState>(
         builder: (context, authState) {
           // AuthLoading solo al arranque (AuthSessionChecked). OAuth/registro no lo usan.
           if (authState is AuthInitial || authState is AuthLoading) {
@@ -521,6 +551,7 @@ class _AuthGateState extends State<_AuthGate> {
             },
           );
         },
+        ),
       ),
     );
   }

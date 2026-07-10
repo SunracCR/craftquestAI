@@ -1650,6 +1650,27 @@ class AppLocalizationsPt extends AppLocalizations {
   String get teacherReviewCorrectAnswerTag => 'Resposta correta';
 
   @override
+  String get sessionReviewFilterAll => 'Todas';
+
+  @override
+  String get sessionReviewFilterIncorrect => 'Somente erradas';
+
+  @override
+  String sessionReviewIncorrectCount(int count) {
+    return '$count erradas';
+  }
+
+  @override
+  String get sessionReviewNoIncorrectQuestions =>
+      'Nao ha perguntas erradas nesta tentativa.';
+
+  @override
+  String get teacherAssignmentSortDefault => 'Ordem padrao';
+
+  @override
+  String get teacherAssignmentSortByBestScore => 'Melhor nota primeiro';
+
+  @override
   String billingPlanLabel(String plan) {
     return 'Plano: $plan';
   }

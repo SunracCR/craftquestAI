@@ -4,6 +4,7 @@ import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_buttons.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/features/auth/data/auth_repository.dart';
+import 'package:craftquest_app/features/auth/presentation/auth_entry_navigation.dart';
 import 'package:craftquest_app/features/auth/presentation/widgets/auth_premium_background.dart';
 import 'package:craftquest_app/features/auth/presentation/widgets/auth_premium_header.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
@@ -61,7 +62,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       context.showSuccessSnackBar(
         AppLocalizations.of(context)!.resetPasswordSuccess,
       );
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      returnToLogin(context);
     } on DioException catch (e) {
       if (!mounted) {
         return;
@@ -93,7 +94,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: IconButton(
-                  onPressed: () => Navigator.of(context).maybePop(),
+                  onPressed: () => returnToLogin(context),
                   icon: const Icon(Icons.arrow_back_rounded),
                   color: AppColors.textPrimary,
                 ),
@@ -184,10 +185,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                       TextButton(
                         onPressed: _isSubmitting
                             ? null
-                            : () {
-                                Navigator.of(context)
-                                    .popUntil((route) => route.isFirst);
-                              },
+                            : () => returnToLogin(context),
                         child: Text(l10n.backToLogin),
                       ),
                           ],

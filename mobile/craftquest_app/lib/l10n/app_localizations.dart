@@ -2802,6 +2802,42 @@ abstract class AppLocalizations {
   /// **'Respuesta correcta'**
   String get teacherReviewCorrectAnswerTag;
 
+  /// No description provided for @sessionReviewFilterAll.
+  ///
+  /// In es, this message translates to:
+  /// **'Todas'**
+  String get sessionReviewFilterAll;
+
+  /// No description provided for @sessionReviewFilterIncorrect.
+  ///
+  /// In es, this message translates to:
+  /// **'Solo falladas'**
+  String get sessionReviewFilterIncorrect;
+
+  /// No description provided for @sessionReviewIncorrectCount.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} falladas'**
+  String sessionReviewIncorrectCount(int count);
+
+  /// No description provided for @sessionReviewNoIncorrectQuestions.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay preguntas falladas en este intento.'**
+  String get sessionReviewNoIncorrectQuestions;
+
+  /// No description provided for @teacherAssignmentSortDefault.
+  ///
+  /// In es, this message translates to:
+  /// **'Orden predeterminado'**
+  String get teacherAssignmentSortDefault;
+
+  /// No description provided for @teacherAssignmentSortByBestScore.
+  ///
+  /// In es, this message translates to:
+  /// **'Mejor nota primero'**
+  String get teacherAssignmentSortByBestScore;
+
   /// No description provided for @billingPlanLabel.
   ///
   /// In es, this message translates to:

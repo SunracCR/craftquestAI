@@ -6,84 +6,83 @@ import 'package:craftquest_app/features/practice/presentation/widgets/practice_q
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
-/// Cabecera compacta: contador, barra segmentada, leyenda y acceso al mapa.
+/// Cabecera mínima: contador, cronómetro opcional, barra segmentada y mapa.
 class PracticeQuestionNavHeader extends StatelessWidget {
   const PracticeQuestionNavHeader({
     super.key,
     required this.currentIndex,
     required this.displayOrder,
     required this.totalQuestions,
-    required this.completedCount,
     required this.statuses,
     required this.onSelected,
+    this.elapsedTime,
   });
 
   final int currentIndex;
   final int displayOrder;
   final int totalQuestions;
-  final int completedCount;
   final List<PracticeQuestionNavStatus> statuses;
   final ValueChanged<int> onSelected;
+
+  /// Solo dígitos (p. ej. `05:23`), sin prefijo «Tiempo».
+  final String? elapsedTime;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.practiceQuestionCounter(
-                      displayOrder,
-                      totalQuestions,
-                    ),
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    l10n.practiceProgressCompletedLabel(
-                      completedCount,
-                      totalQuestions,
-                    ),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                  ),
-                ],
+            Text(
+              '$displayOrder / $totalQuestions',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
-            TextButton.icon(
+            if (elapsedTime != null) ...[
+              const SizedBox(width: AppSpacing.sm),
+              Icon(
+                Icons.timer_outlined,
+                size: 16,
+                color: AppColors.textSecondary.withValues(alpha: 0.85),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                elapsedTime!,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: AppColors.textSecondary,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
+            const Spacer(),
+            IconButton(
+              tooltip: l10n.practiceOpenQuestionMapAction,
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
               onPressed: () => PracticeQuestionMapSheet.show(
                 context,
                 currentIndex: currentIndex,
                 statuses: statuses,
                 onSelected: onSelected,
               ),
-              icon: const Icon(Icons.grid_view_rounded, size: 18),
-              label: Text(l10n.practiceOpenQuestionMapAction),
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.accent,
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-              ),
+              icon: const Icon(Icons.grid_view_rounded, size: 20),
+              color: AppColors.accent,
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: 6),
         _SegmentedProgressBar(
           currentIndex: currentIndex,
           statuses: statuses,
           onSegmentTap: onSelected,
         ),
-        const SizedBox(height: AppSpacing.xs),
-        _NavLegend(l10n: l10n),
       ],
     );
   }
@@ -104,18 +103,17 @@ class _SegmentedProgressBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        const gap = 3.0;
+        const gap = 2.0;
         final segmentWidth =
             (constraints.maxWidth - gap * (statuses.length - 1)) / statuses.length;
 
         return SizedBox(
-          height: 10,
+          height: 8,
           child: Row(
             children: List.generate(statuses.length, (index) {
               final status = statuses[index];
               final isCurrent = index == currentIndex;
               final fillColor = PracticeQuestionNavStyles.segmentFill(status);
-              final height = isCurrent ? 10.0 : 7.0;
 
               return Padding(
                 padding: EdgeInsets.only(
@@ -129,32 +127,22 @@ class _SegmentedProgressBar extends StatelessWidget {
                     color: Colors.transparent,
                     child: InkWell(
                       onTap: () => onSegmentTap(index),
-                      borderRadius: BorderRadius.circular(3),
+                      borderRadius: BorderRadius.circular(2),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
                         curve: Curves.easeOut,
                         width: segmentWidth,
-                        height: height,
+                        height: isCurrent ? 8.0 : 6.0,
                         alignment: Alignment.bottomCenter,
                         decoration: BoxDecoration(
                           color: fillColor,
-                          borderRadius: BorderRadius.circular(3),
+                          borderRadius: BorderRadius.circular(2),
                           border: isCurrent
                               ? Border.fromBorderSide(
                                   PracticeQuestionNavStyles.currentOutline(
                                         true,
                                       )!,
                                 )
-                              : null,
-                          boxShadow: isCurrent
-                              ? [
-                                  BoxShadow(
-                                    color: PracticeQuestionNavStyles
-                                        .currentBorder
-                                        .withValues(alpha: 0.35),
-                                    blurRadius: 4,
-                                  ),
-                                ]
                               : null,
                         ),
                       ),
@@ -166,75 +154,6 @@ class _SegmentedProgressBar extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-
-}
-
-class _NavLegend extends StatelessWidget {
-  const _NavLegend({required this.l10n});
-
-  final AppLocalizations l10n;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: AppSpacing.md,
-      runSpacing: 4,
-      children: [
-        _LegendItem(
-          color: AppColors.accentMint,
-          label: l10n.practiceNavLegendAnswered,
-        ),
-        _LegendItem(
-          color: AppColors.surfaceHighlight,
-          label: l10n.practiceNavLegendPending,
-        ),
-        _LegendItem(
-          color: PracticeQuestionNavStyles.currentBorder,
-          label: l10n.practiceNavLegendCurrent,
-          outlined: true,
-        ),
-      ],
-    );
-  }
-}
-
-class _LegendItem extends StatelessWidget {
-  const _LegendItem({
-    required this.color,
-    required this.label,
-    this.outlined = false,
-  });
-
-  final Color color;
-  final String label;
-  final bool outlined;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(
-            color: outlined ? Colors.transparent : color,
-            borderRadius: BorderRadius.circular(2),
-            border: outlined
-                ? Border.all(color: color, width: 1.5)
-                : null,
-          ),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: AppColors.textSecondary,
-              ),
-        ),
-      ],
     );
   }
 }

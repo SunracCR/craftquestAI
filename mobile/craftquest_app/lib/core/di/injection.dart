@@ -6,6 +6,7 @@ import 'package:craftquest_app/core/compliance/age_signal_service.dart';
 import 'package:craftquest_app/core/auth/saved_login_credentials_storage.dart';
 import 'package:craftquest_app/core/auth/session_expired_notifier.dart';
 import 'package:craftquest_app/core/auth/token_storage.dart';
+import 'package:craftquest_app/features/auth/presentation/auth_entry_navigation.dart';
 import 'package:craftquest_app/core/locale/locale_controller.dart';
 import 'package:craftquest_app/core/network/api_client.dart';
 import 'package:craftquest_app/core/network/network_connectivity_service.dart';
@@ -66,6 +67,7 @@ void configureDependencies() {
   );
   getIt.registerLazySingleton(NetworkConnectivityService.new);
   getIt.registerLazySingleton(SessionExpiredNotifier.new);
+  getIt.registerLazySingleton(WebAuthEntryNotifier.new);
   getIt.registerLazySingleton(
     () => ApiClient(
       tokenStorage: getIt<TokenStorage>(),

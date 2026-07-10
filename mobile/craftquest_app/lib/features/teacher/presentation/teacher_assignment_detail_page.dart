@@ -204,7 +204,7 @@ class _TeacherAssignmentDetailPageState
   }
 }
 
-class _CompletionTab extends StatelessWidget {
+class _CompletionTab extends StatefulWidget {
   const _CompletionTab({
     required this.detail,
     required this.onEdit,
@@ -222,11 +222,43 @@ class _CompletionTab extends StatelessWidget {
   final ValueChanged<String?> onStudentTap;
 
   @override
+  State<_CompletionTab> createState() => _CompletionTabState();
+}
+
+enum _CompletionSortMode { defaultOrder, bestScoreDesc }
+
+class _CompletionTabState extends State<_CompletionTab> {
+  _CompletionSortMode _sortMode = _CompletionSortMode.defaultOrder;
+
+  List<AssignmentMemberProgressModel> _sortedMembers(
+    List<AssignmentMemberProgressModel> members,
+  ) {
+    if (_sortMode == _CompletionSortMode.defaultOrder) {
+      return members;
+    }
+
+    final sorted = List<AssignmentMemberProgressModel>.from(members)
+      ..sort((a, b) {
+        final aScore = a.bestScorePercent;
+        final bScore = b.bestScorePercent;
+        if (aScore == null && bScore == null) {
+          return a.displayName.compareTo(b.displayName);
+        }
+        if (aScore == null) return 1;
+        if (bScore == null) return -1;
+        final scoreCmp = bScore.compareTo(aScore);
+        if (scoreCmp != 0) return scoreCmp;
+        return a.displayName.compareTo(b.displayName);
+      });
+    return sorted;
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
     return FutureBuilder<AssignmentCompletionModel>(
-      future: future,
+      future: widget.future,
       builder: (ctx, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
           return const AppLoadingView();
@@ -234,11 +266,12 @@ class _CompletionTab extends StatelessWidget {
         if (snap.hasError) {
           return AppErrorView(
               message: DioErrorMapper.mapAny(snap.error!, l10n),
-              onRetry: onRetry,
+              onRetry: widget.onRetry,
               retryLabel: l10n.retry);
         }
 
         final data = snap.data!;
+        final members = _sortedMembers(data.members);
         final totalAttempts = data.members.fold<int>(
           0,
           (sum, m) => sum + m.attemptCount,
@@ -257,15 +290,15 @@ class _CompletionTab extends StatelessWidget {
           child: ListView(
           children: [
             _AssignmentHeaderCard(
-              title: detail.title,
-              status: detail.status,
-              quizTitle: detail.quizTitle,
+              title: widget.detail.title,
+              status: widget.detail.status,
+              quizTitle: widget.detail.quizTitle,
             ),
-            if (onEdit != null || onClose != null) ...[
+            if (widget.onEdit != null || widget.onClose != null) ...[
               const SizedBox(height: AppSpacing.sm),
               _AssignmentActionBar(
-                onEdit: onEdit,
-                onClose: onClose,
+                onEdit: widget.onEdit,
+                onClose: widget.onClose,
               ),
             ],
             const SizedBox(height: AppSpacing.sm),
@@ -308,7 +341,26 @@ class _CompletionTab extends StatelessWidget {
               color: AppColors.teacherAccent,
             ),
             const SizedBox(height: 20),
-            ...data.members.map((m) {
+            SegmentedButton<_CompletionSortMode>(
+              segments: [
+                ButtonSegment(
+                  value: _CompletionSortMode.defaultOrder,
+                  label: Text(l10n.teacherAssignmentSortDefault),
+                  icon: const Icon(Icons.sort_by_alpha_rounded, size: 18),
+                ),
+                ButtonSegment(
+                  value: _CompletionSortMode.bestScoreDesc,
+                  label: Text(l10n.teacherAssignmentSortByBestScore),
+                  icon: const Icon(Icons.emoji_events_outlined, size: 18),
+                ),
+              ],
+              selected: {_sortMode},
+              onSelectionChanged: (selection) {
+                setState(() => _sortMode = selection.first);
+              },
+            ),
+            const SizedBox(height: 12),
+            ...members.map((m) {
               final canViewAttempts = m.attemptCount > 0;
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8),
@@ -320,7 +372,7 @@ class _CompletionTab extends StatelessWidget {
                     borderRadius:
                         BorderRadius.circular(AppColors.radiusSm),
                     onTap: canViewAttempts
-                        ? () => onStudentTap(m.userId)
+                        ? () => widget.onStudentTap(m.userId)
                         : null,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(

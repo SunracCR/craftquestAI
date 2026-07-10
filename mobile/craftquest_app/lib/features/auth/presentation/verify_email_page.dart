@@ -1,4 +1,5 @@
 import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/navigation/web_entry_url_cleanup.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
@@ -56,6 +57,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
         _isSubmitting = false;
         _completed = true;
       });
+      clearWebEntryDeepLinkUrl();
       context.read<AuthBloc>().add(AuthEmailVerified(response.user));
     } on DioException catch (e) {
       if (!mounted) {

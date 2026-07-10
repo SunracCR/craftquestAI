@@ -18,7 +18,6 @@ import 'package:craftquest_app/features/practice/data/models/practice_models.dar
 import 'package:craftquest_app/features/practice/data/practice_repository.dart';
 import 'package:craftquest_app/features/practice/data/practice_preferences_repository.dart';
 import 'package:craftquest_app/features/practice/domain/practice_launch_options.dart';
-import 'package:craftquest_app/features/practice/presentation/widgets/practice_elapsed_timer.dart';
 import 'package:craftquest_app/features/practice/presentation/practice_image_precacher.dart';
 import 'package:craftquest_app/features/practice/presentation/practice_result_page.dart';
 import 'package:craftquest_app/features/practice/presentation/practice_session_feedback.dart';
@@ -886,30 +885,19 @@ class _PracticeSessionPageState extends State<PracticeSessionPage>
                         Padding(
                           padding: const EdgeInsets.fromLTRB(
                             AppSpacing.md,
-                            AppSpacing.md,
+                            AppSpacing.sm,
                             AppSpacing.md,
                             AppSpacing.xs,
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              PracticeQuestionNavHeader(
-                                currentIndex: _currentIndex,
-                                displayOrder: question.displayOrder,
-                                totalQuestions: _totalQuestions,
-                                completedCount: _completedCount,
-                                statuses: _navStatuses(),
-                                onSelected: _goToQuestion,
-                              ),
-                              if (_showTimer) ...[
-                                const SizedBox(height: AppSpacing.sm),
-                                PracticeElapsedTimer(
-                                  label: l10n.practiceElapsedLabel(
-                                    _formatElapsed(_totalElapsed),
-                                  ),
-                                ),
-                              ],
-                            ],
+                          child: PracticeQuestionNavHeader(
+                            currentIndex: _currentIndex,
+                            displayOrder: question.displayOrder,
+                            totalQuestions: _totalQuestions,
+                            statuses: _navStatuses(),
+                            onSelected: _goToQuestion,
+                            elapsedTime: _showTimer
+                                ? _formatElapsed(_totalElapsed)
+                                : null,
                           ),
                         ),
                         Expanded(

@@ -779,6 +779,15 @@
   "teacherReviewLegend": "Rojo = respuesta marcada incorrecta · Verde = respuesta marcada correcta · Bombilla = respuesta correcta no marcada",
   "teacherReviewYourAnswerTag": "Tu respuesta",
   "teacherReviewCorrectAnswerTag": "Respuesta correcta",
+  "sessionReviewFilterAll": "Todas",
+  "sessionReviewFilterIncorrect": "Solo falladas",
+  "sessionReviewIncorrectCount": "{count} falladas",
+  "@sessionReviewIncorrectCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "sessionReviewNoIncorrectQuestions": "No hay preguntas falladas en este intento.",
+  "teacherAssignmentSortDefault": "Orden predeterminado",
+  "teacherAssignmentSortByBestScore": "Mejor nota primero",
   "billingPlanLabel": "Plan: {plan}",
   "@billingPlanLabel": {
     "placeholders": { "plan": { "type": "String" } }

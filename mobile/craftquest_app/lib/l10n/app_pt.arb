@@ -779,6 +779,15 @@
   "teacherReviewLegend": "Vermelho = resposta marcada incorreta · Verde = resposta marcada correta · Lampada = resposta correta nao marcada",
   "teacherReviewYourAnswerTag": "Sua resposta",
   "teacherReviewCorrectAnswerTag": "Resposta correta",
+  "sessionReviewFilterAll": "Todas",
+  "sessionReviewFilterIncorrect": "Somente erradas",
+  "sessionReviewIncorrectCount": "{count} erradas",
+  "@sessionReviewIncorrectCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "sessionReviewNoIncorrectQuestions": "Nao ha perguntas erradas nesta tentativa.",
+  "teacherAssignmentSortDefault": "Ordem padrao",
+  "teacherAssignmentSortByBestScore": "Melhor nota primeiro",
   "billingPlanLabel": "Plano: {plan}",
   "@billingPlanLabel": {
     "placeholders": { "plan": { "type": "String" } }
