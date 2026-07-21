@@ -6,7 +6,12 @@ public class AiGenerationOptions
 
     public long MaxUploadBytes { get; set; } = 26_214_400;
     public int MaxPagesPerMaterial { get; set; } = 120;
-    public int MaxQuestionsPerGeneration { get; set; } = 40;
+    public int MaxQuestionsPerGeneration { get; set; } = 100;
+    public int MinQuestionsPerGeneration { get; set; } = 5;
+    public int WordsPerQuestion { get; set; } = 100;
+    public int MinQuestionsPerPage { get; set; } = 2;
+    public int MaxQuestionsPerChunk { get; set; } = 18;
+    public int RecommendedWordsPerQuestion { get; set; } = 150;
     public int RetentionDays { get; set; } = 3;
     public string[] AllowedExtensions { get; set; } = [".pdf", ".docx"];
     public int ScannedPdfMinWordsPerPage { get; set; } = 8;
@@ -16,6 +21,9 @@ public class AiGenerationOptions
     public int[] DeferredRetryDelayMinutes { get; set; } = [2, 5, 15];
     public int StaleProcessingMinutes { get; set; } = 12;
     public int GenerationJobTimeoutMinutes { get; set; } = 15;
+    public int GenerationJobTimeoutBaseMinutes { get; set; } = 8;
+    public int GenerationJobTimeoutMinutesPerChunk { get; set; } = 2;
+    public int GenerationJobTimeoutMaxMinutes { get; set; } = 25;
     /// <summary>Shorter window when user starts a new generation (unblocks stuck jobs sooner).</summary>
     public int StaleProcessingMinutesOnStart { get; set; } = 8;
     public int ChunkTargetWordsPerRequest { get; set; } = 3800;

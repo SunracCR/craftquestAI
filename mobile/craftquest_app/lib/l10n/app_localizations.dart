@@ -3966,6 +3966,12 @@ abstract class AppLocalizations {
   /// **'{count} de {max}'**
   String aiGenerationQuestionCountOfMax(int count, int max);
 
+  /// No description provided for @aiGenerationQuestionCountRecommendedMax.
+  ///
+  /// In es, this message translates to:
+  /// **'Recomendado: {recommended} · Máximo: {max}'**
+  String aiGenerationQuestionCountRecommendedMax(int recommended, int max);
+
   /// No description provided for @aiGenerationQuestionTypes.
   ///
   /// In es, this message translates to:

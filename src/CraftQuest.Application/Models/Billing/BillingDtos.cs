@@ -43,6 +43,7 @@ public sealed class PlanEntitlementsDto
 {
     public int? MaxQuizzes { get; init; }
     public int? MaxQuestionsPerQuiz { get; init; }
+    public int? MaxQuestionsPerAiGeneration { get; init; }
     public required int MonthlyAiCredits { get; init; }
     public required int MonthlyShareCodes { get; init; }
     public int? MaxRedeemedSharedQuizzes { get; init; }

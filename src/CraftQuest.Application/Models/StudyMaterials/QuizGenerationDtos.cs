@@ -27,6 +27,10 @@ public sealed class QuizGenerationEstimateDto
     public required int EstimatedImportableQuestions { get; init; }
     /// <summary>Máximo seleccionable (material + plan), independiente del count pedido.</summary>
     public required int MaxSelectableQuestions { get; init; }
+    /// <summary>Suggested question count based on document size (conservative).</summary>
+    public required int RecommendedQuestionCount { get; init; }
+    public required int MaterialCap { get; init; }
+    public required int PlanCap { get; init; }
     public required int WordsInScope { get; init; }
     /// <summary>Resolved from study material text (not UI locale).</summary>
     public required string GenerationLanguage { get; init; }

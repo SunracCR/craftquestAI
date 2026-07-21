@@ -22,6 +22,7 @@ internal static class IntegrationTestDataSeeder
                 Name = "Free",
                 MaxQuizzes = 2,
                 MaxQuestionsPerQuiz = 50,
+                MaxQuestionsPerAiGeneration = 25,
                 MonthlyAiCredits = 20,
                 MonthlyShareCodes = 2,
                 IsActive = true,

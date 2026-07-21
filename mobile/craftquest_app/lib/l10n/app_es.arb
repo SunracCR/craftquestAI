@@ -1137,6 +1137,10 @@
   "@aiGenerationQuestionCountOfMax": {
     "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
   },
+  "aiGenerationQuestionCountRecommendedMax": "Recomendado: {recommended} · Máximo: {max}",
+  "@aiGenerationQuestionCountRecommendedMax": {
+    "placeholders": { "recommended": { "type": "int" }, "max": { "type": "int" } }
+  },
   "aiGenerationQuestionTypes": "Tipos de pregunta",
   "aiGenerationTypeSingleChoice": "Opción única",
   "aiGenerationTypeMultipleChoice": "Opción múltiple",

@@ -65,6 +65,7 @@ public class BillingService(
             {
                 MaxQuizzes = baseEntitlements.MaxQuizzes,
                 MaxQuestionsPerQuiz = baseEntitlements.MaxQuestionsPerQuiz,
+                MaxQuestionsPerAiGeneration = baseEntitlements.MaxQuestionsPerAiGeneration,
                 MonthlyAiCredits = baseEntitlements.MonthlyAiCredits,
                 MonthlyShareCodes = baseEntitlements.MonthlyShareCodes,
                 MaxRedeemedSharedQuizzes = baseEntitlements.MaxRedeemedSharedQuizzes,
@@ -1095,6 +1096,7 @@ public class BillingService(
     {
         MaxQuizzes = plan.MaxQuizzes,
         MaxQuestionsPerQuiz = plan.MaxQuestionsPerQuiz,
+        MaxQuestionsPerAiGeneration = plan.MaxQuestionsPerAiGeneration,
         MonthlyAiCredits = plan.MonthlyAiCredits,
         MonthlyShareCodes = plan.MonthlyShareCodes,
         MaxRedeemedSharedQuizzes = GetMaxRedeemedSharedQuizzes(plan.Code),
@@ -1114,6 +1116,7 @@ public class BillingService(
         {
             MaxQuizzes = baseEntitlements.MaxQuizzes,
             MaxQuestionsPerQuiz = baseEntitlements.MaxQuestionsPerQuiz,
+            MaxQuestionsPerAiGeneration = baseEntitlements.MaxQuestionsPerAiGeneration,
             MonthlyAiCredits = baseEntitlements.MonthlyAiCredits,
             MonthlyShareCodes = baseEntitlements.MonthlyShareCodes,
             MaxRedeemedSharedQuizzes = baseEntitlements.MaxRedeemedSharedQuizzes,

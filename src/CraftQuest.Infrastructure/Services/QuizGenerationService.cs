@@ -44,32 +44,28 @@ public class QuizGenerationService(
     {
         EnsureAiEnabled();
         parameters = QuizGenerationPresetApplier.Apply(parameters);
-        parameters.QuestionCount = await CapQuestionCountAsync(
-            parameters.QuestionCount,
-            userId,
-            parameters.TargetQuizId,
-            cancellationToken);
         var material = await LoadReadyMaterialAsync(userId, studyMaterialId, cancellationToken);
         var (pageFrom, pageTo) = ResolvePageRange(material, parameters);
         StudyMaterialService.ApplyGenerationLanguage(material, parameters, pageFrom, pageTo);
         await dbContext.SaveChangesAsync(cancellationToken);
         var words = StudyMaterialService.EstimateWordsInRange(material, pageFrom, pageTo);
         var pageCount = material.PageCount ?? 0;
+        var limits = await ResolveCapacityLimitsAsync(
+            userId,
+            parameters.TargetQuizId,
+            words,
+            pageCount,
+            cancellationToken);
+
+        var questionCount = parameters.QuestionCount <= 0 ? 15 : parameters.QuestionCount;
+        parameters.QuestionCount = Math.Clamp(questionCount, 1, limits.MaxSelectable);
+
         var credits = AiOptions.CalculateGenerationCredits(
             parameters.QuestionCount,
             pageCount,
             aiOptions.Value);
         var documentSizeSurcharge = AiOptions.CalculateDocumentSizeSurcharge(pageCount, aiOptions.Value);
-
-        var planCapacity = await ResolveImportableCountAsync(
-            userId,
-            parameters.TargetQuizId,
-            cancellationToken);
-        var materialCap = Math.Min(
-            generationOptions.Value.MaxQuestionsPerGeneration,
-            Math.Max(5, words / 150));
-        var maxSelectable = Math.Min(planCapacity, materialCap);
-        var importableForRequest = Math.Min(parameters.QuestionCount, maxSelectable);
+        var importableForRequest = Math.Min(parameters.QuestionCount, limits.MaxSelectable);
 
         var available = (await billingService.GetMyBillingAsync(userId, cancellationToken))
             .Credits.AiCredits;
@@ -79,7 +75,10 @@ public class QuizGenerationService(
             CreditsRequired = credits,
             AiCreditsAvailable = available,
             EstimatedImportableQuestions = importableForRequest,
-            MaxSelectableQuestions = maxSelectable,
+            MaxSelectableQuestions = limits.MaxSelectable,
+            RecommendedQuestionCount = limits.Recommended,
+            MaterialCap = limits.Material.MaterialCap,
+            PlanCap = limits.PlanCap,
             WordsInScope = words,
             GenerationLanguage = parameters.Language,
             DocumentSizeSurcharge = documentSizeSurcharge,
@@ -134,17 +133,19 @@ public class QuizGenerationService(
         var (pageFrom, pageTo) = ResolvePageRange(material, parameters);
         StudyMaterialService.ApplyGenerationLanguage(material, parameters, pageFrom, pageTo);
         await dbContext.SaveChangesAsync(cancellationToken);
-        parameters.QuestionCount = await CapQuestionCountAsync(
-            parameters.QuestionCount,
-            userId,
-            parameters.TargetQuizId,
-            cancellationToken);
-
         var words = StudyMaterialService.EstimateWordsInRange(material, pageFrom, pageTo);
         if (words == 0)
         {
             throw new AppException("No text found in the selected scope.", 400, "GENERATION_SCOPE_EMPTY");
         }
+
+        parameters.QuestionCount = await CapQuestionCountAsync(
+            parameters.QuestionCount,
+            userId,
+            parameters.TargetQuizId,
+            words,
+            material.PageCount ?? 0,
+            cancellationToken);
 
         var credits = AiOptions.CalculateGenerationCredits(
             parameters.QuestionCount,
@@ -318,10 +319,8 @@ public class QuizGenerationService(
         trace.BeginJob(job.AiJobId);
         jobProgress.Attach(job.AiJobId);
 
-        var timeoutMinutes = Math.Max(5, generationOptions.Value.GenerationJobTimeoutMinutes);
+        var timeoutMinutes = generationOptions.Value.GenerationJobTimeoutMinutes;
         using var jobTimeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        jobTimeoutCts.CancelAfter(TimeSpan.FromMinutes(timeoutMinutes));
-        var jobToken = jobTimeoutCts.Token;
 
         try
         {
@@ -334,16 +333,11 @@ public class QuizGenerationService(
                 ?? throw new InvalidOperationException("Invalid generation parameters.");
 
             parameters = QuizGenerationPresetApplier.Apply(parameters);
-            parameters.QuestionCount = await CapQuestionCountAsync(
-                parameters.QuestionCount,
-                job.RequestedByUserId,
-                job.TargetQuizId,
-                cancellationToken);
 
             var material = await dbContext.StudyMaterials
                 .AsNoTracking()
                 .Include(m => m.Pages)
-                .FirstAsync(m => m.StudyMaterialId == job.StudyMaterialId.Value, jobToken);
+                .FirstAsync(m => m.StudyMaterialId == job.StudyMaterialId.Value, cancellationToken);
 
             if (material.UploadedByUserId != job.RequestedByUserId)
             {
@@ -351,6 +345,23 @@ public class QuizGenerationService(
             }
 
             EnsureMaterialReadyForGeneration(material);
+
+            var (pageFrom, pageTo) = ResolvePageRange(material, parameters);
+            StudyMaterialService.ApplyGenerationLanguage(material, parameters, pageFrom, pageTo);
+            var words = StudyMaterialService.EstimateWordsInRange(material, pageFrom, pageTo);
+            parameters.QuestionCount = await CapQuestionCountAsync(
+                parameters.QuestionCount,
+                job.RequestedByUserId,
+                job.TargetQuizId,
+                words,
+                material.PageCount ?? 0,
+                cancellationToken);
+
+            timeoutMinutes = QuizGenerationCapacityCalculator.ComputeJobTimeoutMinutes(
+                words,
+                generationOptions.Value);
+            jobTimeoutCts.CancelAfter(TimeSpan.FromMinutes(timeoutMinutes));
+            var jobToken = jobTimeoutCts.Token;
 
             var sourceText = StudyMaterialService.BuildScopeText(
                 material,
@@ -685,23 +696,64 @@ public class QuizGenerationService(
         throw last ?? new InvalidOperationException("Quiz generation failed.");
     }
 
-    private async Task<int> ResolveImportableCountAsync(
+    private sealed record GenerationCapacityLimits(
+        QuizGenerationCapacityCalculator.MaterialCapacity Material,
+        int PlanCap,
+        int QuizSlotCap,
+        int MaxSelectable,
+        int Recommended);
+
+    private async Task<GenerationCapacityLimits> ResolveCapacityLimitsAsync(
         Guid userId,
         Guid? targetQuizId,
+        int words,
+        int pageCount,
         CancellationToken cancellationToken)
     {
-        if (targetQuizId is Guid quizId)
-        {
-            var capacity = await billingService.GetQuizQuestionCapacityAsync(
-                userId,
-                quizId,
-                cancellationToken);
-            return capacity.RemainingSlots;
-        }
+        var options = generationOptions.Value;
+        var materialCapacity = QuizGenerationCapacityCalculator.ComputeMaterialCapacity(
+            words,
+            pageCount,
+            options);
 
         var billing = await billingService.GetMyBillingAsync(userId, cancellationToken);
-        return billing.Entitlements.MaxQuestionsPerQuiz
-            ?? generationOptions.Value.MaxQuestionsPerGeneration;
+        var planCap = billing.Entitlements.MaxQuestionsPerAiGeneration
+            ?? options.MaxQuestionsPerGeneration;
+
+        var quizSlotCap = targetQuizId is Guid quizId
+            ? (await billingService.GetQuizQuestionCapacityAsync(userId, quizId, cancellationToken))
+            .RemainingSlots
+            : billing.Entitlements.MaxQuestionsPerQuiz ?? int.MaxValue;
+
+        var maxSelectable = QuizGenerationCapacityCalculator.ComputeMaxSelectable(
+            materialCapacity.MaterialCap,
+            planCap,
+            quizSlotCap);
+
+        return new GenerationCapacityLimits(
+            materialCapacity,
+            planCap,
+            quizSlotCap,
+            maxSelectable,
+            materialCapacity.RecommendedQuestionCount);
+    }
+
+    private async Task<int> CapQuestionCountAsync(
+        int questionCount,
+        Guid userId,
+        Guid? targetQuizId,
+        int words,
+        int pageCount,
+        CancellationToken cancellationToken)
+    {
+        var limits = await ResolveCapacityLimitsAsync(
+            userId,
+            targetQuizId,
+            words,
+            pageCount,
+            cancellationToken);
+        var requested = questionCount <= 0 ? 15 : questionCount;
+        return Math.Clamp(requested, 1, limits.MaxSelectable);
     }
 
     private static void EnsureMaterialReadyForGeneration(StudyMaterial material)
@@ -824,16 +876,4 @@ public class QuizGenerationService(
 
     private static string TruncateJobError(string message) =>
         message.Length > 2000 ? message[..2000] : message;
-
-    private async Task<int> CapQuestionCountAsync(
-        int questionCount,
-        Guid userId,
-        Guid? targetQuizId,
-        CancellationToken cancellationToken)
-    {
-        var max = generationOptions.Value.MaxQuestionsPerGeneration;
-        var capped = Math.Clamp(questionCount <= 0 ? 15 : questionCount, 1, max);
-        var importable = await ResolveImportableCountAsync(userId, targetQuizId, cancellationToken);
-        return Math.Min(capped, importable > 0 ? importable : capped);
-    }
 }

@@ -2374,6 +2374,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String aiGenerationQuestionCountRecommendedMax(int recommended, int max) {
+    return 'Recommended: $recommended · Max: $max';
+  }
+
+  @override
   String get aiGenerationQuestionTypes => 'Question types';
 
   @override

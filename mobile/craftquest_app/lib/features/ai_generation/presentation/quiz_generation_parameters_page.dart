@@ -42,7 +42,6 @@ class QuizGenerationParametersPage extends StatefulWidget {
 class _QuizGenerationParametersPageState
     extends State<QuizGenerationParametersPage> {
   static const _minQuestions = 5;
-  static const _absoluteMaxQuestions = 40;
   static const _estimateDebounce = Duration(milliseconds: 400);
 
   final _repository = getIt<StudyMaterialRepository>();
@@ -70,24 +69,21 @@ class _QuizGenerationParametersPageState
     ('true_false', 'aiGenerationTypeTrueFalse'),
   ];
 
-  int _materialMaxFromDetail() {
-    var max = _detail.estimatedMaxQuestions;
-    if (max <= 0) {
-      max = _absoluteMaxQuestions;
-    }
-    return max.clamp(_minQuestions, _absoluteMaxQuestions);
+  int get _effectiveMax {
+    final max = _maxSelectableQuestions ?? _detail.estimatedMaxQuestions;
+    if (max < _minQuestions) return _minQuestions;
+    return max;
   }
 
-  int get _effectiveMax =>
-      (_maxSelectableQuestions ?? _materialMaxFromDetail())
-          .clamp(_minQuestions, _absoluteMaxQuestions);
-
-  void _applyEstimateLimits(QuizGenerationEstimateModel estimate) {
-    _maxSelectableQuestions = estimate.maxSelectableQuestions.clamp(
-      _minQuestions,
-      _materialMaxFromDetail(),
-    );
-    if (_questionCount > _effectiveMax) {
+  void _applyEstimateLimits(QuizGenerationEstimateModel estimate,
+      {bool initial = false}) {
+    _maxSelectableQuestions = estimate.maxSelectableQuestions < _minQuestions
+        ? _minQuestions
+        : estimate.maxSelectableQuestions;
+    if (initial) {
+      _questionCount = estimate.recommendedQuestionCount
+          .clamp(_minQuestions, _effectiveMax);
+    } else if (_questionCount > _effectiveMax) {
       _questionCount = _effectiveMax;
     }
   }
@@ -123,7 +119,10 @@ class _QuizGenerationParametersPageState
       _topicController.text = _detail.selectionTopic!;
     }
     _language = _initialMaterialLanguage();
-    _questionCount = 15.clamp(_minQuestions, _materialMaxFromDetail());
+    final initialMax = _detail.estimatedMaxQuestions >= _minQuestions
+        ? _detail.estimatedMaxQuestions
+        : 15;
+    _questionCount = initialMax.clamp(_minQuestions, initialMax);
     _loadEstimate(initial: true);
   }
 
@@ -134,7 +133,8 @@ class _QuizGenerationParametersPageState
     super.dispose();
   }
 
-  int _wordsInDocument() => _detail.wordCount ?? 0;
+  int _wordsInDocument() =>
+      _estimate?.wordsInScope ?? _detail.wordCount ?? 0;
 
   String _typeLabel(AppLocalizations l10n, String type) {
     return switch (type) {
@@ -183,7 +183,7 @@ class _QuizGenerationParametersPageState
       setState(() {
         _estimate = estimate;
         _language = _normalizeLanguageCode(estimate.generationLanguage);
-        _applyEstimateLimits(estimate);
+        _applyEstimateLimits(estimate, initial: initial);
         _loadingEstimate = false;
         _refreshingEstimate = false;
       });
@@ -424,6 +424,19 @@ class _QuizGenerationParametersPageState
               onChanged: _onQuestionCountSlide,
               onChangeEnd: _onQuestionCountSlideEnd,
             ),
+            if (_estimate != null) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                l10n.aiGenerationQuestionCountRecommendedMax(
+                  _estimate!.recommendedQuestionCount,
+                  maxQuestions,
+                ),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
             const SizedBox(height: AppSpacing.md),
             Container(
               padding: const EdgeInsets.symmetric(

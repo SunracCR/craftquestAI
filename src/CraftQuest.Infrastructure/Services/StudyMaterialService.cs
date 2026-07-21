@@ -475,9 +475,12 @@ public class StudyMaterialService(
                     PageTo = s.PageTo,
                 })
                 .ToList(),
-            EstimatedMaxQuestions = Math.Min(
-                generationOptions.Value.MaxQuestionsPerGeneration,
-                Math.Max(5, wordsInDocument / 150)),
+            EstimatedMaxQuestions = QuizGenerationCapacityCalculator
+                .ComputeMaterialCapacity(
+                    wordsInDocument,
+                    material.PageCount ?? 0,
+                    generationOptions.Value)
+                .MaterialCap,
             RequiresTextReview = material.NeedsOcr && string.IsNullOrWhiteSpace(material.EditedExtractedText),
             EditedExtractedText = material.EditedExtractedText,
             LanguageCode = material.LanguageCode,

@@ -93,6 +93,7 @@ CREATE TABLE billing.Plans (
     AnnualPrice DECIMAL(12,2) NULL,
     MaxQuizzes INT NULL,
     MaxQuestionsPerQuiz INT NULL,
+    MaxQuestionsPerAiGeneration INT NULL,
     MonthlyAiCredits INT NOT NULL CONSTRAINT DF_Plans_MonthlyAiCredits DEFAULT(0),
     MonthlyShareCodes INT NOT NULL CONSTRAINT DF_Plans_MonthlyShareCodes DEFAULT(0),
     IsTeacherPlan BIT NOT NULL CONSTRAINT DF_Plans_IsTeacherPlan DEFAULT(0),

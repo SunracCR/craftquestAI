@@ -9,6 +9,8 @@ public class Plan
     public decimal? AnnualPrice { get; set; }
     public int? MaxQuizzes { get; set; }
     public int? MaxQuestionsPerQuiz { get; set; }
+    /// <summary>Max questions per AI generation job for this plan.</summary>
+    public int? MaxQuestionsPerAiGeneration { get; set; }
     public int MonthlyAiCredits { get; set; }
     public int MonthlyShareCodes { get; set; }
     public bool IsTeacherPlan { get; set; }

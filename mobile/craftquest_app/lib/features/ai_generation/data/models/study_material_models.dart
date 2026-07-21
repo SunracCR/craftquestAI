@@ -255,6 +255,9 @@ class QuizGenerationEstimateModel {
     required this.aiCreditsAvailable,
     required this.estimatedImportableQuestions,
     required this.maxSelectableQuestions,
+    required this.recommendedQuestionCount,
+    required this.materialCap,
+    required this.planCap,
     required this.wordsInScope,
     required this.generationLanguage,
     this.documentSizeSurcharge = 0,
@@ -262,12 +265,17 @@ class QuizGenerationEstimateModel {
 
   factory QuizGenerationEstimateModel.fromJson(Map<String, dynamic> json) {
     final importable = json['estimatedImportableQuestions'] as int;
+    final maxSelectable =
+        json['maxSelectableQuestions'] as int? ?? importable;
     return QuizGenerationEstimateModel(
       creditsRequired: json['creditsRequired'] as int,
       aiCreditsAvailable: json['aiCreditsAvailable'] as int,
       estimatedImportableQuestions: importable,
-      maxSelectableQuestions:
-          json['maxSelectableQuestions'] as int? ?? importable,
+      maxSelectableQuestions: maxSelectable,
+      recommendedQuestionCount:
+          json['recommendedQuestionCount'] as int? ?? maxSelectable,
+      materialCap: json['materialCap'] as int? ?? maxSelectable,
+      planCap: json['planCap'] as int? ?? maxSelectable,
       wordsInScope: json['wordsInScope'] as int,
       generationLanguage: json['generationLanguage'] as String? ?? 'en',
       documentSizeSurcharge: json['documentSizeSurcharge'] as int? ?? 0,
@@ -278,6 +286,9 @@ class QuizGenerationEstimateModel {
   final int aiCreditsAvailable;
   final int estimatedImportableQuestions;
   final int maxSelectableQuestions;
+  final int recommendedQuestionCount;
+  final int materialCap;
+  final int planCap;
   final int wordsInScope;
   final String generationLanguage;
   final int documentSizeSurcharge;
