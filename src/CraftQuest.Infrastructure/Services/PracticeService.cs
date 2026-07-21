@@ -933,8 +933,8 @@ public class PracticeService(
                         && a.AssignmentId == null
                         && a.ClassId == null)
                     || (a.AccessType == "purchase"
-                        && a.ExpiresAt != null
-                        && a.ExpiresAt > now)),
+                        && (a.IsLifetimeAccess
+                            || (a.ExpiresAt != null && a.ExpiresAt > now)))),
             cancellationToken);
 
         if (!hasAccess)

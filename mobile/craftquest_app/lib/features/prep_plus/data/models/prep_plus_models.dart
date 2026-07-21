@@ -62,6 +62,7 @@ class PrepBrowseItemModel {
     this.currencyCode,
     required this.userAccessState,
     this.accessExpiresAt,
+    this.isLifetimeAccess = false,
     required this.canPurchase,
   });
 
@@ -83,6 +84,7 @@ class PrepBrowseItemModel {
       accessExpiresAt: json['accessExpiresAt'] != null
           ? DateTime.parse(json['accessExpiresAt'] as String)
           : null,
+      isLifetimeAccess: json['isLifetimeAccess'] as bool? ?? false,
       canPurchase: json['canPurchase'] as bool? ?? false,
     );
   }
@@ -100,6 +102,7 @@ class PrepBrowseItemModel {
   final String? currencyCode;
   final String userAccessState;
   final DateTime? accessExpiresAt;
+  final bool isLifetimeAccess;
   final bool canPurchase;
 }
 
@@ -107,6 +110,7 @@ class PrepAccessOfferModel {
   const PrepAccessOfferModel({
     required this.offerId,
     required this.durationDays,
+    this.isLifetimeAccess = false,
     required this.priceAmount,
     required this.currencyCode,
     required this.isFree,
@@ -118,6 +122,7 @@ class PrepAccessOfferModel {
     return PrepAccessOfferModel(
       offerId: json['offerId'] as String,
       durationDays: json['durationDays'] as int,
+      isLifetimeAccess: json['isLifetimeAccess'] as bool? ?? false,
       priceAmount: (json['priceAmount'] as num).toDouble(),
       currencyCode: json['currencyCode'] as String? ?? 'USD',
       isFree: json['isFree'] as bool? ?? false,
@@ -128,6 +133,7 @@ class PrepAccessOfferModel {
 
   final String offerId;
   final int durationDays;
+  final bool isLifetimeAccess;
   final double priceAmount;
   final String currencyCode;
   final bool isFree;
@@ -152,6 +158,7 @@ class PrepItemDetailModel {
     this.listingEndsAt,
     required this.userAccessState,
     this.accessExpiresAt,
+    this.isLifetimeAccess = false,
     required this.canPractice,
     this.offers = const [],
   });
@@ -179,6 +186,7 @@ class PrepItemDetailModel {
       accessExpiresAt: json['accessExpiresAt'] != null
           ? DateTime.parse(json['accessExpiresAt'] as String)
           : null,
+      isLifetimeAccess: json['isLifetimeAccess'] as bool? ?? false,
       canPractice: json['canPractice'] as bool? ?? false,
       offers: offersJson
           .map((e) => PrepAccessOfferModel.fromJson(e as Map<String, dynamic>))
@@ -198,8 +206,11 @@ class PrepItemDetailModel {
       rootCategoryType: 'geographic',
       questionCount: access.questionCount,
       canPurchase: access.canPurchase,
-      userAccessState: access.canPractice ? 'active' : 'expired',
+      userAccessState: access.isLifetimeAccess
+          ? 'owned'
+          : (access.canPractice ? 'active' : 'expired'),
       accessExpiresAt: access.expiresAt,
+      isLifetimeAccess: access.isLifetimeAccess,
       canPractice: access.canPractice,
     );
   }
@@ -237,6 +248,7 @@ class PrepItemDetailModel {
   final DateTime? listingEndsAt;
   final String userAccessState;
   final DateTime? accessExpiresAt;
+  final bool isLifetimeAccess;
   final bool canPractice;
   final List<PrepAccessOfferModel> offers;
 }
@@ -480,7 +492,8 @@ class PrepMyAccessItemModel {
     required this.title,
     required this.questionCount,
     required this.grantedAt,
-    required this.expiresAt,
+    this.expiresAt,
+    this.isLifetimeAccess = false,
     required this.canPractice,
     required this.canPurchase,
     this.lastPracticedAt,
@@ -493,7 +506,10 @@ class PrepMyAccessItemModel {
       title: json['title'] as String,
       questionCount: json['questionCount'] as int? ?? 0,
       grantedAt: DateTime.parse(json['grantedAt'] as String),
-      expiresAt: DateTime.parse(json['expiresAt'] as String),
+      expiresAt: json['expiresAt'] != null
+          ? DateTime.parse(json['expiresAt'] as String)
+          : null,
+      isLifetimeAccess: json['isLifetimeAccess'] as bool? ?? false,
       canPractice: json['canPractice'] as bool? ?? false,
       canPurchase: json['canPurchase'] as bool? ?? false,
       lastPracticedAt: json['lastPracticedAt'] != null
@@ -507,7 +523,8 @@ class PrepMyAccessItemModel {
   final String title;
   final int questionCount;
   final DateTime grantedAt;
-  final DateTime expiresAt;
+  final DateTime? expiresAt;
+  final bool isLifetimeAccess;
   final bool canPractice;
   final bool canPurchase;
   final DateTime? lastPracticedAt;
@@ -541,6 +558,7 @@ class PrepCheckoutResultModel {
     required this.status,
     this.purchaseId,
     this.accessExpiresAt,
+    this.isLifetimeAccess = false,
     required this.requiresPayment,
     this.message,
   });
@@ -552,6 +570,7 @@ class PrepCheckoutResultModel {
       accessExpiresAt: json['accessExpiresAt'] != null
           ? DateTime.parse(json['accessExpiresAt'] as String)
           : null,
+      isLifetimeAccess: json['isLifetimeAccess'] as bool? ?? false,
       requiresPayment: json['requiresPayment'] as bool? ?? false,
       message: json['message'] as String?,
     );
@@ -560,6 +579,7 @@ class PrepCheckoutResultModel {
   final String status;
   final String? purchaseId;
   final DateTime? accessExpiresAt;
+  final bool isLifetimeAccess;
   final bool requiresPayment;
   final String? message;
 }

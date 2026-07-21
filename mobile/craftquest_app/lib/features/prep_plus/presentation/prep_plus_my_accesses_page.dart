@@ -166,13 +166,25 @@ class _AccessList extends StatelessWidget {
             ),
             child: AppListEntryCard(
               title: item.title,
-              subtitle: expired
-                  ? l10n.prepPlusExpiredOn(dateFmt.format(item.expiresAt.toLocal()))
-                  : l10n.prepPlusExpiresOn(dateFmt.format(item.expiresAt.toLocal())),
-              accentColor: expired ? AppColors.textSecondary : AppColors.accentMint,
-              leadingIcon: expired
-                  ? Icons.history_rounded
-                  : Icons.play_circle_outline_rounded,
+              subtitle: item.isLifetimeAccess
+                  ? l10n.prepPlusAccessOwnedBadge
+                  : expired
+                      ? l10n.prepPlusExpiredOn(
+                          dateFmt.format(item.expiresAt!.toLocal()),
+                        )
+                      : l10n.prepPlusExpiresOn(
+                          dateFmt.format(item.expiresAt!.toLocal()),
+                        ),
+              accentColor: item.isLifetimeAccess
+                  ? AppColors.accentGold
+                  : expired
+                      ? AppColors.textSecondary
+                      : AppColors.accentMint,
+              leadingIcon: item.isLifetimeAccess
+                  ? Icons.all_inclusive_rounded
+                  : expired
+                      ? Icons.history_rounded
+                      : Icons.play_circle_outline_rounded,
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(

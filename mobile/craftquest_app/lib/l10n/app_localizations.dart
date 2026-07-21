@@ -1042,6 +1042,24 @@ abstract class AppLocalizations {
   /// **'Acceso total al banco de preguntas'**
   String get prepPlusComboIncludesAccess;
 
+  /// No description provided for @prepPlusAccessLifetime.
+  String get prepPlusAccessLifetime;
+
+  /// No description provided for @prepPlusAccessLifetimeSubtitle.
+  String get prepPlusAccessLifetimeSubtitle;
+
+  /// No description provided for @prepPlusAccessOwnedBadge.
+  String get prepPlusAccessOwnedBadge;
+
+  /// No description provided for @prepPlusAccessOwnedTitle.
+  String get prepPlusAccessOwnedTitle;
+
+  /// No description provided for @prepPlusAccessOwnedSubtitle.
+  String get prepPlusAccessOwnedSubtitle;
+
+  /// No description provided for @prepPlusAlreadyOwnedMessage.
+  String get prepPlusAlreadyOwnedMessage;
+
   /// No description provided for @prepPlusSelectDuration.
   ///
   /// In es, this message translates to:
@@ -6821,6 +6839,12 @@ abstract class AppLocalizations {
   /// **'Matriz de precios'**
   String get prepAdminOffersSection;
 
+  /// No description provided for @prepAdminLifetimeOfferSection.
+  String get prepAdminLifetimeOfferSection;
+
+  /// No description provided for @prepAdminTimedOffersSection.
+  String get prepAdminTimedOffersSection;
+
   /// No description provided for @prepAdminSamplesSection.
   ///
   /// In es, this message translates to:
@@ -7420,6 +7444,9 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'App Store no está configurado. Usa pagos mock en desarrollo.'**
   String get errorPrepAppStoreNotConfigured;
+
+  /// No description provided for @errorPrepLifetimeOfferDuplicate.
+  String get errorPrepLifetimeOfferDuplicate;
 
   /// No description provided for @notificationsTitle.
   ///

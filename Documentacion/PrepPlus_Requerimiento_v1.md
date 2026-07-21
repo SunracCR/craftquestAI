@@ -26,9 +26,10 @@ Independiente de:
 | **Mis accesos** | Tab Prep+ con sección activos + pestaña **Expirados** aparte |
 | **Admin** | Solo desde **Perfil** (roles `content_admin` / `super_admin`) |
 | **Caducidad** | **Ambas:** (A) fin de venta en catálogo; (B) acceso limitado post-compra |
-| **Duraciones de acceso** | 30 días · 60 días · 90 días · 6 meses (precio distinto por cada una) |
+| **Duraciones de acceso** | 30 días · 60 días · 90 días · 6 meses · **acceso definitivo** (opcional por ítem) |
 | **Quiz expirado / sin acceso** | El ítem **permanece visible** en catálogo e historial del usuario; **no es practicable** hasta renovar compra (salvo borrado manual por admin) |
-| **Precio** | **Por duración de acceso** (matriz de 4 precios por cuestionario; puede incluir opción gratis en una o todas las duraciones) |
+| **Precio** | **Flexible por ítem:** el admin activa las duraciones temporales que quiera (30/60/90/183) y/o una oferta **definitiva** con precio propio; cualquier oferta puede ser gratis |
+| **Acceso definitivo** | Estado `owned`: practicable sin expiración; **no se muestran más CTAs de compra**; upgrade desde temporal activo paga **precio completo** de la definitiva |
 | **Internacional** | Misma UX y filtros que país; **sin** filtro institución/examen oficial; **tags temáticos** |
 | **Vista previa** | **3 preguntas** de muestra antes de comprar |
 | **Operador del catálogo** | **Solo plataforma** — módulo **admin** en app/API para CRUD del catálogo |
@@ -45,7 +46,7 @@ El tab debe caber en `NavigationBar` (~12–14 caracteres máx. recomendado en m
 | `prepPlusScreenTitle` | Preparación+ | Exam prep+ | Preparação+ |
 | `prepPlusScreenSubtitle` | Cuestionarios curados para tu examen | Curated quizzes for your exam | Questionários curados para o seu exame |
 | `homePrepPlusCardTitle` | Preparación+ | Prep+ | Preparação+ |
-| `homePrepPlusCardSubtitle` | Compra acceso por tiempo. País, examen o tema. | Buy timed access. Country, exam, or topic. | Compre acesso por tempo. País, exame ou tema. |
+| `homePrepPlusCardSubtitle` | Compra acceso por tiempo o definitivo. País, examen o tema. | Buy timed or lifetime access. Country, exam, or topic. | Compre acesso por tempo ou definitivo. País, exame ou tema. |
 | `homePrepPlusCardCta` | Explorar catálogo | Browse catalog | Explorar catálogo |
 
 **Nota de marca:** el símbolo **+** se mantiene en los tres idiomas (identidad de producto).
@@ -197,7 +198,7 @@ flowchart TD
 - Web: PayPal; móvil: IAP (SKU por offer en fase 2; MVP puede PayPal web + mock).
 - Al confirmar pago: insertar `Purchase` + `QuizAccess` con `ExpiresAt`.
 
-**Matriz de precios:** cada `PrepCatalogItem` tiene hasta **4 filas** en `PrepAccessOffers` (una por duración). Cualquier duración puede marcarse `IsFree = 1`.
+**Matriz de precios:** cada `PrepCatalogItem` tiene ofertas en `PrepAccessOffers` configurables por el admin: duraciones temporales opcionales (30/60/90/183 días) y/o **una** oferta `IsLifetimeAccess = 1` (acceso definitivo). Cualquier oferta puede marcarse `IsFree = 1`.
 
 ---
 
@@ -228,7 +229,7 @@ flowchart TD
 
 #### C. Ofertas de acceso (precios)
 
-- Editor de 4 duraciones: 30 / 60 / 90 / 183 días.
+- Editor de ofertas: sección **Acceso definitivo** (toggle + precio) y duraciones temporales 30 / 60 / 90 / 183 días (cada una opcional).
 - Precio + moneda + marcar gratis por duración.
 
 #### D. Preguntas de muestra

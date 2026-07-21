@@ -31,6 +31,7 @@ public sealed class PrepCatalogBrowseItemDto
     public string? CurrencyCode { get; init; }
     public required string UserAccessState { get; init; }
     public DateTime? AccessExpiresAt { get; init; }
+    public bool IsLifetimeAccess { get; init; }
     public required bool CanPurchase { get; init; }
 }
 
@@ -51,6 +52,7 @@ public sealed class PrepCatalogItemPublicDetailDto
     public DateTime? ListingEndsAt { get; init; }
     public required string UserAccessState { get; init; }
     public DateTime? AccessExpiresAt { get; init; }
+    public bool IsLifetimeAccess { get; init; }
     public required bool CanPractice { get; init; }
     public IReadOnlyList<PrepAccessOfferDto> Offers { get; init; } = [];
 }
@@ -94,7 +96,8 @@ public sealed class PrepMyAccessItemDto
     public required string Title { get; init; }
     public required int QuestionCount { get; init; }
     public required DateTime GrantedAt { get; init; }
-    public required DateTime ExpiresAt { get; init; }
+    public DateTime? ExpiresAt { get; init; }
+    public bool IsLifetimeAccess { get; init; }
     public required bool CanPractice { get; init; }
     public required bool CanPurchase { get; init; }
     public DateTime? LastPracticedAt { get; init; }
@@ -133,6 +136,7 @@ public sealed class PrepCheckoutResultDto
     public required string Status { get; init; }
     public Guid? PurchaseId { get; init; }
     public DateTime? AccessExpiresAt { get; init; }
+    public bool IsLifetimeAccess { get; init; }
     public bool RequiresPayment { get; init; }
     public string? Message { get; init; }
 }

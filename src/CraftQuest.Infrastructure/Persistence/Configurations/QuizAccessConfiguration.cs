@@ -11,6 +11,7 @@ public class QuizAccessConfiguration : IEntityTypeConfiguration<QuizAccess>
         builder.ToTable("QuizAccesses", "sharing");
         builder.HasKey(x => x.QuizAccessId);
         builder.Property(x => x.AccessType).HasMaxLength(40).IsRequired();
+        builder.Property(x => x.IsLifetimeAccess).HasDefaultValue(false);
 
         builder.HasIndex(x => new { x.UserId, x.QuizId, x.ClassId, x.AssignmentId })
             .IsUnique();

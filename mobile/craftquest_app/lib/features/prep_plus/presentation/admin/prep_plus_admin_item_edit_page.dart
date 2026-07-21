@@ -34,6 +34,7 @@ class PrepPlusAdminItemEditPage extends StatefulWidget {
 class _OfferDraft {
   _OfferDraft({
     required this.durationDays,
+    this.isLifetimeAccess = false,
     this.priceAmount = 0,
     this.currencyCode = 'USD',
     this.isFree = false,
@@ -42,6 +43,7 @@ class _OfferDraft {
   });
 
   final int durationDays;
+  final bool isLifetimeAccess;
   double priceAmount;
   String currencyCode;
   bool isFree;
@@ -49,7 +51,8 @@ class _OfferDraft {
   String? storeProductId;
 
   Map<String, dynamic> toJson() => {
-        'durationDays': durationDays,
+        'durationDays': isLifetimeAccess ? 0 : durationDays,
+        'isLifetimeAccess': isLifetimeAccess,
         'priceAmount': isFree ? 0 : priceAmount,
         'currencyCode': currencyCode,
         'isFree': isFree,
@@ -76,6 +79,7 @@ class _PrepPlusAdminItemEditPageState extends State<PrepPlusAdminItemEditPage> {
   String? _categoryId;
   List<String> _sampleQuestionIds = [];
   late List<_OfferDraft> _offers;
+  late _OfferDraft _lifetimeOffer;
   DateTime? _listingStartsAt;
   DateTime? _listingEndsAt;
   String? _coverMediaId;
@@ -90,6 +94,7 @@ class _PrepPlusAdminItemEditPageState extends State<PrepPlusAdminItemEditPage> {
     _offers = _durations
         .map((d) => _OfferDraft(durationDays: d))
         .toList();
+    _lifetimeOffer = _OfferDraft(durationDays: 0, isLifetimeAccess: true);
     _load();
   }
 
@@ -163,7 +168,7 @@ class _PrepPlusAdminItemEditPageState extends State<PrepPlusAdminItemEditPage> {
     _offers = _durations.map((days) {
       PrepAdminOfferModel? existing;
       for (final o in item.offers) {
-        if (o.durationDays == days) {
+        if (!o.isLifetimeAccess && o.durationDays == days) {
           existing = o;
           break;
         }
@@ -180,6 +185,25 @@ class _PrepPlusAdminItemEditPageState extends State<PrepPlusAdminItemEditPage> {
       }
       return _OfferDraft(durationDays: days, isActive: false);
     }).toList();
+
+    PrepAdminOfferModel? lifetimeExisting;
+    for (final o in item.offers) {
+      if (o.isLifetimeAccess) {
+        lifetimeExisting = o;
+        break;
+      }
+    }
+    _lifetimeOffer = lifetimeExisting != null
+        ? _OfferDraft(
+            durationDays: 0,
+            isLifetimeAccess: true,
+            priceAmount: lifetimeExisting.priceAmount,
+            currencyCode: lifetimeExisting.currencyCode,
+            isFree: lifetimeExisting.isFree,
+            isActive: lifetimeExisting.isActive,
+            storeProductId: lifetimeExisting.storeProductId,
+          )
+        : _OfferDraft(durationDays: 0, isLifetimeAccess: true, isActive: false);
   }
 
   PrepAdminSubcategoryOption? get _selectedSubcategory {
@@ -537,14 +561,18 @@ class _PrepPlusAdminItemEditPageState extends State<PrepPlusAdminItemEditPage> {
     final l10n = AppLocalizations.of(context)!;
     setState(() => _saving = true);
     try {
-      final activeOffers = _offers.where((o) => o.isActive).toList();
+      final payload = [
+        ..._offers.map((o) => o.toJson()),
+        if (_lifetimeOffer.isActive) _lifetimeOffer.toJson(),
+      ];
+      final activeOffers = payload.where((o) => o['isActive'] == true).toList();
       if (activeOffers.isEmpty) {
         context.showErrorSnackBar(l10n.prepAdminOffersRequired);
         return;
       }
       final updated = await _repo.upsertOffers(
         widget.catalogItemId!,
-        _offers.map((o) => o.toJson()).toList(),
+        payload,
       );
       if (!mounted) return;
       _bindItem(updated, _subcategories);
@@ -921,7 +949,29 @@ class _PrepPlusAdminItemEditPageState extends State<PrepPlusAdminItemEditPage> {
                           ),
                           child: AppSectionCard(
                             child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
+                                Text(
+                                  l10n.prepAdminLifetimeOfferSection,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                _OfferRow(
+                                  label: l10n.prepPlusAccessLifetime,
+                                  offer: _lifetimeOffer,
+                                  enabled: !_saving,
+                                  onChanged: () => setState(() {}),
+                                ),
+                                const Divider(height: AppSpacing.lg),
+                                Text(
+                                  l10n.prepAdminTimedOffersSection,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
                                 for (final offer in _offers)
                                   _OfferRow(
                                     label: _durationLabel(offer.durationDays, l10n),

@@ -43,6 +43,8 @@ public static class PrepPlusErrorCodes
     public const string StoreProductMismatch = "PREP_STORE_PRODUCT_MISMATCH";
     public const string OfferNoLongerExists = "PREP_OFFER_NO_LONGER_EXISTS";
     public const string InvalidProductCode = "PREP_INVALID_PRODUCT_CODE";
+    public const string AlreadyOwned = "PREP_ALREADY_OWNED";
+    public const string LifetimeOfferDuplicate = "PREP_LIFETIME_OFFER_DUPLICATE";
     public const string GooglePlayNotConfigured = "PREP_GOOGLE_PLAY_NOT_CONFIGURED";
     public const string AppStoreNotConfigured = "PREP_APP_STORE_NOT_CONFIGURED";
 }

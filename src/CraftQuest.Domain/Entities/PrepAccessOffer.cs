@@ -8,6 +8,7 @@ public class PrepAccessOffer
     public decimal PriceAmount { get; set; }
     public string CurrencyCode { get; set; } = "USD";
     public bool IsFree { get; set; }
+    public bool IsLifetimeAccess { get; set; }
     public string? StoreProductId { get; set; }
     public bool IsActive { get; set; } = true;
 

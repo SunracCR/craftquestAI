@@ -59,6 +59,7 @@ public sealed class PrepAccessOfferDto
 {
     public required Guid OfferId { get; init; }
     public required int DurationDays { get; init; }
+    public bool IsLifetimeAccess { get; init; }
     public required decimal PriceAmount { get; init; }
     public required string CurrencyCode { get; init; }
     public required bool IsFree { get; init; }
@@ -126,6 +127,7 @@ public class UpdatePrepCatalogItemRequest
 public class UpsertPrepAccessOfferInput
 {
     public int DurationDays { get; set; }
+    public bool IsLifetimeAccess { get; set; }
     public decimal PriceAmount { get; set; }
     public string CurrencyCode { get; set; } = "USD";
     public bool IsFree { get; set; }

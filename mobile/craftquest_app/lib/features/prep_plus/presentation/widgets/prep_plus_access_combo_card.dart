@@ -29,7 +29,7 @@ class PrepPlusAccessComboCard extends StatelessWidget {
         ? l10n.prepPlusFilterFree
         : NumberFormat.simpleCurrency(name: offer.currencyCode, locale: locale)
             .format(offer.priceAmount);
-    final perDay = offer.isFree || offer.durationDays <= 0
+    final perDay = offer.isFree || offer.isLifetimeAccess || offer.durationDays <= 0
         ? null
         : offer.priceAmount / offer.durationDays;
     final perDayText = perDay == null
@@ -91,7 +91,9 @@ class PrepPlusAccessComboCard extends StatelessWidget {
                         children: [
                           Expanded(
                             child: Text(
-                              _durationLabel(l10n, offer.durationDays),
+                              offer.isLifetimeAccess
+                                  ? l10n.prepPlusAccessLifetime
+                                  : _durationLabel(l10n, offer.durationDays),
                               style: const TextStyle(
                                 fontWeight: FontWeight.w800,
                                 fontSize: 17,
@@ -99,8 +101,9 @@ class PrepPlusAccessComboCard extends StatelessWidget {
                               ),
                             ),
                           ),
-                          if (showBestValueBadge ||
-                              offer.durationDays == _bestValueDays)
+                          if (!offer.isLifetimeAccess &&
+                              (showBestValueBadge ||
+                                  offer.durationDays == _bestValueDays))
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 8,
@@ -127,7 +130,9 @@ class PrepPlusAccessComboCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        l10n.prepPlusComboIncludesAccess,
+                        offer.isLifetimeAccess
+                            ? l10n.prepPlusAccessLifetimeSubtitle
+                            : l10n.prepPlusComboIncludesAccess,
                         style: const TextStyle(
                           fontSize: 12,
                           color: AppColors.textSecondary,

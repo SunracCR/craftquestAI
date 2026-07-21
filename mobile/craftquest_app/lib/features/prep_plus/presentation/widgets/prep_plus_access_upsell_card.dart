@@ -13,6 +13,7 @@ class PrepPlusAccessUpsellCard extends StatelessWidget {
     super.key,
     required this.userAccessState,
     required this.canPractice,
+    required this.isLifetimeAccess,
     required this.accessExpiresAt,
     required this.offers,
     required this.onTap,
@@ -21,6 +22,7 @@ class PrepPlusAccessUpsellCard extends StatelessWidget {
 
   final String userAccessState;
   final bool canPractice;
+  final bool isLifetimeAccess;
   final DateTime? accessExpiresAt;
   final List<PrepAccessOfferModel> offers;
   final VoidCallback onTap;
@@ -40,6 +42,9 @@ class PrepPlusAccessUpsellCard extends StatelessWidget {
   bool get _hasFreeOffer => offers.any((o) => o.isFree);
 
   String _actionLabel(AppLocalizations l10n) {
+    if (isLifetimeAccess || userAccessState == 'owned') {
+      return l10n.prepPlusAccessOwnedBadge;
+    }
     if (canPractice) return l10n.prepPlusExtendAccessAction;
     if (userAccessState == 'expired') return l10n.prepPlusRenewAction;
     if (_hasFreeOffer) return l10n.prepPlusGetFreeAccessAction;
@@ -47,6 +52,9 @@ class PrepPlusAccessUpsellCard extends StatelessWidget {
   }
 
   String _title(AppLocalizations l10n) {
+    if (isLifetimeAccess || userAccessState == 'owned') {
+      return l10n.prepPlusAccessOwnedTitle;
+    }
     if (canPractice && accessExpiresAt != null) {
       return l10n.prepPlusAccessUntil(formatDate(accessExpiresAt!));
     }
@@ -57,6 +65,9 @@ class PrepPlusAccessUpsellCard extends StatelessWidget {
   }
 
   String? _subtitle(AppLocalizations l10n, BuildContext context) {
+    if (isLifetimeAccess || userAccessState == 'owned') {
+      return l10n.prepPlusAccessOwnedSubtitle;
+    }
     if (canPractice &&
         accessExpiresAt != null &&
         PrepPlusAccessCountdown.shouldShow(
@@ -82,13 +93,16 @@ class PrepPlusAccessUpsellCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final showCountdown = canPractice &&
+    final showCountdown = !isLifetimeAccess &&
+        userAccessState != 'owned' &&
+        canPractice &&
         accessExpiresAt != null &&
         PrepPlusAccessCountdown.shouldShow(
           canPractice: canPractice,
           accessExpiresAt: accessExpiresAt,
         );
     final subtitle = _subtitle(l10n, context);
+    final isOwned = isLifetimeAccess || userAccessState == 'owned';
 
     return AppSectionCard(
       padding: const EdgeInsets.symmetric(
@@ -101,15 +115,25 @@ class PrepPlusAccessUpsellCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: (canPractice ? AppColors.accentMint : AppColors.warning)
+              color: (isOwned
+                      ? AppColors.accentGold
+                      : canPractice
+                          ? AppColors.accentMint
+                          : AppColors.warning)
                   .withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: Icon(
-              canPractice
-                  ? Icons.schedule_rounded
-                  : Icons.lock_clock_rounded,
-              color: canPractice ? AppColors.accentMint : AppColors.warning,
+              isOwned
+                  ? Icons.all_inclusive_rounded
+                  : canPractice
+                      ? Icons.schedule_rounded
+                      : Icons.lock_clock_rounded,
+              color: isOwned
+                  ? AppColors.accentGold
+                  : canPractice
+                      ? AppColors.accentMint
+                      : AppColors.warning,
               size: 22,
             ),
           ),
@@ -148,28 +172,30 @@ class PrepPlusAccessUpsellCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: AppSpacing.xs),
-          FilledButton.tonal(
-            onPressed: onTap,
-            style: FilledButton.styleFrom(
-              foregroundColor: AppColors.accentGold,
-              backgroundColor: AppColors.accentGold.withValues(alpha: 0.15),
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.sm,
-                vertical: AppSpacing.xs,
+          if (!isOwned) ...[
+            const SizedBox(width: AppSpacing.xs),
+            FilledButton.tonal(
+              onPressed: onTap,
+              style: FilledButton.styleFrom(
+                foregroundColor: AppColors.accentGold,
+                backgroundColor: AppColors.accentGold.withValues(alpha: 0.15),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm,
+                  vertical: AppSpacing.xs,
+                ),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
               ),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              visualDensity: VisualDensity.compact,
-            ),
-            child: Text(
-              _actionLabel(l10n),
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 12,
+              child: Text(
+                _actionLabel(l10n),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );

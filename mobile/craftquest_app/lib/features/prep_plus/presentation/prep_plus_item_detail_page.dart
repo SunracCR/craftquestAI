@@ -170,6 +170,9 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
   String? _defaultOfferId(List<PrepAccessOfferModel> offers) {
     if (offers.isEmpty) return null;
     for (final o in offers) {
+      if (o.isLifetimeAccess) return o.offerId;
+    }
+    for (final o in offers) {
       if (o.durationDays == _bestValueDurationDays) return o.offerId;
     }
     PrepAccessOfferModel longest = offers.first;
@@ -808,7 +811,38 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
                                     ),
                                   ),
                                 ],
-                                if (_item!.accessExpiresAt != null)
+                                if (_item!.isLifetimeAccess)
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      top: AppSpacing.sm,
+                                    ),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: AppSpacing.sm,
+                                        vertical: AppSpacing.xs,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.accentGold
+                                            .withValues(alpha: 0.12),
+                                        borderRadius: BorderRadius.circular(
+                                          AppColors.radiusSm,
+                                        ),
+                                        border: Border.all(
+                                          color: AppColors.accentGold
+                                              .withValues(alpha: 0.4),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        l10n.prepPlusAccessOwnedBadge,
+                                        style: const TextStyle(
+                                          color: AppColors.accentGold,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                else if (_item!.accessExpiresAt != null)
                                   Padding(
                                     padding:
                                         const EdgeInsets.only(top: AppSpacing.sm),
@@ -947,6 +981,8 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
                           ),
                         ],
                         if (_item!.offers.isNotEmpty &&
+                            _item!.userAccessState != 'owned' &&
+                            !_item!.isLifetimeAccess &&
                             (_item!.canPurchase ||
                                 _item!.userAccessState == 'expired' ||
                                 _item!.canPractice)) ...[
@@ -960,6 +996,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
                             child: PrepPlusAccessUpsellCard(
                               userAccessState: _item!.userAccessState,
                               canPractice: _item!.canPractice,
+                              isLifetimeAccess: _item!.isLifetimeAccess,
                               accessExpiresAt: _item!.accessExpiresAt,
                               offers: _item!.offers,
                               formatDate: _formatDate,

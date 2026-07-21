@@ -569,6 +569,27 @@ class AppLocalizationsEs extends AppLocalizations {
       'Acceso total al banco de preguntas';
 
   @override
+  String get prepPlusAccessLifetime => 'Acceso definitivo';
+
+  @override
+  String get prepPlusAccessLifetimeSubtitle =>
+      'Practica sin límite de tiempo';
+
+  @override
+  String get prepPlusAccessOwnedBadge => 'Tuyo para siempre';
+
+  @override
+  String get prepPlusAccessOwnedTitle => 'Tienes acceso definitivo';
+
+  @override
+  String get prepPlusAccessOwnedSubtitle =>
+      'Puedes practicar cuando quieras, sin fecha de vencimiento';
+
+  @override
+  String get prepPlusAlreadyOwnedMessage =>
+      'Ya tienes acceso definitivo a este cuestionario';
+
+  @override
   String get prepPlusSelectDuration => 'Duración del acceso';
 
   @override
@@ -4089,6 +4110,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get prepAdminOffersSection => 'Matriz de precios';
 
   @override
+  String get prepAdminLifetimeOfferSection => 'Acceso definitivo';
+
+  @override
+  String get prepAdminTimedOffersSection => 'Acceso por duración';
+
+  @override
   String get prepAdminSamplesSection => 'Preguntas muestra';
 
   @override
@@ -4438,6 +4465,10 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get errorPrepAppStoreNotConfigured =>
       'App Store no está configurado. Usa pagos mock en desarrollo.';
+
+  @override
+  String get errorPrepLifetimeOfferDuplicate =>
+      'Solo puede haber una oferta de acceso definitivo por ítem.';
 
   @override
   String get notificationsTitle => 'Notificaciones';

@@ -564,6 +564,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get prepPlusComboIncludesAccess => 'Full question bank access';
 
   @override
+  String get prepPlusAccessLifetime => 'Lifetime access';
+
+  @override
+  String get prepPlusAccessLifetimeSubtitle => 'Practice with no time limit';
+
+  @override
+  String get prepPlusAccessOwnedBadge => 'Yours forever';
+
+  @override
+  String get prepPlusAccessOwnedTitle => 'You have lifetime access';
+
+  @override
+  String get prepPlusAccessOwnedSubtitle =>
+      'Practice anytime with no expiration date';
+
+  @override
+  String get prepPlusAlreadyOwnedMessage =>
+      'You already have lifetime access to this quiz';
+
+  @override
   String get prepPlusSelectDuration => 'Access duration';
 
   @override
@@ -4058,6 +4078,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get prepAdminOffersSection => 'Pricing matrix';
 
   @override
+  String get prepAdminLifetimeOfferSection => 'Lifetime access';
+
+  @override
+  String get prepAdminTimedOffersSection => 'Timed access';
+
+  @override
   String get prepAdminSamplesSection => 'Sample questions';
 
   @override
@@ -4405,6 +4431,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorPrepAppStoreNotConfigured =>
       'App Store is not configured. Use mock payments in development.';
+
+  @override
+  String get errorPrepLifetimeOfferDuplicate =>
+      'Only one lifetime access offer is allowed per item.';
 
   @override
   String get notificationsTitle => 'Notifications';

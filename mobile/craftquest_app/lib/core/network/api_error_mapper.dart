@@ -504,6 +504,10 @@ abstract final class ApiErrorMapper {
         return l10n.errorPrepGooglePlayNotConfigured;
       case 'PREP_APP_STORE_NOT_CONFIGURED':
         return l10n.errorPrepAppStoreNotConfigured;
+      case 'PREP_ALREADY_OWNED':
+        return l10n.prepPlusAlreadyOwnedMessage;
+      case 'PREP_LIFETIME_OFFER_DUPLICATE':
+        return l10n.errorPrepLifetimeOfferDuplicate;
       default:
         return _mapLegacyEnglishTitle(data['title'] as String?, l10n);
     }

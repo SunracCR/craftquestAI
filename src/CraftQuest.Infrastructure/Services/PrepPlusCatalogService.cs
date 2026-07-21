@@ -182,12 +182,13 @@ public class PrepPlusCatalogService(
                     a.UserId == userId
                     && a.AccessType == "purchase"
                     && a.PrepCatalogItemId == i.CatalogItemId
-                    && a.ExpiresAt > now)),
+                    && (a.IsLifetimeAccess || (a.ExpiresAt != null && a.ExpiresAt > now)))),
             "expired" => query.Where(i =>
                 dbContext.QuizAccesses.Any(a =>
                     a.UserId == userId
                     && a.AccessType == "purchase"
                     && a.PrepCatalogItemId == i.CatalogItemId
+                    && !a.IsLifetimeAccess
                     && a.ExpiresAt != null
                     && a.ExpiresAt <= now)),
             "none" => query.Where(i =>
@@ -225,18 +226,21 @@ public class PrepPlusCatalogService(
             Tags = DeserializeTags(item.TagsJson),
             InstitutionTag = item.InstitutionTag,
             QuestionCount = questionCount,
-            CanPurchase = CanPurchase(item, now),
+            CanPurchase = CanPurchase(item, now) && state != "owned",
             ListingEndsAt = item.ListingEndsAt,
             UserAccessState = state,
             AccessExpiresAt = access?.ExpiresAt,
-            CanPractice = state == "active",
+            IsLifetimeAccess = access?.IsLifetimeAccess ?? false,
+            CanPractice = state is "active" or "owned",
             Offers = item.AccessOffers
                 .Where(o => o.IsActive)
-                .OrderBy(o => o.DurationDays)
+                .OrderBy(o => o.IsLifetimeAccess)
+                .ThenBy(o => o.DurationDays)
                 .Select(o => new PrepAccessOfferDto
                 {
                     OfferId = o.OfferId,
                     DurationDays = o.DurationDays,
+                    IsLifetimeAccess = o.IsLifetimeAccess,
                     PriceAmount = o.PriceAmount,
                     CurrencyCode = o.CurrencyCode,
                     IsFree = o.IsFree,
@@ -551,17 +555,18 @@ public class PrepPlusCatalogService(
                     Title = item.TitleOverride ?? item.Quiz.Title,
                     QuestionCount = questionCounts.GetValueOrDefault(item.QuizId),
                     GrantedAt = access.GrantedAt,
-                    ExpiresAt = access.ExpiresAt ?? access.GrantedAt,
-                    CanPractice = access.ExpiresAt > now,
-                    CanPurchase = CanPurchase(item, now),
+                    ExpiresAt = access.ExpiresAt,
+                    IsLifetimeAccess = access.IsLifetimeAccess,
+                    CanPractice = access.IsLifetimeAccess || access.ExpiresAt > now,
+                    CanPurchase = CanPurchase(item, now) && !access.IsLifetimeAccess,
                     LastPracticedAt = access.LastPracticedAt,
                 };
 
-                if (access.ExpiresAt > now)
+                if (access.IsLifetimeAccess || access.ExpiresAt > now)
                 {
                     active.Add(dto);
                 }
-                else
+                else if (access.ExpiresAt is not null)
                 {
                     expired.Add(dto);
                 }
@@ -611,10 +616,17 @@ public class PrepPlusCatalogService(
             };
         }
 
-        var expiresAt = await prepPlusAccessService.GrantOrExtendPurchaseAccessAsync(
+        await prepPlusAccessService.EnsureCanPurchaseOfferAsync(
+            userId,
+            item.QuizId,
+            offer.IsLifetimeAccess,
+            cancellationToken);
+
+        var grant = await prepPlusAccessService.GrantOrExtendPurchaseAccessAsync(
             userId,
             item.CatalogItemId,
             item.QuizId,
+            offer.IsLifetimeAccess,
             offer.DurationDays,
             purchaseId: null,
             cancellationToken);
@@ -625,8 +637,11 @@ public class PrepPlusCatalogService(
         {
             Status = "granted",
             RequiresPayment = false,
-            AccessExpiresAt = expiresAt,
-            Message = "Free access granted.",
+            AccessExpiresAt = grant.AccessExpiresAt,
+            IsLifetimeAccess = grant.IsLifetimeAccess,
+            Message = offer.IsLifetimeAccess
+                ? "Permanent access granted."
+                : "Free access granted.",
         };
     }
 
@@ -793,7 +808,11 @@ public class PrepPlusCatalogService(
 
         return accesses
             .GroupBy(a => a.PrepCatalogItemId!.Value)
-            .ToDictionary(g => g.Key, g => g.OrderByDescending(a => a.ExpiresAt).First());
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderByDescending(a => a.IsLifetimeAccess)
+                    .ThenByDescending(a => a.ExpiresAt)
+                    .First());
     }
 
     private async Task<QuizAccess?> GetPurchaseAccessAsync(
@@ -808,7 +827,8 @@ public class PrepPlusCatalogService(
                 && a.QuizId == quizId
                 && a.AccessType == "purchase"
                 && a.PrepCatalogItemId == catalogItemId)
-            .OrderByDescending(a => a.ExpiresAt)
+            .OrderByDescending(a => a.IsLifetimeAccess)
+            .ThenByDescending(a => a.ExpiresAt)
             .FirstOrDefaultAsync(cancellationToken);
     }
 
@@ -820,12 +840,14 @@ public class PrepPlusCatalogService(
 
     private static string ResolveAccessState(QuizAccess? access, DateTime now)
     {
-        if (access is null || access.ExpiresAt is null)
+        if (access is null)
         {
             return "none";
         }
 
-        return access.ExpiresAt > now ? "active" : "expired";
+        return PrepPlusAccessRules.ResolveAccessState(
+            new QuizAccessSnapshot(access.AccessType, access.IsLifetimeAccess, access.ExpiresAt),
+            now);
     }
 
     private static PrepCatalogBrowseItemDto MapBrowseItem(
@@ -853,7 +875,8 @@ public class PrepPlusCatalogService(
             CurrencyCode = paidOffers.FirstOrDefault()?.CurrencyCode,
             UserAccessState = userAccessState,
             AccessExpiresAt = access?.ExpiresAt,
-            CanPurchase = CanPurchase(item, now),
+            IsLifetimeAccess = access?.IsLifetimeAccess ?? false,
+            CanPurchase = CanPurchase(item, now) && userAccessState != "owned",
         };
     }
 

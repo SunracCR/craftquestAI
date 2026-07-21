@@ -184,6 +184,7 @@ public class PrepReferralService(
             referral.ReferrerUserId,
             catalogItemId,
             quizId,
+            isLifetimeAccess: false,
             RewardDays,
             purchaseId: null,
             cancellationToken);

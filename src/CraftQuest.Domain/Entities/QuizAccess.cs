@@ -12,6 +12,7 @@ public class QuizAccess
     public DateTime GrantedAt { get; set; }
     public DateTime? LastPracticedAt { get; set; }
     public DateTime? ExpiresAt { get; set; }
+    public bool IsLifetimeAccess { get; set; }
     public Guid? GrantedByPurchaseId { get; set; }
     public Guid? PrepCatalogItemId { get; set; }
 

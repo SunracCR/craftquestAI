@@ -50,7 +50,15 @@ public class PrepPlusPaymentService(
         var now = DateTime.UtcNow;
         var productCode = BuildProductCode(catalogItemId, offerId);
         var title = item.TitleOverride ?? item.Quiz.Title;
-        var description = $"Preparación+ · {title} · {offer.DurationDays} days";
+        var description = offer.IsLifetimeAccess
+            ? $"Preparación+ · {title} · Acceso definitivo"
+            : $"Preparación+ · {title} · {offer.DurationDays} days";
+
+        await prepPlusAccessService.EnsureCanPurchaseOfferAsync(
+            userId,
+            item.QuizId,
+            offer.IsLifetimeAccess,
+            cancellationToken);
 
         if (options.Value.UseMockPayments)
         {
@@ -176,6 +184,12 @@ public class PrepPlusPaymentService(
             ValidateStoreConfigured(platform);
         }
 
+        await prepPlusAccessService.EnsureCanPurchaseOfferAsync(
+            userId,
+            item.QuizId,
+            offer.IsLifetimeAccess,
+            cancellationToken);
+
         var providerCode = platform == "google_play" ? "google_play" : "app_store";
         var transactionId = request.TransactionId ?? request.PurchaseToken;
         var productCode = BuildProductCode(request.CatalogItemId, request.OfferId);
@@ -241,10 +255,17 @@ public class PrepPlusPaymentService(
         purchase.Status = "validated";
         purchase.PurchasedAt = DateTime.UtcNow;
 
-        var expiresAt = await prepPlusAccessService.GrantOrExtendPurchaseAccessAsync(
+        await prepPlusAccessService.EnsureCanPurchaseOfferAsync(
+            purchase.UserId,
+            offer.CatalogItem.QuizId,
+            offer.IsLifetimeAccess,
+            cancellationToken);
+
+        var grant = await prepPlusAccessService.GrantOrExtendPurchaseAccessAsync(
             purchase.UserId,
             catalogItemId,
             offer.CatalogItem.QuizId,
+            offer.IsLifetimeAccess,
             offer.DurationDays,
             purchase.PurchaseId,
             cancellationToken);
@@ -265,8 +286,11 @@ public class PrepPlusPaymentService(
             Status = "granted",
             PurchaseId = purchase.PurchaseId,
             RequiresPayment = false,
-            AccessExpiresAt = expiresAt,
-            Message = "Access granted.",
+            AccessExpiresAt = grant.AccessExpiresAt,
+            IsLifetimeAccess = grant.IsLifetimeAccess,
+            Message = offer.IsLifetimeAccess
+                ? "Permanent access granted."
+                : "Access granted.",
         };
     }
 
@@ -277,7 +301,8 @@ public class PrepPlusPaymentService(
         var access = await dbContext.QuizAccesses
             .AsNoTracking()
             .Where(a => a.GrantedByPurchaseId == purchase.PurchaseId)
-            .OrderByDescending(a => a.ExpiresAt)
+            .OrderByDescending(a => a.IsLifetimeAccess)
+            .ThenByDescending(a => a.ExpiresAt)
             .FirstOrDefaultAsync(cancellationToken);
 
         return new PrepCheckoutResultDto
@@ -286,6 +311,7 @@ public class PrepPlusPaymentService(
             PurchaseId = purchase.PurchaseId,
             RequiresPayment = false,
             AccessExpiresAt = access?.ExpiresAt,
+            IsLifetimeAccess = access?.IsLifetimeAccess ?? false,
             Message = "Access already active.",
         };
     }

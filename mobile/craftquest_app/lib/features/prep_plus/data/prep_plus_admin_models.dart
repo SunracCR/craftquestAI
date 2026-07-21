@@ -122,6 +122,7 @@ class PrepAdminOfferModel {
   const PrepAdminOfferModel({
     required this.offerId,
     required this.durationDays,
+    this.isLifetimeAccess = false,
     required this.priceAmount,
     required this.currencyCode,
     required this.isFree,
@@ -133,6 +134,7 @@ class PrepAdminOfferModel {
     return PrepAdminOfferModel(
       offerId: json['offerId'] as String,
       durationDays: json['durationDays'] as int,
+      isLifetimeAccess: json['isLifetimeAccess'] as bool? ?? false,
       priceAmount: (json['priceAmount'] as num).toDouble(),
       currencyCode: json['currencyCode'] as String? ?? 'USD',
       isFree: json['isFree'] as bool? ?? false,
@@ -143,6 +145,7 @@ class PrepAdminOfferModel {
 
   final String offerId;
   final int durationDays;
+  final bool isLifetimeAccess;
   final double priceAmount;
   final String currencyCode;
   final bool isFree;

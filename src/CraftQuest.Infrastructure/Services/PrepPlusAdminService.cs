@@ -405,14 +405,20 @@ public class PrepPlusAdminService(
 
         ValidateOffers(request.Offers);
 
-        var existingByDuration = entity.AccessOffers.ToDictionary(o => o.DurationDays);
-        var requestedDurations = new HashSet<int>();
+        var existingByKey = entity.AccessOffers.ToDictionary(o => OfferKey(o.IsLifetimeAccess, o.DurationDays));
+        var requestedKeys = new HashSet<(bool IsLifetime, int DurationDays)>();
 
         foreach (var input in request.Offers)
         {
-            requestedDurations.Add(input.DurationDays);
-            if (existingByDuration.TryGetValue(input.DurationDays, out var offer))
+            var isLifetime = input.IsLifetimeAccess;
+            var durationDays = isLifetime ? PrepPlusConstants.LifetimeDurationDays : input.DurationDays;
+            var key = OfferKey(isLifetime, durationDays);
+            requestedKeys.Add(key);
+
+            if (existingByKey.TryGetValue(key, out var offer))
             {
+                offer.IsLifetimeAccess = isLifetime;
+                offer.DurationDays = durationDays;
                 offer.PriceAmount = input.IsFree ? 0 : input.PriceAmount;
                 offer.CurrencyCode = input.CurrencyCode.Trim().ToUpperInvariant();
                 offer.IsFree = input.IsFree;
@@ -425,7 +431,8 @@ public class PrepPlusAdminService(
                 {
                     OfferId = Guid.NewGuid(),
                     CatalogItemId = catalogItemId,
-                    DurationDays = input.DurationDays,
+                    IsLifetimeAccess = isLifetime,
+                    DurationDays = durationDays,
                     PriceAmount = input.IsFree ? 0 : input.PriceAmount,
                     CurrencyCode = input.CurrencyCode.Trim().ToUpperInvariant(),
                     IsFree = input.IsFree,
@@ -435,7 +442,7 @@ public class PrepPlusAdminService(
             }
         }
 
-        foreach (var offer in entity.AccessOffers.Where(o => !requestedDurations.Contains(o.DurationDays)))
+        foreach (var offer in entity.AccessOffers.Where(o => !requestedKeys.Contains(OfferKey(o.IsLifetimeAccess, o.DurationDays))))
         {
             offer.IsActive = false;
         }
@@ -722,6 +729,9 @@ public class PrepPlusAdminService(
         }
     }
 
+    private static (bool IsLifetime, int DurationDays) OfferKey(bool isLifetimeAccess, int durationDays) =>
+        (isLifetimeAccess, isLifetimeAccess ? PrepPlusConstants.LifetimeDurationDays : durationDays);
+
     private static void ValidateOffers(IReadOnlyList<UpsertPrepAccessOfferInput> offers)
     {
         if (offers.Count == 0)
@@ -732,9 +742,29 @@ public class PrepPlusAdminService(
                 PrepPlusErrorCodes.OffersRequired);
         }
 
+        var lifetimeCount = offers.Count(o => o.IsLifetimeAccess);
+        if (lifetimeCount > 1)
+        {
+            throw new AppException(
+                "Only one lifetime offer is allowed per catalog item.",
+                400,
+                PrepPlusErrorCodes.LifetimeOfferDuplicate);
+        }
+
         foreach (var offer in offers)
         {
-            if (!PrepPlusConstants.AllowedDurationDays.Contains(offer.DurationDays))
+            if (offer.IsLifetimeAccess)
+            {
+                if (offer.DurationDays != 0
+                    && offer.DurationDays != PrepPlusConstants.LifetimeDurationDays)
+                {
+                    throw new AppException(
+                        "Lifetime offers must use duration 0.",
+                        400,
+                        PrepPlusErrorCodes.InvalidDuration);
+                }
+            }
+            else if (!PrepPlusConstants.AllowedDurationDays.Contains(offer.DurationDays))
             {
                 throw new AppException(
                     $"Invalid duration. Allowed: {string.Join(", ", PrepPlusConstants.AllowedDurationDays)}.",
@@ -748,7 +778,8 @@ public class PrepPlusAdminService(
             }
         }
 
-        if (offers.Select(o => o.DurationDays).Distinct().Count() != offers.Count)
+        if (offers.Count(o => !o.IsLifetimeAccess) !=
+            offers.Where(o => !o.IsLifetimeAccess).Select(o => o.DurationDays).Distinct().Count())
         {
             throw new AppException(
                 "Duplicate duration in offers.",
@@ -840,11 +871,13 @@ public class PrepPlusAdminService(
             IsDeleted = item.IsDeleted,
             QuestionCount = questionCount,
             Offers = item.AccessOffers
-                .OrderBy(o => o.DurationDays)
+                .OrderBy(o => o.IsLifetimeAccess)
+                .ThenBy(o => o.DurationDays)
                 .Select(o => new PrepAccessOfferDto
                 {
                     OfferId = o.OfferId,
                     DurationDays = o.DurationDays,
+                    IsLifetimeAccess = o.IsLifetimeAccess,
                     PriceAmount = o.PriceAmount,
                     CurrencyCode = o.CurrencyCode,
                     IsFree = o.IsFree,
