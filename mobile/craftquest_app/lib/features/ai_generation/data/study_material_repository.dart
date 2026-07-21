@@ -24,6 +24,7 @@ class StudyMaterialRepository {
     required String fileName,
     required List<int> bytes,
     String? title,
+    void Function(int sent, int total)? onUploadProgress,
   }) async {
     final formData = FormData.fromMap({
       'file': MultipartFile.fromBytes(bytes, filename: fileName),
@@ -33,6 +34,9 @@ class StudyMaterialRepository {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/api/study-materials',
       data: formData,
+      onSendProgress: onUploadProgress == null
+          ? null
+          : (sent, total) => onUploadProgress(sent, total),
     );
 
     return StudyMaterialUploadResult.fromJson(response.data!);

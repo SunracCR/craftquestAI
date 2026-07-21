@@ -12,6 +12,7 @@ import 'package:craftquest_app/core/widgets/user_avatar.dart';
 import 'package:craftquest_app/core/widgets/app_section_card.dart';
 import 'package:craftquest_app/core/widgets/app_section_title.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
+import 'package:craftquest_app/core/utils/ai_generation_allowance.dart';
 import 'package:craftquest_app/core/utils/billing_display.dart';
 import 'package:craftquest_app/core/billing/checkout_refresh_notifier.dart';
 import 'package:craftquest_app/core/utils/home_teacher_banner_prefs.dart';
@@ -427,9 +428,13 @@ class _HomePageState extends State<HomePage> {
                                     AppHighlightStatRow(
                                       icon: Icons.auto_awesome_outlined,
                                       label: l10n.billingCreditsLabel(
+                                        AiGenerationAllowance.estimateGenerations(
+                                          _billing!.credits.aiCredits,
+                                        ),
                                         _billing!.credits.aiCredits,
                                       ),
-                                      value: '${_billing!.credits.aiCredits}',
+                                      value:
+                                          '~${AiGenerationAllowance.estimateGenerations(_billing!.credits.aiCredits)}',
                                       color: AppColors.accentViolet,
                                     ),
                                     if (subscriptionRenewalLine != null) ...[

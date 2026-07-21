@@ -8,6 +8,7 @@ using CraftQuest.Infrastructure.Security;
 using CraftQuest.Infrastructure.Services;
 using CraftQuest.UnitTests.Billing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
 namespace CraftQuest.UnitTests.Auth;
@@ -191,7 +192,8 @@ public class AuthServiceEmailVerificationTests
                 LinkBaseUrl = "https://api.craftquestai.com",
                 WebAppUrl = "https://app.craftquestai.com",
             }),
-            Options.Create(new ExternalAuthOptions()));
+            Options.Create(new ExternalAuthOptions()),
+            NullLogger<AuthService>.Instance);
     }
 
     private static CraftQuestDbContext CreateDb()

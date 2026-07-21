@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
@@ -27,12 +29,59 @@ class _AiActivityPageState extends State<AiActivityPage> {
   List<AiJobSummaryModel>? _jobs;
   bool _loading = true;
   bool _clearing = false;
+  bool _silentRefreshing = false;
   String? _error;
+  Timer? _autoRefreshTimer;
+
+  static const _activePollInterval = Duration(seconds: 2);
+
+  bool get _hasActiveJobs => (_jobs ?? []).any((job) => job.isActive);
 
   @override
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _autoRefreshTimer?.cancel();
+    super.dispose();
+  }
+
+  void _syncAutoRefreshTimer() {
+    _autoRefreshTimer?.cancel();
+    _autoRefreshTimer = null;
+    if (!_hasActiveJobs || !mounted) {
+      return;
+    }
+    _autoRefreshTimer = Timer.periodic(_activePollInterval, (_) {
+      unawaited(_refreshSilently());
+    });
+  }
+
+  Future<void> _refreshSilently() async {
+    if (!mounted || _loading || _clearing || _silentRefreshing) {
+      return;
+    }
+    setState(() => _silentRefreshing = true);
+    try {
+      final jobs = await _repository.listJobs(filter: 'inbox');
+      if (!mounted) return;
+      setState(() => _jobs = jobs);
+      if (!_hasActiveJobs) {
+        _autoRefreshTimer?.cancel();
+        _autoRefreshTimer = null;
+      }
+    } on DioException {
+      // Polling silencioso: no interrumpir la lista por un fallo puntual.
+    } catch (_) {
+      // Ignorar errores transitorios en auto-refresh.
+    } finally {
+      if (mounted) {
+        setState(() => _silentRefreshing = false);
+      }
+    }
   }
 
   Future<void> _load() async {
@@ -47,6 +96,7 @@ class _AiActivityPageState extends State<AiActivityPage> {
         _jobs = jobs;
         _loading = false;
       });
+      _syncAutoRefreshTimer();
     } on DioException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -145,7 +195,7 @@ class _AiActivityPageState extends State<AiActivityPage> {
       ),
     ).then((_) {
       if (mounted) {
-        _load();
+        unawaited(_load());
       }
     });
   }
@@ -158,6 +208,17 @@ class _AiActivityPageState extends State<AiActivityPage> {
       appBar: craftQuestAppBar(
         title: l10n.aiActivityTitle,
         actions: [
+          if (_silentRefreshing)
+            const Padding(
+              padding: EdgeInsets.only(right: AppSpacing.sm),
+              child: Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            ),
           if (!_loading && _error == null && _hasClearableHistory)
             IconButton(
               tooltip: l10n.aiActivityClearHistoryAction,

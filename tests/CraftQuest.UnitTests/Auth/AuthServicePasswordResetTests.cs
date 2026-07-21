@@ -7,6 +7,7 @@ using CraftQuest.Infrastructure.Security;
 using CraftQuest.Infrastructure.Services;
 using CraftQuest.UnitTests.Billing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
 namespace CraftQuest.UnitTests.Auth;
@@ -115,7 +116,8 @@ public class AuthServicePasswordResetTests
             new StubAppleIdTokenValidator(),
             resetOptions,
             joinLinkOptions,
-            externalAuthOptions);
+            externalAuthOptions,
+            NullLogger<AuthService>.Instance);
     }
 
     private static CraftQuestDbContext CreateDb()

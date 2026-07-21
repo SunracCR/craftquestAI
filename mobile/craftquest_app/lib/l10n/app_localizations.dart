@@ -1043,21 +1043,39 @@ abstract class AppLocalizations {
   String get prepPlusComboIncludesAccess;
 
   /// No description provided for @prepPlusAccessLifetime.
+  ///
+  /// In es, this message translates to:
+  /// **'Acceso definitivo'**
   String get prepPlusAccessLifetime;
 
   /// No description provided for @prepPlusAccessLifetimeSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Practica sin límite de tiempo'**
   String get prepPlusAccessLifetimeSubtitle;
 
   /// No description provided for @prepPlusAccessOwnedBadge.
+  ///
+  /// In es, this message translates to:
+  /// **'Tuyo para siempre'**
   String get prepPlusAccessOwnedBadge;
 
   /// No description provided for @prepPlusAccessOwnedTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tienes acceso definitivo'**
   String get prepPlusAccessOwnedTitle;
 
   /// No description provided for @prepPlusAccessOwnedSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Puedes practicar cuando quieras, sin fecha de vencimiento'**
   String get prepPlusAccessOwnedSubtitle;
 
   /// No description provided for @prepPlusAlreadyOwnedMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya tienes acceso definitivo a este cuestionario'**
   String get prepPlusAlreadyOwnedMessage;
 
   /// No description provided for @prepPlusSelectDuration.
@@ -1107,6 +1125,60 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Practicar'**
   String get prepPlusPracticeAction;
+
+  /// No description provided for @prepPlusPracticeOptionsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Opciones de práctica'**
+  String get prepPlusPracticeOptionsTitle;
+
+  /// No description provided for @prepPlusPracticeOptionsSummaryDefault.
+  ///
+  /// In es, this message translates to:
+  /// **'Configuración estándar'**
+  String get prepPlusPracticeOptionsSummaryDefault;
+
+  /// No description provided for @prepPlusPracticeOptionRandom.
+  ///
+  /// In es, this message translates to:
+  /// **'Aleatorio'**
+  String get prepPlusPracticeOptionRandom;
+
+  /// No description provided for @prepPlusPracticeOptionTimer.
+  ///
+  /// In es, this message translates to:
+  /// **'Cronómetro'**
+  String get prepPlusPracticeOptionTimer;
+
+  /// No description provided for @prepPlusPracticeOptionSound.
+  ///
+  /// In es, this message translates to:
+  /// **'Sonido'**
+  String get prepPlusPracticeOptionSound;
+
+  /// No description provided for @prepPlusExpandDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver más'**
+  String get prepPlusExpandDescription;
+
+  /// No description provided for @prepPlusTrySimulationShort.
+  ///
+  /// In es, this message translates to:
+  /// **'3 preguntas de muestra · sin guardar resultados'**
+  String get prepPlusTrySimulationShort;
+
+  /// No description provided for @prepPlusProgressAnalyticsShort.
+  ///
+  /// In es, this message translates to:
+  /// **'Analítica'**
+  String get prepPlusProgressAnalyticsShort;
+
+  /// No description provided for @prepPlusProgressHistoryShort.
+  ///
+  /// In es, this message translates to:
+  /// **'Historial'**
+  String get prepPlusProgressHistoryShort;
 
   /// No description provided for @prepPlusBuyAction.
   ///
@@ -2883,8 +2955,8 @@ abstract class AppLocalizations {
   /// No description provided for @billingCreditsLabel.
   ///
   /// In es, this message translates to:
-  /// **'Créditos IA este mes: {credits}'**
-  String billingCreditsLabel(int credits);
+  /// **'~{generations} generaciones IA · {credits} cr.'**
+  String billingCreditsLabel(int generations, int credits);
 
   /// No description provided for @redeemCodeAction.
   ///
@@ -3477,14 +3549,14 @@ abstract class AppLocalizations {
   /// No description provided for @upgradeProHighlightAiCredits.
   ///
   /// In es, this message translates to:
-  /// **'150 créditos IA al mes (tu plan actual: 20)'**
+  /// **'~15 generaciones IA al mes (tu plan: ~3)'**
   String get upgradeProHighlightAiCredits;
 
   /// No description provided for @upgradePlanHighlightAiCredits.
   ///
   /// In es, this message translates to:
-  /// **'{credits} créditos IA al mes (tu plan actual: {currentCredits})'**
-  String upgradePlanHighlightAiCredits(int credits, int currentCredits);
+  /// **'~{generations} generaciones IA al mes (tu plan: ~{currentGenerations})'**
+  String upgradePlanHighlightAiCredits(int generations, int currentGenerations);
 
   /// No description provided for @upgradeProHighlightShared.
   ///
@@ -3507,7 +3579,7 @@ abstract class AppLocalizations {
   /// No description provided for @upgradeTeacherHighlightAiCredits.
   ///
   /// In es, this message translates to:
-  /// **'360 créditos IA al mes para más generaciones'**
+  /// **'~30 generaciones IA al mes (doble que Pro)'**
   String get upgradeTeacherHighlightAiCredits;
 
   /// No description provided for @upgradeTeacherHighlightClasses.
@@ -3882,6 +3954,54 @@ abstract class AppLocalizations {
   /// **'Analizando documento…'**
   String get aiGenerationProcessing;
 
+  /// No description provided for @aiPipelineUploadingTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Subiendo archivo'**
+  String get aiPipelineUploadingTitle;
+
+  /// No description provided for @aiPipelineUploadingSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviando tu material al servidor…'**
+  String get aiPipelineUploadingSubtitle;
+
+  /// No description provided for @aiPipelineUploadingPercent.
+  ///
+  /// In es, this message translates to:
+  /// **'{percent} % subido'**
+  String aiPipelineUploadingPercent(int percent);
+
+  /// No description provided for @aiPipelineAnalyzingTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Analizando material'**
+  String get aiPipelineAnalyzingTitle;
+
+  /// No description provided for @aiPipelineAnalyzingSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Extrayendo texto y preparando el documento para la IA…'**
+  String get aiPipelineAnalyzingSubtitle;
+
+  /// No description provided for @aiPipelineStepUploadDone.
+  ///
+  /// In es, this message translates to:
+  /// **'Archivo recibido'**
+  String get aiPipelineStepUploadDone;
+
+  /// No description provided for @aiPipelineStepExtracting.
+  ///
+  /// In es, this message translates to:
+  /// **'Extrayendo texto'**
+  String get aiPipelineStepExtracting;
+
+  /// No description provided for @aiPipelineStepPreparing.
+  ///
+  /// In es, this message translates to:
+  /// **'Preparando material'**
+  String get aiPipelineStepPreparing;
+
   /// No description provided for @aiGenerationNeedsOcr.
   ///
   /// In es, this message translates to:
@@ -4197,20 +4317,20 @@ abstract class AppLocalizations {
   /// No description provided for @aiCreditPacksSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Recarga créditos para seguir generando con IA. Los paquetes comprados no expiran; el cupo mensual del plan sí se reinicia cada mes.'**
+  /// **'Recarga para seguir generando con IA (~40 preg. por generación). Los paquetes no expiran; el cupo mensual del plan se reinicia cada mes.'**
   String get aiCreditPacksSubtitle;
 
   /// No description provided for @aiCreditPacksCurrentBalance.
   ///
   /// In es, this message translates to:
-  /// **'Saldo actual: {credits} créditos'**
-  String aiCreditPacksCurrentBalance(int credits);
+  /// **'Saldo: ~{generations} generaciones ({credits} cr.)'**
+  String aiCreditPacksCurrentBalance(int generations, int credits);
 
   /// No description provided for @aiCreditPacksCreditsLabel.
   ///
   /// In es, this message translates to:
-  /// **'{credits} créditos IA'**
-  String aiCreditPacksCreditsLabel(int credits);
+  /// **'~{generations} generaciones (~{credits} cr.)'**
+  String aiCreditPacksCreditsLabel(int generations, int credits);
 
   /// No description provided for @aiCreditPacksBuyForPrice.
   ///
@@ -4731,7 +4851,7 @@ abstract class AppLocalizations {
   /// No description provided for @guestRegisterBenefit3.
   ///
   /// In es, this message translates to:
-  /// **'Plan Free: 2 cuestionarios y 20 créditos IA, gratis'**
+  /// **'Plan Free: 2 cuestionarios y ~3 generaciones IA, gratis'**
   String get guestRegisterBenefit3;
 
   /// No description provided for @guestRegisterBenefit4.
@@ -6840,9 +6960,15 @@ abstract class AppLocalizations {
   String get prepAdminOffersSection;
 
   /// No description provided for @prepAdminLifetimeOfferSection.
+  ///
+  /// In es, this message translates to:
+  /// **'Acceso definitivo'**
   String get prepAdminLifetimeOfferSection;
 
   /// No description provided for @prepAdminTimedOffersSection.
+  ///
+  /// In es, this message translates to:
+  /// **'Acceso por duración'**
   String get prepAdminTimedOffersSection;
 
   /// No description provided for @prepAdminSamplesSection.
@@ -7446,6 +7572,9 @@ abstract class AppLocalizations {
   String get errorPrepAppStoreNotConfigured;
 
   /// No description provided for @errorPrepLifetimeOfferDuplicate.
+  ///
+  /// In es, this message translates to:
+  /// **'Solo puede haber una oferta de acceso definitivo por ítem.'**
   String get errorPrepLifetimeOfferDuplicate;
 
   /// No description provided for @notificationsTitle.

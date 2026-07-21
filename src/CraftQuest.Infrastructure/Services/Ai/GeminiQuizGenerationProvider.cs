@@ -79,6 +79,8 @@ public class GeminiQuizGenerationProvider(
             genOptions,
             cancellationToken);
 
+        await jobProgress.UpdateAsync(AiJobStages.Outlining, 18, cancellationToken);
+
         if (chunks.Count == 1)
         {
             var outlineItems = outline?.Items.ToList();
@@ -100,14 +102,20 @@ public class GeminiQuizGenerationProvider(
             cancellationToken);
     }
 
-    private async Task ReportChunkProgressAsync(int completed, int total, CancellationToken cancellationToken)
+    private async Task ReportChunkProgressAsync(
+        int started,
+        int completed,
+        int total,
+        CancellationToken cancellationToken)
     {
         if (total <= 0)
         {
             return;
         }
 
-        var percent = 20 + (int)Math.Round(50.0 * completed / total);
+        var weighted = 0.35 * started + 0.65 * completed;
+        var percent = 20 + (int)Math.Round(50.0 * weighted / total);
+        percent = Math.Clamp(percent, 20, 70);
         await jobProgress.UpdateAsync(AiJobStages.Generating, percent, cancellationToken);
     }
 
@@ -182,6 +190,7 @@ public class GeminiQuizGenerationProvider(
         using var gate = new SemaphoreSlim(maxParallel, maxParallel);
         var generationConfig = new { temperature = 0.2, responseMimeType = "application/json" };
         var completedChunks = 0;
+        var startedChunks = 0;
 
         await jobProgress.UpdateAsync(AiJobStages.Generating, 20, cancellationToken);
 
@@ -195,6 +204,9 @@ public class GeminiQuizGenerationProvider(
                 {
                     return new CqifDocument { CqifVersion = "2.0", Questions = [] };
                 }
+
+                var started = Interlocked.Increment(ref startedChunks);
+                await ReportChunkProgressAsync(started, completedChunks, chunks.Count, cancellationToken);
 
                 var prompt = BuildPrompt(
                     chunkText,
@@ -218,7 +230,7 @@ public class GeminiQuizGenerationProvider(
                     cancellationToken);
                 trace.DocumentSnapshot($"chunk-{index + 1}-parsed", doc);
                 var done = Interlocked.Increment(ref completedChunks);
-                await ReportChunkProgressAsync(done, chunks.Count, cancellationToken);
+                await ReportChunkProgressAsync(startedChunks, done, chunks.Count, cancellationToken);
                 return doc;
             }
             finally
@@ -271,20 +283,36 @@ public class GeminiQuizGenerationProvider(
             outlineItems);
         var generationConfig = new { temperature = 0.2, responseMimeType = "application/json" };
         trace.Prompt("single-chunk", prompt);
-        var result = await geminiClient.GenerateTextAsync(
-            prompt,
-            generationConfig,
-            "Gemini quiz generation",
-            cancellationToken);
+        await jobProgress.UpdateAsync(AiJobStages.Generating, 28, cancellationToken);
 
-        var document = await ParseOrRepairAsync(result.Text, result.Model, "single-chunk", cancellationToken);
-        trace.DocumentSnapshot("single-chunk-parsed", document);
-        var merged = QuizGenerationQuestionMerger.Merge(
-            [document],
-            questionCount,
-            generationOptions.Value.DeduplicateMergedQuestions);
-        trace.DocumentSnapshot("single-chunk-merged", merged);
-        return merged;
+        await using (var heartbeat = AiGenerationProgressHeartbeat.Start(
+                         jobProgress,
+                         floorPercent: 28,
+                         ceilingPercent: 68,
+                         cancellationToken))
+        {
+            var result = await geminiClient.GenerateTextAsync(
+                prompt,
+                generationConfig,
+                "Gemini quiz generation",
+                cancellationToken);
+
+            heartbeat.BumpTo(40);
+            await jobProgress.UpdateAsync(AiJobStages.Generating, 40, cancellationToken);
+
+            var document = await ParseOrRepairAsync(result.Text, result.Model, "single-chunk", cancellationToken);
+            trace.DocumentSnapshot("single-chunk-parsed", document);
+            heartbeat.BumpTo(55);
+            await jobProgress.UpdateAsync(AiJobStages.Generating, 55, cancellationToken);
+
+            var merged = QuizGenerationQuestionMerger.Merge(
+                [document],
+                questionCount,
+                generationOptions.Value.DeduplicateMergedQuestions);
+            trace.DocumentSnapshot("single-chunk-merged", merged);
+            await jobProgress.UpdateAsync(AiJobStages.Generating, 65, cancellationToken);
+            return merged;
+        }
     }
 
     private async Task<CqifDocument> ParseOrRepairAsync(

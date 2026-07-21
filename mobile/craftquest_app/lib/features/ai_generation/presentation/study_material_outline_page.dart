@@ -1,7 +1,9 @@
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/api_error_mapper.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
+import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
+import 'package:craftquest_app/core/utils/smoothed_progress_controller.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/features/ai_generation/ai_generation_limits.dart';
@@ -9,6 +11,7 @@ import 'package:craftquest_app/features/ai_generation/data/study_material_reposi
 import 'package:craftquest_app/features/ai_generation/presentation/quiz_generation_parameters_page.dart';
 import 'package:craftquest_app/features/ai_generation/presentation/study_material_review_text_page.dart';
 import 'package:craftquest_app/features/ai_generation/presentation/study_material_upload_page.dart';
+import 'package:craftquest_app/features/ai_generation/presentation/widgets/ai_pipeline_progress_card.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -21,11 +24,13 @@ class StudyMaterialOutlinePage extends StatefulWidget {
     required this.studyMaterialId,
     this.targetQuizId,
     this.targetQuizTitle,
+    this.fileName,
   });
 
   final String studyMaterialId;
   final String? targetQuizId;
   final String? targetQuizTitle;
+  final String? fileName;
 
   @override
   State<StudyMaterialOutlinePage> createState() => _StudyMaterialOutlinePageState();
@@ -33,6 +38,7 @@ class StudyMaterialOutlinePage extends StatefulWidget {
 
 class _StudyMaterialOutlinePageState extends State<StudyMaterialOutlinePage> {
   final _repository = getIt<StudyMaterialRepository>();
+  final _analysisProgress = EstimatedAnalysisProgressController();
   bool _loading = true;
   String? _error;
   String? _errorDetail;
@@ -42,7 +48,20 @@ class _StudyMaterialOutlinePageState extends State<StudyMaterialOutlinePage> {
   @override
   void initState() {
     super.initState();
+    _analysisProgress.addListener(_onProgressTick);
+    _analysisProgress.start();
     _poll();
+  }
+
+  @override
+  void dispose() {
+    _analysisProgress.removeListener(_onProgressTick);
+    _analysisProgress.disposeController();
+    super.dispose();
+  }
+
+  void _onProgressTick() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _poll() async {
@@ -59,6 +78,7 @@ class _StudyMaterialOutlinePageState extends State<StudyMaterialOutlinePage> {
         if (!mounted) return;
 
         if (detail.processingStatus == 'failed') {
+          _analysisProgress.stop();
           final l10n = AppLocalizations.of(context)!;
           final pageLimit = ApiErrorMapper.isMaterialPageLimitFailure(
             detail.errorMessage,
@@ -88,6 +108,7 @@ class _StudyMaterialOutlinePageState extends State<StudyMaterialOutlinePage> {
         }
 
         if (detail.isReady) {
+          _analysisProgress.stop();
           if (detail.requiresTextReview) {
             if (!mounted) return;
             await Navigator.of(context).pushReplacement(
@@ -121,6 +142,7 @@ class _StudyMaterialOutlinePageState extends State<StudyMaterialOutlinePage> {
         await Future<void>.delayed(const Duration(seconds: 2));
       } on DioException catch (e) {
         if (!mounted) return;
+        _analysisProgress.stop();
         setState(() {
           _error = DioErrorMapper.map(e);
           _loading = false;
@@ -128,6 +150,7 @@ class _StudyMaterialOutlinePageState extends State<StudyMaterialOutlinePage> {
         return;
       } catch (_) {
         if (!mounted) return;
+        _analysisProgress.stop();
         setState(() {
           _error = DioErrorMapper.genericMessage();
           _loading = false;
@@ -145,6 +168,59 @@ class _StudyMaterialOutlinePageState extends State<StudyMaterialOutlinePage> {
           targetQuizTitle: widget.targetQuizTitle,
         ),
       ),
+    );
+  }
+
+  Widget _analysisSteps(AppLocalizations l10n) {
+    final percent = _analysisProgress.displayPercent;
+    final step = percent < 30
+        ? 0
+        : percent < 55
+            ? 1
+            : 2;
+
+    Widget row(int index, String label) {
+      final done = index < step;
+      final active = index == step;
+      return Padding(
+        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+        child: Row(
+          children: [
+            Icon(
+              done
+                  ? Icons.check_circle_rounded
+                  : active
+                      ? Icons.radio_button_checked_rounded
+                      : Icons.radio_button_off_rounded,
+              size: 20,
+              color: done
+                  ? AppColors.accentMint
+                  : active
+                      ? AppColors.accentCool
+                      : AppColors.textSecondary.withValues(alpha: 0.5),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                label,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                      color: active ? AppColors.textPrimary : AppColors.textSecondary,
+                    ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        row(0, l10n.aiPipelineStepUploadDone),
+        row(1, l10n.aiPipelineStepExtracting),
+        row(2, l10n.aiPipelineStepPreparing),
+      ],
     );
   }
 
@@ -170,15 +246,22 @@ class _StudyMaterialOutlinePageState extends State<StudyMaterialOutlinePage> {
 
     return EdgeAwareScaffold(
       appBar: craftQuestAppBar(title: l10n.aiGenerationOutlineTitle),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (_loading) const AppLoadingView(),
-            const SizedBox(height: AppSpacing.md),
-            Text(l10n.aiGenerationProcessing),
+      body: ListView(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        children: [
+          AiPipelineProgressCard(
+            title: l10n.aiPipelineAnalyzingTitle,
+            subtitle: widget.fileName ?? l10n.aiPipelineAnalyzingSubtitle,
+            percent: _analysisProgress.displayPercent,
+            l10n: l10n,
+            showStalledPulse: _analysisProgress.displayPercent >= 55,
+            footer: _analysisSteps(l10n),
+          ),
+          if (_loading) ...[
+            const SizedBox(height: AppSpacing.lg),
+            const Center(child: AppLoadingView()),
           ],
-        ),
+        ],
       ),
     );
   }

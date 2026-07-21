@@ -569,8 +569,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get prepPlusAccessLifetime => 'Acesso definitivo';
 
   @override
-  String get prepPlusAccessLifetimeSubtitle =>
-      'Pratique sem limite de tempo';
+  String get prepPlusAccessLifetimeSubtitle => 'Pratique sem limite de tempo';
 
   @override
   String get prepPlusAccessOwnedBadge => 'Seu para sempre';
@@ -617,6 +616,34 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get prepPlusPracticeAction => 'Praticar';
+
+  @override
+  String get prepPlusPracticeOptionsTitle => 'Opções de prática';
+
+  @override
+  String get prepPlusPracticeOptionsSummaryDefault => 'Configuração padrão';
+
+  @override
+  String get prepPlusPracticeOptionRandom => 'Aleatório';
+
+  @override
+  String get prepPlusPracticeOptionTimer => 'Cronômetro';
+
+  @override
+  String get prepPlusPracticeOptionSound => 'Som';
+
+  @override
+  String get prepPlusExpandDescription => 'Ver mais';
+
+  @override
+  String get prepPlusTrySimulationShort =>
+      '3 perguntas de amostra · sem salvar resultados';
+
+  @override
+  String get prepPlusProgressAnalyticsShort => 'Análise';
+
+  @override
+  String get prepPlusProgressHistoryShort => 'Histórico';
 
   @override
   String get prepPlusBuyAction => 'Comprar acesso';
@@ -1708,8 +1735,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String get billingQuizzesUnlimited => 'Questionarios: Ilimitados';
 
   @override
-  String billingCreditsLabel(int credits) {
-    return 'Creditos IA deste mes: $credits';
+  String billingCreditsLabel(int generations, int credits) {
+    return '~$generations geracoes IA · $credits cr.';
   }
 
   @override
@@ -2098,11 +2125,14 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get upgradeProHighlightAiCredits =>
-      '150 creditos IA por mes (seu plano atual: 20)';
+      '~15 geracoes IA por mes (seu plano: ~3)';
 
   @override
-  String upgradePlanHighlightAiCredits(int credits, int currentCredits) {
-    return '$credits creditos IA por mes (seu plano atual: $currentCredits)';
+  String upgradePlanHighlightAiCredits(
+    int generations,
+    int currentGenerations,
+  ) {
+    return '~$generations geracoes IA por mes (seu plano: ~$currentGenerations)';
   }
 
   @override
@@ -2118,7 +2148,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get upgradeTeacherHighlightAiCredits =>
-      '360 creditos IA por mes para mais geracoes';
+      '~30 geracoes IA por mes (2× Pro)';
 
   @override
   String get upgradeTeacherHighlightClasses => 'Turmas e grupos de estudantes';
@@ -2351,6 +2381,34 @@ class AppLocalizationsPt extends AppLocalizations {
   String get aiGenerationProcessing => 'A analisar documento…';
 
   @override
+  String get aiPipelineUploadingTitle => 'Enviando arquivo';
+
+  @override
+  String get aiPipelineUploadingSubtitle =>
+      'Enviando seu material para o servidor…';
+
+  @override
+  String aiPipelineUploadingPercent(int percent) {
+    return '$percent% enviado';
+  }
+
+  @override
+  String get aiPipelineAnalyzingTitle => 'Analisando material';
+
+  @override
+  String get aiPipelineAnalyzingSubtitle =>
+      'Extraindo texto e preparando o documento para a IA…';
+
+  @override
+  String get aiPipelineStepUploadDone => 'Arquivo recebido';
+
+  @override
+  String get aiPipelineStepExtracting => 'Extraindo texto';
+
+  @override
+  String get aiPipelineStepPreparing => 'Preparando material';
+
+  @override
   String get aiGenerationNeedsOcr =>
       'Pouco texto detetado. Use PDF ou Word com texto selecionavel, ou revise e cole o conteudo.';
 
@@ -2543,16 +2601,16 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get aiCreditPacksSubtitle =>
-      'Recarregue creditos para continuar gerando com IA. Pacotes comprados nao expiram; a cota mensal do plano reinicia a cada mes.';
+      'Recarregue para continuar gerando com IA (~40 perguntas por geracao). Pacotes nao expiram; a cota mensal do plano reinicia a cada mes.';
 
   @override
-  String aiCreditPacksCurrentBalance(int credits) {
-    return 'Saldo atual: $credits creditos';
+  String aiCreditPacksCurrentBalance(int generations, int credits) {
+    return 'Saldo: ~$generations geracoes ($credits cr.)';
   }
 
   @override
-  String aiCreditPacksCreditsLabel(int credits) {
-    return '$credits creditos IA';
+  String aiCreditPacksCreditsLabel(int generations, int credits) {
+    return '~$generations geracoes (~$credits cr.)';
   }
 
   @override
@@ -2858,7 +2916,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get guestRegisterBenefit3 =>
-      'Plano Free: 2 questionarios e 20 creditos de IA, gratis';
+      'Plano Free: 2 questionarios e ~3 geracoes IA, gratis';
 
   @override
   String get guestRegisterBenefit4 => 'Experiencia sem anuncios';

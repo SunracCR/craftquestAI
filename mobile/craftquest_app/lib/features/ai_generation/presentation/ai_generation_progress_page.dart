@@ -5,6 +5,7 @@ import 'package:craftquest_app/core/network/api_error_mapper.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
+import 'package:craftquest_app/core/utils/smoothed_progress_controller.dart';
 import 'package:craftquest_app/core/widgets/app_buttons.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
@@ -12,6 +13,7 @@ import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/features/ai/data/ai_repository.dart';
 import 'package:craftquest_app/features/ai/data/models/ai_job_model.dart';
 import 'package:craftquest_app/features/ai_generation/presentation/utils/ai_job_stage_labels.dart';
+import 'package:craftquest_app/features/ai_generation/presentation/widgets/ai_pipeline_progress_card.dart';
 import 'package:craftquest_app/features/imports/data/import_repository.dart';
 import 'package:craftquest_app/features/imports/data/models/import_models.dart';
 import 'package:craftquest_app/features/imports/presentation/import_preview_page.dart';
@@ -47,6 +49,7 @@ class AiGenerationProgressPage extends StatefulWidget {
 class _AiGenerationProgressPageState extends State<AiGenerationProgressPage> {
   final _aiRepository = getIt<AiRepository>();
   final _importRepository = getIt<ImportRepository>();
+  final _smoothedProgress = SmoothedProgressController();
   String? _error;
   String? _errorDetail;
   AiJobModel? _job;
@@ -57,9 +60,29 @@ class _AiGenerationProgressPageState extends State<AiGenerationProgressPage> {
   @override
   void initState() {
     super.initState();
+    _smoothedProgress.addListener(_onSmoothedProgress);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) unawaited(_poll());
     });
+  }
+
+  @override
+  void dispose() {
+    _smoothedProgress.removeListener(_onSmoothedProgress);
+    _smoothedProgress.disposeController();
+    super.dispose();
+  }
+
+  void _onSmoothedProgress() {
+    if (mounted) setState(() {});
+  }
+
+  void _syncProgressFromJob(AiJobModel job) {
+    _smoothedProgress.updateFromServer(
+      progressPercent: job.progressPercent,
+      stage: job.stage,
+      isActiveGeneration: job.isActiveGeneration,
+    );
   }
 
   bool _isJobStale(AiJobModel job) {
@@ -110,6 +133,7 @@ class _AiGenerationProgressPageState extends State<AiGenerationProgressPage> {
             _processingSince = DateTime.now();
           }
         });
+        _syncProgressFromJob(job);
 
         if (job.isFailed) {
           unawaited(getIt<NotificationsCubit>().refreshUnreadCount());
@@ -199,6 +223,7 @@ class _AiGenerationProgressPageState extends State<AiGenerationProgressPage> {
 
   Future<void> _retryFailedJob() async {
     if (_isRetrying) return;
+    _smoothedProgress.reset();
     setState(() {
       _isRetrying = true;
       _error = null;
@@ -282,87 +307,76 @@ class _AiGenerationProgressPageState extends State<AiGenerationProgressPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final canLeave = _error != null && !_isRetrying;
+    final job = _job;
+    final displayPercent = _smoothedProgress.displayPercent;
+    final showDeterminate = job?.isActiveGeneration == true &&
+        (job?.progressPercent != null || displayPercent > 0);
 
     return PopScope(
       canPop: canLeave,
       child: EdgeAwareScaffold(
-      appBar: craftQuestAppBar(
-        title: l10n.aiGenerationProgressTitle,
-        automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            onPressed: _goHome,
-            tooltip: l10n.practiceBackHomeAction,
-            icon: const Icon(Icons.home_rounded),
-          ),
-        ],
-      ),
-      body: _error != null
-          ? AppErrorView(
-              message: _error!,
-              detail: _errorDetail,
-              retryLabel: _stuckDetected
-                  ? l10n.aiGenerationStuckGoBackAction
-                  : l10n.aiGenerationRetryAction,
-              onRetry: _stuckDetected ? _goBackToRetry : _retryFailedJob,
-            )
-          : Center(
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (_job?.progressPercent != null &&
-                        _job!.isActiveGeneration) ...[
-                      SizedBox(
-                        width: 280,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
-                          child: LinearProgressIndicator(
-                            value: _job!.progressPercent! / 100,
-                            minHeight: 8,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      Text(
-                        l10n.aiGenerationProgressPercent(_job!.progressPercent!),
-                        style: Theme.of(context).textTheme.labelLarge,
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                    ] else
-                      const AppLoadingView(),
-                    const SizedBox(height: AppSpacing.md),
-                    Text(
-                      _progressSubtitle(l10n),
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Text(
-                      l10n.aiGenerationBackgroundSnack,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    if (_job?.isDeferredRetry == true) ...[
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        l10n.aiGenerationCreditsNotConsumed,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                    const SizedBox(height: AppSpacing.xl),
-                    AppSecondaryButton(
-                      label: l10n.practiceBackHomeAction,
-                      icon: Icons.home_rounded,
-                      accentColor: AppColors.accentCool,
-                      onPressed: _goHome,
-                    ),
-                  ],
-                ),
-              ),
+        appBar: craftQuestAppBar(
+          title: l10n.aiGenerationProgressTitle,
+          automaticallyImplyLeading: false,
+          actions: [
+            IconButton(
+              onPressed: _goHome,
+              tooltip: l10n.practiceBackHomeAction,
+              icon: const Icon(Icons.home_rounded),
             ),
+          ],
+        ),
+        body: _error != null
+            ? AppErrorView(
+                message: _error!,
+                detail: _errorDetail,
+                retryLabel: _stuckDetected
+                    ? l10n.aiGenerationStuckGoBackAction
+                    : l10n.aiGenerationRetryAction,
+                onRetry: _stuckDetected ? _goBackToRetry : _retryFailedJob,
+              )
+            : ListView(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                children: [
+                  AiPipelineProgressCard(
+                    title: widget.quizTitle,
+                    subtitle: _progressSubtitle(l10n),
+                    percent: displayPercent,
+                    l10n: l10n,
+                    showStepper: job?.isActiveGeneration == true,
+                    stage: job?.stage,
+                    status: job?.status ?? 'processing',
+                    showStalledPulse: _smoothedProgress.isStalled,
+                    indeterminate: !showDeterminate,
+                    footer: Column(
+                      children: [
+                        Text(
+                          l10n.aiGenerationBackgroundSnack,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                        ),
+                        if (job?.isDeferredRetry == true) ...[
+                          const SizedBox(height: AppSpacing.sm),
+                          Text(
+                            l10n.aiGenerationCreditsNotConsumed,
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                        const SizedBox(height: AppSpacing.lg),
+                        AppSecondaryButton(
+                          label: l10n.practiceBackHomeAction,
+                          icon: Icons.home_rounded,
+                          accentColor: AppColors.accentCool,
+                          onPressed: _goHome,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
       ),
     );
   }

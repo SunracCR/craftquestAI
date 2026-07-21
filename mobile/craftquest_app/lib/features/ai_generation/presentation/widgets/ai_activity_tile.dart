@@ -1,11 +1,12 @@
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
+import 'package:craftquest_app/core/utils/smoothed_progress_controller.dart';
 import 'package:craftquest_app/features/ai/data/models/ai_job_summary_model.dart';
 import 'package:craftquest_app/features/ai_generation/presentation/utils/ai_job_stage_labels.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
-class AiActivityTile extends StatelessWidget {
+class AiActivityTile extends StatefulWidget {
   const AiActivityTile({
     super.key,
     required this.job,
@@ -16,17 +17,63 @@ class AiActivityTile extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
+  State<AiActivityTile> createState() => _AiActivityTileState();
+}
+
+class _AiActivityTileState extends State<AiActivityTile> {
+  final _smoothedProgress = SmoothedProgressController();
+
+  @override
+  void initState() {
+    super.initState();
+    _smoothedProgress.addListener(_onProgressTick);
+    _syncProgress();
+  }
+
+  @override
+  void didUpdateWidget(AiActivityTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.job.aiJobId != widget.job.aiJobId) {
+      _smoothedProgress.reset();
+    }
+    _syncProgress();
+  }
+
+  @override
+  void dispose() {
+    _smoothedProgress.removeListener(_onProgressTick);
+    _smoothedProgress.disposeController();
+    super.dispose();
+  }
+
+  void _onProgressTick() {
+    if (mounted) setState(() {});
+  }
+
+  void _syncProgress() {
+    _smoothedProgress.updateFromServer(
+      progressPercent: widget.job.progressPercent,
+      stage: widget.job.stage,
+      isActiveGeneration: widget.job.isActive,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final job = widget.job;
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final statusLabel = AiJobStageLabels.inboxStatusLabel(l10n, job);
     final pageRange = AiJobStageLabels.pageRangeLabel(l10n, job.pageFrom, job.pageTo);
     final statusColor = _statusColor(job);
+    final displayPercent = _smoothedProgress.displayPercent;
+    final showProgress = job.isActive &&
+        (job.progressPercent != null || displayPercent > 0);
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: onTap,
+        onTap: widget.onTap,
         borderRadius: BorderRadius.circular(AppColors.radiusMd),
         child: Ink(
           decoration: BoxDecoration(
@@ -78,22 +125,37 @@ class AiActivityTile extends StatelessWidget {
                     _StatusChip(label: statusLabel, color: statusColor),
                   ],
                 ),
-                if (job.isActive && job.progressPercent != null) ...[
+                if (showProgress) ...[
                   const SizedBox(height: AppSpacing.md),
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: job.progressPercent! / 100,
-                      minHeight: 6,
-                      backgroundColor: AppColors.surface,
-                      color: statusColor,
+                    borderRadius: BorderRadius.circular(6),
+                    child: SizedBox(
+                      height: 8,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Container(color: AppColors.surface),
+                          FractionallySizedBox(
+                            alignment: Alignment.centerLeft,
+                            widthFactor: (displayPercent / 100).clamp(0.02, 1),
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [statusColor, AppColors.accentMint],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    l10n.aiGenerationProgressPercent(job.progressPercent!),
+                    l10n.aiGenerationProgressPercent(displayPercent),
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],

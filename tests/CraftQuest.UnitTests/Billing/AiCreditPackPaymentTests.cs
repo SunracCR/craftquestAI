@@ -42,8 +42,8 @@ public class AiCreditPackPaymentTests
             userId,
             new PayPalCaptureOrderRequest { OrderId = created.OrderId });
 
-        Assert.Equal(50, captured.CreditsGranted);
-        Assert.Equal(200, captured.AiCreditsBalance);
+        Assert.Equal(30, captured.CreditsGranted);
+        Assert.Equal(180, captured.AiCreditsBalance);
 
         var purchaseEntry = await db.CreditLedgerEntries.SingleAsync(
             e => e.UserId == userId && e.Reason == "purchase");
@@ -118,8 +118,8 @@ public class AiCreditPackPaymentTests
                 new AiCreditPackDefinition
                 {
                     Code = "pack_50",
-                    Name = "50 AI credits",
-                    Credits = 50,
+                    Name = "~5 AI generations",
+                    Credits = 30,
                     PriceUsd = 4.99m,
                     SortOrder = 1,
                 },

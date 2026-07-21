@@ -1,3 +1,4 @@
+import 'package:craftquest_app/core/utils/ai_generation_allowance.dart';
 import 'package:craftquest_app/features/billing/data/models/billing_models.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 
@@ -10,8 +11,10 @@ abstract final class PlanUpgradeHighlights {
     return switch (plan.code.toLowerCase()) {
       'pro' => [
           l10n.upgradePlanHighlightAiCredits(
-            plan.monthlyAiCredits,
-            currentEntitlements.monthlyAiCredits,
+            AiGenerationAllowance.estimateGenerations(plan.monthlyAiCredits),
+            AiGenerationAllowance.estimateGenerations(
+              currentEntitlements.monthlyAiCredits,
+            ),
           ),
           l10n.upgradeProHighlightQuizzesLimit(
             currentEntitlements.maxQuizzes ?? 0,
@@ -25,8 +28,10 @@ abstract final class PlanUpgradeHighlights {
       'teacher' => [
           l10n.upgradeTeacherHighlightIncludesPro,
           l10n.upgradePlanHighlightAiCredits(
-            plan.monthlyAiCredits,
-            currentEntitlements.monthlyAiCredits,
+            AiGenerationAllowance.estimateGenerations(plan.monthlyAiCredits),
+            AiGenerationAllowance.estimateGenerations(
+              currentEntitlements.monthlyAiCredits,
+            ),
           ),
           l10n.upgradeTeacherHighlightClasses,
           l10n.upgradeTeacherHighlightAssignments,

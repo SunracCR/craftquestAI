@@ -254,6 +254,15 @@
     }
   },
   "prepPlusPracticeAction": "Practice",
+  "prepPlusPracticeOptionsTitle": "Practice options",
+  "prepPlusPracticeOptionsSummaryDefault": "Default settings",
+  "prepPlusPracticeOptionRandom": "Random",
+  "prepPlusPracticeOptionTimer": "Timer",
+  "prepPlusPracticeOptionSound": "Sound",
+  "prepPlusExpandDescription": "Show more",
+  "prepPlusTrySimulationShort": "3 sample questions · results not saved",
+  "prepPlusProgressAnalyticsShort": "Analytics",
+  "prepPlusProgressHistoryShort": "History",
   "prepPlusBuyAction": "Buy access",
   "prepPlusGetFreeAccessAction": "Get free access",
   "prepPlusRenewAction": "Renew access",
@@ -807,9 +816,12 @@
     }
   },
   "billingQuizzesUnlimited": "Quizzes: Unlimited",
-  "billingCreditsLabel": "AI credits this month: {credits}",
+  "billingCreditsLabel": "~{generations} AI generations · {credits} cr.",
   "@billingCreditsLabel": {
-    "placeholders": { "credits": { "type": "int" } }
+    "placeholders": {
+      "generations": { "type": "int" },
+      "credits": { "type": "int" }
+    }
   },
   "redeemCodeAction": "Redeem code",
   "redeemCodeTitle": "Redeem access code",
@@ -998,18 +1010,18 @@
       "max": { "type": "int" }
     }
   },
-  "upgradeProHighlightAiCredits": "150 AI credits per month (your current plan: 20)",
-  "upgradePlanHighlightAiCredits": "{credits} AI credits per month (your current plan: {currentCredits})",
+  "upgradeProHighlightAiCredits": "~15 AI generations per month (your plan: ~3)",
+  "upgradePlanHighlightAiCredits": "~{generations} AI generations per month (your plan: ~{currentGenerations})",
   "@upgradePlanHighlightAiCredits": {
     "placeholders": {
-      "credits": { "type": "int" },
-      "currentCredits": { "type": "int" }
+      "generations": { "type": "int" },
+      "currentGenerations": { "type": "int" }
     }
   },
   "upgradeProHighlightShared": "Unlimited shared quizzes when redeeming or inviting",
   "upgradeProHighlightDirectInvite": "Invite specific people by email",
   "upgradeTeacherHighlightIncludesPro": "Everything in Pro",
-  "upgradeTeacherHighlightAiCredits": "360 AI credits per month for more generations",
+  "upgradeTeacherHighlightAiCredits": "~30 AI generations per month (2× Pro)",
   "upgradeTeacherHighlightClasses": "Classes and student groups",
   "upgradeTeacherHighlightAssignments": "Assignments with due dates, attempts, and review",
   "upgradeTeacherHighlightGroupShare": "Share codes for your class only",
@@ -1112,6 +1124,17 @@
   "aiGenerationUploadChangeFile": "Change file",
   "aiGenerationUploadRemoveFile": "Remove",
   "aiGenerationProcessing": "Analyzing document…",
+  "aiPipelineUploadingTitle": "Uploading file",
+  "aiPipelineUploadingSubtitle": "Sending your material to the server…",
+  "aiPipelineUploadingPercent": "{percent}% uploaded",
+  "@aiPipelineUploadingPercent": {
+    "placeholders": { "percent": { "type": "int" } }
+  },
+  "aiPipelineAnalyzingTitle": "Analyzing material",
+  "aiPipelineAnalyzingSubtitle": "Extracting text and preparing the document for AI…",
+  "aiPipelineStepUploadDone": "File received",
+  "aiPipelineStepExtracting": "Extracting text",
+  "aiPipelineStepPreparing": "Preparing material",
   "aiGenerationNeedsOcr": "Little text detected. Use a PDF or Word with selectable text, or review and paste the content.",
   "aiGenerationReviewTextTitle": "Review text",
   "aiGenerationReviewTextHint": "This document has little extractable text. Fix what was detected or paste content with selectable text.",
@@ -1197,14 +1220,20 @@
   "errorAiCreditsInsufficient": "Not enough AI credits for this generation.",
   "errorAiCreditPacksNotAvailable": "AI credit packs are available on Pro and Teacher plans.",
   "aiCreditPacksTitle": "Buy AI credits",
-  "aiCreditPacksSubtitle": "Top up credits to keep generating with AI. Purchased packs never expire; your plan's monthly quota still resets each month.",
-  "aiCreditPacksCurrentBalance": "Current balance: {credits} credits",
+  "aiCreditPacksSubtitle": "Top up to keep generating with AI (~40 questions per generation). Packs never expire; your plan quota resets each month.",
+  "aiCreditPacksCurrentBalance": "Balance: ~{generations} generations ({credits} cr.)",
   "@aiCreditPacksCurrentBalance": {
-    "placeholders": { "credits": { "type": "int" } }
+    "placeholders": {
+      "generations": { "type": "int" },
+      "credits": { "type": "int" }
+    }
   },
-  "aiCreditPacksCreditsLabel": "{credits} AI credits",
+  "aiCreditPacksCreditsLabel": "~{generations} generations (~{credits} cr.)",
   "@aiCreditPacksCreditsLabel": {
-    "placeholders": { "credits": { "type": "int" } }
+    "placeholders": {
+      "generations": { "type": "int" },
+      "credits": { "type": "int" }
+    }
   },
   "aiCreditPacksBuyForPrice": "Buy · {price}",
   "@aiCreditPacksBuyForPrice": {
@@ -1318,7 +1347,7 @@
   "guestRegisterCtaTitle": "Want to save your results?",
   "guestRegisterBenefit1": "Permanent history of all your attempts",
   "guestRegisterBenefit2": "Create your own quizzes with AI",
-  "guestRegisterBenefit3": "Free plan: 2 quizzes and 20 AI credits, no cost",
+  "guestRegisterBenefit3": "Free plan: 2 quizzes and ~3 AI generations, no cost",
   "guestRegisterBenefit4": "Ad-free experience",
   "guestRegisterBenefit5": "Share quizzes with codes or direct invites",
   "guestRegisterBenefit6": "Practice analytics: see where you struggle most",

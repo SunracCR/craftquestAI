@@ -1,13 +1,16 @@
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/api_error_mapper.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
+import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
+import 'package:craftquest_app/core/utils/smoothed_progress_controller.dart';
 import 'package:craftquest_app/core/widgets/app_bottom_bar.dart';
 import 'package:craftquest_app/core/widgets/app_buttons.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/features/ai_generation/data/study_material_repository.dart';
 import 'package:craftquest_app/features/ai_generation/presentation/study_material_outline_page.dart';
+import 'package:craftquest_app/features/ai_generation/presentation/widgets/ai_pipeline_progress_card.dart';
 import 'package:craftquest_app/features/ai_generation/presentation/widgets/study_material_upload_failure_panel.dart';
 import 'package:craftquest_app/features/ai_generation/presentation/widgets/study_material_upload_zone.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
@@ -33,6 +36,7 @@ class StudyMaterialUploadPage extends StatefulWidget {
 
 class _StudyMaterialUploadPageState extends State<StudyMaterialUploadPage> {
   final _repository = getIt<StudyMaterialRepository>();
+  final _uploadProgress = UploadProgressNotifier();
   bool _uploading = false;
   bool _dragOver = false;
 
@@ -49,6 +53,12 @@ class _StudyMaterialUploadPageState extends State<StudyMaterialUploadPage> {
 
   bool get _hasSelectedFile =>
       _documentFileName != null && _documentBytes != null && _documentBytes!.isNotEmpty;
+
+  @override
+  void dispose() {
+    _uploadProgress.dispose();
+    super.dispose();
+  }
 
   void _clearSelectedFile() {
     setState(() {
@@ -137,6 +147,7 @@ class _StudyMaterialUploadPageState extends State<StudyMaterialUploadPage> {
     final l10n = AppLocalizations.of(context)!;
     if (_documentBytes == null || _documentFileName == null) return;
 
+    _uploadProgress.reset();
     setState(() {
       _uploading = true;
       _uploadErrorMessage = null;
@@ -146,6 +157,7 @@ class _StudyMaterialUploadPageState extends State<StudyMaterialUploadPage> {
       final upload = await _repository.upload(
         fileName: _documentFileName!,
         bytes: _documentBytes!,
+        onUploadProgress: (sent, total) => _uploadProgress.report(sent, total),
       );
 
       if (!mounted) return;
@@ -155,6 +167,7 @@ class _StudyMaterialUploadPageState extends State<StudyMaterialUploadPage> {
             studyMaterialId: upload.studyMaterialId,
             targetQuizId: widget.targetQuizId,
             targetQuizTitle: widget.targetQuizTitle,
+            fileName: _documentFileName,
           ),
         ),
       );
@@ -165,7 +178,10 @@ class _StudyMaterialUploadPageState extends State<StudyMaterialUploadPage> {
       if (!mounted) return;
       context.showErrorSnackBar(l10n.aiGenerationFailed);
     } finally {
-      if (mounted) setState(() => _uploading = false);
+      if (mounted) {
+        _uploadProgress.reset();
+        setState(() => _uploading = false);
+      }
     }
   }
 
@@ -184,53 +200,92 @@ class _StudyMaterialUploadPageState extends State<StudyMaterialUploadPage> {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.md,
-          AppSpacing.md,
-          AppSpacing.md,
-          AppSpacing.xl,
-        ),
+      body: Stack(
         children: [
-          if (_uploadErrorMessage != null && _uploadErrorGuidance != null) ...[
-            StudyMaterialUploadFailurePanel(
-              message: _uploadErrorMessage!,
-              guidance: _uploadErrorGuidance!,
-              onPickAnother: _pickDocument,
+          ListView(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.xl,
             ),
-            const SizedBox(height: AppSpacing.lg),
-          ],
-          StudyMaterialUploadHeader(l10n: l10n),
-          const SizedBox(height: AppSpacing.md),
-          StudyMaterialUploadConstraintChips(l10n: l10n),
-          const SizedBox(height: AppSpacing.lg),
-          if (!_hasSelectedFile) ...[
-            StudyMaterialUploadFormatGuide(l10n: l10n),
-            const SizedBox(height: AppSpacing.lg),
-          ],
-          StudyMaterialUploadZone(
-            l10n: l10n,
-            hasFile: _hasSelectedFile,
-            dragOver: _dragOver,
-            supportsFileDrop: _supportsFileDrop,
-            uploading: _uploading,
-            fileName: _documentFileName,
-            fileSizeLabel: _hasSelectedFile
-                ? _formatFileSize(_documentBytes!.length)
-                : null,
-            fileIcon: _documentFileName != null
-                ? _iconForFileName(_documentFileName!)
-                : null,
-            onPickFile: _pickDocument,
-            onChangeFile: _pickDocument,
-            onClearFile: _clearSelectedFile,
-            onDragEntered: () => setState(() => _dragOver = true),
-            onDragExited: () => setState(() => _dragOver = false),
-            onDragDone: (files) {
-              setState(() => _dragOver = false);
-              _handleDroppedFiles(files);
-            },
+            children: [
+              if (_uploadErrorMessage != null && _uploadErrorGuidance != null) ...[
+                StudyMaterialUploadFailurePanel(
+                  message: _uploadErrorMessage!,
+                  guidance: _uploadErrorGuidance!,
+                  onPickAnother: _pickDocument,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+              ],
+              StudyMaterialUploadHeader(l10n: l10n),
+              const SizedBox(height: AppSpacing.md),
+              StudyMaterialUploadConstraintChips(l10n: l10n),
+              const SizedBox(height: AppSpacing.lg),
+              if (!_hasSelectedFile) ...[
+                StudyMaterialUploadFormatGuide(l10n: l10n),
+                const SizedBox(height: AppSpacing.lg),
+              ],
+              StudyMaterialUploadZone(
+                l10n: l10n,
+                hasFile: _hasSelectedFile,
+                dragOver: _dragOver,
+                supportsFileDrop: _supportsFileDrop,
+                uploading: _uploading,
+                fileName: _documentFileName,
+                fileSizeLabel: _hasSelectedFile
+                    ? _formatFileSize(_documentBytes!.length)
+                    : null,
+                fileIcon: _documentFileName != null
+                    ? _iconForFileName(_documentFileName!)
+                    : null,
+                onPickFile: _pickDocument,
+                onChangeFile: _pickDocument,
+                onClearFile: _clearSelectedFile,
+                onDragEntered: () => setState(() => _dragOver = true),
+                onDragExited: () => setState(() => _dragOver = false),
+                onDragDone: (files) {
+                  setState(() => _dragOver = false);
+                  _handleDroppedFiles(files);
+                },
+              ),
+            ],
           ),
+          if (_uploading)
+            ColoredBox(
+              color: AppColors.background.withValues(alpha: 0.88),
+              child: SafeArea(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: ValueListenableBuilder<double?>(
+                      valueListenable: _uploadProgress,
+                      builder: (context, progress, _) {
+                        final percent = progress == null
+                            ? 0
+                            : (progress * 100).round().clamp(0, 100);
+                        return AiPipelineProgressCard(
+                          title: l10n.aiPipelineUploadingTitle,
+                          subtitle: _documentFileName ?? l10n.aiPipelineUploadingSubtitle,
+                          percent: percent,
+                          l10n: l10n,
+                          indeterminate: progress == null,
+                          footer: progress == null
+                              ? null
+                              : Text(
+                                  l10n.aiPipelineUploadingPercent(percent),
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );

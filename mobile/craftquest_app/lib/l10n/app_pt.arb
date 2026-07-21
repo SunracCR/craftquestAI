@@ -254,6 +254,15 @@
     }
   },
   "prepPlusPracticeAction": "Praticar",
+  "prepPlusPracticeOptionsTitle": "Opções de prática",
+  "prepPlusPracticeOptionsSummaryDefault": "Configuração padrão",
+  "prepPlusPracticeOptionRandom": "Aleatório",
+  "prepPlusPracticeOptionTimer": "Cronômetro",
+  "prepPlusPracticeOptionSound": "Som",
+  "prepPlusExpandDescription": "Ver mais",
+  "prepPlusTrySimulationShort": "3 perguntas de amostra · sem salvar resultados",
+  "prepPlusProgressAnalyticsShort": "Análise",
+  "prepPlusProgressHistoryShort": "Histórico",
   "prepPlusBuyAction": "Comprar acesso",
   "prepPlusGetFreeAccessAction": "Obter acesso grátis",
   "prepPlusRenewAction": "Renovar acesso",
@@ -807,9 +816,12 @@
     }
   },
   "billingQuizzesUnlimited": "Questionarios: Ilimitados",
-  "billingCreditsLabel": "Creditos IA deste mes: {credits}",
+  "billingCreditsLabel": "~{generations} geracoes IA · {credits} cr.",
   "@billingCreditsLabel": {
-    "placeholders": { "credits": { "type": "int" } }
+    "placeholders": {
+      "generations": { "type": "int" },
+      "credits": { "type": "int" }
+    }
   },
   "redeemCodeAction": "Resgatar codigo",
   "redeemCodeTitle": "Resgatar codigo de acesso",
@@ -998,18 +1010,18 @@
       "max": { "type": "int" }
     }
   },
-  "upgradeProHighlightAiCredits": "150 creditos IA por mes (seu plano atual: 20)",
-  "upgradePlanHighlightAiCredits": "{credits} creditos IA por mes (seu plano atual: {currentCredits})",
+  "upgradeProHighlightAiCredits": "~15 geracoes IA por mes (seu plano: ~3)",
+  "upgradePlanHighlightAiCredits": "~{generations} geracoes IA por mes (seu plano: ~{currentGenerations})",
   "@upgradePlanHighlightAiCredits": {
     "placeholders": {
-      "credits": { "type": "int" },
-      "currentCredits": { "type": "int" }
+      "generations": { "type": "int" },
+      "currentGenerations": { "type": "int" }
     }
   },
   "upgradeProHighlightShared": "Compartilhados ilimitados ao resgatar ou convidar",
   "upgradeProHighlightDirectInvite": "Convide pessoas especificas por e-mail",
   "upgradeTeacherHighlightIncludesPro": "Tudo do plano Pro",
-  "upgradeTeacherHighlightAiCredits": "360 creditos IA por mes para mais geracoes",
+  "upgradeTeacherHighlightAiCredits": "~30 geracoes IA por mes (2× Pro)",
   "upgradeTeacherHighlightClasses": "Turmas e grupos de estudantes",
   "upgradeTeacherHighlightAssignments": "Tarefas com prazos, tentativas e revisao",
   "upgradeTeacherHighlightGroupShare": "Compartilhe codigos so com sua turma",
@@ -1111,6 +1123,17 @@
   "aiGenerationUploadChangeFile": "Alterar ficheiro",
   "aiGenerationUploadRemoveFile": "Remover",
   "aiGenerationProcessing": "A analisar documento…",
+  "aiPipelineUploadingTitle": "Enviando arquivo",
+  "aiPipelineUploadingSubtitle": "Enviando seu material para o servidor…",
+  "aiPipelineUploadingPercent": "{percent}% enviado",
+  "@aiPipelineUploadingPercent": {
+    "placeholders": { "percent": { "type": "int" } }
+  },
+  "aiPipelineAnalyzingTitle": "Analisando material",
+  "aiPipelineAnalyzingSubtitle": "Extraindo texto e preparando o documento para a IA…",
+  "aiPipelineStepUploadDone": "Arquivo recebido",
+  "aiPipelineStepExtracting": "Extraindo texto",
+  "aiPipelineStepPreparing": "Preparando material",
   "aiGenerationNeedsOcr": "Pouco texto detetado. Use PDF ou Word com texto selecionavel, ou revise e cole o conteudo.",
   "aiGenerationReviewTextTitle": "Rever texto",
   "aiGenerationReviewTextHint": "O documento tem pouco texto extraivel. Corrija o detetado ou cole conteudo com texto selecionavel.",
@@ -1196,14 +1219,20 @@
   "errorAiCreditsInsufficient": "Creditos IA insuficientes para esta geracao.",
   "errorAiCreditPacksNotAvailable": "Pacotes de creditos IA estao disponiveis nos planos Pro e Teacher.",
   "aiCreditPacksTitle": "Comprar creditos IA",
-  "aiCreditPacksSubtitle": "Recarregue creditos para continuar gerando com IA. Pacotes comprados nao expiram; a cota mensal do plano reinicia a cada mes.",
-  "aiCreditPacksCurrentBalance": "Saldo atual: {credits} creditos",
+  "aiCreditPacksSubtitle": "Recarregue para continuar gerando com IA (~40 perguntas por geracao). Pacotes nao expiram; a cota mensal do plano reinicia a cada mes.",
+  "aiCreditPacksCurrentBalance": "Saldo: ~{generations} geracoes ({credits} cr.)",
   "@aiCreditPacksCurrentBalance": {
-    "placeholders": { "credits": { "type": "int" } }
+    "placeholders": {
+      "generations": { "type": "int" },
+      "credits": { "type": "int" }
+    }
   },
-  "aiCreditPacksCreditsLabel": "{credits} creditos IA",
+  "aiCreditPacksCreditsLabel": "~{generations} geracoes (~{credits} cr.)",
   "@aiCreditPacksCreditsLabel": {
-    "placeholders": { "credits": { "type": "int" } }
+    "placeholders": {
+      "generations": { "type": "int" },
+      "credits": { "type": "int" }
+    }
   },
   "aiCreditPacksBuyForPrice": "Comprar · {price}",
   "@aiCreditPacksBuyForPrice": {
@@ -1317,7 +1346,7 @@
   "guestRegisterCtaTitle": "Quer salvar seus resultados?",
   "guestRegisterBenefit1": "Historico permanente de todas as suas tentativas",
   "guestRegisterBenefit2": "Crie seus proprios questionarios com IA",
-  "guestRegisterBenefit3": "Plano Free: 2 questionarios e 20 creditos de IA, gratis",
+  "guestRegisterBenefit3": "Plano Free: 2 questionarios e ~3 geracoes IA, gratis",
   "guestRegisterBenefit4": "Experiencia sem anuncios",
   "guestRegisterBenefit5": "Compartilhe questionarios com codigos ou convites",
   "guestRegisterBenefit6": "Analitica de pratica: veja onde voce mais erra",

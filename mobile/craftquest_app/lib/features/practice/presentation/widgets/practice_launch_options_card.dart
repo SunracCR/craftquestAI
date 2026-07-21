@@ -19,6 +19,7 @@ class PracticeLaunchOptionsCard extends StatelessWidget {
     this.showTimerOption = true,
     this.showRandomizeOption = true,
     this.showSoundEffectsOption = true,
+    this.showSectionTitle = true,
   });
 
   final bool randomizeQuestions;
@@ -28,6 +29,7 @@ class PracticeLaunchOptionsCard extends StatelessWidget {
   final bool showTimerOption;
   final bool showRandomizeOption;
   final bool showSoundEffectsOption;
+  final bool showSectionTitle;
   final ValueChanged<bool> onRandomizeQuestionsChanged;
   final ValueChanged<bool> onShowTimerChanged;
   final ValueChanged<bool>? onSoundEffectsChanged;
@@ -93,15 +95,21 @@ class PracticeLaunchOptionsCard extends StatelessWidget {
       );
     }
 
+    final card = AppSectionCard(
+      padding: EdgeInsets.zero,
+      child: Column(children: tiles),
+    );
+
+    if (!showSectionTitle) {
+      return card;
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         AppSectionTitle(title: l10n.practiceOptionsTitle),
         const SizedBox(height: AppSpacing.xs),
-        AppSectionCard(
-          padding: EdgeInsets.zero,
-          child: Column(children: tiles),
-        ),
+        card,
       ],
     );
   }

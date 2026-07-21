@@ -7,6 +7,7 @@ import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
+import 'package:craftquest_app/core/utils/ai_generation_allowance.dart';
 import 'package:craftquest_app/core/widgets/app_page_header.dart';
 import 'package:craftquest_app/core/widgets/app_section_card.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
@@ -273,6 +274,9 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
                       AppSectionCard(
                         child: Text(
                           l10n.aiCreditPacksCurrentBalance(
+                            AiGenerationAllowance.estimateGenerations(
+                              _billing!.credits.aiCredits,
+                            ),
                             _billing!.credits.aiCredits,
                           ),
                           style: Theme.of(context).textTheme.titleMedium,
@@ -296,7 +300,12 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
                               ),
                               const SizedBox(height: AppSpacing.xs),
                               Text(
-                                l10n.aiCreditPacksCreditsLabel(pack.credits),
+                                l10n.aiCreditPacksCreditsLabel(
+                                  AiGenerationAllowance.estimateGenerations(
+                                    pack.credits,
+                                  ),
+                                  pack.credits,
+                                ),
                                 style: Theme.of(context)
                                     .textTheme
                                     .bodyMedium
