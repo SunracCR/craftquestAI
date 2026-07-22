@@ -38,6 +38,9 @@ public sealed class FirebasePushSender(
 
         if (tokens.Count == 0)
         {
+            logger.LogInformation(
+                "FCM skipped for user {UserId}: no device tokens registered",
+                userId);
             return;
         }
 
@@ -58,6 +61,12 @@ public sealed class FirebasePushSender(
                 message,
                 cancellationToken);
 
+            logger.LogInformation(
+                "FCM sent for user {UserId}: {SuccessCount}/{TotalCount} succeeded",
+                userId,
+                response.SuccessCount,
+                response.FailureCount + response.SuccessCount);
+
             for (var i = 0; i < response.Responses.Count; i++)
             {
                 if (response.Responses[i].IsSuccess)
@@ -66,6 +75,10 @@ public sealed class FirebasePushSender(
                 }
 
                 var error = response.Responses[i].Exception?.MessagingErrorCode;
+                logger.LogWarning(
+                    "FCM token rejected for user {UserId}: {ErrorCode}",
+                    userId,
+                    error);
                 if (error is MessagingErrorCode.Unregistered or MessagingErrorCode.InvalidArgument)
                 {
                     await RemoveInvalidTokenAsync(tokens[i], cancellationToken);
@@ -117,12 +130,21 @@ public sealed class FirebasePushSender(
             {
                 if (FirebaseApp.DefaultInstance is null)
                 {
+                    if (!File.Exists(options.CredentialsPath))
+                    {
+                        logger.LogError(
+                            "Firebase credentials file not found at {CredentialsPath}",
+                            options.CredentialsPath);
+                        return false;
+                    }
+
                     FirebaseApp.Create(new AppOptions
                     {
                         Credential = GoogleCredential.FromFile(options.CredentialsPath),
                     });
                 }
 
+                logger.LogInformation("Firebase Admin SDK initialized for push notifications.");
                 return true;
             }
             catch (Exception ex)

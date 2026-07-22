@@ -11,7 +11,6 @@ import 'package:craftquest_app/features/notifications/presentation/notifications
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 /// Inicialización diferida de push (R3) y registro de token FCM/APNs.
@@ -23,34 +22,56 @@ class PushNotificationService {
       FlutterLocalNotificationsPlugin();
 
   String? _currentToken;
-  bool _initialized = false;
+  bool _firebaseReady = false;
+  Future<void>? _initFuture;
 
   Future<void> initializeDeferred() async {
-    if (_initialized || kIsWeb) {
+    if (kIsWeb) {
       return;
     }
 
-    _initialized = true;
+    _initFuture ??= _initializeInternal();
+    await _initFuture;
+  }
+
+  Future<void> _initializeInternal() async {
+    if (_firebaseReady) {
+      return;
+    }
+
     try {
       await Firebase.initializeApp();
-    } catch (_) {
-      // Sin google-services / GoogleService-Info: push deshabilitado en dev.
+    } catch (error, stackTrace) {
+      _logPush('Firebase.initializeApp failed', error, stackTrace);
       return;
     }
 
-    await _setupLocalNotifications();
-    await _requestPermissions();
-    _listenForTokenRefresh();
-    _listenForForegroundMessages();
-    _listenForOpenedApp();
-    await _handleInitialMessage();
+    try {
+      await _setupLocalNotifications();
+      await _requestPermissions();
+      _listenForTokenRefresh();
+      _listenForForegroundMessages();
+      _listenForOpenedApp();
+      await _handleInitialMessage();
+      _firebaseReady = true;
+      _logPush('Firebase push initialized');
+    } catch (error, stackTrace) {
+      _logPush('Push setup failed after Firebase init', error, stackTrace);
+    }
   }
 
   Future<void> onAuthenticated() async {
-    if (!_initialized) {
-      await initializeDeferred();
+    await initializeDeferred();
+    if (!_firebaseReady) {
+      _logPush('Skipping token registration: Firebase not ready');
+      return;
     }
+
     await _registerTokenWithBackend();
+    if (_currentToken == null) {
+      await Future<void>.delayed(const Duration(seconds: 2));
+      await _registerTokenWithBackend();
+    }
   }
 
   Future<void> onLogout() async {
@@ -60,8 +81,8 @@ class PushNotificationService {
     }
     try {
       await _repository.removeDeviceToken(token);
-    } catch (_) {
-      // Best effort.
+    } catch (error, stackTrace) {
+      _logPush('removeDeviceToken failed', error, stackTrace);
     }
     _currentToken = null;
   }
@@ -95,25 +116,33 @@ class PushNotificationService {
 
   Future<void> _requestPermissions() async {
     if (Platform.isIOS) {
-      await FirebaseMessaging.instance.requestPermission();
+      final settings = await FirebaseMessaging.instance.requestPermission();
+      _logPush('iOS notification authorization: ${settings.authorizationStatus}');
     } else if (Platform.isAndroid) {
-      await _localNotifications
+      final granted = await _localNotifications
           .resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin>()
           ?.requestNotificationsPermission();
+      _logPush('Android POST_NOTIFICATIONS granted: $granted');
     }
   }
 
   Future<void> _registerTokenWithBackend() async {
     try {
       if (!await _hasAuthenticatedSession()) {
+        _logPush('Token registration skipped: no authenticated session');
         return;
       }
 
       final token = await FirebaseMessaging.instance.getToken();
-      if (token == null || token.isEmpty || token == _currentToken) {
+      if (token == null || token.isEmpty) {
+        _logPush('FCM getToken returned empty');
         return;
       }
+      if (token == _currentToken) {
+        return;
+      }
+
       final platform = Platform.isIOS
           ? 'ios'
           : Platform.isAndroid
@@ -121,8 +150,9 @@ class PushNotificationService {
               : 'web';
       await _repository.registerDeviceToken(token: token, platform: platform);
       _currentToken = token;
-    } catch (_) {
-      // Best effort.
+      _logPush('Device token registered ($platform)');
+    } catch (error, stackTrace) {
+      _logPush('registerDeviceToken failed', error, stackTrace);
     }
   }
 
@@ -145,7 +175,10 @@ class PushNotificationService {
         final platform = Platform.isIOS ? 'ios' : 'android';
         await _repository.registerDeviceToken(token: token, platform: platform);
         _currentToken = token;
-      } catch (_) {}
+        _logPush('Device token refreshed ($platform)');
+      } catch (error, stackTrace) {
+        _logPush('onTokenRefresh registration failed', error, stackTrace);
+      }
     });
   }
 
@@ -227,5 +260,16 @@ class PushNotificationService {
     final type = data['type'] as String? ?? '';
     final route = data['route'] as String? ?? '';
     return '$type|$route';
+  }
+
+  void _logPush(String message, [Object? error, StackTrace? stackTrace]) {
+    if (!kDebugMode) {
+      return;
+    }
+
+    debugPrint('[PushNotificationService] $message${error != null ? ': $error' : ''}');
+    if (stackTrace != null) {
+      debugPrint(stackTrace.toString());
+    }
   }
 }

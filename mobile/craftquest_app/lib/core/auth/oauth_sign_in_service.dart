@@ -31,9 +31,16 @@ class OAuthSignInService {
   final String _appleWebServicesId;
   final String _appleWebRedirectUri;
   GoogleSignIn? _googleSignIn;
+  String? _configuredGoogleClientId;
   StreamSubscription<GoogleSignInAccount?>? _webUserSubscription;
 
   bool get isGoogleConfigured => _googleServerClientId.isNotEmpty;
+
+  String get googleServerClientId => _googleServerClientId;
+
+  String get appleWebServicesId => _appleWebServicesId;
+
+  String get appleWebRedirectUri => _appleWebRedirectUri;
 
   /// Web: Services ID + redirect. Nativo: solo hace falta que la API tenga BundleId.
   bool get isAppleWebConfigured =>
@@ -48,12 +55,16 @@ class OAuthSignInService {
 
     const scopes = ['openid', 'email', 'profile'];
 
-    // google_sign_in_web: assert(serverClientId == null). No pasar ese parámetro.
+    // Reutilizar la misma instancia en web: renderButton (GIS) notifica vía onCurrentUserChanged.
     if (kIsWeb) {
-      _googleSignIn = GoogleSignIn(
-        clientId: _googleServerClientId,
-        scopes: scopes,
-      );
+      if (_googleSignIn == null ||
+          _configuredGoogleClientId != _googleServerClientId) {
+        _googleSignIn = GoogleSignIn(
+          clientId: _googleServerClientId,
+          scopes: scopes,
+        );
+        _configuredGoogleClientId = _googleServerClientId;
+      }
       return;
     }
 
@@ -67,7 +78,10 @@ class OAuthSignInService {
   ///
   /// No llama a [GoogleSignIn.signInSilently]: eso dispara One Tap / FedCM al cargar
   /// la pantalla y puede iniciar sesión sin que el usuario pulse el botón.
-  void configureWebGoogleListener(void Function(OAuthSignInResult result) onResult) {
+  void configureWebGoogleListener(
+    void Function(OAuthSignInResult result) onResult, {
+    void Function(Object error, StackTrace stackTrace)? onError,
+  }) {
     if (!kIsWeb || !isGoogleConfigured) {
       return;
     }
@@ -76,15 +90,24 @@ class OAuthSignInService {
     final google = _googleSignIn!;
 
     _webUserSubscription?.cancel();
-    _webUserSubscription = google.onCurrentUserChanged.listen((account) async {
-      if (account == null) {
-        return;
-      }
-      final credentials = await _credentialsFromAccount(account);
-      if (credentials != null) {
-        onResult(credentials);
-      }
-    });
+    _webUserSubscription = google.onCurrentUserChanged.listen(
+      (account) async {
+        if (account == null) {
+          return;
+        }
+        try {
+          final credentials = await _credentialsFromAccount(account);
+          if (credentials != null) {
+            onResult(credentials);
+          }
+        } catch (error, stackTrace) {
+          onError?.call(error, stackTrace);
+        }
+      },
+      onError: (Object error, StackTrace stackTrace) {
+        onError?.call(error, stackTrace);
+      },
+    );
   }
 
   void dispose() {

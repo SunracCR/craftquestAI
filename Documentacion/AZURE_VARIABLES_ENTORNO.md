@@ -43,6 +43,23 @@ Sin `Cors__AllowedOrigins__*` la API **no arranca** en Production.
 
 ---
 
+## Push FCM (notificaciones al teléfono)
+
+Sin esta sección, la API crea notificaciones **in-app** pero **no envía push** (usa `LoggingPushSender`).
+
+| Variable | Producción | Notas |
+|----------|------------|--------|
+| `Push__Enabled` | `true` | `false` = solo log, sin FCM |
+| `Push__CredentialsPath` | Ruta absoluta al JSON (Linux: `/home/site/secrets/firebase-service-account.json`) |
+
+**Archivo en App Service:** Firebase Console → Project settings → Service accounts → Generate new private key. Subir vía Kudu/FTP y apuntar `Push__CredentialsPath`.
+
+Diagnóstico SQL: [VerifyPushNotifications.sql](./VerifyPushNotifications.sql). Guía completa: [PUSH_NOTIFICATIONS_SETUP.md](./PUSH_NOTIFICATIONS_SETUP.md).
+
+Logs esperados si push está desactivado: `Push (disabled) user=` o `Firebase push disabled`.
+
+---
+
 ## Pagos — general
 
 | Variable | Producción | Notas |
@@ -185,9 +202,10 @@ flutter build apk --dart-define=API_BASE_URL=https://api.craftquestai.com --dart
 2. Connection string SQL
 3. `Jwt__SecretKey` + CORS
 4. `ExternalAuth__*` (Google/Apple)
-5. `Payments__UseMockPayments=false` + PayPal + webhooks + rutas a secretos Play/Apple
-6. `Ai__GeminiApiKey`
-7. `Media__StorageProvider=azure` + connection string Blob
-8. `PasswordReset__*` + `APPLICATIONINSIGHTS_CONNECTION_STRING`
+5. `Push__Enabled=true` + `Push__CredentialsPath` (FCM; ver [PUSH_NOTIFICATIONS_SETUP.md](./PUSH_NOTIFICATIONS_SETUP.md))
+6. `Payments__UseMockPayments=false` + PayPal + webhooks + rutas a secretos Play/Apple
+7. `Ai__GeminiApiKey`
+8. `Media__StorageProvider=azure` + connection string Blob
+9. `PasswordReset__*` + `APPLICATIONINSIGHTS_CONNECTION_STRING`
 
 Marca como **secretos** en Azure (o Key Vault references): `Jwt__SecretKey`, `PasswordReset__Pepper`, `Payments__PayPal__ClientSecret`, `Ai__GeminiApiKey`, `Media__Azure__ConnectionString`, `ConnectionStrings__DefaultConnection`.

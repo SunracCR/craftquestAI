@@ -87,6 +87,7 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
       return;
     }
     if (state is AuthFailure) {
+      _lastSubmittedOAuthIdToken = null;
       unawaited(_maybeShowOAuthFailure(state.message));
     }
   }
@@ -127,17 +128,57 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
       }
     }
 
-    final oauth = OAuthSignInService(
+    final oauth = _oauth;
+    final reuseOAuth = oauth != null &&
+        oauth.googleServerClientId == resolvedGoogleClientId &&
+        oauth.appleWebServicesId == (appleServicesId ?? '') &&
+        oauth.appleWebRedirectUri == (resolvedAppleRedirect ?? '');
+
+    if (reuseOAuth) {
+      if (kIsWeb && resolvedGoogleClientId.isNotEmpty) {
+        oauth.configureWebGoogleListener(
+          _onWebGoogleCredentials,
+          onError: _onWebGoogleError,
+        );
+      }
+      return;
+    }
+
+    final newOAuth = OAuthSignInService(
       googleServerClientId: resolvedGoogleClientId,
       appleWebServicesId: appleServicesId,
       appleWebRedirectUri: resolvedAppleRedirect,
     );
     if (kIsWeb && resolvedGoogleClientId.isNotEmpty) {
-      oauth.configureWebGoogleListener(_onWebGoogleCredentials);
+      newOAuth.configureWebGoogleListener(
+        _onWebGoogleCredentials,
+        onError: _onWebGoogleError,
+      );
     }
 
     _oauth?.dispose();
-    _oauth = oauth;
+    _oauth = newOAuth;
+  }
+
+  void _onWebGoogleError(Object error, StackTrace stackTrace) {
+    if (kDebugMode) {
+      debugPrint('OAuth web Google listener error: $error');
+      debugPrint('$stackTrace');
+    }
+    if (!mounted) {
+      return;
+    }
+    setState(() => _busy = false);
+    _lastSubmittedOAuthIdToken = null;
+    final l10n = AppLocalizations.of(context)!;
+    final detail = error.toString();
+    final hint = _oauthFailureHint(
+      error: error,
+      detail: detail,
+      provider: 'google',
+      l10n: l10n,
+    );
+    AppSnackBars.showError('${l10n.oauthSignInFailed}$hint');
   }
 
   Future<void> _refreshOAuthConfigFromApi() async {
@@ -189,7 +230,10 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
   }
 
   void _onWebGoogleCredentials(OAuthSignInResult credentials) {
-    if (!mounted || _busy || !widget.enabled) {
+    if (!mounted || !widget.enabled) {
+      return;
+    }
+    if (_busy) {
       return;
     }
     if (_lastSubmittedOAuthIdToken == credentials.idToken) {
