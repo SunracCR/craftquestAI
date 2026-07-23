@@ -38,5 +38,16 @@
     "Password": "",
     "FromEmail": "noreply@craftquestai.com",
     "FromDisplayName": "CraftQuestAI"
+  },
+  "ExternalAuth": {
+    "Google": {
+      "WebClientId": "<OAuth Web client ID>.apps.googleusercontent.com",
+      "AdditionalClientIds": []
+    },
+    "Apple": {
+      "BundleId": "com.craftquestai.craftquestaiApp",
+      "ServicesId": "com.craftquestai.web",
+      "WebRedirectUri": "https://app.craftquestai.com/"
+    }
   }
 }

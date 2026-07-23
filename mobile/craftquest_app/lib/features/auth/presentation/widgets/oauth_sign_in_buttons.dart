@@ -51,11 +51,11 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
       defaultTargetPlatform == TargetPlatform.macOS ||
       defaultTargetPlatform == TargetPlatform.windows;
 
+  /// Apple nativo: iOS/macOS. Web usa Services ID. Android no soportado (sin flujo web).
   static bool get _supportsAppleUi =>
       kIsWeb ||
       defaultTargetPlatform == TargetPlatform.iOS ||
-      defaultTargetPlatform == TargetPlatform.macOS ||
-      defaultTargetPlatform == TargetPlatform.android;
+      defaultTargetPlatform == TargetPlatform.macOS;
 
   @override
   void initState() {
@@ -122,6 +122,7 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
     var resolvedAppleRedirect = appleWebRedirectUri;
     if (kIsWeb &&
         (resolvedAppleRedirect == null || resolvedAppleRedirect.isEmpty)) {
+      // Must match Apple Services ID Return URL exactly (trailing slash included).
       resolvedAppleRedirect = '${Uri.base.origin}/';
       if (!resolvedAppleRedirect.endsWith('/')) {
         resolvedAppleRedirect = '$resolvedAppleRedirect/';

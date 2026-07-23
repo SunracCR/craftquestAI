@@ -6,10 +6,13 @@
 |--------|------|------|
 | POST | `/api/auth/google` | `{ "idToken": "..." }` |
 | POST | `/api/auth/apple` | `{ "idToken": "...", "email": "...", "displayName": "..." }` |
+| GET | `/api/auth/oauth-config` | Devuelve IDs públicos y flags `isAppleConfigured`, `isAppleWebConfigured` |
 
 `email` y `displayName` en Apple solo en el **primer** inicio (cuando Apple los entrega al cliente).
 
 ## Configuración backend (`appsettings`)
+
+Producción ([`appsettings.Production.json`](../src/CraftQuest.Api/appsettings.Production.json)):
 
 ```json
 "ExternalAuth": {
@@ -18,9 +21,41 @@
     "AdditionalClientIds": []
   },
   "Apple": {
-      "BundleId": "com.craftquestai.craftquestaiApp",
-    "ServicesId": ""
+    "BundleId": "com.craftquestai.craftquestaiApp",
+    "ServicesId": "com.craftquestai.web",
+    "WebRedirectUri": "https://app.craftquestai.com/"
   }
+}
+```
+
+| Campo | Uso |
+|-------|-----|
+| `BundleId` | Audience del identity token en **iOS/macOS** nativo |
+| `ServicesId` | Audience del identity token en **web** (y futuro Android vía flujo web) |
+| `WebRedirectUri` | Return URL registrada en Apple; debe coincidir **exactamente** (incluye `/` final) |
+
+Variables Azure equivalentes (opcional, sobreescriben JSON):
+
+| Variable | Valor producción |
+|----------|------------------|
+| `ExternalAuth__Apple__BundleId` | `com.craftquestai.craftquestaiApp` |
+| `ExternalAuth__Apple__ServicesId` | `com.craftquestai.web` |
+| `ExternalAuth__Apple__WebRedirectUri` | `https://app.craftquestai.com/` |
+
+Tras desplegar la API, verificar:
+
+```http
+GET https://api.craftquestai.com/api/auth/oauth-config
+```
+
+Respuesta esperada (fragmento):
+
+```json
+{
+  "isAppleConfigured": true,
+  "isAppleWebConfigured": true,
+  "appleServicesId": "com.craftquestai.web",
+  "appleWebRedirectUri": "https://app.craftquestai.com/"
 }
 ```
 
@@ -37,29 +72,32 @@
 6. Pantalla de consentimiento OAuth configurada.
 7. Habilitar **Google People API** en el mismo proyecto (APIs y servicios → Biblioteca → “People API” → Habilitar). Sin esto, el login en web puede fallar con `403 SERVICE_DISABLED` / `people.googleapis.com`.
 
-### Apple Developer (iOS / Android)
+### Apple Developer — checklist manual
 
-1. App ID con capability **Sign in with Apple**.
-2. En Xcode (iOS): Signing & Capabilities → Sign in with Apple.
-3. `BundleId` debe coincidir con el de la app Flutter iOS.
+#### 1. App ID iOS (nativo)
 
-### Apple en **web** (sí se puede)
+1. [Apple Developer](https://developer.apple.com/account) → **Certificates, Identifiers & Profiles** → **Identifiers**.
+2. App ID `com.craftquestai.craftquestaiApp` → habilitar capability **Sign in with Apple**.
+3. En **Xcode** (Mac): target `Runner` → **Signing & Capabilities** → añadir **Sign in with Apple** (el entitlement ya está en `ios/Runner/Runner.entitlements`).
 
-Usa un **Services ID**, no el Bundle ID:
+#### 2. Services ID (web)
 
-1. Identifiers → **Services IDs** → crear (p. ej. `com.craftquestai.web`).
-2. Sign in with Apple → **Domains** + **Return URLs** (URL exacta, con `/` final si Apple la pide).
-3. API:
+1. Identifiers → **Services IDs** → crear `com.craftquestai.web`.
+2. Habilitar **Sign in with Apple** → **Configure**:
+   - **Primary App ID:** `com.craftquestai.craftquestaiApp`
+   - **Domains and Subdomains:** `app.craftquestai.com`
+   - **Return URLs:** `https://app.craftquestai.com/` (con `/` final — debe coincidir con `WebRedirectUri` en la API)
 
-```json
-"Apple": {
-  "BundleId": "com.craftquestai.craftquestaiApp",
-  "ServicesId": "com.craftquestai.web",
-  "WebRedirectUri": "https://tu-dominio-web/"
-}
-```
+No hace falta clave `.p8` de Sign in with Apple para login: el backend valida el JWT del cliente contra las claves públicas JWKS de Apple.
 
-El token web valida con audience = `ServicesId` (ya soportado en el backend).
+### Plataformas soportadas (Apple)
+
+| Plataforma | Botón visible | Mecanismo |
+|------------|---------------|-----------|
+| iOS | Sí | Nativo (`BundleId` como audience) |
+| Web (`app.craftquestai.com`) | Sí | Services ID + redirect web |
+| macOS | Sí (UI) | Nativo; falta entitlement en `macos/Runner/*.entitlements` si se publica macOS |
+| **Android** | **No** | Sin flujo web implementado; el botón está oculto para evitar errores en runtime |
 
 ## Flutter
 
@@ -69,14 +107,58 @@ flutter run --dart-define=GOOGLE_SERVER_CLIENT_ID=<Web client ID>.apps.googleuse
 
 Paquetes: `google_sign_in`, `sign_in_with_apple`. Web: script Apple en `web/index.html`.
 
-Google: `WebClientId` desde API (`GET /api/auth/oauth-config`). Apple web: `ServicesId` + `WebRedirectUri` en la API.
+Google: `WebClientId` desde API (`GET /api/auth/oauth-config`). Apple web: `ServicesId` + `WebRedirectUri` desde la misma API.
+
+En web, si la API no devuelve `WebRedirectUri`, el cliente usa `'${Uri.base.origin}/'` (p. ej. `https://app.craftquestai.com/` en producción).
 
 ### Flutter web (Google)
 
-En web **no** uses `GoogleSignIn.signIn()` para la API: no devuelve `idToken`. La app usa el botón oficial GIS (`renderButton`) + `signInSilently` / `onCurrentUserChanged`, igual que recomienda `google_sign_in_web`.
+En web **no** uses `GoogleSignIn.signIn()` para la API: no devuelve `idToken`. La app usa el botón oficial GIS (`renderButton`) + `onCurrentUserChanged`, igual que recomienda `google_sign_in_web`.
 
 ## Comportamiento
 
 - Cuenta nueva → usuario + rol student + plan Free + vínculo `google`/`apple` en `core.AuthProviders`.
 - Mismo email que registro con contraseña → se **vincula** el proveedor a la cuenta existente.
 - Cuenta solo OAuth → `PasswordHash` null (cambio de contraseña no disponible).
+
+## Prueba end-to-end (Apple)
+
+### Pre-requisitos
+
+- [ ] API desplegada con sección `ExternalAuth:Apple` completa
+- [ ] App ID iOS con Sign in with Apple + capability en Xcode
+- [ ] Services ID `com.craftquestai.web` con dominio y Return URL configurados
+- [ ] Web desplegada en `https://app.craftquestai.com`
+
+### iOS (dispositivo físico)
+
+1. Instalar build iOS (TestFlight o Xcode) con bundle `com.craftquestai.craftquestaiApp`.
+2. Abrir login → pulsar **Apple**.
+3. Completar flujo Apple → debe entrar a la app.
+
+### Web
+
+1. Abrir `https://app.craftquestai.com` → login → **Apple**.
+2. Completar flujo (dominio debe estar en Services ID; no funciona en `localhost` sin túnel).
+
+### Verificación SQL
+
+Tras login exitoso, sustituir el GUID del usuario:
+
+```sql
+SELECT Provider, ProviderSubject, LinkedAt
+FROM core.AuthProviders
+WHERE UserId = '00000000-0000-0000-0000-000000000000'
+  AND Provider = 'apple';
+```
+
+Debe existir una fila con `Provider = 'apple'` y un `ProviderSubject` (sub de Apple).
+
+Errores frecuentes:
+
+| Síntoma | Causa probable |
+|---------|----------------|
+| `Apple no está configurado en el servidor` | API sin `BundleId` / `ServicesId` |
+| `Apple en web requiere Services ID...` | `isAppleWebConfigured: false` en oauth-config |
+| `Invalid Apple token` / 401 | Return URL distinta, Services ID incorrecto, o token expirado |
+| Botón Apple no visible en Android | Comportamiento esperado (no soportado aún) |
