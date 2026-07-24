@@ -371,6 +371,9 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
       }
       if (!context.mounted || generation != _signInGeneration) return;
       setState(() => _busy = false);
+      if (_isOAuthUserCancellation(e)) {
+        return;
+      }
       final detail = e.toString();
       final hint = _oauthFailureHint(
         error: e,
@@ -383,6 +386,32 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
           : '${l10n.oauthSignInFailed}$hint';
       AppSnackBars.showError(message);
     }
+  }
+
+  /// User dismissed the OAuth sheet (Apple popup, Google picker, etc.).
+  static bool _isOAuthUserCancellation(Object error) {
+    if (error is SignInWithAppleAuthorizationException) {
+      return error.code == AuthorizationErrorCode.canceled;
+    }
+    if (error is SignInWithAppleCredentialsException) {
+      final message = error.message.toLowerCase();
+      return message.contains('popup_closed_by_user') ||
+          message.contains('popup_closed_by_browser') ||
+          message.contains('user_cancelled') ||
+          message.contains('user_canceled') ||
+          message.contains('canceled') ||
+          message.contains('cancelled');
+    }
+    if (error is PlatformException) {
+      final code = error.code.toLowerCase();
+      return code.contains('cancel') || code == '12501';
+    }
+    final detail = error.toString().toLowerCase();
+    return detail.contains('authorizationerrorcode.canceled') ||
+        detail.contains('authorization-error/canceled') ||
+        detail.contains('popup_closed_by_user') ||
+        detail.contains('popup_closed_by_browser') ||
+        detail.contains('sign_in_canceled');
   }
 
   static String _oauthFailureHint({
@@ -412,7 +441,8 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
         detail.contains('SERVICE_DISABLED')) {
       return l10n.oauthGooglePeopleApiHint;
     }
-    if (kIsWeb &&
+    if (provider == 'google' &&
+        kIsWeb &&
         (detail.contains('origin') ||
             detail.contains('Origin') ||
             detail.contains('popup') ||
