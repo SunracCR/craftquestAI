@@ -25,6 +25,8 @@ internal static class IntegrationTestDataSeeder
                 MaxQuestionsPerAiGeneration = 25,
                 MonthlyAiCredits = 20,
                 MonthlyShareCodes = 2,
+                MaxOfflineQuizzes = 0,
+                MaxOfflineStorageMb = 0,
                 IsActive = true,
             });
         }

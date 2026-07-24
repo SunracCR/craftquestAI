@@ -14,6 +14,9 @@ public class PracticeSessionConfiguration : IEntityTypeConfiguration<PracticeSes
         builder.Property(x => x.RandomizationStrategy).HasMaxLength(40).IsRequired();
         builder.Property(x => x.ScoreObtained).HasPrecision(10, 2);
         builder.Property(x => x.ScorePossible).HasPrecision(10, 2);
+        builder.HasIndex(x => x.ClientSessionId)
+            .IsUnique()
+            .HasFilter("[ClientSessionId] IS NOT NULL");
 
         builder.HasOne(x => x.StudentUser)
             .WithMany()

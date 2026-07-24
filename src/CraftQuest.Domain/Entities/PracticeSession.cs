@@ -26,6 +26,9 @@ public class PracticeSession
 
     public Guid? GuestVisitId { get; set; }
 
+    /// <summary>Client-generated id for idempotent offline session sync.</summary>
+    public Guid? ClientSessionId { get; set; }
+
     public User? StudentUser { get; set; }
     public Quiz Quiz { get; set; } = null!;
     public GuestVisit? GuestVisit { get; set; }

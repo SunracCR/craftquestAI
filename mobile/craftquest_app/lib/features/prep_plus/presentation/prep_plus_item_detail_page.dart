@@ -32,6 +32,10 @@ import 'package:craftquest_app/features/practice/data/practice_repository.dart';
 import 'package:craftquest_app/features/practice/presentation/my_practice_attempts_page.dart';
 import 'package:craftquest_app/features/practice/presentation/practice_navigation.dart';
 import 'package:craftquest_app/features/practice/presentation/practice_session_feedback.dart';
+import 'package:craftquest_app/features/offline_practice/data/offline_package_repository.dart';
+import 'package:craftquest_app/features/offline_practice/presentation/offline_downloads_page.dart';
+import 'package:craftquest_app/core/utils/billing_plan_access.dart';
+import 'package:craftquest_app/features/billing/data/billing_repository.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -73,6 +77,8 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
   bool _loading = true;
   bool _loadingPreferences = false;
   bool _checkingOut = false;
+  bool _downloadingOffline = false;
+  String? _planCode;
   bool _randomizeQuestions = false;
   bool _showTimer = true;
   bool _enableSoundEffects = PracticeLaunchOptions.defaults.enableSoundEffects;
@@ -110,6 +116,33 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       unawaited(_load());
     } else {
       unawaited(_load(fullScreenLoading: true));
+    }
+    unawaited(_loadBillingPlan());
+  }
+
+  Future<void> _loadBillingPlan() async {
+    try {
+      final billing = await getIt<BillingRepository>().getMyBilling();
+      if (!mounted) return;
+      setState(() => _planCode = billing.plan.code);
+    } catch (_) {}
+  }
+
+  Future<void> _downloadForOffline(String quizId) async {
+    if (!BillingPlanAccess.canDownloadOffline(_planCode)) {
+      return;
+    }
+    if (_downloadingOffline) return;
+    setState(() => _downloadingOffline = true);
+    try {
+      await getIt<OfflinePackageRepository>().downloadAndPersist(quizId: quizId);
+      if (!mounted) return;
+      AppSnackBars.showSuccess('Descarga offline completada.');
+    } catch (error) {
+      if (!mounted) return;
+      AppSnackBars.showError(error.toString());
+    } finally {
+      if (mounted) setState(() => _downloadingOffline = false);
     }
   }
 
@@ -826,6 +859,44 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
                               onSoundEffectsChanged: _updateSoundEffects,
                             ),
                           ),
+                          if (BillingPlanAccess.canDownloadOffline(_planCode))
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                AppSpacing.md,
+                                AppSpacing.sm,
+                                AppSpacing.md,
+                                0,
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: AppSecondaryButton(
+                                      label: _downloadingOffline
+                                          ? 'Descargando...'
+                                          : 'Descargar offline',
+                                      onPressed: _downloadingOffline
+                                          ? null
+                                          : () => _downloadForOffline(
+                                                _item!.quizId,
+                                              ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.sm),
+                                  IconButton(
+                                    tooltip: 'Mis descargas offline',
+                                    onPressed: () {
+                                      Navigator.of(context).push<void>(
+                                        MaterialPageRoute<void>(
+                                          builder: (_) =>
+                                              const OfflineDownloadsPage(),
+                                        ),
+                                      );
+                                    },
+                                    icon: const Icon(Icons.offline_pin),
+                                  ),
+                                ],
+                              ),
+                            ),
                         ],
                         if (!_item!.canPurchase &&
                             _item!.userAccessState == 'none')

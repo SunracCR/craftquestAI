@@ -51,6 +51,9 @@ public sealed class PlanEntitlementsDto
     public bool CanInviteUsersDirectly { get; init; }
     /// <summary>True cuando hay más cuestionarios propios que permite el plan; solo lectura/práctica.</summary>
     public bool QuizModificationLocked { get; init; }
+    public int? MaxOfflineQuizzes { get; init; }
+    public int? MaxOfflineStorageMb { get; init; }
+    public bool CanDownloadOffline { get; init; }
 }
 
 public sealed class CreditBalancesDto

@@ -1,4 +1,5 @@
 using CraftQuest.Application.Contracts;
+using CraftQuest.Application.Models.Offline;
 using CraftQuest.Application.Models.Practice;
 using CraftQuest.Application.Models.Teacher;
 using Microsoft.AspNetCore.Authorization;
@@ -19,6 +20,20 @@ public class PracticeController(IPracticeService practiceService) : ApiControlle
     {
         var session = await practiceService.StartSessionAsync(GetUserId(), request, cancellationToken);
         return CreatedAtAction(nameof(Start), new { sessionId = session.PracticeSessionId }, session);
+    }
+
+    [HttpPost("offline-sync")]
+    [ProducesResponseType(typeof(OfflineSyncResultDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> SyncOffline(
+        [FromBody] OfflineSyncRequest request,
+        [FromServices] IOfflineQuizService offlineQuizService,
+        CancellationToken cancellationToken)
+    {
+        var result = await offlineQuizService.SyncOfflineSessionAsync(
+            GetUserId(),
+            request,
+            cancellationToken);
+        return Ok(result);
     }
 
     [HttpPost("{sessionId:guid}/questions/{practiceQuestionSnapshotId:guid}/answer")]

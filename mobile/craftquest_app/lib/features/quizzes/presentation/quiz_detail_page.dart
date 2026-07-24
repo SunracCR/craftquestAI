@@ -41,6 +41,8 @@ import 'package:craftquest_app/features/sharing/data/sharing_repository.dart';
 import 'package:craftquest_app/features/sharing/data/models/sharing_models.dart';
 import 'package:craftquest_app/features/billing/data/billing_repository.dart';
 import 'package:craftquest_app/features/billing/presentation/upgrade_plan_page.dart';
+import 'package:craftquest_app/features/offline_practice/data/offline_package_repository.dart';
+import 'package:craftquest_app/features/offline_practice/presentation/offline_downloads_page.dart';
 import 'package:craftquest_app/features/sharing/presentation/invite_quiz_users_sheet.dart';
 import 'package:craftquest_app/features/sharing/presentation/create_share_code_sheet.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -75,6 +77,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
   final _repository = getIt<QuizRepository>();
   final _sharingRepository = getIt<SharingRepository>();
   final _billingRepository = getIt<BillingRepository>();
+  final _offlineRepository = getIt<OfflinePackageRepository>();
   final _practiceRepository = getIt<PracticeRepository>();
   final _preferencesRepository = getIt<PracticePreferencesRepository>();
   final _soundPreferenceStore = getIt<PracticeSoundPreferenceStore>();
@@ -94,6 +97,8 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
   bool _isEditingTitle = false;
   bool _savingTitle = false;
   bool _exportingPdf = false;
+  bool _downloadingOffline = false;
+  bool _isOfflineDownloaded = false;
   String? _planCode;
   PracticeActiveSessionModel? _activePractice;
   bool _canInviteDirect = false;
@@ -129,9 +134,17 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
     _publicationStatus = widget.publicationStatus;
     _warmPracticeUiPrefetch();
     scheduleInitialScreenLoad(_refreshQuestionCount);
-    if (widget.isOwner) {
-      _loadBillingEntitlements();
-    }
+    _loadBillingEntitlements();
+    _refreshOfflineDownloadState();
+  }
+
+  Future<void> _refreshOfflineDownloadState() async {
+    try {
+      final downloaded =
+          await _offlineRepository.isQuizDownloaded(widget.quizId);
+      if (!mounted) return;
+      setState(() => _isOfflineDownloaded = downloaded);
+    } catch (_) {}
   }
 
   @override
@@ -521,6 +534,9 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
 
   bool get _canExportQuizPdf => BillingPlanAccess.canExportQuizPdf(_planCode);
 
+  bool get _canDownloadOffline =>
+      BillingPlanAccess.canDownloadOffline(_planCode) && _canPractice;
+
   Future<void> _loadBillingEntitlements() async {
     try {
       final billing = await _billingRepository.getMyBilling();
@@ -561,6 +577,74 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
         .trim();
     final base = sanitized.isEmpty ? 'quiz' : sanitized;
     return base.length > 120 ? '${base.substring(0, 120)}.pdf' : '$base.pdf';
+  }
+
+  Future<void> _promptOfflineUpgrade() async {
+    final l10n = AppLocalizations.of(context)!;
+    final upgrade = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Descargar para offline'),
+        content: const Text(
+          'La descarga offline requiere un plan de pago (Pro, Teacher o Institution).',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.upgradePlanAction),
+          ),
+        ],
+      ),
+    );
+    if (upgrade == true && mounted) {
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(builder: (_) => const UpgradePlanPage()),
+      );
+    }
+  }
+
+  Future<void> _downloadForOffline() async {
+    if (!_canDownloadOffline) {
+      await _promptOfflineUpgrade();
+      return;
+    }
+    if (_downloadingOffline) return;
+
+    setState(() {
+      _downloadingOffline = true;
+    });
+
+    try {
+      await _offlineRepository.downloadAndPersist(
+        quizId: widget.quizId,
+        onProgress: (_) {},
+      );
+      if (!mounted) return;
+      setState(() {
+        _isOfflineDownloaded = true;
+        _downloadingOffline = false;
+      });
+      AppSnackBars.showSuccess(
+        'Cuestionario descargado para uso offline.',
+      );
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _downloadingOffline = false;
+      });
+      AppSnackBars.showError(error.toString());
+    }
+  }
+
+  Future<void> _openOfflineDownloads() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(builder: (_) => const OfflineDownloadsPage()),
+    );
+    await _refreshOfflineDownloadState();
   }
 
   Future<void> _promptPdfUpgrade() async {
@@ -1382,6 +1466,32 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
                                         .withValues(alpha: 0.2),
                                     onTap: _viewAttempts,
                                   ),
+                                  if (_canPractice) ...[
+                                    _menuDivider(),
+                                    AppActionTile(
+                                      icon: Icons.download_for_offline_rounded,
+                                      label: _downloadingOffline
+                                          ? 'Descargando offline...'
+                                          : (_isOfflineDownloaded
+                                              ? 'Actualizar descarga offline'
+                                              : 'Descargar para offline'),
+                                      iconColor: AppColors.accentMint,
+                                      iconBackgroundColor: AppColors.accentMint
+                                          .withValues(alpha: 0.2),
+                                      isLoading: _downloadingOffline,
+                                      locked: !_canDownloadOffline,
+                                      onTap: _downloadForOffline,
+                                    ),
+                                    _menuDivider(),
+                                    AppActionTile(
+                                      icon: Icons.offline_pin,
+                                      label: 'Mis descargas offline',
+                                      iconColor: AppColors.accentCool,
+                                      iconBackgroundColor: AppColors.accentCool
+                                          .withValues(alpha: 0.2),
+                                      onTap: _openOfflineDownloads,
+                                    ),
+                                  ],
                                   if (!isOwner) ...[
                                     _menuDivider(),
                                     AppActionTile(

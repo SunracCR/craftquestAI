@@ -1,4 +1,5 @@
 using CraftQuest.Application.Models.Billing;
+using CraftQuest.Application.Models.Offline;
 
 namespace CraftQuest.Application.Contracts;
 
@@ -54,6 +55,14 @@ public interface IBillingService
     Task EnsureHasAiCreditsAsync(
         Guid userId,
         int amount,
+        CancellationToken cancellationToken = default);
+
+    Task EnsureCanDownloadOfflineAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
+    Task<OfflineEntitlementsDto> GetOfflineEntitlementsAsync(
+        Guid userId,
         CancellationToken cancellationToken = default);
 
     Task ConsumeAiCreditsAsync(

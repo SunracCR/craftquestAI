@@ -7,6 +7,7 @@ using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.HostedServices;
 using CraftQuest.Infrastructure.Services;
 using CraftQuest.Infrastructure.Services.Ai;
+using CraftQuest.Infrastructure.Services.Offline;
 using CraftQuest.Infrastructure.Services.Practice;
 using CraftQuest.Infrastructure.StudyMaterials;
 using CraftQuest.Infrastructure.Security;
@@ -77,6 +78,7 @@ public static class DependencyInjection
         services.Configure<AiOptions>(configuration.GetSection(AiOptions.SectionName));
         services.Configure<AiGenerationOptions>(configuration.GetSection(AiGenerationOptions.SectionName));
         services.Configure<PracticeOptions>(configuration.GetSection(PracticeOptions.SectionName));
+        services.Configure<OfflineOptions>(configuration.GetSection(OfflineOptions.SectionName));
         services.Configure<MediaOptions>(configuration.GetSection(MediaOptions.SectionName));
         services.Configure<PaymentOptions>(configuration.GetSection(PaymentOptions.SectionName));
         services.AddHttpClient("Gemini", client =>
@@ -102,6 +104,8 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IQuizService, QuizService>();
         services.AddScoped<IQuizPdfExportService, QuizPdfExportService>();
+        services.AddScoped<IOfflineQuizService, OfflineQuizService>();
+        services.AddScoped<OfflinePackageCryptoService>();
         services.AddScoped<IQuizFolderService, QuizFolderService>();
         services.AddScoped<IPracticeService, PracticeService>();
         services.AddScoped<IQuizPracticePreferenceService, QuizPracticePreferenceService>();

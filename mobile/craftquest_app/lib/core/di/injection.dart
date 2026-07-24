@@ -39,6 +39,12 @@ import 'package:craftquest_app/features/prep_plus/data/prep_plus_admin_repositor
 import 'package:craftquest_app/features/prep_plus/data/prep_plus_repository.dart';
 import 'package:craftquest_app/features/notifications/data/notification_repository.dart';
 import 'package:craftquest_app/features/notifications/presentation/notifications_cubit.dart';
+import 'package:craftquest_app/features/offline_practice/data/database/offline_local_database.dart';
+import 'package:craftquest_app/features/offline_practice/data/offline_key_storage.dart';
+import 'package:craftquest_app/features/offline_practice/data/offline_media_downloader.dart';
+import 'package:craftquest_app/features/offline_practice/data/offline_package_repository.dart';
+import 'package:craftquest_app/features/offline_practice/data/offline_sync_repository.dart';
+import 'package:craftquest_app/features/offline_practice/domain/offline_sync_manager.dart';
 import 'package:craftquest_app/features/shell/presentation/main_shell_tab_signal.dart';
 import 'package:craftquest_app/core/services/push_notification_service.dart';
 import 'package:get_it/get_it.dart';
@@ -128,5 +134,33 @@ void configureDependencies() {
   );
   getIt.registerLazySingleton(
     () => PushNotificationService(getIt<NotificationRepository>()),
+  );
+  getIt.registerLazySingleton(OfflineLocalDatabase.new);
+  getIt.registerLazySingleton(OfflineKeyStorage.new);
+  getIt.registerLazySingleton(
+    () => OfflineMediaDownloader(
+      database: getIt<OfflineLocalDatabase>(),
+      tokenStorage: getIt<TokenStorage>(),
+    ),
+  );
+  getIt.registerLazySingleton(
+    () => OfflinePackageRepository(
+      getIt<ApiClient>(),
+      getIt<OfflineLocalDatabase>(),
+      getIt<OfflineKeyStorage>(),
+      getIt<OfflineMediaDownloader>(),
+    ),
+  );
+  getIt.registerLazySingleton(
+    () => OfflineSyncRepository(
+      getIt<ApiClient>(),
+      getIt<OfflineLocalDatabase>(),
+    ),
+  );
+  getIt.registerLazySingleton(
+    () => OfflineSyncManager(
+      getIt<OfflineSyncRepository>(),
+      getIt<NetworkConnectivityService>(),
+    ),
   );
 }

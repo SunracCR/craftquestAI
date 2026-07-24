@@ -168,6 +168,9 @@ class PlanEntitlementsModel {
     required this.currentRedeemedSharedQuizzes,
     this.canInviteUsersDirectly = false,
     this.quizModificationLocked = false,
+    this.maxOfflineQuizzes,
+    this.maxOfflineStorageMb,
+    this.canDownloadOffline = false,
   });
 
   factory PlanEntitlementsModel.fromJson(Map<String, dynamic> json) {
@@ -183,6 +186,9 @@ class PlanEntitlementsModel {
           json['canInviteUsersDirectly'] as bool? ?? false,
       quizModificationLocked:
           json['quizModificationLocked'] as bool? ?? false,
+      maxOfflineQuizzes: json['maxOfflineQuizzes'] as int?,
+      maxOfflineStorageMb: json['maxOfflineStorageMb'] as int?,
+      canDownloadOffline: json['canDownloadOffline'] as bool? ?? false,
     );
   }
 
@@ -194,6 +200,9 @@ class PlanEntitlementsModel {
   final int currentRedeemedSharedQuizzes;
   final bool canInviteUsersDirectly;
   final bool quizModificationLocked;
+  final int? maxOfflineQuizzes;
+  final int? maxOfflineStorageMb;
+  final bool canDownloadOffline;
 }
 
 class CreditBalancesModel {

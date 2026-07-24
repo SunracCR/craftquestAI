@@ -10,4 +10,6 @@ abstract final class BillingPlanAccess {
   static bool canBuyAiCreditPacks(String? planCode) => isPaidPlan(planCode);
 
   static bool canExportQuizPdf(String? planCode) => isPaidPlan(planCode);
+
+  static bool canDownloadOffline(String? planCode) => isPaidPlan(planCode);
 }

@@ -3,6 +3,7 @@ using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Exceptions;
 using CraftQuest.Application.Models.Billing;
 using CraftQuest.Application.Models.Notifications;
+using CraftQuest.Application.Models.Offline;
 using CraftQuest.Domain.Constants;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Notifications;
@@ -72,6 +73,9 @@ public class BillingService(
                 CurrentRedeemedSharedQuizzes = baseEntitlements.CurrentRedeemedSharedQuizzes,
                 CanInviteUsersDirectly = canInviteDirectly,
                 QuizModificationLocked = IsQuizModificationLocked(plan, quizzesCreated),
+                MaxOfflineQuizzes = plan.MaxOfflineQuizzes,
+                MaxOfflineStorageMb = plan.MaxOfflineStorageMb,
+                CanDownloadOffline = IsPaidPlan(plan.Code),
             },
             Credits = new CreditBalancesDto
             {
@@ -289,6 +293,34 @@ public class BillingService(
                 403,
                 "DIRECT_INVITE_NOT_ALLOWED");
         }
+    }
+
+    public async Task EnsureCanDownloadOfflineAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var subscription = await GetActiveSubscriptionAsync(userId, cancellationToken);
+        if (!IsPaidPlan(subscription.Plan.Code))
+        {
+            throw new AppException(
+                "Offline quiz download requires a paid plan.",
+                403,
+                "OFFLINE_PLAN_REQUIRED");
+        }
+    }
+
+    public async Task<OfflineEntitlementsDto> GetOfflineEntitlementsAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var subscription = await GetActiveSubscriptionAsync(userId, cancellationToken);
+        var plan = subscription.Plan;
+        return new OfflineEntitlementsDto
+        {
+            CanDownloadOffline = IsPaidPlan(plan.Code),
+            MaxOfflineQuizzes = plan.MaxOfflineQuizzes,
+            MaxOfflineStorageMb = plan.MaxOfflineStorageMb,
+        };
     }
 
     public async Task EnsureHasAiCreditsAsync(
@@ -1131,6 +1163,10 @@ public class BillingService(
 
     private static bool IsQuizModificationLocked(Plan plan, int quizzesCreated) =>
         plan.MaxQuizzes is int max && quizzesCreated > max;
+
+    private static bool IsPaidPlan(string planCode) =>
+        !string.IsNullOrWhiteSpace(planCode)
+        && !planCode.Equals("free", StringComparison.OrdinalIgnoreCase);
 
     private Task<int> CountOwnedQuizzesAsync(
         Guid userId,
