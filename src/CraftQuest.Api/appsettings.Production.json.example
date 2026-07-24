@@ -47,7 +47,7 @@
     "Apple": {
       "BundleId": "com.craftquestai.craftquestaiApp",
       "ServicesId": "com.craftquestai.web",
-      "WebRedirectUri": "https://app.craftquestai.com/"
+      "WebRedirectUri": "https://app.craftquestai.com"
     }
   }
 }

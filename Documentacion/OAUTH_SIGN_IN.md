@@ -23,7 +23,7 @@ Producción ([`appsettings.Production.json`](../src/CraftQuest.Api/appsettings.P
   "Apple": {
     "BundleId": "com.craftquestai.craftquestaiApp",
     "ServicesId": "com.craftquestai.web",
-    "WebRedirectUri": "https://app.craftquestai.com/"
+    "WebRedirectUri": "https://app.craftquestai.com"
   }
 }
 ```
@@ -32,7 +32,7 @@ Producción ([`appsettings.Production.json`](../src/CraftQuest.Api/appsettings.P
 |-------|-----|
 | `BundleId` | Audience del identity token en **iOS/macOS** nativo |
 | `ServicesId` | Audience del identity token en **web** (y futuro Android vía flujo web) |
-| `WebRedirectUri` | Return URL registrada en Apple; debe coincidir **exactamente** (incluye `/` final) |
+| `WebRedirectUri` | Return URL registrada en Apple (web popup: origen sin `/` final, p. ej. `https://app.craftquestai.com`) |
 
 Variables Azure equivalentes (opcional, sobreescriben JSON):
 
@@ -40,7 +40,7 @@ Variables Azure equivalentes (opcional, sobreescriben JSON):
 |----------|------------------|
 | `ExternalAuth__Apple__BundleId` | `com.craftquestai.craftquestaiApp` |
 | `ExternalAuth__Apple__ServicesId` | `com.craftquestai.web` |
-| `ExternalAuth__Apple__WebRedirectUri` | `https://app.craftquestai.com/` |
+| `ExternalAuth__Apple__WebRedirectUri` | `https://app.craftquestai.com` |
 
 Tras desplegar la API, verificar:
 
@@ -55,7 +55,7 @@ Respuesta esperada (fragmento):
   "isAppleConfigured": true,
   "isAppleWebConfigured": true,
   "appleServicesId": "com.craftquestai.web",
-  "appleWebRedirectUri": "https://app.craftquestai.com/"
+  "appleWebRedirectUri": "https://app.craftquestai.com"
 }
 ```
 
@@ -86,9 +86,7 @@ Respuesta esperada (fragmento):
 2. Habilitar **Sign in with Apple** → **Configure**:
    - **Primary App ID:** `com.craftquestai.craftquestaiApp`
    - **Domains and Subdomains:** `app.craftquestai.com`
-   - **Return URLs:** registra **ambas** (Apple exige coincidencia exacta con el `redirect_uri`):
-     - `https://app.craftquestai.com/`
-     - `https://app.craftquestai.com`
+   - **Return URLs:** `https://app.craftquestai.com` (**sin** barra final — el plugin web usa `usePopup: true`)
 3. **Verificar dominio (obligatorio para web):**
    - Apple ofrece descargar `apple-developer-domain-association.txt`.
    - Colócalo en [`mobile/craftquest_app/web/.well-known/apple-developer-domain-association.txt`](../mobile/craftquest_app/web/.well-known/apple-developer-domain-association.txt).
@@ -120,7 +118,9 @@ Paquetes: `google_sign_in`, `sign_in_with_apple`. Web: script Apple en `web/inde
 
 Google: `WebClientId` desde API (`GET /api/auth/oauth-config`). Apple web: `ServicesId` + `WebRedirectUri` desde la misma API.
 
-En web, si la API no devuelve `WebRedirectUri`, el cliente usa `'${Uri.base.origin}/'` (p. ej. `https://app.craftquestai.com/` en producción).
+En web, si la API no devuelve `WebRedirectUri`, el cliente usa `Uri.base.origin` (p. ej. `https://app.craftquestai.com`).
+
+**Importante (popup web):** con `usePopup: true` (Sign in with Apple JS), el `redirectURI` debe ser solo el **origen** del sitio, sin `/` final ni path. Si Apple devuelve `Invalid web redirect url` y la URL lleva `redirect_uri=...com%2F`, el Return URL en Apple y la API deben ir **sin** barra final.
 
 ### Flutter web (Google)
 

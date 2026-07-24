@@ -25,6 +25,6 @@ public class AppleAuthOptions
     /// <summary>Services ID (Sign in with Apple en web/Android), si aplica.</summary>
     public string? ServicesId { get; set; }
 
-    /// <summary>Return URL registrada en Apple (web), p. ej. https://app.craftquestai.com/</summary>
+    /// <summary>Return URL registrada en Apple (web), p. ej. https://app.craftquestai.com (sin barra final; usePopup).</summary>
     public string? WebRedirectUri { get; set; }
 }

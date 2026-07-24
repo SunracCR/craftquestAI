@@ -57,6 +57,15 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
       defaultTargetPlatform == TargetPlatform.iOS ||
       defaultTargetPlatform == TargetPlatform.macOS;
 
+  /// Apple JS with usePopup expects origin-only redirect (no trailing slash).
+  static String _normalizeAppleWebRedirectUri(String uri) {
+    final trimmed = uri.trim();
+    if (trimmed.endsWith('/') && trimmed.indexOf('/', 8) == trimmed.length - 1) {
+      return trimmed.substring(0, trimmed.length - 1);
+    }
+    return trimmed;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -122,11 +131,11 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
     var resolvedAppleRedirect = appleWebRedirectUri;
     if (kIsWeb &&
         (resolvedAppleRedirect == null || resolvedAppleRedirect.isEmpty)) {
-      // Must match Apple Services ID Return URL exactly (trailing slash included).
-      resolvedAppleRedirect = '${Uri.base.origin}/';
-      if (!resolvedAppleRedirect.endsWith('/')) {
-        resolvedAppleRedirect = '$resolvedAppleRedirect/';
-      }
+      // usePopup: redirectURI = origin only (no path/trailing slash). Must match Apple Return URL.
+      resolvedAppleRedirect = Uri.base.origin;
+    } else if (resolvedAppleRedirect != null &&
+        resolvedAppleRedirect.isNotEmpty) {
+      resolvedAppleRedirect = _normalizeAppleWebRedirectUri(resolvedAppleRedirect);
     }
 
     final oauth = _oauth;
@@ -202,10 +211,9 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
 
     if (kIsWeb &&
         (appleWebRedirectUri == null || appleWebRedirectUri.isEmpty)) {
-      appleWebRedirectUri = '${Uri.base.origin}/';
-      if (!appleWebRedirectUri.endsWith('/')) {
-        appleWebRedirectUri = '$appleWebRedirectUri/';
-      }
+      appleWebRedirectUri = Uri.base.origin;
+    } else if (appleWebRedirectUri != null && appleWebRedirectUri.isNotEmpty) {
+      appleWebRedirectUri = _normalizeAppleWebRedirectUri(appleWebRedirectUri);
     }
 
     var appleAvailable = _appleAvailable;

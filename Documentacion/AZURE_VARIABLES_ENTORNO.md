@@ -39,7 +39,7 @@ Sin `Cors__AllowedOrigins__*` la API **no arranca** en Production.
 | `ExternalAuth__Google__AdditionalClientIds__0` | No | Client ID Android/iOS extra si el token trae otro `aud` |
 | `ExternalAuth__Apple__BundleId` | Sí (Apple iOS) | Debe coincidir con la app: `com.craftquestai.craftquestaiApp` |
 | `ExternalAuth__Apple__ServicesId` | Sí (web) | Services ID de Apple Developer |
-| `ExternalAuth__Apple__WebRedirectUri` | Sí (web) | Return URL exacta, p. ej. `https://app.craftquestai.com/` |
+| `ExternalAuth__Apple__WebRedirectUri` | Sí (web) | Return URL exacta, p. ej. `https://app.craftquestai.com` (sin `/` final en popup web) |
 
 ---
 
