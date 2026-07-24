@@ -3,7 +3,8 @@
     "rewrite": "/index.html",
     "exclude": [
       "/assets/*",
-      "/*.{css,scss,js,map,json,wasm,png,jpg,jpeg,gif,svg,webp,ico,woff,woff2,ttf,otf,mp3,wav,ogg}"
+      "/.well-known/*",
+      "/*.{css,scss,js,map,json,wasm,png,jpg,jpeg,gif,svg,webp,ico,woff,woff2,ttf,otf,mp3,wav,ogg,txt}"
     ]
   },
   "mimeTypes": {

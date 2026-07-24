@@ -86,7 +86,18 @@ Respuesta esperada (fragmento):
 2. Habilitar **Sign in with Apple** → **Configure**:
    - **Primary App ID:** `com.craftquestai.craftquestaiApp`
    - **Domains and Subdomains:** `app.craftquestai.com`
-   - **Return URLs:** `https://app.craftquestai.com/` (con `/` final — debe coincidir con `WebRedirectUri` en la API)
+   - **Return URLs:** registra **ambas** (Apple exige coincidencia exacta con el `redirect_uri`):
+     - `https://app.craftquestai.com/`
+     - `https://app.craftquestai.com`
+3. **Verificar dominio (obligatorio para web):**
+   - Apple ofrece descargar `apple-developer-domain-association.txt`.
+   - Colócalo en [`mobile/craftquest_app/web/.well-known/apple-developer-domain-association.txt`](../mobile/craftquest_app/web/.well-known/apple-developer-domain-association.txt).
+   - Despliega la web. La URL debe devolver el **archivo de texto**, no el HTML de Flutter:
+     ```bash
+     curl https://app.craftquestai.com/.well-known/apple-developer-domain-association.txt
+     ```
+   - En Apple Developer, pulsa **Verify** junto a `app.craftquestai.com`.
+   - Si esa URL responde con `<!DOCTYPE html>`, el dominio **no** está verificado → error `Invalid web redirect url`.
 
 No hace falta clave `.p8` de Sign in with Apple para login: el backend valida el JWT del cliente contra las claves públicas JWKS de Apple.
 
