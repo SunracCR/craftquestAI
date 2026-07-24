@@ -1,5 +1,4 @@
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
+import 'package:craftquest_app/features/offline_practice/data/offline_paths.dart';
 import 'package:sqflite/sqflite.dart';
 
 class OfflineLocalDatabase {
@@ -11,8 +10,7 @@ class OfflineLocalDatabase {
     if (_db != null) {
       return _db!;
     }
-    final dir = await getApplicationDocumentsDirectory();
-    final path = p.join(dir.path, 'offline_practice.db');
+    final path = await offlineDatabaseFilePath();
     _db = await openDatabase(
       path,
       version: 1,

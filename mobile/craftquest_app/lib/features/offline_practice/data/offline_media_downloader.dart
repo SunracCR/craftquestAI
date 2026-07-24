@@ -5,9 +5,9 @@ import 'package:craftquest_app/core/auth/token_storage.dart';
 import 'package:craftquest_app/core/utils/media_url_resolver.dart';
 import 'package:craftquest_app/features/offline_practice/data/database/offline_local_database.dart';
 import 'package:craftquest_app/features/offline_practice/data/models/offline_models.dart';
+import 'package:craftquest_app/features/offline_practice/data/offline_paths.dart';
 import 'package:dio/dio.dart';
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 
 class OfflineMediaDownloader {
   OfflineMediaDownloader({
@@ -123,8 +123,7 @@ class OfflineMediaDownloader {
   }
 
   Future<Directory> _mediaDirectoryForQuiz(String quizId) async {
-    final root = await getApplicationDocumentsDirectory();
-    final dir = Directory(p.join(root.path, 'offline_media', quizId));
+    final dir = Directory(await offlineMediaDirectoryPath(quizId));
     if (!dir.existsSync()) {
       await dir.create(recursive: true);
     }

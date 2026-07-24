@@ -33,13 +33,18 @@ import 'package:craftquest_app/features/practice/presentation/my_practice_attemp
 import 'package:craftquest_app/features/practice/presentation/practice_navigation.dart';
 import 'package:craftquest_app/features/practice/presentation/practice_session_feedback.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_package_repository.dart';
-import 'package:craftquest_app/features/offline_practice/presentation/offline_downloads_page.dart';
+import 'package:craftquest_app/features/offline_practice/data/offline_storage_bootstrap.dart';
+import 'package:craftquest_app/features/offline_practice/data/offline_sync_repository.dart';
+import 'package:craftquest_app/features/offline_practice/presentation/cubit/offline_practice_session_cubit.dart';
+import 'package:craftquest_app/features/offline_practice/presentation/offline_practice_session_page.dart';
+import 'package:craftquest_app/features/offline_practice/presentation/widgets/offline_quiz_actions_panel.dart';
 import 'package:craftquest_app/core/utils/billing_plan_access.dart';
 import 'package:craftquest_app/features/billing/data/billing_repository.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
@@ -78,6 +83,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
   bool _loadingPreferences = false;
   bool _checkingOut = false;
   bool _downloadingOffline = false;
+  bool _isOfflineDownloaded = false;
   String? _planCode;
   bool _randomizeQuestions = false;
   bool _showTimer = true;
@@ -129,6 +135,10 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
   }
 
   Future<void> _downloadForOffline(String quizId) async {
+    if (!OfflinePlatformSupport.isSupported) {
+      AppSnackBars.showError(OfflinePlatformSupport.unsupportedMessage);
+      return;
+    }
     if (!BillingPlanAccess.canDownloadOffline(_planCode)) {
       return;
     }
@@ -137,13 +147,67 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
     try {
       await getIt<OfflinePackageRepository>().downloadAndPersist(quizId: quizId);
       if (!mounted) return;
-      AppSnackBars.showSuccess('Descarga offline completada.');
+      setState(() => _isOfflineDownloaded = true);
+      AppSnackBars.showSuccess('Cuestionario listo para practicar sin conexión.');
     } catch (error) {
       if (!mounted) return;
       AppSnackBars.showError(error.toString());
     } finally {
       if (mounted) setState(() => _downloadingOffline = false);
     }
+  }
+
+  Future<void> _refreshOfflineDownloadState(String quizId) async {
+    try {
+      final downloaded =
+          await getIt<OfflinePackageRepository>().isQuizDownloaded(quizId);
+      if (!mounted) return;
+      setState(() => _isOfflineDownloaded = downloaded);
+    } catch (_) {}
+  }
+
+  Future<void> _practiceOffline(String quizId, String title) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => BlocProvider(
+          create: (_) => OfflinePracticeSessionCubit(
+            packageRepository: getIt<OfflinePackageRepository>(),
+            syncRepository: getIt<OfflineSyncRepository>(),
+            quizId: quizId,
+            showElapsedTimer: _showTimer,
+          )..load(),
+          child: OfflinePracticeSessionPage(quizTitle: title),
+        ),
+      ),
+    );
+    await _refreshOfflineDownloadState(quizId);
+  }
+
+  Future<void> _confirmRemoveOfflineDownload(String quizId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Quitar descarga offline'),
+        content: const Text(
+          'Se eliminará este cuestionario de tu dispositivo.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Quitar'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    await getIt<OfflinePackageRepository>().deleteDownloadedQuiz(quizId);
+    if (!mounted) return;
+    setState(() => _isOfflineDownloaded = false);
+    AppSnackBars.showSuccess('Descarga offline eliminada.');
   }
 
   @override
@@ -170,6 +234,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       });
       if (item.canPractice) {
         _warmPracticeLaunch(item.quizId);
+        unawaited(_refreshOfflineDownloadState(item.quizId));
         if (!hadItem) {
           unawaited(_loadPracticePreferences(item.quizId));
           unawaited(_loadSoundPreferences());
@@ -859,7 +924,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
                               onSoundEffectsChanged: _updateSoundEffects,
                             ),
                           ),
-                          if (BillingPlanAccess.canDownloadOffline(_planCode))
+                          if (_item!.canPractice)
                             Padding(
                               padding: const EdgeInsets.fromLTRB(
                                 AppSpacing.md,
@@ -867,34 +932,24 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
                                 AppSpacing.md,
                                 0,
                               ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: AppSecondaryButton(
-                                      label: _downloadingOffline
-                                          ? 'Descargando...'
-                                          : 'Descargar offline',
-                                      onPressed: _downloadingOffline
-                                          ? null
-                                          : () => _downloadForOffline(
-                                                _item!.quizId,
-                                              ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: AppSpacing.sm),
-                                  IconButton(
-                                    tooltip: 'Mis descargas offline',
-                                    onPressed: () {
-                                      Navigator.of(context).push<void>(
-                                        MaterialPageRoute<void>(
-                                          builder: (_) =>
-                                              const OfflineDownloadsPage(),
-                                        ),
-                                      );
-                                    },
-                                    icon: const Icon(Icons.offline_pin),
-                                  ),
-                                ],
+                              child: OfflineQuizActionsPanel(
+                                isDownloaded: _isOfflineDownloaded,
+                                isDownloading: _downloadingOffline,
+                                canDownloadOffline: BillingPlanAccess
+                                    .canDownloadOffline(_planCode),
+                                isPlatformSupported:
+                                    OfflinePlatformSupport.isSupported,
+                                onDownload: () =>
+                                    _downloadForOffline(_item!.quizId),
+                                onPracticeOffline: () => _practiceOffline(
+                                  _item!.quizId,
+                                  _item!.title,
+                                ),
+                                onRemoveDownload: () =>
+                                    _confirmRemoveOfflineDownload(
+                                  _item!.quizId,
+                                ),
+                                onUpgradePrompt: () {},
                               ),
                             ),
                         ],

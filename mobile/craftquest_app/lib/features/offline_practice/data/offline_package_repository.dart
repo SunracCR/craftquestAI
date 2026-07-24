@@ -6,8 +6,7 @@ import 'package:craftquest_app/features/offline_practice/data/database/offline_l
 import 'package:craftquest_app/features/offline_practice/data/models/offline_models.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_key_storage.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_media_downloader.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
+import 'package:craftquest_app/features/offline_practice/data/offline_paths.dart';
 import 'package:sqflite/sqflite.dart';
 
 class OfflinePackageRepository {
@@ -355,8 +354,7 @@ class OfflinePackageRepository {
 
     await _keyStorage.deletePackageKey(quizId);
 
-    final root = await getApplicationDocumentsDirectory();
-    final mediaDir = Directory(p.join(root.path, 'offline_media', quizId));
+    final mediaDir = Directory(await offlineMediaDirectoryPath(quizId));
     if (mediaDir.existsSync()) {
       await mediaDir.delete(recursive: true);
     }
