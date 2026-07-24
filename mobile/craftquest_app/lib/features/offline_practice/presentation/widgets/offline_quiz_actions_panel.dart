@@ -2,6 +2,7 @@ import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_buttons.dart';
 import 'package:craftquest_app/core/widgets/app_section_card.dart';
+import 'package:craftquest_app/features/offline_practice/data/offline_storage_bootstrap.dart';
 import 'package:flutter/material.dart';
 
 class OfflineQuizActionsPanel extends StatelessWidget {
@@ -39,7 +40,7 @@ class OfflineQuizActionsPanel extends StatelessWidget {
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Text(
-                'La práctica offline está disponible en Android, iOS y la app de escritorio.',
+                OfflinePlatformSupport.unsupportedPanelMessage,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.textSecondary,
                     ),

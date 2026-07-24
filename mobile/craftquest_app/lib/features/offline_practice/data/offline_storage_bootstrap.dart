@@ -30,7 +30,17 @@ abstract final class OfflinePlatformSupport {
 
   static String get unsupportedMessage {
     if (kIsWeb) {
-      return 'La descarga offline está disponible en la app móvil (Android/iOS).';
+      return 'La descarga offline no está disponible en la versión web.';
+    }
+    return 'La descarga offline no está disponible en esta plataforma.';
+  }
+
+  /// Texto del panel cuando la plataforma actual no soporta offline.
+  static String get unsupportedPanelMessage {
+    if (kIsWeb) {
+      return 'Estás en la versión web. Para descargar y practicar sin conexión, '
+          'abre CraftQuest en la app de escritorio (Windows) o en tu móvil '
+          '(Android/iOS).';
     }
     return 'La descarga offline no está disponible en esta plataforma.';
   }
