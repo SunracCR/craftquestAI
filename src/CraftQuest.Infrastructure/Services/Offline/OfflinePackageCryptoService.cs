@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using CraftQuest.Application.Models.Offline;
 using CraftQuest.Application.Options;
 using Microsoft.Extensions.Options;
 
@@ -21,6 +22,17 @@ public sealed class OfflinePackageCryptoService(IOptions<OfflineOptions> options
             correctAnswerOptionIds,
             JsonOptions);
 
+        return EncryptPayload(packageKey, plaintext);
+    }
+
+    public string EncryptAnswerKey(byte[] packageKey, OfflineAnswerKeyPayload payload)
+    {
+        var plaintext = JsonSerializer.SerializeToUtf8Bytes(payload, JsonOptions);
+        return EncryptPayload(packageKey, plaintext);
+    }
+
+    private static string EncryptPayload(byte[] packageKey, byte[] plaintext)
+    {
         var nonce = RandomNumberGenerator.GetBytes(AesGcm.NonceByteSizes.MaxSize);
         var ciphertext = new byte[plaintext.Length];
         var tag = new byte[AesGcm.TagByteSizes.MaxSize];

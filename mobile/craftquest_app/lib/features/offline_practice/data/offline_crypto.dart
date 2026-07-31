@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:craftquest_app/features/offline_practice/data/models/offline_models.dart';
 import 'package:cryptography/cryptography.dart';
 
 class OfflineCrypto {
@@ -9,10 +10,40 @@ class OfflineCrypto {
     required String packageKeyBase64,
     required String correctAnswerBlob,
   }) async {
+    final decoded = await _decryptJson(
+      packageKeyBase64: packageKeyBase64,
+      blob: correctAnswerBlob,
+    );
+    if (decoded is! List) {
+      throw FormatException('Expected JSON array of answer option ids.');
+    }
+
+    return decoded.map((e) => e.toString()).toList();
+  }
+
+  static Future<OfflineAnswerKeyModel> decryptAnswerKey({
+    required String packageKeyBase64,
+    required String answerKeyBlob,
+  }) async {
+    final decoded = await _decryptJson(
+      packageKeyBase64: packageKeyBase64,
+      blob: answerKeyBlob,
+    );
+    if (decoded is! Map<String, dynamic>) {
+      throw FormatException('Expected JSON object for offline answer key.');
+    }
+
+    return OfflineAnswerKeyModel.fromJson(decoded);
+  }
+
+  static Future<Object?> _decryptJson({
+    required String packageKeyBase64,
+    required String blob,
+  }) async {
     final keyBytes = base64Decode(packageKeyBase64);
-    final payload = base64Decode(correctAnswerBlob);
+    final payload = base64Decode(blob);
     if (payload.length < 28) {
-      throw FormatException('Invalid offline correct answer blob.');
+      throw FormatException('Invalid offline encrypted blob.');
     }
 
     const nonceLength = 12;
@@ -33,11 +64,6 @@ class OfflineCrypto {
       secretKey: secretKey,
     );
 
-    final decoded = jsonDecode(utf8.decode(decrypted));
-    if (decoded is! List) {
-      throw FormatException('Expected JSON array of answer option ids.');
-    }
-
-    return decoded.map((e) => e.toString()).toList();
+    return jsonDecode(utf8.decode(decrypted));
   }
 }

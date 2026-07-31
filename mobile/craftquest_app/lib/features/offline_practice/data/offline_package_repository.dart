@@ -133,6 +133,7 @@ class OfflinePackageRepository {
               question.supportsMultipleCorrectAnswers ? 1 : 0,
           'question_media_asset_id': question.questionMediaAssetId,
           'correct_answer_blob': question.correctAnswerBlob,
+          'answer_key_blob': question.answerKeyBlob,
         });
 
         for (final option in question.answerOptions) {
@@ -282,6 +283,7 @@ class OfflinePackageRepository {
                   (q['supports_multiple_correct_answers'] as int? ?? 0) == 1,
               questionMediaAssetId: q['question_media_asset_id'] as String?,
               correctAnswerBlob: q['correct_answer_blob'] as String,
+              answerKeyBlob: q['answer_key_blob'] as String?,
               answerOptions:
                   optionsByQuestion[q['question_id'] as String] ?? const [],
             ),

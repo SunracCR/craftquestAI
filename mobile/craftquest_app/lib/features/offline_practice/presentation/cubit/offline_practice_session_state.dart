@@ -15,11 +15,11 @@ class OfflinePracticeSessionState extends Equatable {
     this.quiz,
     this.currentIndex = 0,
     this.selections = const {},
-    this.feedbackByQuestion = const {},
-    this.correctAnswersByQuestion = const {},
+    this.answerKeyByQuestion = const {},
     this.startedAt,
     this.finishedAt,
     this.finishResult,
+    this.reviewQuestions = const [],
     this.errorMessage,
   });
 
@@ -27,11 +27,11 @@ class OfflinePracticeSessionState extends Equatable {
   final OfflineQuizPackageModel? quiz;
   final int currentIndex;
   final Map<String, Set<String>> selections;
-  final Map<String, OfflineQuestionFeedbackModel> feedbackByQuestion;
-  final Map<String, List<String>> correctAnswersByQuestion;
+  final Map<String, OfflineAnswerKeyModel> answerKeyByQuestion;
   final DateTime? startedAt;
   final DateTime? finishedAt;
   final OfflineLocalFinishResultModel? finishResult;
+  final List<OfflineReviewQuestionModel> reviewQuestions;
   final String? errorMessage;
 
   OfflinePackageQuestionModel? get currentQuestion {
@@ -52,11 +52,11 @@ class OfflinePracticeSessionState extends Equatable {
     OfflineQuizPackageModel? quiz,
     int? currentIndex,
     Map<String, Set<String>>? selections,
-    Map<String, OfflineQuestionFeedbackModel>? feedbackByQuestion,
-    Map<String, List<String>>? correctAnswersByQuestion,
+    Map<String, OfflineAnswerKeyModel>? answerKeyByQuestion,
     DateTime? startedAt,
     DateTime? finishedAt,
     OfflineLocalFinishResultModel? finishResult,
+    List<OfflineReviewQuestionModel>? reviewQuestions,
     String? errorMessage,
   }) {
     return OfflinePracticeSessionState(
@@ -64,12 +64,11 @@ class OfflinePracticeSessionState extends Equatable {
       quiz: quiz ?? this.quiz,
       currentIndex: currentIndex ?? this.currentIndex,
       selections: selections ?? this.selections,
-      feedbackByQuestion: feedbackByQuestion ?? this.feedbackByQuestion,
-      correctAnswersByQuestion:
-          correctAnswersByQuestion ?? this.correctAnswersByQuestion,
+      answerKeyByQuestion: answerKeyByQuestion ?? this.answerKeyByQuestion,
       startedAt: startedAt ?? this.startedAt,
       finishedAt: finishedAt ?? this.finishedAt,
       finishResult: finishResult ?? this.finishResult,
+      reviewQuestions: reviewQuestions ?? this.reviewQuestions,
       errorMessage: errorMessage,
     );
   }
@@ -80,11 +79,11 @@ class OfflinePracticeSessionState extends Equatable {
         quiz?.quizId,
         currentIndex,
         selections,
-        feedbackByQuestion,
-        correctAnswersByQuestion,
+        answerKeyByQuestion,
         startedAt,
         finishedAt,
         finishResult,
+        reviewQuestions,
         errorMessage,
       ];
 }

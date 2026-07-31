@@ -11,6 +11,7 @@ import 'package:craftquest_app/core/widgets/app_section_title.dart';
 import 'package:craftquest_app/core/widgets/app_padded_scroll.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
+import 'package:craftquest_app/core/widgets/practice_review_justification_panel.dart';
 import 'package:craftquest_app/features/guest/data/guest_repository.dart';
 import 'package:craftquest_app/features/teacher/data/models/teacher_review_models.dart';
 import 'package:craftquest_app/features/practice/data/practice_repository.dart';
@@ -252,11 +253,21 @@ class _TeacherSessionReviewPageState extends State<TeacherSessionReviewPage> {
       return null;
     }
 
-    return _PracticeReviewJustificationPanel(
+    return PracticeReviewJustificationPanel(
       title: l10n.practiceReviewJustificationTitle,
       expandHint: l10n.practiceReviewJustificationTapToExpand,
       text: text,
-      sources: question.justificationSources,
+      sources: question.justificationSources
+          .map(
+            (s) => PracticeReviewJustificationSource(
+              title: s.title,
+              sourceUrl: s.sourceUrl,
+              snippet: s.snippet,
+              pageNumber: s.pageNumber,
+              isPrimary: s.isPrimary,
+            ),
+          )
+          .toList(),
       pageLabel: l10n.practiceReviewSourcePage,
     );
   }
@@ -560,121 +571,6 @@ class _TeacherSessionReviewPageState extends State<TeacherSessionReviewPage> {
                       ],
                     ),
                     ),
-    );
-  }
-}
-
-class _PracticeReviewJustificationPanel extends StatefulWidget {
-  const _PracticeReviewJustificationPanel({
-    required this.title,
-    required this.expandHint,
-    required this.text,
-    required this.sources,
-    required this.pageLabel,
-  });
-
-  final String title;
-  final String expandHint;
-  final String text;
-  final List<TeacherJustificationSourceReviewModel> sources;
-  final String Function(int page) pageLabel;
-
-  @override
-  State<_PracticeReviewJustificationPanel> createState() =>
-      _PracticeReviewJustificationPanelState();
-}
-
-class _PracticeReviewJustificationPanelState
-    extends State<_PracticeReviewJustificationPanel> {
-  bool _expanded = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final titleStyle = Theme.of(context).textTheme.labelLarge?.copyWith(
-          color: AppColors.accentGold,
-          fontWeight: FontWeight.w800,
-        );
-
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: AppColors.accentGold.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(AppColors.radiusSm),
-        border: Border.all(
-          color: AppColors.accentGold.withValues(alpha: 0.35),
-        ),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => setState(() => _expanded = !_expanded),
-          borderRadius: BorderRadius.circular(AppColors.radiusSm),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(widget.title, style: titleStyle),
-                          if (!_expanded) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              widget.expandHint,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(color: AppColors.textSecondary),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    Icon(
-                      _expanded
-                          ? Icons.expand_less_rounded
-                          : Icons.expand_more_rounded,
-                      color: AppColors.accentGold,
-                    ),
-                  ],
-                ),
-                if (_expanded) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    widget.text,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(height: 1.35),
-                  ),
-                  ...widget.sources.map((s) {
-                    if (s.pageNumber == null &&
-                        (s.snippet == null || s.snippet!.isEmpty)) {
-                      return const SizedBox.shrink();
-                    }
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 6),
-                      child: Text(
-                        s.pageNumber != null
-                            ? widget.pageLabel(s.pageNumber!)
-                            : s.snippet!,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppColors.textSecondary,
-                              fontStyle: FontStyle.italic,
-                            ),
-                      ),
-                    );
-                  }),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

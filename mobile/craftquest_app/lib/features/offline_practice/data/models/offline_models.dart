@@ -1,3 +1,110 @@
+class OfflineJustificationSourceModel {
+  const OfflineJustificationSourceModel({
+    this.title,
+    this.sourceUrl,
+    this.snippet,
+    this.pageNumber,
+    this.isPrimary = false,
+  });
+
+  factory OfflineJustificationSourceModel.fromJson(Map<String, dynamic> json) {
+    return OfflineJustificationSourceModel(
+      title: json['title'] as String?,
+      sourceUrl: json['sourceUrl'] as String?,
+      snippet: json['snippet'] as String?,
+      pageNumber: json['pageNumber'] as int?,
+      isPrimary: json['isPrimary'] as bool? ?? false,
+    );
+  }
+
+  final String? title;
+  final String? sourceUrl;
+  final String? snippet;
+  final int? pageNumber;
+  final bool isPrimary;
+}
+
+class OfflineAnswerKeyModel {
+  const OfflineAnswerKeyModel({
+    required this.correctAnswerOptionIds,
+    this.justificationText,
+    this.justificationSources = const [],
+  });
+
+  factory OfflineAnswerKeyModel.fromJson(Map<String, dynamic> json) {
+    return OfflineAnswerKeyModel(
+      correctAnswerOptionIds: (json['correctAnswerOptionIds'] as List<dynamic>)
+          .map((e) => e.toString())
+          .toList(),
+      justificationText: json['justificationText'] as String?,
+      justificationSources: (json['justificationSources'] as List<dynamic>?)
+              ?.map(
+                (e) => OfflineJustificationSourceModel.fromJson(
+                  e as Map<String, dynamic>,
+                ),
+              )
+              .toList() ??
+          const [],
+    );
+  }
+
+  final List<String> correctAnswerOptionIds;
+  final String? justificationText;
+  final List<OfflineJustificationSourceModel> justificationSources;
+}
+
+class OfflineReviewAnswerOptionModel {
+  const OfflineReviewAnswerOptionModel({
+    required this.answerOptionId,
+    required this.stableKey,
+    required this.defaultSortOrder,
+    this.answerText,
+    this.mediaAssetId,
+    required this.wasSelected,
+    required this.isCorrect,
+    required this.displayLabel,
+  });
+
+  final String answerOptionId;
+  final String stableKey;
+  final int defaultSortOrder;
+  final String? answerText;
+  final String? mediaAssetId;
+  final bool wasSelected;
+  final bool isCorrect;
+  final String displayLabel;
+}
+
+class OfflineReviewQuestionModel {
+  const OfflineReviewQuestionModel({
+    required this.questionId,
+    required this.sortOrder,
+    required this.questionText,
+    this.questionMediaAssetId,
+    required this.points,
+    required this.supportsMultipleCorrectAnswers,
+    required this.answerOptions,
+    required this.selectedAnswerOptionIds,
+    required this.isCorrect,
+    required this.pointsAwarded,
+    this.justificationText,
+    this.justificationSources = const [],
+  });
+
+  final String questionId;
+  final int sortOrder;
+  final String questionText;
+  final String? questionMediaAssetId;
+  final double points;
+  final bool supportsMultipleCorrectAnswers;
+  final List<OfflineReviewAnswerOptionModel> answerOptions;
+  final Set<String> selectedAnswerOptionIds;
+  final bool isCorrect;
+  final double pointsAwarded;
+  final String? justificationText;
+  final List<OfflineJustificationSourceModel> justificationSources;
+}
+
 class OfflineEntitlementsModel {
   const OfflineEntitlementsModel({
     required this.canDownloadOffline,
@@ -95,6 +202,7 @@ class OfflinePackageQuestionModel {
     required this.supportsMultipleCorrectAnswers,
     this.questionMediaAssetId,
     required this.correctAnswerBlob,
+    this.answerKeyBlob,
     required this.answerOptions,
   });
 
@@ -111,6 +219,7 @@ class OfflinePackageQuestionModel {
           json['supportsMultipleCorrectAnswers'] as bool? ?? false,
       questionMediaAssetId: json['questionMediaAssetId'] as String?,
       correctAnswerBlob: json['correctAnswerBlob'] as String,
+      answerKeyBlob: json['answerKeyBlob'] as String?,
       answerOptions: (json['answerOptions'] as List<dynamic>)
           .map(
             (e) => OfflinePackageAnswerOptionModel.fromJson(
@@ -131,7 +240,11 @@ class OfflinePackageQuestionModel {
   final bool supportsMultipleCorrectAnswers;
   final String? questionMediaAssetId;
   final String correctAnswerBlob;
+  final String? answerKeyBlob;
   final List<OfflinePackageAnswerOptionModel> answerOptions;
+
+  bool get hasAnswerKeyBlob =>
+      answerKeyBlob != null && answerKeyBlob!.trim().isNotEmpty;
 }
 
 class OfflinePackageAnswerOptionModel {

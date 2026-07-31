@@ -1,3 +1,4 @@
+using CraftQuest.Application.Models.Offline;
 using CraftQuest.Application.Options;
 using CraftQuest.Infrastructure.Services.Offline;
 using Microsoft.Extensions.Options;
@@ -47,6 +48,39 @@ public class OfflinePackageCryptoServiceTests
 
         Assert.Equal(v1, v2);
         Assert.Equal(32, v1.Length);
+    }
+
+    [Fact]
+    public void EncryptAnswerKey_ProducesNonEmptyBlob()
+    {
+        var service = new OfflinePackageCryptoService(
+            Options.Create(new OfflineOptions()));
+
+        var key = service.GeneratePackageKey();
+        var payload = new OfflineAnswerKeyPayload
+        {
+            CorrectAnswerOptionIds =
+            [
+                Guid.Parse("11111111-1111-1111-1111-111111111111"),
+            ],
+            JustificationText = "Because option A is correct.",
+            JustificationSources =
+            [
+                new OfflineJustificationSourceDto
+                {
+                    Title = "Source",
+                    SourceUrl = "https://example.com",
+                    PageNumber = 3,
+                    IsPrimary = true,
+                },
+            ],
+        };
+
+        var blob = service.EncryptAnswerKey(key, payload);
+        Assert.False(string.IsNullOrWhiteSpace(blob));
+
+        var bytes = Convert.FromBase64String(blob);
+        Assert.True(bytes.Length > 28);
     }
 
     [Fact]

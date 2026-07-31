@@ -17,11 +17,7 @@ class ApiClient {
         _sessionExpiredNotifier = sessionExpiredNotifier,
         _dio = Dio(
           BaseOptions(
-            baseUrl: baseUrl ??
-                const String.fromEnvironment(
-                  'API_BASE_URL',
-                  defaultValue: 'https://localhost:7080',
-                ),
+            baseUrl: baseUrl ?? _defaultBaseUrl(),
             connectTimeout: const Duration(seconds: 30),
             receiveTimeout: const Duration(seconds: 45),
             headers: {'Content-Type': 'application/json'},
@@ -67,6 +63,18 @@ class ApiClient {
 
   Dio get dio => _dio;
   TokenStorage get tokenStorage => _tokenStorage;
+
+  /// Dev: localhost. Release: producción salvo `--dart-define=API_BASE_URL=...`.
+  static String _defaultBaseUrl() {
+    const envUrl = String.fromEnvironment('API_BASE_URL');
+    if (envUrl.isNotEmpty) {
+      return envUrl;
+    }
+    if (kReleaseMode) {
+      return 'https://api.craftquestai.com';
+    }
+    return 'https://localhost:7080';
+  }
 
   /// Trusts the ASP.NET dev certificate for localhost / Android emulator in debug.
   static void _configureDevHttpsCertificate(Dio dio) {

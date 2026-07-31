@@ -48,12 +48,22 @@ class OfflinePracticeSessionCubit extends Cubit<OfflinePracticeSessionState> {
         return;
       }
 
-      final correctAnswers = <String, List<String>>{};
+      final missingAnswerKey = quiz.questions.any((q) => !q.hasAnswerKeyBlob);
+      if (missingAnswerKey) {
+        emit(
+          state.copyWith(
+            status: OfflinePracticeSessionStatus.error,
+            errorMessage: 'offline_download_needs_update',
+          ),
+        );
+        return;
+      }
+
+      final answerKeys = <String, OfflineAnswerKeyModel>{};
       for (final question in quiz.questions) {
-        correctAnswers[question.questionId] =
-            await OfflineCrypto.decryptCorrectAnswerIds(
+        answerKeys[question.questionId] = await OfflineCrypto.decryptAnswerKey(
           packageKeyBase64: quiz.packageKeyBase64,
-          correctAnswerBlob: question.correctAnswerBlob,
+          answerKeyBlob: question.answerKeyBlob!,
         );
       }
 
@@ -61,7 +71,7 @@ class OfflinePracticeSessionCubit extends Cubit<OfflinePracticeSessionState> {
         state.copyWith(
           status: OfflinePracticeSessionStatus.ready,
           quiz: quiz,
-          correctAnswersByQuestion: correctAnswers,
+          answerKeyByQuestion: answerKeys,
           startedAt: DateTime.now().toUtc(),
         ),
       );
@@ -110,10 +120,9 @@ class OfflinePracticeSessionCubit extends Cubit<OfflinePracticeSessionState> {
     emit(state.copyWith(selections: selections));
   }
 
-  Future<void> submitCurrentQuestion() async {
+  Future<void> answerAndContinue() async {
     final question = state.currentQuestion;
-    final quiz = state.quiz;
-    if (question == null || quiz == null) {
+    if (question == null) {
       return;
     }
 
@@ -122,24 +131,12 @@ class OfflinePracticeSessionCubit extends Cubit<OfflinePracticeSessionState> {
       return;
     }
 
-    final correctIds =
-        state.correctAnswersByQuestion[question.questionId] ?? const [];
-    final feedback = OfflineLocalGrader.gradeQuestion(
-      question: question,
-      selectedIds: selected,
-      correctIds: correctIds,
-    );
+    if (state.currentIndex + 1 >= state.totalQuestions) {
+      await finishSession();
+      return;
+    }
 
-    final feedbackMap =
-        Map<String, OfflineQuestionFeedbackModel>.from(state.feedbackByQuestion)
-          ..[question.questionId] = feedback;
-
-    emit(
-      state.copyWith(
-        feedbackByQuestion: feedbackMap,
-        status: OfflinePracticeSessionStatus.answering,
-      ),
-    );
+    goToQuestion(state.currentIndex + 1);
   }
 
   Future<void> finishSession() async {
@@ -150,11 +147,22 @@ class OfflinePracticeSessionCubit extends Cubit<OfflinePracticeSessionState> {
 
     final finishedAt = DateTime.now().toUtc();
     final clientSessionId = _uuid.v4();
+    final correctAnswersByQuestion = {
+      for (final entry in state.answerKeyByQuestion.entries)
+        entry.key: entry.value.correctAnswerOptionIds,
+    };
+
     final result = OfflineLocalGrader.finishSession(
       clientSessionId: clientSessionId,
       questions: quiz.questions,
       selections: state.selections,
-      correctAnswersByQuestion: state.correctAnswersByQuestion,
+      correctAnswersByQuestion: correctAnswersByQuestion,
+    );
+
+    final reviewQuestions = _buildReviewQuestions(
+      quiz: quiz,
+      selections: state.selections,
+      answerKeyByQuestion: state.answerKeyByQuestion,
     );
 
     final answers = quiz.questions
@@ -185,7 +193,74 @@ class OfflinePracticeSessionCubit extends Cubit<OfflinePracticeSessionState> {
         status: OfflinePracticeSessionStatus.finished,
         finishedAt: finishedAt,
         finishResult: result,
+        reviewQuestions: reviewQuestions,
       ),
     );
+  }
+
+  List<OfflineReviewQuestionModel> _buildReviewQuestions({
+    required OfflineQuizPackageModel quiz,
+    required Map<String, Set<String>> selections,
+    required Map<String, OfflineAnswerKeyModel> answerKeyByQuestion,
+  }) {
+    final reviewQuestions = <OfflineReviewQuestionModel>[];
+
+    for (final question in quiz.questions) {
+      final answerKey = answerKeyByQuestion[question.questionId];
+      if (answerKey == null) {
+        continue;
+      }
+
+      final selected = selections[question.questionId] ?? {};
+      final correctIds = answerKey.correctAnswerOptionIds.toSet();
+      final feedback = OfflineLocalGrader.gradeQuestion(
+        question: question,
+        selectedIds: selected,
+        correctIds: answerKey.correctAnswerOptionIds,
+      );
+
+      final displayOptions = question.answerOptions
+          .where((o) => !OfflineLocalGrader.isQuestionImageStem(o.stableKey))
+          .toList()
+        ..sort((a, b) => a.defaultSortOrder.compareTo(b.defaultSortOrder));
+
+      final reviewOptions = <OfflineReviewAnswerOptionModel>[];
+      for (var i = 0; i < displayOptions.length; i++) {
+        final option = displayOptions[i];
+        reviewOptions.add(
+          OfflineReviewAnswerOptionModel(
+            answerOptionId: option.answerOptionId,
+            stableKey: option.stableKey,
+            defaultSortOrder: option.defaultSortOrder,
+            answerText: option.answerText,
+            mediaAssetId: option.mediaAssetId,
+            wasSelected: selected.contains(option.answerOptionId),
+            isCorrect: correctIds.contains(option.answerOptionId),
+            displayLabel: String.fromCharCode(65 + i),
+          ),
+        );
+      }
+
+      reviewQuestions.add(
+        OfflineReviewQuestionModel(
+          questionId: question.questionId,
+          sortOrder: question.sortOrder,
+          questionText: question.questionText,
+          questionMediaAssetId: question.questionMediaAssetId,
+          points: question.points,
+          supportsMultipleCorrectAnswers:
+              question.supportsMultipleCorrectAnswers,
+          answerOptions: reviewOptions,
+          selectedAnswerOptionIds: selected,
+          isCorrect: feedback.isCorrect,
+          pointsAwarded: feedback.pointsAwarded,
+          justificationText: answerKey.justificationText,
+          justificationSources: answerKey.justificationSources,
+        ),
+      );
+    }
+
+    reviewQuestions.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    return reviewQuestions;
   }
 }

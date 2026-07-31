@@ -2116,5 +2116,19 @@
   "correctBirthDateAction": "Corregir fecha de nacimiento",
   "correctBirthDateSubtitle": "Si te equivocaste al indicar tu edad",
   "correctBirthDateSuccess": "Fecha de nacimiento actualizada",
-  "correctBirthDateLoginHint": "¿Te equivocaste en tu fecha de nacimiento?"
+  "correctBirthDateLoginHint": "¿Te equivocaste en tu fecha de nacimiento?",
+  "offlineDownloadNeedsUpdate": "Esta descarga necesita actualizarse para incluir la revisión con justificación. Usa «Actualizar» en el detalle del cuestionario.",
+  "offlineViewDetailedReview": "Ver revisión detallada",
+  "offlineLocalReviewTitle": "Revisión local",
+  "offlineAnswerAndContinue": "Responder y continuar",
+  "offlineLocalReviewProvisionalNote": "Revisión basada en tu descarga local. El resultado oficial se confirmará al sincronizar.",
+  "offlineProvisionalResultTitle": "Resultado provisional",
+  "offlineSyncPendingNote": "El resultado oficial se confirmará al sincronizar con el servidor.",
+  "offlineSyncNow": "Sincronizar ahora",
+  "offlineResultOmittedLabel": "Omitidas: {count}",
+  "@offlineResultOmittedLabel": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  }
 }

@@ -13,82 +13,94 @@ class OfflineLocalDatabase {
     final path = await offlineDatabaseFilePath();
     _db = await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
-        await db.execute('''
-          CREATE TABLE offline_quizzes (
-            quiz_id TEXT PRIMARY KEY,
-            title TEXT NOT NULL,
-            description TEXT,
-            content_version TEXT NOT NULL,
-            generated_at TEXT NOT NULL,
-            expires_at TEXT NOT NULL,
-            randomize_questions INTEGER NOT NULL,
-            default_randomize_answer_options INTEGER NOT NULL,
-            watermark_token TEXT NOT NULL,
-            total_bytes INTEGER NOT NULL DEFAULT 0,
-            downloaded_at TEXT NOT NULL
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE offline_questions (
-            question_id TEXT PRIMARY KEY,
-            quiz_id TEXT NOT NULL,
-            sort_order INTEGER NOT NULL,
-            question_text TEXT NOT NULL,
-            question_type TEXT NOT NULL,
-            points REAL NOT NULL,
-            randomize_answer_options INTEGER NOT NULL,
-            scoring_policy TEXT NOT NULL,
-            supports_multiple_correct_answers INTEGER NOT NULL,
-            question_media_asset_id TEXT,
-            correct_answer_blob TEXT NOT NULL
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE offline_answer_options (
-            answer_option_id TEXT PRIMARY KEY,
-            question_id TEXT NOT NULL,
-            quiz_id TEXT NOT NULL,
-            stable_key TEXT NOT NULL,
-            default_sort_order INTEGER NOT NULL,
-            answer_text TEXT,
-            media_asset_id TEXT
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE offline_media_files (
-            media_asset_id TEXT NOT NULL,
-            quiz_id TEXT NOT NULL,
-            local_path TEXT,
-            download_url TEXT NOT NULL,
-            content_type TEXT,
-            file_size_bytes INTEGER,
-            status TEXT NOT NULL,
-            PRIMARY KEY (media_asset_id, quiz_id)
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE pending_sync_sessions (
-            client_session_id TEXT PRIMARY KEY,
-            quiz_id TEXT NOT NULL,
-            content_version TEXT NOT NULL,
-            started_at TEXT NOT NULL,
-            finished_at TEXT NOT NULL,
-            show_elapsed_timer INTEGER NOT NULL,
-            local_score_obtained REAL,
-            local_score_possible REAL,
-            answers_json TEXT NOT NULL,
-            sync_status TEXT NOT NULL,
-            sync_attempts INTEGER NOT NULL DEFAULT 0,
-            last_sync_attempt_at TEXT,
-            server_session_id TEXT,
-            sync_error TEXT
-          )
-        ''');
+        await _createSchema(db);
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute(
+            'ALTER TABLE offline_questions ADD COLUMN answer_key_blob TEXT',
+          );
+        }
       },
     );
     return _db!;
+  }
+
+  static Future<void> _createSchema(Database db) async {
+    await db.execute('''
+      CREATE TABLE offline_quizzes (
+        quiz_id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT,
+        content_version TEXT NOT NULL,
+        generated_at TEXT NOT NULL,
+        expires_at TEXT NOT NULL,
+        randomize_questions INTEGER NOT NULL,
+        default_randomize_answer_options INTEGER NOT NULL,
+        watermark_token TEXT NOT NULL,
+        total_bytes INTEGER NOT NULL DEFAULT 0,
+        downloaded_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE offline_questions (
+        question_id TEXT PRIMARY KEY,
+        quiz_id TEXT NOT NULL,
+        sort_order INTEGER NOT NULL,
+        question_text TEXT NOT NULL,
+        question_type TEXT NOT NULL,
+        points REAL NOT NULL,
+        randomize_answer_options INTEGER NOT NULL,
+        scoring_policy TEXT NOT NULL,
+        supports_multiple_correct_answers INTEGER NOT NULL,
+        question_media_asset_id TEXT,
+        correct_answer_blob TEXT NOT NULL,
+        answer_key_blob TEXT
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE offline_answer_options (
+        answer_option_id TEXT PRIMARY KEY,
+        question_id TEXT NOT NULL,
+        quiz_id TEXT NOT NULL,
+        stable_key TEXT NOT NULL,
+        default_sort_order INTEGER NOT NULL,
+        answer_text TEXT,
+        media_asset_id TEXT
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE offline_media_files (
+        media_asset_id TEXT NOT NULL,
+        quiz_id TEXT NOT NULL,
+        local_path TEXT,
+        download_url TEXT NOT NULL,
+        content_type TEXT,
+        file_size_bytes INTEGER,
+        status TEXT NOT NULL,
+        PRIMARY KEY (media_asset_id, quiz_id)
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE pending_sync_sessions (
+        client_session_id TEXT PRIMARY KEY,
+        quiz_id TEXT NOT NULL,
+        content_version TEXT NOT NULL,
+        started_at TEXT NOT NULL,
+        finished_at TEXT NOT NULL,
+        show_elapsed_timer INTEGER NOT NULL,
+        local_score_obtained REAL,
+        local_score_possible REAL,
+        answers_json TEXT NOT NULL,
+        sync_status TEXT NOT NULL,
+        sync_attempts INTEGER NOT NULL DEFAULT 0,
+        last_sync_attempt_at TEXT,
+        server_session_id TEXT,
+        sync_error TEXT
+      )
+    ''');
   }
 }
 
@@ -133,6 +145,7 @@ class OfflineQuestionRow {
     required this.supportsMultipleCorrectAnswers,
     this.questionMediaAssetId,
     required this.correctAnswerBlob,
+    this.answerKeyBlob,
   });
 
   final String questionId;
@@ -146,6 +159,7 @@ class OfflineQuestionRow {
   final bool supportsMultipleCorrectAnswers;
   final String? questionMediaAssetId;
   final String correctAnswerBlob;
+  final String? answerKeyBlob;
 }
 
 class OfflineAnswerOptionRow {

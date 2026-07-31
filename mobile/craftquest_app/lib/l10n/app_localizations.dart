@@ -7918,6 +7918,60 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'¿Te equivocaste en tu fecha de nacimiento?'**
   String get correctBirthDateLoginHint;
+
+  /// No description provided for @offlineDownloadNeedsUpdate.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta descarga necesita actualizarse para incluir la revisión con justificación. Usa «Actualizar» en el detalle del cuestionario.'**
+  String get offlineDownloadNeedsUpdate;
+
+  /// No description provided for @offlineViewDetailedReview.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver revisión detallada'**
+  String get offlineViewDetailedReview;
+
+  /// No description provided for @offlineLocalReviewTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisión local'**
+  String get offlineLocalReviewTitle;
+
+  /// No description provided for @offlineAnswerAndContinue.
+  ///
+  /// In es, this message translates to:
+  /// **'Responder y continuar'**
+  String get offlineAnswerAndContinue;
+
+  /// No description provided for @offlineLocalReviewProvisionalNote.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisión basada en tu descarga local. El resultado oficial se confirmará al sincronizar.'**
+  String get offlineLocalReviewProvisionalNote;
+
+  /// No description provided for @offlineProvisionalResultTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Resultado provisional'**
+  String get offlineProvisionalResultTitle;
+
+  /// No description provided for @offlineSyncPendingNote.
+  ///
+  /// In es, this message translates to:
+  /// **'El resultado oficial se confirmará al sincronizar con el servidor.'**
+  String get offlineSyncPendingNote;
+
+  /// No description provided for @offlineSyncNow.
+  ///
+  /// In es, this message translates to:
+  /// **'Sincronizar ahora'**
+  String get offlineSyncNow;
+
+  /// No description provided for @offlineResultOmittedLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Omitidas: {count}'**
+  String offlineResultOmittedLabel(int count);
 }
 
 class _AppLocalizationsDelegate

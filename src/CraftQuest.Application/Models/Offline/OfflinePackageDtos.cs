@@ -27,6 +27,22 @@ public sealed class OfflineQuizPackageDto
     public required OfflineEntitlementsDto Entitlements { get; init; }
 }
 
+public sealed class OfflineAnswerKeyPayload
+{
+    public required IReadOnlyList<Guid> CorrectAnswerOptionIds { get; init; }
+    public string? JustificationText { get; init; }
+    public IReadOnlyList<OfflineJustificationSourceDto> JustificationSources { get; init; } = [];
+}
+
+public sealed class OfflineJustificationSourceDto
+{
+    public string? Title { get; init; }
+    public string? SourceUrl { get; init; }
+    public string? Snippet { get; init; }
+    public int? PageNumber { get; init; }
+    public bool IsPrimary { get; init; }
+}
+
 public sealed class OfflinePackageQuestionDto
 {
     public required Guid QuestionId { get; init; }
@@ -38,7 +54,9 @@ public sealed class OfflinePackageQuestionDto
     public required string ScoringPolicy { get; init; }
     public required bool SupportsMultipleCorrectAnswers { get; init; }
     public Guid? QuestionMediaAssetId { get; init; }
-    /// <summary>Base64 AES-GCM blob of JSON array of correct AnswerOptionIds.</summary>
+    /// <summary>Base64 AES-GCM blob of <see cref="OfflineAnswerKeyPayload"/>.</summary>
+    public required string AnswerKeyBlob { get; init; }
+    /// <summary>Base64 AES-GCM blob of JSON array of correct AnswerOptionIds (legacy clients).</summary>
     public required string CorrectAnswerBlob { get; init; }
     public required IReadOnlyList<OfflinePackageAnswerOptionDto> AnswerOptions { get; init; }
 }

@@ -102,6 +102,23 @@ public class OfflineQuizService(
                 }
             }
 
+            var justification = question.Justification;
+            var answerKeyPayload = new OfflineAnswerKeyPayload
+            {
+                CorrectAnswerOptionIds = correctIds,
+                JustificationText = justification?.JustificationText,
+                JustificationSources = justification?.Sources
+                    .Select(s => new OfflineJustificationSourceDto
+                    {
+                        Title = s.SourceTitle,
+                        SourceUrl = s.SourceUrl,
+                        Snippet = s.Snippet,
+                        PageNumber = s.SourcePageNumber,
+                        IsPrimary = s.IsPrimary,
+                    })
+                    .ToList() ?? [],
+            };
+
             packageQuestions.Add(new OfflinePackageQuestionDto
             {
                 QuestionId = question.QuestionId,
@@ -113,6 +130,7 @@ public class OfflineQuizService(
                 ScoringPolicy = scoringPolicy,
                 SupportsMultipleCorrectAnswers = question.QuestionType.SupportsMultipleCorrectAnswers,
                 QuestionMediaAssetId = stemOption?.MediaAssetId,
+                AnswerKeyBlob = cryptoService.EncryptAnswerKey(packageKey, answerKeyPayload),
                 CorrectAnswerBlob = cryptoService.EncryptCorrectAnswers(packageKey, correctIds),
                 AnswerOptions = allOptions
                     .Select(o => new OfflinePackageAnswerOptionDto

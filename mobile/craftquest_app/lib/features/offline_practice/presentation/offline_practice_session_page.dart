@@ -11,6 +11,8 @@ import 'package:craftquest_app/features/offline_practice/data/offline_package_re
 import 'package:craftquest_app/features/offline_practice/domain/offline_sync_manager.dart';
 import 'package:craftquest_app/features/offline_practice/presentation/cubit/offline_practice_session_cubit.dart';
 import 'package:craftquest_app/features/offline_practice/presentation/cubit/offline_practice_session_state.dart';
+import 'package:craftquest_app/features/offline_practice/presentation/offline_practice_review_page.dart';
+import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -24,6 +26,8 @@ class OfflinePracticeSessionPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return EdgeAwareScaffold(
       appBar: AppBar(
         title: Text(quizTitle),
@@ -34,13 +38,19 @@ class OfflinePracticeSessionPage extends StatelessWidget {
             case OfflinePracticeSessionStatus.loading:
               return const Center(child: CircularProgressIndicator());
             case OfflinePracticeSessionStatus.error:
+              final message = state.errorMessage == 'offline_download_needs_update'
+                  ? l10n.offlineDownloadNeedsUpdate
+                  : (state.errorMessage ?? l10n.genericRequestErrorMessage);
               return AppErrorView(
-                message: state.errorMessage ?? 'Error al cargar sesión offline.',
-                retryLabel: 'Reintentar',
+                message: message,
+                retryLabel: l10n.retry,
                 onRetry: () => context.read<OfflinePracticeSessionCubit>().load(),
               );
             case OfflinePracticeSessionStatus.finished:
-              return _FinishedView(state: state);
+              return _FinishedView(
+                state: state,
+                quizTitle: quizTitle,
+              );
             case OfflinePracticeSessionStatus.ready:
             case OfflinePracticeSessionStatus.answering:
               return _QuestionView(state: state);
@@ -59,6 +69,7 @@ class _QuestionView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<OfflinePracticeSessionCubit>();
+    final l10n = AppLocalizations.of(context)!;
     final question = state.currentQuestion;
     if (question == null) {
       return const AppEmptyView(
@@ -67,12 +78,13 @@ class _QuestionView extends StatelessWidget {
       );
     }
 
-    final feedback = state.feedbackByQuestion[question.questionId];
     final selected = state.selections[question.questionId] ?? {};
     final displayOptions = question.answerOptions
         .where((o) => !OfflineLocalGrader.isQuestionImageStem(o.stableKey))
         .toList()
       ..sort((a, b) => a.defaultSortOrder.compareTo(b.defaultSortOrder));
+
+    final isLastQuestion = state.currentIndex + 1 >= state.totalQuestions;
 
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -80,7 +92,10 @@ class _QuestionView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Pregunta ${state.currentIndex + 1} de ${state.totalQuestions}',
+            l10n.practiceQuestionCounter(
+              state.currentIndex + 1,
+              state.totalQuestions,
+            ),
             style: Theme.of(context).textTheme.labelLarge,
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -110,14 +125,11 @@ class _QuestionView extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   child: InkWell(
                     borderRadius: BorderRadius.circular(12),
-                    onTap: feedback == null
-                        ? () => cubit.toggleSelection(
-                              questionId: question.questionId,
-                              answerOptionId: option.answerOptionId,
-                              supportsMultiple:
-                                  question.supportsMultipleCorrectAnswers,
-                            )
-                        : null,
+                    onTap: () => cubit.toggleSelection(
+                      questionId: question.questionId,
+                      answerOptionId: option.answerOptionId,
+                      supportsMultiple: question.supportsMultipleCorrectAnswers,
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(AppSpacing.md),
                       child: Row(
@@ -147,22 +159,12 @@ class _QuestionView extends StatelessWidget {
               },
             ),
           ),
-          if (feedback != null) ...[
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              feedback.isCorrect ? 'Correcta (provisional)' : 'Incorrecta (provisional)',
-              style: TextStyle(
-                color: feedback.isCorrect ? AppColors.success : AppColors.error,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
           const SizedBox(height: AppSpacing.md),
           Row(
             children: [
               Expanded(
                 child: AppSecondaryButton(
-                  label: 'Anterior',
+                  label: l10n.practicePreviousQuestionAction,
                   onPressed: state.currentIndex > 0
                       ? () => cubit.goToQuestion(state.currentIndex - 1)
                       : null,
@@ -171,18 +173,18 @@ class _QuestionView extends StatelessWidget {
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: AppPrimaryButton(
-                  label: feedback == null ? 'Confirmar' : 'Siguiente',
-                  onPressed: () async {
-                    if (feedback == null) {
-                      await cubit.submitCurrentQuestion();
-                      return;
-                    }
-                    if (state.currentIndex + 1 >= state.totalQuestions) {
-                      await cubit.finishSession();
-                    } else {
-                      cubit.goToQuestion(state.currentIndex + 1);
-                    }
-                  },
+                  label: isLastQuestion
+                      ? l10n.practiceFinishAction
+                      : l10n.offlineAnswerAndContinue,
+                  onPressed: selected.isEmpty
+                      ? null
+                      : () async {
+                          if (isLastQuestion) {
+                            await cubit.finishSession();
+                          } else {
+                            await cubit.answerAndContinue();
+                          }
+                        },
                 ),
               ),
             ],
@@ -194,40 +196,67 @@ class _QuestionView extends StatelessWidget {
 }
 
 class _FinishedView extends StatelessWidget {
-  const _FinishedView({required this.state});
+  const _FinishedView({
+    required this.state,
+    required this.quizTitle,
+  });
 
   final OfflinePracticeSessionState state;
+  final String quizTitle;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final result = state.finishResult!;
+
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Resultado provisional',
+            l10n.offlineProvisionalResultTitle,
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const SizedBox(height: AppSpacing.md),
-          Text('Puntuación: ${result.scoreObtained}/${result.scorePossible}'),
-          Text('Porcentaje: ${result.percentage}%'),
-          Text('Correctas: ${result.correctAnswers}'),
-          Text('Incorrectas: ${result.incorrectAnswers}'),
-          Text('Omitidas: ${result.omittedAnswers}'),
+          Text(l10n.practiceScoreLabel(result.scoreObtained, result.scorePossible)),
+          Text(l10n.practicePercentageLabel(result.percentage)),
+          Text(l10n.practiceCorrectLabel(result.correctAnswers)),
+          Text(l10n.practiceIncorrectLabel(result.incorrectAnswers)),
+          Text(l10n.offlineResultOmittedLabel(result.omittedAnswers)),
           const SizedBox(height: AppSpacing.md),
-          const Text(
-            'El resultado oficial se confirmará al sincronizar con el servidor.',
+          Text(
+            l10n.offlineSyncPendingNote,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
           ),
           const Spacer(),
           AppPrimaryButton(
-            label: 'Cerrar',
+            label: l10n.offlineViewDetailedReview,
+            icon: Icons.fact_check_outlined,
+            onPressed: state.reviewQuestions.isEmpty
+                ? null
+                : () {
+                    Navigator.of(context).push<void>(
+                      MaterialPageRoute<void>(
+                        builder: (_) => OfflinePracticeReviewPage(
+                          quizId: state.quiz!.quizId,
+                          quizTitle: quizTitle,
+                          questions: state.reviewQuestions,
+                        ),
+                      ),
+                    );
+                  },
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          AppPrimaryButton(
+            label: l10n.closeAction,
             onPressed: () => Navigator.of(context).pop(true),
           ),
           const SizedBox(height: AppSpacing.sm),
           AppSecondaryButton(
-            label: 'Sincronizar ahora',
+            label: l10n.offlineSyncNow,
             onPressed: () async {
               await getIt<OfflineSyncManager>().syncPendingSessions();
               if (context.mounted) {

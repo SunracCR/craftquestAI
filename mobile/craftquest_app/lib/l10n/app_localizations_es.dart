@@ -4708,4 +4708,36 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get correctBirthDateLoginHint =>
       '¿Te equivocaste en tu fecha de nacimiento?';
+
+  @override
+  String get offlineDownloadNeedsUpdate =>
+      'Esta descarga necesita actualizarse para incluir la revisión con justificación. Usa «Actualizar» en el detalle del cuestionario.';
+
+  @override
+  String get offlineViewDetailedReview => 'Ver revisión detallada';
+
+  @override
+  String get offlineLocalReviewTitle => 'Revisión local';
+
+  @override
+  String get offlineAnswerAndContinue => 'Responder y continuar';
+
+  @override
+  String get offlineLocalReviewProvisionalNote =>
+      'Revisión basada en tu descarga local. El resultado oficial se confirmará al sincronizar.';
+
+  @override
+  String get offlineProvisionalResultTitle => 'Resultado provisional';
+
+  @override
+  String get offlineSyncPendingNote =>
+      'El resultado oficial se confirmará al sincronizar con el servidor.';
+
+  @override
+  String get offlineSyncNow => 'Sincronizar ahora';
+
+  @override
+  String offlineResultOmittedLabel(int count) {
+    return 'Omitidas: $count';
+  }
 }
