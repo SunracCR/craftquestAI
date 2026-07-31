@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:craftquest_app/core/assets/audio_assets.dart';
@@ -13,10 +12,24 @@ class SoundService {
   static final Map<String, Uint8List> _bytesCache = {};
   Future<void>? _warmUpFuture;
   Future<void>? _audioContextFuture;
+  bool _audioContextConfigured = false;
 
   /// Preloads SFX sources so the first tap plays without asset decode delay.
   Future<void> warmUp() {
-    return _warmUpFuture ??= _warmUp();
+    final inFlight = _warmUpFuture;
+    if (inFlight != null) {
+      return inFlight;
+    }
+
+    final warmUp = _warmUp();
+    _warmUpFuture = warmUp;
+    return warmUp.catchError((Object error, StackTrace stackTrace) {
+      _warmUpFuture = null;
+      if (kDebugMode) {
+        debugPrint('SoundService.warmUp failed: $error\n$stackTrace');
+      }
+      throw error;
+    });
   }
 
   Future<void> _warmUp() async {
@@ -63,6 +76,7 @@ class SoundService {
     _loadingPlayers.clear();
     _warmUpFuture = null;
     _audioContextFuture = null;
+    _audioContextConfigured = false;
     await Future.wait(players.map((player) => player.dispose()));
   }
 
@@ -134,15 +148,41 @@ class SoundService {
     return bytes;
   }
 
-  Future<void> _ensureAudioContext() {
-    return _audioContextFuture ??= AudioPlayer.global.setAudioContext(
+  Future<void> _ensureAudioContext() async {
+    if (_audioContextConfigured) {
+      return;
+    }
+
+    final inFlight = _audioContextFuture;
+    if (inFlight != null) {
+      await inFlight;
+      return;
+    }
+
+    final configure = _configureAudioContext();
+    _audioContextFuture = configure;
+    try {
+      await configure;
+      _audioContextConfigured = true;
+    } catch (error, stackTrace) {
+      _audioContextFuture = null;
+      if (kDebugMode) {
+        debugPrint(
+          'SoundService._ensureAudioContext failed (non-fatal): $error\n$stackTrace',
+        );
+      }
+    }
+  }
+
+  Future<void> _configureAudioContext() {
+    return AudioPlayer.global.setAudioContext(
       AudioContext(
         android: const AudioContextAndroid(
           isSpeakerphoneOn: false,
           stayAwake: false,
           contentType: AndroidContentType.sonification,
-          usageType: AndroidUsageType.assistanceSonification,
-          audioFocus: AndroidAudioFocus.gainTransientMayDuck,
+          usageType: AndroidUsageType.game,
+          audioFocus: AndroidAudioFocus.gain,
         ),
         iOS: AudioContextIOS(
           category: AVAudioSessionCategory.ambient,

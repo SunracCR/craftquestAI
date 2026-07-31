@@ -5,15 +5,13 @@ import 'package:craftquest_app/core/utils/deferred_screen_load.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:dio/dio.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
+import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_bottom_bar.dart';
 import 'package:craftquest_app/core/widgets/app_buttons.dart';
-import 'package:craftquest_app/core/widgets/app_list_entry_card.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/features/practice/data/models/practice_models.dart';
-import 'package:craftquest_app/features/practice/data/practice_preferences_repository.dart';
 import 'package:craftquest_app/features/practice/data/practice_repository.dart';
-import 'package:craftquest_app/features/practice/presentation/practice_navigation.dart';
 import 'package:craftquest_app/features/quizzes/data/models/quiz_models.dart';
 import 'package:craftquest_app/features/quizzes/data/quiz_repository.dart';
 import 'package:craftquest_app/features/quizzes/presentation/quiz_flow_anchor.dart';
@@ -181,8 +179,6 @@ class _QuizListPageState extends State<QuizListPage> with ScreenLoadGeneration {
 
   Widget _buildQuizCard(QuizModel quiz) {
     final l10n = AppLocalizations.of(context)!;
-    final canPractice =
-        quiz.publicationStatus == 'published' && quiz.questionCount > 0;
     final activePractice = _inProgressByQuizId[quiz.quizId];
     final isPublished = quiz.publicationStatus == 'published';
     final accent =
@@ -192,14 +188,14 @@ class _QuizListPageState extends State<QuizListPage> with ScreenLoadGeneration {
       quiz.questionCount,
     );
     if (quiz.hasPendingAiDraft) {
-      subtitle = '$subtitle\n${l10n.quizListPendingAiDraft}';
+      subtitle = '$subtitle · ${l10n.quizListPendingAiDraft}';
     }
     if (activePractice != null) {
       subtitle =
-          '$subtitle\n${l10n.practiceInProgressSubtitle(activePractice.answeredCount, activePractice.totalQuestions)}';
+          '$subtitle · ${l10n.practiceInProgressSubtitle(activePractice.answeredCount, activePractice.totalQuestions)}';
     }
 
-    return AppListEntryCard(
+    return _CompactQuizListTile(
       title: quiz.title,
       subtitle: subtitle,
       accentColor: accent,
@@ -218,48 +214,6 @@ class _QuizListPageState extends State<QuizListPage> with ScreenLoadGeneration {
         if (!mounted) return;
         scheduleReturnRefresh(() => _load(showLoading: false));
       },
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (_folders.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.drive_file_move_outlined),
-              tooltip: l10n.quizFolderMoveQuizAction,
-              onPressed: () => _moveQuiz(quiz),
-            ),
-          if (canPractice)
-            IconButton(
-              icon: Icon(
-                activePractice != null
-                    ? Icons.play_circle_outline_rounded
-                    : Icons.play_arrow_rounded,
-              ),
-              color: AppColors.accent,
-              tooltip: activePractice != null
-                  ? l10n.practiceContinueAction
-                  : l10n.practiceQuizAction,
-              onPressed: () async {
-                final prefsRepo = getIt<PracticePreferencesRepository>();
-                await openPracticeSession(
-                  context,
-                  quizId: quiz.quizId,
-                  quizTitle: quiz.title,
-                  resumeSessionId: activePractice?.practiceSessionId,
-                  activeSessionPrefetch: activePractice != null
-                      ? Future.value(activePractice)
-                      : _practiceRepository.getActiveSessionForQuiz(
-                          quiz.quizId,
-                        ),
-                  launchOptionsPrefetch: prefsRepo.loadLaunchOptions(
-                    quiz.quizId,
-                  ),
-                );
-                if (!mounted) return;
-                scheduleReturnRefresh(() => _load(showLoading: false));
-              },
-            ),
-        ],
-      ),
     );
   }
 
@@ -327,6 +281,79 @@ class _QuizListPageState extends State<QuizListPage> with ScreenLoadGeneration {
                         ),
                       ],
                     ),
+    );
+  }
+}
+
+class _CompactQuizListTile extends StatelessWidget {
+  const _CompactQuizListTile({
+    required this.title,
+    required this.subtitle,
+    required this.accentColor,
+    required this.leadingIcon,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final Color accentColor;
+  final IconData leadingIcon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.surfaceHighlight,
+      borderRadius: BorderRadius.circular(AppColors.radiusSm),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: AppSpacing.xs,
+          ),
+          child: Row(
+            children: [
+              Icon(
+                leadingIcon,
+                size: 18,
+                color: accentColor,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: accentColor.withValues(alpha: 0.75),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

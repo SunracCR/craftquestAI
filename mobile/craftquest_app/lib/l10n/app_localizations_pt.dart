@@ -4716,7 +4716,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get offlineLocalReviewTitle => 'Revisao local';
 
   @override
-  String get offlineAnswerAndContinue => 'Responder e continuar';
+  String get offlineNextAction => 'Proximo';
+
+  @override
+  String get offlineFinishAction => 'Finalizar';
 
   @override
   String get offlineLocalReviewProvisionalNote =>

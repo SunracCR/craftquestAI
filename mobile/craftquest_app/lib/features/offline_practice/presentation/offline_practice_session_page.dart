@@ -174,8 +174,8 @@ class _QuestionView extends StatelessWidget {
               Expanded(
                 child: AppPrimaryButton(
                   label: isLastQuestion
-                      ? l10n.practiceFinishAction
-                      : l10n.offlineAnswerAndContinue,
+                      ? l10n.offlineFinishAction
+                      : l10n.offlineNextAction,
                   onPressed: selected.isEmpty
                       ? null
                       : () async {

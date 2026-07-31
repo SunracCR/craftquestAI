@@ -4720,7 +4720,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get offlineLocalReviewTitle => 'Revisión local';
 
   @override
-  String get offlineAnswerAndContinue => 'Responder y continuar';
+  String get offlineNextAction => 'Siguiente';
+
+  @override
+  String get offlineFinishAction => 'Finalizar';
 
   @override
   String get offlineLocalReviewProvisionalNote =>

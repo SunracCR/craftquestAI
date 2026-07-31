@@ -7937,11 +7937,17 @@ abstract class AppLocalizations {
   /// **'Revisión local'**
   String get offlineLocalReviewTitle;
 
-  /// No description provided for @offlineAnswerAndContinue.
+  /// No description provided for @offlineNextAction.
   ///
   /// In es, this message translates to:
-  /// **'Responder y continuar'**
-  String get offlineAnswerAndContinue;
+  /// **'Siguiente'**
+  String get offlineNextAction;
+
+  /// No description provided for @offlineFinishAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Finalizar'**
+  String get offlineFinishAction;
 
   /// No description provided for @offlineLocalReviewProvisionalNote.
   ///
