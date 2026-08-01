@@ -30,6 +30,8 @@
   "retry": "Retry",
   "noInternetBannerTitle": "No internet connection",
   "noInternetBannerMessage": "You can keep browsing, but data will not update until you are back online.",
+  "offlineSessionBannerTitle": "Offline session",
+  "offlineSessionBannerMessage": "You are using your last saved profile. Some data may be outdated until you are back online.",
   "noInternetSnackBarMessage": "You are offline. Check your connection and try again.",
   "errorDevApiUnreachable": "Could not reach the API on your phone. With USB connected run: adb reverse tcp:7080 tcp:7080, then restart the app.",
   "genericRequestErrorMessage": "The request could not be completed. Please try again shortly.",

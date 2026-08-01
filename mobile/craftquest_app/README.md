@@ -162,3 +162,13 @@ Pantallas: `excel_import_page.dart`, `study_material_upload_zone.dart`.
 
 Store: `practice_sound_preference_store.dart` (clave `pref_practice_sfx`).
 
+## Sesión offline (practicar cuestionarios descargados)
+
+Si ya iniciaste sesión antes y tienes tokens + perfil cacheado, la app **no te expulsa al login** cuando no hay red al abrirla. Entrarás con el último perfil conocido y podrás practicar lo ya descargado.
+
+- Perfil cacheado: `CachedProfileStore` (secure storage).
+- Lógica de arranque: `AuthBloc._onSessionChecked` + `AuthRepository.restoreProfileAfterSessionFailure`.
+- Flag de UI: `AuthAuthenticated.isOfflineSession` (banner + refresh al reconectar).
+- Límite de seguridad: refresh token JWT expirado (7 días) → login obligatorio.
+- Tests: `test/features/auth/auth_bloc_offline_session_test.dart`.
+

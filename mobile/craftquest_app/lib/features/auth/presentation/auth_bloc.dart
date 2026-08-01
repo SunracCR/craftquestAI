@@ -55,6 +55,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final profile = await _repository.getProfile();
       emit(AuthAuthenticated(profile));
       _resetSessionExpiredFlag();
+    } on DioException catch (error) {
+      final restored = await _repository.restoreProfileAfterSessionFailure(error);
+      if (restored != null) {
+        emit(
+          AuthAuthenticated(
+            restored.profile,
+            isOfflineSession: restored.isOfflineSession,
+          ),
+        );
+        _resetSessionExpiredFlag();
+        return;
+      }
+      await _repository.logout();
+      emit(const AuthUnauthenticated());
     } catch (_) {
       await _repository.logout();
       emit(const AuthUnauthenticated());
@@ -252,7 +266,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) {
     final current = state;
     if (current is AuthAuthenticated) {
-      emit(AuthAuthenticated(event.user));
+      emit(
+        AuthAuthenticated(
+          event.user,
+          isOfflineSession: current.isOfflineSession,
+        ),
+      );
     }
   }
 

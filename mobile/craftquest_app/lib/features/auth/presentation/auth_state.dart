@@ -20,12 +20,16 @@ class AuthUnauthenticated extends AuthState {
 }
 
 class AuthAuthenticated extends AuthState {
-  const AuthAuthenticated(this.user);
+  const AuthAuthenticated(
+    this.user, {
+    this.isOfflineSession = false,
+  });
 
   final UserProfileModel user;
+  final bool isOfflineSession;
 
   @override
-  List<Object?> get props => [user];
+  List<Object?> get props => [user, isOfflineSession];
 }
 
 class AuthFailure extends AuthState {

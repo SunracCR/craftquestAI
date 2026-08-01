@@ -12,6 +12,21 @@ abstract final class DioErrorMapper {
         error.type == DioExceptionType.receiveTimeout;
   }
 
+  static bool isTransientFailure(Object error) {
+    if (error is DioException) {
+      return isTimeoutFailure(error) || isConnectivityFailure(error);
+    }
+    if (error is SocketException) {
+      return true;
+    }
+    return false;
+  }
+
+  static bool isAuthFailure(DioException error) {
+    final status = error.response?.statusCode;
+    return status == 401 || status == 403;
+  }
+
   static bool isConnectivityFailure(DioException error) {
     if (isTimeoutFailure(error)) {
       return false;

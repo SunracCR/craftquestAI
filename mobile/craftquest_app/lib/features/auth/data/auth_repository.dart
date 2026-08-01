@@ -1,13 +1,18 @@
+import 'package:craftquest_app/core/auth/cached_profile_store.dart';
+import 'package:craftquest_app/core/auth/jwt_utils.dart';
+import 'package:craftquest_app/core/auth/token_refresh_outcome.dart';
 import 'package:craftquest_app/core/network/api_client.dart';
 import 'package:craftquest_app/features/auth/data/models/auth_models.dart';
 import 'package:craftquest_app/features/auth/data/models/oauth_config_model.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
+import 'package:craftquest_app/features/auth/data/session_restore_result.dart';
 import 'package:dio/dio.dart';
 
 class AuthRepository {
-  AuthRepository(this._apiClient);
+  AuthRepository(this._apiClient, this._cachedProfileStore);
 
   final ApiClient _apiClient;
+  final CachedProfileStore _cachedProfileStore;
 
   Future<RegisterResultModel> register({
     required String email,
@@ -118,7 +123,71 @@ class AuthRepository {
   Future<UserProfileModel> getProfile() async {
     final response =
         await _apiClient.dio.get<Map<String, dynamic>>('/api/auth/me');
-    return UserProfileModel.fromJson(response.data!);
+    final profile = UserProfileModel.fromJson(response.data!);
+    await _cachedProfileStore.save(profile);
+    return profile;
+  }
+
+  Future<UserProfileModel?> getCachedProfile() => _cachedProfileStore.load();
+
+  Future<bool> isRefreshTokenValidLocally() async {
+    final refreshToken = await _apiClient.tokenStorage.getRefreshToken();
+    if (refreshToken == null || refreshToken.isEmpty) {
+      return false;
+    }
+    return !JwtUtils.isTokenExpired(refreshToken);
+  }
+
+  /// Attempts to restore a session when `/api/auth/me` fails at app startup.
+  Future<SessionRestoreResult?> restoreProfileAfterSessionFailure(
+    DioException error,
+  ) async {
+    if (!await isRefreshTokenValidLocally()) {
+      return null;
+    }
+
+    final cached = await getCachedProfile();
+    if (cached == null) {
+      return null;
+    }
+
+    if (DioErrorMapper.isTransientFailure(error)) {
+      return SessionRestoreResult(
+        profile: cached,
+        isOfflineSession: true,
+      );
+    }
+
+    if (DioErrorMapper.isAuthFailure(error)) {
+      final refreshOutcome = await _attemptRefresh();
+      switch (refreshOutcome) {
+        case TokenRefreshOutcome.success:
+          try {
+            final profile = await getProfile();
+            return SessionRestoreResult(
+              profile: profile,
+              isOfflineSession: false,
+            );
+          } on DioException catch (retryError) {
+            if (DioErrorMapper.isTransientFailure(retryError)) {
+              return SessionRestoreResult(
+                profile: cached,
+                isOfflineSession: true,
+              );
+            }
+            return null;
+          }
+        case TokenRefreshOutcome.transientFailure:
+          return SessionRestoreResult(
+            profile: cached,
+            isOfflineSession: true,
+          );
+        case TokenRefreshOutcome.authFailure:
+          return null;
+      }
+    }
+
+    return null;
   }
 
   /// Actualiza JWT (roles en el token) y devuelve el perfil desde la API.
@@ -149,7 +218,9 @@ class AuthRepository {
           'dateOfBirth': dateOfBirth.toIso8601String().split('T').first,
       },
     );
-    return UserProfileModel.fromJson(response.data!);
+    final profile = UserProfileModel.fromJson(response.data!);
+    await _cachedProfileStore.save(profile);
+    return profile;
   }
 
   Future<void> requestPasswordReset({required String email}) async {
@@ -185,11 +256,15 @@ class AuthRepository {
     );
   }
 
-  Future<void> logout() => _apiClient.tokenStorage.clear();
+  Future<void> logout() async {
+    await _apiClient.tokenStorage.clear();
+    await _cachedProfileStore.clear();
+  }
 
   Future<void> deleteAccount() async {
     await _apiClient.dio.delete<void>('/api/auth/me');
     await _apiClient.tokenStorage.clear();
+    await _cachedProfileStore.clear();
   }
 
   Future<AuthResponseModel> _persistAndMap(Map<String, dynamic> data) async {
@@ -198,8 +273,12 @@ class AuthRepository {
       accessToken: auth.tokens.accessToken,
       refreshToken: auth.tokens.refreshToken,
     );
+    await _cachedProfileStore.save(auth.user);
     return auth;
   }
+
+  Future<TokenRefreshOutcome> _attemptRefresh() =>
+      _apiClient.refreshTokensDetailed();
 
   String mapError(DioException error) => DioErrorMapper.map(error);
 }

@@ -40,4 +40,14 @@ abstract final class JwtUtils {
     }
     return DateTime.now().toUtc().isAfter(expiry.subtract(skew));
   }
+
+  /// Returns true when [token] has an `exp` claim in the past.
+  static bool isTokenExpired(String token, {DateTime? now}) {
+    final expiry = accessTokenExpiryUtc(token);
+    if (expiry == null) {
+      return true;
+    }
+    final reference = now ?? DateTime.now().toUtc();
+    return !reference.isBefore(expiry);
+  }
 }

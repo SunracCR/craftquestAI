@@ -62,6 +62,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'You can keep browsing, but data will not update until you are back online.';
 
   @override
+  String get offlineSessionBannerTitle => 'Offline session';
+
+  @override
+  String get offlineSessionBannerMessage =>
+      'You are using your last saved profile. Some data may be outdated until you are back online.';
+
+  @override
   String get noInternetSnackBarMessage =>
       'You are offline. Check your connection and try again.';
 

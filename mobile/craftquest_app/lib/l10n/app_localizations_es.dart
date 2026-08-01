@@ -62,6 +62,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Puedes seguir navegando, pero los datos no se actualizarán hasta que vuelva la red.';
 
   @override
+  String get offlineSessionBannerTitle => 'Sesión sin conexión';
+
+  @override
+  String get offlineSessionBannerMessage =>
+      'Estás usando tu último perfil guardado. Algunos datos pueden no estar actualizados hasta que vuelva la red.';
+
+  @override
   String get noInternetSnackBarMessage =>
       'Sin conexión. Revisa tu internet e inténtalo de nuevo.';
 

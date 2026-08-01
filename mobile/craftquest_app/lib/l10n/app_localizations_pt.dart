@@ -62,6 +62,13 @@ class AppLocalizationsPt extends AppLocalizations {
       'Voce pode continuar navegando, mas os dados so atualizam quando a rede voltar.';
 
   @override
+  String get offlineSessionBannerTitle => 'Sessao offline';
+
+  @override
+  String get offlineSessionBannerMessage =>
+      'Voce esta usando seu ultimo perfil salvo. Alguns dados podem estar desatualizados ate a rede voltar.';
+
+  @override
   String get noInternetSnackBarMessage =>
       'Sem conexao. Verifique a internet e tente novamente.';
 

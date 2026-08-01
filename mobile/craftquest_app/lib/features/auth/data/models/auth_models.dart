@@ -38,6 +38,18 @@ class UserProfileModel {
     );
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'userId': userId,
+      'email': email,
+      'displayName': displayName,
+      'avatarId': avatarId,
+      'preferredLanguage': preferredLanguage,
+      'dateOfBirth': dateOfBirth,
+      'roles': roles,
+    };
+  }
+
   final String userId;
   final String email;
   final String? displayName;

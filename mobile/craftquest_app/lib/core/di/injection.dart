@@ -3,6 +3,7 @@ import 'package:craftquest_app/core/compliance/compliance_pref_cache.dart';
 import 'package:craftquest_app/core/compliance/age_collection_controller.dart';
 import 'package:craftquest_app/core/compliance/age_collection_storage.dart';
 import 'package:craftquest_app/core/compliance/age_signal_service.dart';
+import 'package:craftquest_app/core/auth/cached_profile_store.dart';
 import 'package:craftquest_app/core/auth/saved_login_credentials_storage.dart';
 import 'package:craftquest_app/core/auth/session_expired_notifier.dart';
 import 'package:craftquest_app/core/auth/token_storage.dart';
@@ -60,6 +61,7 @@ void configureDependencies() {
   getIt.registerLazySingleton(CheckoutRefreshNotifier.new);
   getIt.registerLazySingleton(MainShellTabSignal.new);
   getIt.registerLazySingleton(TokenStorage.new);
+  getIt.registerLazySingleton(CachedProfileStore.secure);
   getIt.registerLazySingleton(SavedLoginCredentialsStorage.new);
   getIt.registerLazySingleton(GuestTokenStorage.new);
   getIt.registerLazySingleton(LocaleController.new);
@@ -80,7 +82,12 @@ void configureDependencies() {
       sessionExpiredNotifier: getIt<SessionExpiredNotifier>(),
     ),
   );
-  getIt.registerLazySingleton(() => AuthRepository(getIt<ApiClient>()));
+  getIt.registerLazySingleton(
+    () => AuthRepository(
+      getIt<ApiClient>(),
+      getIt<CachedProfileStore>(),
+    ),
+  );
   getIt.registerLazySingleton(() => GuestRepository(getIt<ApiClient>()));
   getIt.registerFactory(
     () => AuthBloc(

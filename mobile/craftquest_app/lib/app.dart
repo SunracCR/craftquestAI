@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:craftquest_app/core/compliance/age_collection_gate.dart';
 import 'package:craftquest_app/core/compliance/parental_consent_gate.dart';
 import 'package:craftquest_app/core/auth/session_expired_notifier.dart';
+import 'package:craftquest_app/core/network/network_connectivity_service.dart';
 import 'package:craftquest_app/core/auth/token_storage.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/l10n/localized_message_holder.dart';
@@ -90,7 +91,20 @@ class CraftQuestApp extends StatelessWidget {
             themeMode: ThemeMode.dark,
             builder: (context, child) {
               LocalizedMessageHolder.update(AppLocalizations.of(context));
-              return AppConnectivityOverlay(child: child);
+              return BlocBuilder<AuthBloc, AuthState>(
+                buildWhen: (previous, current) =>
+                    previous is AuthAuthenticated != current is AuthAuthenticated ||
+                    (previous is AuthAuthenticated &&
+                        current is AuthAuthenticated &&
+                        previous.isOfflineSession != current.isOfflineSession),
+                builder: (context, authState) {
+                  return AppConnectivityOverlay(
+                    showOfflineSessionBanner: authState is AuthAuthenticated &&
+                        authState.isOfflineSession,
+                    child: child,
+                  );
+                },
+              );
             },
             home: const ParentalConsentGate(
               child: AgeCollectionGate(
@@ -528,7 +542,10 @@ class _AuthGateState extends State<_AuthGate> {
           }
 
           if (authState is AuthAuthenticated) {
-            return _AuthenticatedShell(user: authState.user);
+            return _OfflineSessionReconnectListener(
+              isOfflineSession: authState.isOfflineSession,
+              child: _AuthenticatedShell(user: authState.user),
+            );
           }
 
           final accountLink = readWebAccountLink();
@@ -555,6 +572,68 @@ class _AuthGateState extends State<_AuthGate> {
       ),
     );
   }
+}
+
+class _OfflineSessionReconnectListener extends StatefulWidget {
+  const _OfflineSessionReconnectListener({
+    required this.isOfflineSession,
+    required this.child,
+  });
+
+  final bool isOfflineSession;
+  final Widget child;
+
+  @override
+  State<_OfflineSessionReconnectListener> createState() =>
+      _OfflineSessionReconnectListenerState();
+}
+
+class _OfflineSessionReconnectListenerState
+    extends State<_OfflineSessionReconnectListener> {
+  late final NetworkConnectivityService _connectivity;
+  bool _wasOffline = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _connectivity = getIt<NetworkConnectivityService>();
+    _wasOffline = !_connectivity.isOnline;
+    _connectivity.addListener(_onConnectivityChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant _OfflineSessionReconnectListener oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isOfflineSession && _connectivity.isOnline) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _requestProfileRefresh();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _connectivity.removeListener(_onConnectivityChanged);
+    super.dispose();
+  }
+
+  void _onConnectivityChanged() {
+    final online = _connectivity.isOnline;
+    if (online && _wasOffline && widget.isOfflineSession) {
+      _requestProfileRefresh();
+    }
+    _wasOffline = !online;
+  }
+
+  void _requestProfileRefresh() {
+    if (!mounted) {
+      return;
+    }
+    context.read<AuthBloc>().add(const AuthProfileRefreshRequested());
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 class _AuthenticatedShell extends StatefulWidget {

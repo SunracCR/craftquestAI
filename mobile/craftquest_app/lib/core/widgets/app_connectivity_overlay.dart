@@ -5,32 +5,76 @@ import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
-/// Global offline banner above all routes.
-class AppConnectivityOverlay extends StatelessWidget {
-  const AppConnectivityOverlay({super.key, required this.child});
+/// Global offline indicator above all routes. Compact and dismissible per offline spell.
+class AppConnectivityOverlay extends StatefulWidget {
+  const AppConnectivityOverlay({
+    super.key,
+    required this.child,
+    this.showOfflineSessionBanner = false,
+  });
 
   final Widget? child;
+  final bool showOfflineSessionBanner;
+
+  @override
+  State<AppConnectivityOverlay> createState() => _AppConnectivityOverlayState();
+}
+
+class _AppConnectivityOverlayState extends State<AppConnectivityOverlay> {
+  late final NetworkConnectivityService _connectivity;
+  bool _noInternetDismissed = false;
+  bool _sessionBannerDismissed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _connectivity = getIt<NetworkConnectivityService>();
+    _connectivity.addListener(_onConnectivityChanged);
+  }
+
+  @override
+  void dispose() {
+    _connectivity.removeListener(_onConnectivityChanged);
+    super.dispose();
+  }
+
+  void _onConnectivityChanged() {
+    if (_connectivity.isOnline) {
+      if (_noInternetDismissed || _sessionBannerDismissed) {
+        setState(() {
+          _noInternetDismissed = false;
+          _sessionBannerDismissed = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final connectivity = getIt<NetworkConnectivityService>();
-
     return ListenableBuilder(
-      listenable: connectivity,
+      listenable: _connectivity,
       builder: (context, _) {
         final l10n = AppLocalizations.of(context);
-        final showBanner = !connectivity.isOnline && l10n != null;
+        if (l10n == null) {
+          return widget.child ?? const SizedBox.shrink();
+        }
+
+        final showNoInternet =
+            !_connectivity.isOnline && !_noInternetDismissed;
+        final showSession =
+            widget.showOfflineSessionBanner && !_sessionBannerDismissed;
+        final showAnyBanner = showNoInternet || showSession;
 
         return Stack(
           children: [
-            if (child != null) child!,
-            if (showBanner)
+            if (widget.child != null) widget.child!,
+            if (showAnyBanner)
               Positioned(
                 left: 0,
                 right: 0,
                 top: 0,
                 child: Material(
-                  elevation: 6,
+                  elevation: 4,
                   color: Colors.transparent,
                   child: SafeArea(
                     bottom: false,
@@ -41,7 +85,31 @@ class AppConnectivityOverlay extends StatelessWidget {
                         AppSpacing.md,
                         0,
                       ),
-                      child: _OfflineBanner(l10n: l10n),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (showNoInternet)
+                            _CompactOfflineBanner(
+                              title: l10n.noInternetBannerTitle,
+                              icon: Icons.wifi_off_rounded,
+                              onDismiss: () {
+                                setState(() => _noInternetDismissed = true);
+                              },
+                              dismissTooltip: l10n.closeAction,
+                            ),
+                          if (showNoInternet && showSession)
+                            const SizedBox(height: AppSpacing.xs),
+                          if (showSession)
+                            _CompactOfflineBanner(
+                              title: l10n.offlineSessionBannerTitle,
+                              icon: Icons.cloud_off_rounded,
+                              onDismiss: () {
+                                setState(() => _sessionBannerDismissed = true);
+                              },
+                              dismissTooltip: l10n.closeAction,
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -53,61 +121,65 @@ class AppConnectivityOverlay extends StatelessWidget {
   }
 }
 
-class _OfflineBanner extends StatelessWidget {
-  const _OfflineBanner({required this.l10n});
+class _CompactOfflineBanner extends StatelessWidget {
+  const _CompactOfflineBanner({
+    required this.title,
+    required this.icon,
+    required this.onDismiss,
+    required this.dismissTooltip,
+  });
 
-  final AppLocalizations l10n;
+  final String title;
+  final IconData icon;
+  final VoidCallback onDismiss;
+  final String dismissTooltip;
 
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: AppColors.surfaceHighlight,
+        color: AppColors.surfaceHighlight.withValues(alpha: 0.96),
         borderRadius: BorderRadius.circular(AppColors.radiusSm),
         border: Border.all(
-          color: AppColors.accentGold.withValues(alpha: 0.55),
+          color: AppColors.accentGold.withValues(alpha: 0.45),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
+        padding: const EdgeInsets.only(
+          left: AppSpacing.sm,
+          right: AppSpacing.xs,
         ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(
-              Icons.wifi_off_rounded,
+              icon,
               color: AppColors.accentGold,
-              size: 22,
+              size: 18,
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.noInternetBannerTitle,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    l10n.noInternetBannerMessage,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
-                          height: 1.35,
-                        ),
-                  ),
-                ],
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ),
+            IconButton(
+              onPressed: onDismiss,
+              tooltip: dismissTooltip,
+              visualDensity: VisualDensity.compact,
+              iconSize: 18,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(
+                minWidth: 36,
+                minHeight: 36,
+              ),
+              icon: Icon(
+                Icons.close_rounded,
+                color: AppColors.textSecondary,
               ),
             ),
           ],

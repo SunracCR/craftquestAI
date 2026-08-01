@@ -1,7 +1,9 @@
 import 'dart:io';
 
 import 'package:craftquest_app/core/auth/session_expired_notifier.dart';
+import 'package:craftquest_app/core/auth/token_refresh_outcome.dart';
 import 'package:craftquest_app/core/auth/token_storage.dart';
+import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/network/auth_interceptor.dart';
 import 'package:craftquest_app/core/network/multipart_request_interceptor.dart';
 import 'package:dio/dio.dart';
@@ -105,9 +107,14 @@ class ApiClient {
 
   /// Renueva access/refresh JWT con los roles actuales del usuario (p. ej. tras comprar plan teacher).
   Future<bool> refreshTokens() async {
+    final outcome = await refreshTokensDetailed();
+    return outcome == TokenRefreshOutcome.success;
+  }
+
+  Future<TokenRefreshOutcome> refreshTokensDetailed() async {
     final refreshToken = await _tokenStorage.getRefreshToken();
     if (refreshToken == null || refreshToken.isEmpty) {
-      return false;
+      return TokenRefreshOutcome.authFailure;
     }
 
     try {
@@ -122,15 +129,23 @@ class ApiClient {
           access.isEmpty ||
           refresh == null ||
           refresh.isEmpty) {
-        return false;
+        return TokenRefreshOutcome.authFailure;
       }
       await _tokenStorage.saveTokens(
         accessToken: access,
         refreshToken: refresh,
       );
-      return true;
-    } on DioException {
-      return false;
+      return TokenRefreshOutcome.success;
+    } on DioException catch (error) {
+      if (DioErrorMapper.isAuthFailure(error)) {
+        return TokenRefreshOutcome.authFailure;
+      }
+      if (DioErrorMapper.isTransientFailure(error)) {
+        return TokenRefreshOutcome.transientFailure;
+      }
+      return TokenRefreshOutcome.authFailure;
+    } catch (_) {
+      return TokenRefreshOutcome.transientFailure;
     }
   }
 }

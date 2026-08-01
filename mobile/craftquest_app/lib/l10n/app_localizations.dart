@@ -196,6 +196,18 @@ abstract class AppLocalizations {
   /// **'Puedes seguir navegando, pero los datos no se actualizarán hasta que vuelva la red.'**
   String get noInternetBannerMessage;
 
+  /// No description provided for @offlineSessionBannerTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Sesión sin conexión'**
+  String get offlineSessionBannerTitle;
+
+  /// No description provided for @offlineSessionBannerMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Estás usando tu último perfil guardado. Algunos datos pueden no estar actualizados hasta que vuelva la red.'**
+  String get offlineSessionBannerMessage;
+
   /// No description provided for @noInternetSnackBarMessage.
   ///
   /// In es, this message translates to:
