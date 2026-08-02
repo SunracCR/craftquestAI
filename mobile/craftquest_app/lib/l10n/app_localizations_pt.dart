@@ -69,6 +69,35 @@ class AppLocalizationsPt extends AppLocalizations {
       'Voce esta usando seu ultimo perfil salvo. Alguns dados podem estar desatualizados ate a rede voltar.';
 
   @override
+  String get offlineDownloadsAction => 'Downloads offline';
+
+  @override
+  String get offlineDownloadsViewAction => 'Ver downloads offline';
+
+  @override
+  String get offlineDownloadsPlayAction => 'Praticar offline';
+
+  @override
+  String get offlineDownloadsDeleteAction => 'Remover download';
+
+  @override
+  String get offlineDownloadsSyncTooltip => 'Sincronizar resultados';
+
+  @override
+  String get offlineDownloadsEmptyMessage =>
+      'Sem downloads offline. Baixe questionarios na tela de detalhes do quiz (plano pago).';
+
+  @override
+  String offlineDownloadsItemSummary(
+    int questionCount,
+    String sizeLabel,
+    int mediaReady,
+    int mediaTotal,
+  ) {
+    return '$questionCount perguntas · $sizeLabel · Midia $mediaReady/$mediaTotal';
+  }
+
+  @override
   String get noInternetSnackBarMessage =>
       'Sem conexao. Verifique a internet e tente novamente.';
 

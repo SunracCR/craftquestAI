@@ -79,6 +79,8 @@ class AppErrorView extends StatelessWidget {
     required this.retryLabel,
     this.title,
     this.detail,
+    this.secondaryActionLabel,
+    this.onSecondaryAction,
   });
 
   final String message;
@@ -86,6 +88,8 @@ class AppErrorView extends StatelessWidget {
   final String retryLabel;
   final String? title;
   final String? detail;
+  final String? secondaryActionLabel;
+  final VoidCallback? onSecondaryAction;
 
   @override
   Widget build(BuildContext context) {
@@ -133,6 +137,13 @@ class AppErrorView extends StatelessWidget {
                 onPressed: onRetry,
               ),
             ),
+            if (secondaryActionLabel != null && onSecondaryAction != null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              TextButton(
+                onPressed: onSecondaryAction,
+                child: Text(secondaryActionLabel!),
+              ),
+            ],
           ],
         ),
       ),

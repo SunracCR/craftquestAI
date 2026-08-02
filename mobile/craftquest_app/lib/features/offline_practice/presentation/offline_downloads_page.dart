@@ -9,6 +9,7 @@ import 'package:craftquest_app/features/offline_practice/data/offline_sync_repos
 import 'package:craftquest_app/features/offline_practice/domain/offline_sync_manager.dart';
 import 'package:craftquest_app/features/offline_practice/presentation/cubit/offline_practice_session_cubit.dart';
 import 'package:craftquest_app/features/offline_practice/presentation/offline_practice_session_page.dart';
+import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -87,13 +88,15 @@ class _OfflineDownloadsPageState extends State<OfflineDownloadsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return EdgeAwareScaffold(
       appBar: AppBar(
-        title: const Text('Descargas offline'),
+        title: Text(l10n.offlineDownloadsAction),
         actions: [
           IconButton(
             onPressed: _syncNow,
-            tooltip: 'Sincronizar resultados',
+            tooltip: l10n.offlineDownloadsSyncTooltip,
             icon: Badge(
               isLabelVisible: _pendingSyncCount > 0,
               label: Text('$_pendingSyncCount'),
@@ -107,14 +110,13 @@ class _OfflineDownloadsPageState extends State<OfflineDownloadsPage> {
           : _error != null
               ? AppErrorView(
                   message: _error!,
-                  retryLabel: 'Reintentar',
+                  retryLabel: l10n.retry,
                   onRetry: _load,
                 )
               : _items.isEmpty
-                  ? const AppEmptyView(
+                  ? AppEmptyView(
                       icon: Icons.download_for_offline_outlined,
-                      message:
-                          'Sin descargas offline. Descarga cuestionarios desde el detalle del quiz (plan pago).',
+                      message: l10n.offlineDownloadsEmptyMessage,
                     )
                   : RefreshIndicator(
                       onRefresh: _load,
@@ -131,9 +133,12 @@ class _OfflineDownloadsPageState extends State<OfflineDownloadsPage> {
                             child: ListTile(
                               title: Text(item.title),
                               subtitle: Text(
-                                '${item.questionCount} preguntas · '
-                                '${_formatBytes(item.totalBytes)} · '
-                                'Media ${item.mediaReady}/${item.mediaTotal}',
+                                l10n.offlineDownloadsItemSummary(
+                                  item.questionCount,
+                                  _formatBytes(item.totalBytes),
+                                  item.mediaReady,
+                                  item.mediaTotal,
+                                ),
                               ),
                               trailing: PopupMenuButton<String>(
                                 onSelected: (value) async {
@@ -144,13 +149,13 @@ class _OfflineDownloadsPageState extends State<OfflineDownloadsPage> {
                                   }
                                 },
                                 itemBuilder: (_) => [
-                                  const PopupMenuItem(
+                                  PopupMenuItem(
                                     value: 'play',
-                                    child: Text('Practicar offline'),
+                                    child: Text(l10n.offlineDownloadsPlayAction),
                                   ),
-                                  const PopupMenuItem(
+                                  PopupMenuItem(
                                     value: 'delete',
-                                    child: Text('Eliminar descarga'),
+                                    child: Text(l10n.offlineDownloadsDeleteAction),
                                   ),
                                 ],
                               ),

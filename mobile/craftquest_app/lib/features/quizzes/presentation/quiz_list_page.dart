@@ -10,6 +10,7 @@ import 'package:craftquest_app/core/widgets/app_bottom_bar.dart';
 import 'package:craftquest_app/core/widgets/app_buttons.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
+import 'package:craftquest_app/features/offline_practice/presentation/offline_downloads_page.dart';
 import 'package:craftquest_app/features/practice/data/models/practice_models.dart';
 import 'package:craftquest_app/features/practice/data/practice_repository.dart';
 import 'package:craftquest_app/features/quizzes/data/models/quiz_models.dart';
@@ -40,6 +41,7 @@ class _QuizListPageState extends State<QuizListPage> with ScreenLoadGeneration {
   Map<String, PracticeActiveSessionModel> _inProgressByQuizId = {};
   String? _error;
   bool _loading = true;
+  bool _isConnectivityError = false;
   String _searchQuery = '';
 
   @override
@@ -61,6 +63,7 @@ class _QuizListPageState extends State<QuizListPage> with ScreenLoadGeneration {
       setState(() {
         _loading = true;
         _error = null;
+        _isConnectivityError = false;
       });
     }
     try {
@@ -73,6 +76,7 @@ class _QuizListPageState extends State<QuizListPage> with ScreenLoadGeneration {
         _quizzes = results[0] as List<QuizModel>;
         _folders = results[1] as List<QuizFolderModel>;
         _loading = false;
+        _isConnectivityError = false;
       });
       unawaited(_loadInProgressSessions());
     } on DioException catch (e) {
@@ -80,14 +84,25 @@ class _QuizListPageState extends State<QuizListPage> with ScreenLoadGeneration {
       setState(() {
         _error = DioErrorMapper.map(e);
         _loading = false;
+        _isConnectivityError = DioErrorMapper.isConnectivityFailure(e) ||
+            DioErrorMapper.isTimeoutFailure(e);
       });
     } catch (_) {
       if (!mounted || isStaleScreenLoad(loadId)) return;
       setState(() {
         _error = DioErrorMapper.genericMessage();
         _loading = false;
+        _isConnectivityError = false;
       });
     }
+  }
+
+  Future<void> _openOfflineDownloads() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => const OfflineDownloadsPage(),
+      ),
+    );
   }
 
   Future<void> _loadInProgressSessions() async {
@@ -251,6 +266,12 @@ class _QuizListPageState extends State<QuizListPage> with ScreenLoadGeneration {
                   message: _error!,
                   retryLabel: l10n.retry,
                   onRetry: _load,
+                  secondaryActionLabel: _isConnectivityError
+                      ? l10n.offlineDownloadsViewAction
+                      : null,
+                  onSecondaryAction: _isConnectivityError
+                      ? _openOfflineDownloads
+                      : null,
                 )
               : (_quizzes == null || _quizzes!.isEmpty)
                   ? AppEmptyView(message: l10n.quizzesEmpty)

@@ -32,6 +32,21 @@
   "noInternetBannerMessage": "Voce pode continuar navegando, mas os dados so atualizam quando a rede voltar.",
   "offlineSessionBannerTitle": "Sessao offline",
   "offlineSessionBannerMessage": "Voce esta usando seu ultimo perfil salvo. Alguns dados podem estar desatualizados ate a rede voltar.",
+  "offlineDownloadsAction": "Downloads offline",
+  "offlineDownloadsViewAction": "Ver downloads offline",
+  "offlineDownloadsPlayAction": "Praticar offline",
+  "offlineDownloadsDeleteAction": "Remover download",
+  "offlineDownloadsSyncTooltip": "Sincronizar resultados",
+  "offlineDownloadsEmptyMessage": "Sem downloads offline. Baixe questionarios na tela de detalhes do quiz (plano pago).",
+  "offlineDownloadsItemSummary": "{questionCount} perguntas · {sizeLabel} · Midia {mediaReady}/{mediaTotal}",
+  "@offlineDownloadsItemSummary": {
+    "placeholders": {
+      "questionCount": { "type": "int" },
+      "sizeLabel": { "type": "String" },
+      "mediaReady": { "type": "int" },
+      "mediaTotal": { "type": "int" }
+    }
+  },
   "noInternetSnackBarMessage": "Sem conexao. Verifique a internet e tente novamente.",
   "errorDevApiUnreachable": "Nao foi possivel ligar a API no telemovel. Com USB ligado execute: adb reverse tcp:7080 tcp:7080 e reinicie a app.",
   "genericRequestErrorMessage": "Nao foi possivel concluir a solicitacao. Tente novamente em instantes.",

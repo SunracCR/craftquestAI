@@ -69,6 +69,35 @@ class AppLocalizationsEn extends AppLocalizations {
       'You are using your last saved profile. Some data may be outdated until you are back online.';
 
   @override
+  String get offlineDownloadsAction => 'Offline downloads';
+
+  @override
+  String get offlineDownloadsViewAction => 'View offline downloads';
+
+  @override
+  String get offlineDownloadsPlayAction => 'Practice offline';
+
+  @override
+  String get offlineDownloadsDeleteAction => 'Remove download';
+
+  @override
+  String get offlineDownloadsSyncTooltip => 'Sync results';
+
+  @override
+  String get offlineDownloadsEmptyMessage =>
+      'No offline downloads yet. Download quizzes from the quiz detail screen (paid plan).';
+
+  @override
+  String offlineDownloadsItemSummary(
+    int questionCount,
+    String sizeLabel,
+    int mediaReady,
+    int mediaTotal,
+  ) {
+    return '$questionCount questions · $sizeLabel · Media $mediaReady/$mediaTotal';
+  }
+
+  @override
   String get noInternetSnackBarMessage =>
       'You are offline. Check your connection and try again.';
 

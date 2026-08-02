@@ -25,6 +25,8 @@ import 'package:craftquest_app/features/billing/presentation/ai_credit_packs_pag
 import 'package:craftquest_app/features/billing/presentation/upgrade_plan_page.dart';
 import 'package:craftquest_app/features/ai_generation/presentation/ai_generation_hub_page.dart';
 import 'package:craftquest_app/features/quizzes/presentation/quiz_list_page.dart';
+import 'package:craftquest_app/features/offline_practice/data/offline_package_repository.dart';
+import 'package:craftquest_app/features/offline_practice/presentation/offline_downloads_page.dart';
 import 'package:craftquest_app/features/sharing/presentation/accessible_quizzes_page.dart';
 import 'package:craftquest_app/features/sharing/presentation/redeem_code_page.dart';
 import 'package:craftquest_app/features/student/presentation/student_assignments_page.dart';
@@ -45,8 +47,10 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   UserBillingModel? _billing;
   bool _teacherBannerHidden = true;
+  int _offlineDownloadCount = 0;
   late final CheckoutRefreshNotifier _checkoutRefresh;
   late final BillingRepository _billingRepository;
+  late final OfflinePackageRepository _offlinePackageRepository;
 
   bool get _showTeacherBanner =>
       !_teacherBannerHidden &&
@@ -62,6 +66,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _billingRepository = getIt<BillingRepository>();
+    _offlinePackageRepository = getIt<OfflinePackageRepository>();
     _billing = _billingRepository.cachedBilling;
     _checkoutRefresh = getIt<CheckoutRefreshNotifier>()
       ..addListener(_onCheckoutCompleted);
@@ -131,20 +136,57 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _load({bool forceRefresh = false}) async {
     try {
-      final billing = await _billingRepository.getMyBilling(
-        forceRefresh: forceRefresh,
-      );
+      final results = await Future.wait([
+        _billingRepository.getMyBilling(forceRefresh: forceRefresh),
+        _offlinePackageRepository.countDownloadedQuizzes(),
+      ]);
       if (!mounted) return;
+      final billing = results[0] as UserBillingModel;
+      final offlineCount = results[1] as int;
       if (!forceRefresh &&
           _billing != null &&
           _billing!.plan.code.toLowerCase() != 'free' &&
           billing.plan.code.toLowerCase() == 'free') {
+        setState(() => _offlineDownloadCount = offlineCount);
         return;
       }
-      setState(() => _billing = billing);
+      setState(() {
+        _billing = billing;
+        _offlineDownloadCount = offlineCount;
+      });
     } catch (_) {
       if (!mounted) return;
-      setState(() => _billing = null);
+      try {
+        final offlineCount =
+            await _offlinePackageRepository.countDownloadedQuizzes();
+        if (!mounted) return;
+        setState(() {
+          _billing = null;
+          _offlineDownloadCount = offlineCount;
+        });
+      } catch (_) {
+        if (!mounted) return;
+        setState(() => _billing = null);
+      }
+    }
+  }
+
+  Future<void> _openOfflineDownloads() async {
+    await SafeNavigation.pushPage(
+      context,
+      const OfflineDownloadsPage(),
+    );
+    if (!mounted) return;
+    await _loadOfflineDownloadCount();
+  }
+
+  Future<void> _loadOfflineDownloadCount() async {
+    try {
+      final count = await _offlinePackageRepository.countDownloadedQuizzes();
+      if (!mounted) return;
+      setState(() => _offlineDownloadCount = count);
+    } catch (_) {
+      // Best effort: keep previous badge count.
     }
   }
 
@@ -308,6 +350,16 @@ class _HomePageState extends State<HomePage> {
                               const QuizListPage(),
                             );
                           },
+                        ),
+                        _divider(),
+                        AppActionTile(
+                          icon: Icons.download_for_offline_rounded,
+                          label: l10n.offlineDownloadsAction,
+                          badgeCount: _offlineDownloadCount,
+                          iconColor: AppColors.accentMint,
+                          iconBackgroundColor:
+                              AppColors.accentMint.withValues(alpha: 0.2),
+                          onTap: _openOfflineDownloads,
                         ),
                         _divider(),
                         AppActionTile(

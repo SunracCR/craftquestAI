@@ -32,6 +32,21 @@
   "noInternetBannerMessage": "Puedes seguir navegando, pero los datos no se actualizarán hasta que vuelva la red.",
   "offlineSessionBannerTitle": "Sesión sin conexión",
   "offlineSessionBannerMessage": "Estás usando tu último perfil guardado. Algunos datos pueden no estar actualizados hasta que vuelva la red.",
+  "offlineDownloadsAction": "Descargas offline",
+  "offlineDownloadsViewAction": "Ver descargas offline",
+  "offlineDownloadsPlayAction": "Practicar offline",
+  "offlineDownloadsDeleteAction": "Eliminar descarga",
+  "offlineDownloadsSyncTooltip": "Sincronizar resultados",
+  "offlineDownloadsEmptyMessage": "Sin descargas offline. Descarga cuestionarios desde el detalle del quiz (plan pago).",
+  "offlineDownloadsItemSummary": "{questionCount} preguntas · {sizeLabel} · Media {mediaReady}/{mediaTotal}",
+  "@offlineDownloadsItemSummary": {
+    "placeholders": {
+      "questionCount": { "type": "int" },
+      "sizeLabel": { "type": "String" },
+      "mediaReady": { "type": "int" },
+      "mediaTotal": { "type": "int" }
+    }
+  },
   "noInternetSnackBarMessage": "Sin conexión. Revisa tu internet e inténtalo de nuevo.",
   "errorDevApiUnreachable": "No se pudo conectar con la API en el teléfono. Con el USB conectado ejecuta: adb reverse tcp:7080 tcp:7080 y reinicia la app.",
   "genericRequestErrorMessage": "No se pudo completar la solicitud. Inténtalo de nuevo en unos momentos.",

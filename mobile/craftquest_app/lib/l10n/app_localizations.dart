@@ -208,6 +208,53 @@ abstract class AppLocalizations {
   /// **'Estás usando tu último perfil guardado. Algunos datos pueden no estar actualizados hasta que vuelva la red.'**
   String get offlineSessionBannerMessage;
 
+  /// No description provided for @offlineDownloadsAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Descargas offline'**
+  String get offlineDownloadsAction;
+
+  /// No description provided for @offlineDownloadsViewAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver descargas offline'**
+  String get offlineDownloadsViewAction;
+
+  /// No description provided for @offlineDownloadsPlayAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Practicar offline'**
+  String get offlineDownloadsPlayAction;
+
+  /// No description provided for @offlineDownloadsDeleteAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar descarga'**
+  String get offlineDownloadsDeleteAction;
+
+  /// No description provided for @offlineDownloadsSyncTooltip.
+  ///
+  /// In es, this message translates to:
+  /// **'Sincronizar resultados'**
+  String get offlineDownloadsSyncTooltip;
+
+  /// No description provided for @offlineDownloadsEmptyMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin descargas offline. Descarga cuestionarios desde el detalle del quiz (plan pago).'**
+  String get offlineDownloadsEmptyMessage;
+
+  /// No description provided for @offlineDownloadsItemSummary.
+  ///
+  /// In es, this message translates to:
+  /// **'{questionCount} preguntas · {sizeLabel} · Media {mediaReady}/{mediaTotal}'**
+  String offlineDownloadsItemSummary(
+    int questionCount,
+    String sizeLabel,
+    int mediaReady,
+    int mediaTotal,
+  );
+
   /// No description provided for @noInternetSnackBarMessage.
   ///
   /// In es, this message translates to:

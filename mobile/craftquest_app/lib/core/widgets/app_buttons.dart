@@ -219,6 +219,7 @@ class AppActionTile extends StatelessWidget {
     this.iconBackgroundColor,
     this.isLoading = false,
     this.locked = false,
+    this.badgeCount,
   });
 
   final IconData icon;
@@ -228,6 +229,7 @@ class AppActionTile extends StatelessWidget {
   final Color? iconBackgroundColor;
   final bool isLoading;
   final bool locked;
+  final int? badgeCount;
 
   @override
   Widget build(BuildContext context) {
@@ -274,6 +276,26 @@ class AppActionTile extends StatelessWidget {
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
                 ),
+                if (badgeCount != null && badgeCount! > 0) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: tint.withValues(alpha: 0.22),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      '$badgeCount',
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            color: tint,
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                ],
                 if (!isLoading)
                   Icon(
                     locked ? Icons.lock_rounded : Icons.chevron_right_rounded,
