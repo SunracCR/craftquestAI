@@ -31,7 +31,7 @@ Future<void> main() async {
       getIt<AgeSignalService>().checkAndPersist().then((result) {
         getIt<CompliancePrefCache>().updateParentalBlocked(
           blocked: result.requiresParentalConsent,
-          userStatus: result.userStatus,
+          consentReason: result.consentReasonCode,
         );
       }),
     );

@@ -1,7 +1,7 @@
 name: craftquest_app
 description: CraftQuest mobile app
 publish_to: 'none'
-version: 1.0.4+14
+version: 1.0.4+15
 
 environment:
   sdk: ^3.7.0

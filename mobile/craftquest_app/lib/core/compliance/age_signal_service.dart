@@ -12,7 +12,10 @@ class AgeSignalService {
   static const String prefsKeyRequiresParentalConsent =
       'requires_parental_consent';
 
-  static const String prefsKeyLastUserStatus = 'age_signal_last_user_status';
+  /// Motivo del bloqueo (ver [AgeSignalResult.consentReasonCode]); reemplaza
+  /// al antiguo `userStatus`, deprecado en Play Age Signals 0.0.4.
+  static const String prefsKeyLastConsentReason =
+      'age_signal_last_consent_reason';
 
   static const String playStorePackageId = 'com.craftquestai.craftquestai_app';
 
@@ -26,11 +29,11 @@ class AgeSignalService {
       prefsKeyRequiresParentalConsent,
       result.requiresParentalConsent,
     );
-    final status = result.userStatus;
-    if (status == null || status.isEmpty) {
-      await prefs.remove(prefsKeyLastUserStatus);
+    final reason = result.consentReasonCode;
+    if (reason == null || reason.isEmpty) {
+      await prefs.remove(prefsKeyLastConsentReason);
     } else {
-      await prefs.setString(prefsKeyLastUserStatus, status);
+      await prefs.setString(prefsKeyLastConsentReason, reason);
     }
     return result;
   }
@@ -67,14 +70,14 @@ class AgeSignalService {
     return prefs.getBool(prefsKeyRequiresParentalConsent) ?? false;
   }
 
-  Future<String?> lastUserStatus() async {
+  Future<String?> lastConsentReason() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(prefsKeyLastUserStatus);
+    return prefs.getString(prefsKeyLastConsentReason);
   }
 
   Future<void> clearStoredConsentFlag() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(prefsKeyRequiresParentalConsent);
-    await prefs.remove(prefsKeyLastUserStatus);
+    await prefs.remove(prefsKeyLastConsentReason);
   }
 }

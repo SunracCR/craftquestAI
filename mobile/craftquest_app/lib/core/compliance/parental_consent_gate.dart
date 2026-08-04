@@ -22,7 +22,7 @@ class _ParentalConsentGateState extends State<ParentalConsentGate>
   late final CompliancePrefCache _cache;
 
   bool _blocked = false;
-  String? _userStatus;
+  String? _consentReason;
 
   @override
   void initState() {
@@ -52,18 +52,18 @@ class _ParentalConsentGateState extends State<ParentalConsentGate>
     }
     _cache.updateParentalBlocked(
       blocked: result.requiresParentalConsent,
-      userStatus: result.userStatus,
+      consentReason: result.consentReasonCode,
     );
     setState(() {
       _blocked = result.requiresParentalConsent;
-      _userStatus = result.userStatus;
+      _consentReason = result.consentReasonCode;
     });
   }
 
   void _syncFromCache() {
     setState(() {
       _blocked = _cache.parentalBlocked;
-      _userStatus = _cache.parentalUserStatus;
+      _consentReason = _cache.parentalConsentReason;
     });
   }
 
@@ -72,7 +72,7 @@ class _ParentalConsentGateState extends State<ParentalConsentGate>
       _cache.updateParentalBlocked(blocked: false);
       setState(() {
         _blocked = false;
-        _userStatus = null;
+        _consentReason = null;
       });
     } else {
       _syncFromCache();
@@ -83,7 +83,7 @@ class _ParentalConsentGateState extends State<ParentalConsentGate>
   Widget build(BuildContext context) {
     if (_blocked) {
       return ParentalConsentRequiredPage(
-        userStatus: _userStatus,
+        consentReason: _consentReason,
         onRecheckComplete: _onRecheckComplete,
       );
     }

@@ -9,7 +9,7 @@ class CompliancePrefCache {
 
   bool ageCollected = false;
   bool parentalBlocked = false;
-  String? parentalUserStatus;
+  String? parentalConsentReason;
 
   bool get isReady => _ready;
 
@@ -39,7 +39,8 @@ class CompliancePrefCache {
     parentalBlocked =
         prefs.getBool(AgeSignalService.prefsKeyRequiresParentalConsent) ??
             false;
-    parentalUserStatus = prefs.getString(AgeSignalService.prefsKeyLastUserStatus);
+    parentalConsentReason =
+        prefs.getString(AgeSignalService.prefsKeyLastConsentReason);
   }
 
   void markAgeCollected() {
@@ -52,9 +53,9 @@ class CompliancePrefCache {
 
   void updateParentalBlocked({
     required bool blocked,
-    String? userStatus,
+    String? consentReason,
   }) {
     parentalBlocked = blocked;
-    parentalUserStatus = userStatus;
+    parentalConsentReason = consentReason;
   }
 }

@@ -13,11 +13,11 @@ import 'package:url_launcher/url_launcher.dart';
 class ParentalConsentRequiredPage extends StatefulWidget {
   const ParentalConsentRequiredPage({
     super.key,
-    required this.userStatus,
+    required this.consentReason,
     required this.onRecheckComplete,
   });
 
-  final String? userStatus;
+  final String? consentReason;
   final ValueChanged<bool> onRecheckComplete;
 
   @override
@@ -30,12 +30,12 @@ class _ParentalConsentRequiredPageState extends State<ParentalConsentRequiredPag
   bool _rechecking = false;
 
   String _message(AppLocalizations l10n) {
-    switch (widget.userStatus) {
+    switch (widget.consentReason) {
       case 'SUPERVISED_APPROVAL_PENDING':
         return l10n.parentalConsentBodyPending;
       case 'SUPERVISED_APPROVAL_DENIED':
         return l10n.parentalConsentBodyDenied;
-      case 'UNKNOWN':
+      case 'VERIFICATION_REQUIRED':
         return l10n.parentalConsentBodyUnknown;
       default:
         return l10n.parentalConsentBodyDefault;

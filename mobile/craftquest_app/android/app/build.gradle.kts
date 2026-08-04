@@ -79,5 +79,5 @@ dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     implementation("androidx.activity:activity-ktx:1.9.3")
     implementation("com.google.android.gms:play-services-base:18.5.0")
-    implementation("com.google.android.play:age-signals:0.0.3")
+    implementation("com.google.android.play:age-signals:0.0.4")
 }
