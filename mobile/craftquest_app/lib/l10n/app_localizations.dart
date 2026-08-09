@@ -226,6 +226,72 @@ abstract class AppLocalizations {
   /// **'Actualizar ahora'**
   String get forceUpdateAction;
 
+  /// No description provided for @appVersionAdminSectionTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Versión de la app'**
+  String get appVersionAdminSectionTitle;
+
+  /// No description provided for @appVersionAdminAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Versión mínima requerida'**
+  String get appVersionAdminAction;
+
+  /// No description provided for @appVersionAdminSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Forzar actualización por plataforma'**
+  String get appVersionAdminSubtitle;
+
+  /// No description provided for @appVersionAdminTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Versión mínima requerida'**
+  String get appVersionAdminTitle;
+
+  /// No description provided for @appVersionAdminNotConfigured.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin configurar (no bloquea a nadie)'**
+  String get appVersionAdminNotConfigured;
+
+  /// No description provided for @appVersionAdminMinVersionLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Versión mínima'**
+  String get appVersionAdminMinVersionLabel;
+
+  /// No description provided for @appVersionAdminLatestVersionLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Última versión'**
+  String get appVersionAdminLatestVersionLabel;
+
+  /// No description provided for @appVersionAdminUpdateUrlLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'URL de actualización'**
+  String get appVersionAdminUpdateUrlLabel;
+
+  /// No description provided for @appVersionAdminMessageLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Mensaje (opcional)'**
+  String get appVersionAdminMessageLabel;
+
+  /// No description provided for @appVersionAdminSaved.
+  ///
+  /// In es, this message translates to:
+  /// **'Requisito de versión guardado'**
+  String get appVersionAdminSaved;
+
+  /// No description provided for @appVersionAdminFormTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar requisito · {platform}'**
+  String appVersionAdminFormTitle(String platform);
+
   /// No description provided for @offlineDownloadsAction.
   ///
   /// In es, this message translates to:

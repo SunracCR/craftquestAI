@@ -35,6 +35,22 @@
   "forceUpdateTitle": "Update required",
   "forceUpdateBodyDefault": "A new version of CraftQuest is available. Please update to keep using the app.",
   "forceUpdateAction": "Update now",
+  "appVersionAdminSectionTitle": "App version",
+  "appVersionAdminAction": "Minimum required version",
+  "appVersionAdminSubtitle": "Force update per platform",
+  "appVersionAdminTitle": "Minimum required version",
+  "appVersionAdminNotConfigured": "Not configured (does not block anyone)",
+  "appVersionAdminMinVersionLabel": "Minimum version",
+  "appVersionAdminLatestVersionLabel": "Latest version",
+  "appVersionAdminUpdateUrlLabel": "Update URL",
+  "appVersionAdminMessageLabel": "Message (optional)",
+  "appVersionAdminSaved": "Version requirement saved",
+  "appVersionAdminFormTitle": "Edit requirement · {platform}",
+  "@appVersionAdminFormTitle": {
+    "placeholders": {
+      "platform": { "type": "String" }
+    }
+  },
   "offlineDownloadsAction": "Offline downloads",
   "offlineDownloadsViewAction": "View offline downloads",
   "offlineDownloadsPlayAction": "Practice offline",

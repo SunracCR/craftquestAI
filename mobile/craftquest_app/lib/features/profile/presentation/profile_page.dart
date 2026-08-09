@@ -30,6 +30,7 @@ import 'package:craftquest_app/features/profile/presentation/payment_history_pag
 import 'package:craftquest_app/features/profile/presentation/widgets/avatar_picker_sheet.dart';
 import 'package:craftquest_app/features/profile/presentation/widgets/edit_display_name_dialog.dart';
 import 'package:craftquest_app/features/prep_plus/presentation/admin/prep_plus_admin_hub_page.dart';
+import 'package:craftquest_app/core/update/presentation/app_version_admin_page.dart';
 import 'package:craftquest_app/features/notifications/presentation/notification_preferences_page.dart';
 import 'package:craftquest_app/features/profile/presentation/widgets/profile_language_selector.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
@@ -228,6 +229,8 @@ class _ProfilePageState extends State<ProfilePage> {
   bool get _canManagePrepPlus =>
       widget.user.roles.contains('content_admin') ||
       widget.user.roles.contains('super_admin');
+
+  bool get _isSuperAdmin => widget.user.roles.contains('super_admin');
 
   Future<void> _editDisplayName() async {
     if (_savingName) return;
@@ -567,6 +570,31 @@ class _ProfilePageState extends State<ProfilePage> {
                   Navigator.of(context).push(
                     MaterialPageRoute<void>(
                       builder: (_) => const PrepPlusAdminHubPage(),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+          if (_isSuperAdmin) ...[
+            const SizedBox(height: AppSpacing.lg),
+            AppSectionTitle(title: l10n.appVersionAdminSectionTitle),
+            const SizedBox(height: AppSpacing.xs),
+            AppSectionCard(
+              padding: EdgeInsets.zero,
+              child: ListTile(
+                leading: const Icon(
+                  Icons.system_update_outlined,
+                  color: AppColors.accentCool,
+                ),
+                title: Text(l10n.appVersionAdminAction),
+                subtitle: Text(l10n.appVersionAdminSubtitle),
+                trailing: const Icon(Icons.chevron_right_rounded,
+                    color: AppColors.textSecondary),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const AppVersionAdminPage(),
                     ),
                   );
                 },

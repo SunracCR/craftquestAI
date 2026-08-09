@@ -79,6 +79,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forceUpdateAction => 'Update now';
 
   @override
+  String get appVersionAdminSectionTitle => 'App version';
+
+  @override
+  String get appVersionAdminAction => 'Minimum required version';
+
+  @override
+  String get appVersionAdminSubtitle => 'Force update per platform';
+
+  @override
+  String get appVersionAdminTitle => 'Minimum required version';
+
+  @override
+  String get appVersionAdminNotConfigured =>
+      'Not configured (does not block anyone)';
+
+  @override
+  String get appVersionAdminMinVersionLabel => 'Minimum version';
+
+  @override
+  String get appVersionAdminLatestVersionLabel => 'Latest version';
+
+  @override
+  String get appVersionAdminUpdateUrlLabel => 'Update URL';
+
+  @override
+  String get appVersionAdminMessageLabel => 'Message (optional)';
+
+  @override
+  String get appVersionAdminSaved => 'Version requirement saved';
+
+  @override
+  String appVersionAdminFormTitle(String platform) {
+    return 'Edit requirement · $platform';
+  }
+
+  @override
   String get offlineDownloadsAction => 'Offline downloads';
 
   @override
