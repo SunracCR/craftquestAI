@@ -39,6 +39,7 @@ Antes de ejecutar, comprueba la columna **Verificación**. Si ya cumple la condi
 | 63 | `AddParentalConsent.sql` | Consentimiento parental (DOB, guardian, tokens) y estado `pending_parental_consent` | `COL_LENGTH('core.Users','DateOfBirth')`; tabla `core.ParentalConsentTokens`; `CK_Users_Status` incluye `pending_parental_consent` | ☐ | ☐ | ☐ |
 | 64 | `AlterIndexes_PrepPlus.sql` | Índices hub Prep+ (conteo por categoría y mis accesos) | `IX_PrepCatalogItems_CategoryId_IsPublished_IsDeleted`, `IX_QuizAccesses_UserId_AccessType_PrepCatalogItemId` | ☐ | ☐ | ☐ |
 | 65 | `AlterPlans_MonthlyAiCredits_Pro15_Teacher30.sql` | Pro 90 cr / Teacher 180 cr (15 y 30 gen. de 40 preg.) | `MonthlyAiCredits` en `pro`=90, `teacher`=180 | ☐ | ☐ | ☐ |
+| 66 | `AddAppVersionRequirements.sql` | Versión mínima de app forzada (Android/iOS) | Tabla `core.AppVersionRequirements`; filas `android`/`ios` seed | ☐ | ☐ | ☐ |
 
 ## Estrategia (ítem 58)
 

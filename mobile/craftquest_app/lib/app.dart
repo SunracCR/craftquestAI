@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:craftquest_app/core/compliance/age_collection_gate.dart';
 import 'package:craftquest_app/core/compliance/parental_consent_gate.dart';
+import 'package:craftquest_app/core/update/force_update_gate.dart';
 import 'package:craftquest_app/core/auth/session_expired_notifier.dart';
 import 'package:craftquest_app/core/network/network_connectivity_service.dart';
 import 'package:craftquest_app/core/auth/token_storage.dart';
@@ -106,9 +107,11 @@ class CraftQuestApp extends StatelessWidget {
                 },
               );
             },
-            home: const ParentalConsentGate(
-              child: AgeCollectionGate(
-                child: _SessionExpiredListener(child: _AuthGate()),
+            home: const ForceUpdateGate(
+              child: ParentalConsentGate(
+                child: AgeCollectionGate(
+                  child: _SessionExpiredListener(child: _AuthGate()),
+                ),
               ),
             ),
           );

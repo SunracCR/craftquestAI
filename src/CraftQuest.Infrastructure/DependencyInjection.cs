@@ -101,6 +101,7 @@ public static class DependencyInjection
         services.AddHostedService<DatabaseKeepWarmHostedService>();
         services.AddSingleton<JwtTokenService>();
         services.AddScoped<IAppStatusService, AppStatusService>();
+        services.AddScoped<IAppVersionService, AppVersionService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IQuizService, QuizService>();
         services.AddScoped<IQuizPdfExportService, QuizPdfExportService>();

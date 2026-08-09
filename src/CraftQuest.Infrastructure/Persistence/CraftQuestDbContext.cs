@@ -57,6 +57,7 @@ public class CraftQuestDbContext(DbContextOptions<CraftQuestDbContext> options) 
     public DbSet<PrepSampleQuestion> PrepSampleQuestions => Set<PrepSampleQuestion>();
     public DbSet<PrepReferralCode> PrepReferralCodes => Set<PrepReferralCode>();
     public DbSet<PrepReferralConversion> PrepReferralConversions => Set<PrepReferralConversion>();
+    public DbSet<AppVersionRequirement> AppVersionRequirements => Set<AppVersionRequirement>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

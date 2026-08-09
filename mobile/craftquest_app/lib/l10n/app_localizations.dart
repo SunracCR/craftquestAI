@@ -208,6 +208,24 @@ abstract class AppLocalizations {
   /// **'Estás usando tu último perfil guardado. Algunos datos pueden no estar actualizados hasta que vuelva la red.'**
   String get offlineSessionBannerMessage;
 
+  /// No description provided for @forceUpdateTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Actualización requerida'**
+  String get forceUpdateTitle;
+
+  /// No description provided for @forceUpdateBodyDefault.
+  ///
+  /// In es, this message translates to:
+  /// **'Hay una nueva versión de CraftQuest. Actualiza para seguir usando la app.'**
+  String get forceUpdateBodyDefault;
+
+  /// No description provided for @forceUpdateAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Actualizar ahora'**
+  String get forceUpdateAction;
+
   /// No description provided for @offlineDownloadsAction.
   ///
   /// In es, this message translates to:

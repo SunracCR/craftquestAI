@@ -11,6 +11,8 @@ import 'package:craftquest_app/features/auth/presentation/auth_entry_navigation.
 import 'package:craftquest_app/core/locale/locale_controller.dart';
 import 'package:craftquest_app/core/network/api_client.dart';
 import 'package:craftquest_app/core/network/network_connectivity_service.dart';
+import 'package:craftquest_app/core/update/app_version_repository.dart';
+import 'package:craftquest_app/core/update/app_version_service.dart';
 import 'package:craftquest_app/core/services/app_warmup_service.dart';
 import 'package:craftquest_app/core/services/deep_link_service.dart';
 import 'package:craftquest_app/core/services/sound_service.dart';
@@ -89,6 +91,10 @@ void configureDependencies() {
     ),
   );
   getIt.registerLazySingleton(() => GuestRepository(getIt<ApiClient>()));
+  getIt.registerLazySingleton(() => AppVersionRepository(getIt<ApiClient>()));
+  getIt.registerLazySingleton(
+    () => AppVersionService(getIt<AppVersionRepository>()),
+  );
   getIt.registerFactory(
     () => AuthBloc(
       getIt<AuthRepository>(),

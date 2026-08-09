@@ -1,7 +1,7 @@
 name: craftquest_app
 description: CraftQuest mobile app
 publish_to: 'none'
-version: 1.0.4+15
+version: 1.0.4+16
 
 environment:
   sdk: ^3.7.0
@@ -44,6 +44,7 @@ dependencies:
   sqflite_common_ffi: ^2.3.6
   cryptography: ^2.7.0
   uuid: ^4.5.1
+  package_info_plus: ^8.3.1
 
 dev_dependencies:
   flutter_test:

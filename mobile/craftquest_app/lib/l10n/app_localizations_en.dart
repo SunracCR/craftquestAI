@@ -69,6 +69,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'You are using your last saved profile. Some data may be outdated until you are back online.';
 
   @override
+  String get forceUpdateTitle => 'Update required';
+
+  @override
+  String get forceUpdateBodyDefault =>
+      'A new version of CraftQuest is available. Please update to keep using the app.';
+
+  @override
+  String get forceUpdateAction => 'Update now';
+
+  @override
   String get offlineDownloadsAction => 'Offline downloads';
 
   @override
