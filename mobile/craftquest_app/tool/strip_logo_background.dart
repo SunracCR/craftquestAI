@@ -41,8 +41,8 @@ bool _isBakedBackground(int r, int g, int b) {
   final minChannel = [r, g, b].reduce((a, c) => a < c ? a : c);
   final spread = maxChannel - minChannel;
 
-  // Negro/gris neutro del export (p. ej. #0D0D0D), no colores del gradiente.
-  if (maxChannel <= 48 && spread <= 8) {
+  // Negro/gris/blanco neutro del export, no colores del gradiente del logo.
+  if (spread <= 8 && (maxChannel <= 48 || minChannel >= 240)) {
     return true;
   }
   return false;
