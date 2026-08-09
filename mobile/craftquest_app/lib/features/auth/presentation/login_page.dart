@@ -18,6 +18,7 @@ import 'package:craftquest_app/features/auth/presentation/widgets/auth_premium_h
 import 'package:craftquest_app/features/auth/presentation/widgets/guest_practice_promo_card.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -168,8 +169,21 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  static const double _loginLogoSize = 168;
+  static const double _loginLogoSize = 204;
   static const double _loginMaxWidth = 420;
+
+  bool _fitLoginWithoutScroll(BuildContext context) {
+    if (kIsWeb) {
+      return false;
+    }
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+      case TargetPlatform.iOS:
+        return MediaQuery.viewInsetsOf(context).bottom == 0;
+      default:
+        return false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -208,7 +222,7 @@ class _LoginPageState extends State<LoginPage> {
                                 logoSize: _loginLogoSize,
                                 title: l10n.loginTitle,
                               ),
-                              const SizedBox(height: AppSpacing.lg),
+                              const SizedBox(height: AppSpacing.md),
                               AutofillGroup(
                                 child: Column(
                                   children: [
@@ -394,16 +408,36 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       );
 
+                      final fitWithoutScroll = _fitLoginWithoutScroll(context);
+                      final horizontalPad = EdgeInsets.fromLTRB(
+                        horizontalPadding,
+                        AppSpacing.sm,
+                        horizontalPadding,
+                        AppSpacing.sm + viewInsets.bottom,
+                      );
+                      final sizedForm = SizedBox(
+                        width: maxFormWidth,
+                        child: form,
+                      );
+
+                      if (fitWithoutScroll) {
+                        return Padding(
+                          padding: horizontalPad,
+                          child: Center(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.center,
+                              child: sizedForm,
+                            ),
+                          ),
+                        );
+                      }
+
                       return SingleChildScrollView(
                         keyboardDismissBehavior:
                             ScrollViewKeyboardDismissBehavior.onDrag,
                         physics: const ClampingScrollPhysics(),
-                        padding: EdgeInsets.fromLTRB(
-                          horizontalPadding,
-                          AppSpacing.sm,
-                          horizontalPadding,
-                          AppSpacing.sm + viewInsets.bottom,
-                        ),
+                        padding: horizontalPad,
                         child: ConstrainedBox(
                           constraints: BoxConstraints(
                             minHeight: (constraints.maxHeight -
@@ -411,12 +445,7 @@ class _LoginPageState extends State<LoginPage> {
                                     viewInsets.bottom)
                                 .clamp(0.0, double.infinity),
                           ),
-                          child: Center(
-                            child: SizedBox(
-                              width: maxFormWidth,
-                              child: form,
-                            ),
-                          ),
+                          child: Center(child: sizedForm),
                         ),
                       );
                     },

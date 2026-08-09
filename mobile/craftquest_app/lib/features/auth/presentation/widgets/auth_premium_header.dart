@@ -23,7 +23,7 @@ class AuthPremiumHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final gapAfterLogo = dense ? 8.0 : 12.0;
+    final gapAfterLogo = dense ? 6.0 : 12.0;
     final gapAfterTitle = dense ? 6.0 : 8.0;
 
     return Column(
