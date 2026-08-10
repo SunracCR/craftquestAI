@@ -412,11 +412,30 @@ class _LoginPageState extends State<LoginPage> {
                         ],
                       );
 
+                      final cardBody = Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          loginHeader,
+                          SizedBox(
+                            height: compactHeight ? AppSpacing.sm : AppSpacing.md,
+                          ),
+                          if (fitWithoutScroll)
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.topCenter,
+                              child: formFields,
+                            )
+                          else
+                            formFields,
+                        ],
+                      );
+
                       final loginCard = Form(
                         key: _formKey,
                         child: AuthPremiumCard(
                           dense: true,
-                          child: formFields,
+                          child: cardBody,
                         ),
                       );
 
@@ -426,36 +445,11 @@ class _LoginPageState extends State<LoginPage> {
                       );
 
                       if (fitWithoutScroll) {
-                        // Logo fuera del FittedBox: evita pixelado por reescalado.
                         return Padding(
                           padding: horizontalPad,
-                          child: Column(
-                            children: [
-                              loginHeader,
-                              SizedBox(height: compactHeight ? 6 : 10),
-                              Flexible(
-                                child: Align(
-                                  alignment: Alignment.topCenter,
-                                  child: FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    alignment: Alignment.topCenter,
-                                    child: sizedCard,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                          child: Center(child: sizedCard),
                         );
                       }
-
-                      final scrollBody = Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          loginHeader,
-                          const SizedBox(height: AppSpacing.sm),
-                          sizedCard,
-                        ],
-                      );
 
                       return SingleChildScrollView(
                         keyboardDismissBehavior:
@@ -469,7 +463,7 @@ class _LoginPageState extends State<LoginPage> {
                                     viewInsets.bottom)
                                 .clamp(0.0, double.infinity),
                           ),
-                          child: Center(child: scrollBody),
+                          child: Center(child: sizedCard),
                         ),
                       );
                     },
