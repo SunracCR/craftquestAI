@@ -120,7 +120,6 @@ class _QuestionView extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           PracticeSelectionHint(
             isSingleSelect: isSingleSelect,
-            questionType: question.questionType,
           ),
           const SizedBox(height: AppSpacing.sm),
           Expanded(

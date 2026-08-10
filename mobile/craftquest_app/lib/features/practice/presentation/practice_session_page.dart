@@ -935,7 +935,6 @@ class _PracticeSessionPageState extends State<PracticeSessionPage>
                                   isSingleSelect: _isSingleSelect(
                                     question.questionType,
                                   ),
-                                  questionType: question.questionType,
                                 ),
                                 const SizedBox(height: AppSpacing.sm),
                                 IgnorePointer(

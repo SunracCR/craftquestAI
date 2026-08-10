@@ -287,7 +287,6 @@ class _PrepPlusPreviewPageState extends State<PrepPlusPreviewPage> {
                                   isSingleSelect: _isSingleSelect(
                                     question.questionType,
                                   ),
-                                  questionType: question.questionType,
                                 ),
                                 const SizedBox(height: AppSpacing.sm),
                                 ...question.answerOptions.asMap().entries.map(
