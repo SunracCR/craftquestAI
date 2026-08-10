@@ -231,5 +231,8 @@ public class TeacherReviewMapperTests
             Guid mediaAssetId,
             CancellationToken cancellationToken = default) =>
             throw new NotImplementedException();
+
+        public Task<bool> ExistsAsync(Guid mediaAssetId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(false);
     }
 }

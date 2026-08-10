@@ -103,4 +103,14 @@ public static class PrepReferralLinkUrlBuilder
 
     public static string ResolveFaviconUrl(JoinLinkOptions options) =>
         $"{options.WebAppUrl.TrimEnd('/')}/favicon-32.png?v=2";
+
+    public static string ResolveDefaultOgImageUrl(JoinLinkOptions options)
+    {
+        if (!string.IsNullOrWhiteSpace(options.DefaultOgImageUrl))
+        {
+            return options.DefaultOgImageUrl.Trim();
+        }
+
+        return $"{options.WebAppUrl.TrimEnd('/')}/icons/Icon-512.png";
+    }
 }

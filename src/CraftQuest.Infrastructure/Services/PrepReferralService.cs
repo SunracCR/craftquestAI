@@ -234,13 +234,21 @@ public class PrepReferralService(
         var paidOffers = activeOffers.Where(o => !o.IsFree && o.PriceAmount > 0).ToList();
         var bestOffer = activeOffers.OrderBy(o => o.DurationDays).FirstOrDefault();
         string? coverContentType = null;
-        if (item.CoverMediaId is Guid coverMediaId)
+        string? coverMediaUrl = null;
+        if (item.CoverMediaId is Guid coverMediaId
+            && await mediaService.ExistsAsync(coverMediaId, cancellationToken))
         {
-            coverContentType = await dbContext.MediaAssets
+            var coverAsset = await dbContext.MediaAssets
                 .AsNoTracking()
                 .Where(m => m.MediaAssetId == coverMediaId && m.Status == "active")
-                .Select(m => m.ContentType)
+                .Select(m => new { m.ContentType, m.Sha256Hash })
                 .FirstOrDefaultAsync(cancellationToken);
+
+            coverContentType = coverAsset?.ContentType;
+            coverMediaUrl = BuildCoverMediaUrl(
+                normalizedSlug,
+                coverMediaId,
+                coverAsset?.Sha256Hash);
         }
 
         return new PrepReferralLandingPreviewDto
@@ -251,7 +259,7 @@ public class PrepReferralService(
             CategoryName = item.Category.Name,
             LowestPaidPrice = paidOffers.Count > 0 ? paidOffers.Min(o => o.PriceAmount) : null,
             CurrencyCode = paidOffers.FirstOrDefault()?.CurrencyCode ?? bestOffer?.CurrencyCode,
-            CoverMediaUrl = BuildCoverMediaUrl(normalizedSlug, item.CoverMediaId),
+            CoverMediaUrl = coverMediaUrl,
             CoverContentType = coverContentType,
         };
     }
@@ -291,18 +299,33 @@ public class PrepReferralService(
         }
         catch (AppException ex) when (ex.StatusCode == 404)
         {
+            logger.LogWarning(
+                "Prep cover media unavailable for slug {Slug} (media {MediaAssetId}): {Message}",
+                normalizedSlug,
+                coverMediaId,
+                ex.Message);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "Failed to open prep cover for slug {Slug} (media {MediaAssetId}).",
+                normalizedSlug,
+                coverMediaId);
             return null;
         }
     }
 
-    private string? BuildCoverMediaUrl(string slug, Guid? coverMediaId)
+    private string? BuildCoverMediaUrl(string slug, Guid coverMediaId, string? contentHash)
     {
-        if (coverMediaId is null)
+        var baseUrl = PrepReferralLinkUrlBuilder.BuildPublicShareImageUrl(_joinLinkOptions, slug);
+        if (string.IsNullOrWhiteSpace(contentHash) || contentHash.Length < 8)
         {
-            return null;
+            return baseUrl;
         }
 
-        return PrepReferralLinkUrlBuilder.BuildPublicShareImageUrl(_joinLinkOptions, slug);
+        return $"{baseUrl}?v={contentHash[..8]}";
     }
 
     private Task<bool> CatalogItemHasPaidOffersAsync(

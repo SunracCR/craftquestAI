@@ -17,5 +17,7 @@ public interface IMediaService
         Guid mediaAssetId,
         CancellationToken cancellationToken = default);
 
+    Task<bool> ExistsAsync(Guid mediaAssetId, CancellationToken cancellationToken = default);
+
     string BuildPublicUrl(Guid mediaAssetId);
 }

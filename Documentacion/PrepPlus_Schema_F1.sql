@@ -106,19 +106,29 @@ GO
 
 /* --- Ofertas por duración --- */
 IF OBJECT_ID('catalog.PrepAccessOffers', 'U') IS NULL
-CREATE TABLE catalog.PrepAccessOffers (
-    OfferId UNIQUEIDENTIFIER NOT NULL CONSTRAINT PK_PrepAccessOffers PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
-    CatalogItemId UNIQUEIDENTIFIER NOT NULL,
-    DurationDays INT NOT NULL,
-    PriceAmount DECIMAL(12,2) NOT NULL CONSTRAINT DF_PrepAccessOffers_Price DEFAULT(0),
-    CurrencyCode NVARCHAR(10) NOT NULL CONSTRAINT DF_PrepAccessOffers_Currency DEFAULT('USD'),
-    IsFree BIT NOT NULL CONSTRAINT DF_PrepAccessOffers_IsFree DEFAULT(0),
-    StoreProductId NVARCHAR(120) NULL,
-    IsActive BIT NOT NULL CONSTRAINT DF_PrepAccessOffers_IsActive DEFAULT(1),
-    CONSTRAINT FK_PrepAccessOffers_Items FOREIGN KEY (CatalogItemId) REFERENCES catalog.PrepCatalogItems(CatalogItemId) ON DELETE CASCADE,
-    CONSTRAINT UQ_PrepAccessOffers_ItemDuration UNIQUE (CatalogItemId, DurationDays),
-    CONSTRAINT CK_PrepAccessOffers_Duration CHECK (DurationDays IN (30, 60, 90, 183))
-);
+BEGIN
+    CREATE TABLE catalog.PrepAccessOffers (
+        OfferId UNIQUEIDENTIFIER NOT NULL CONSTRAINT PK_PrepAccessOffers PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
+        CatalogItemId UNIQUEIDENTIFIER NOT NULL,
+        DurationDays INT NOT NULL,
+        PriceAmount DECIMAL(12,2) NOT NULL CONSTRAINT DF_PrepAccessOffers_Price DEFAULT(0),
+        CurrencyCode NVARCHAR(10) NOT NULL CONSTRAINT DF_PrepAccessOffers_Currency DEFAULT('USD'),
+        IsFree BIT NOT NULL CONSTRAINT DF_PrepAccessOffers_IsFree DEFAULT(0),
+        IsLifetimeAccess BIT NOT NULL CONSTRAINT DF_PrepAccessOffers_IsLifetimeAccess DEFAULT(0),
+        StoreProductId NVARCHAR(120) NULL,
+        IsActive BIT NOT NULL CONSTRAINT DF_PrepAccessOffers_IsActive DEFAULT(1),
+        CONSTRAINT FK_PrepAccessOffers_Items FOREIGN KEY (CatalogItemId) REFERENCES catalog.PrepCatalogItems(CatalogItemId) ON DELETE CASCADE,
+        CONSTRAINT CK_PrepAccessOffers_Duration CHECK (
+            (IsLifetimeAccess = 1 AND DurationDays = 0)
+            OR (IsLifetimeAccess = 0 AND DurationDays IN (30, 60, 90, 183)))
+    );
+    CREATE UNIQUE NONCLUSTERED INDEX UX_PrepAccessOffers_CatalogItem_TimedDuration
+        ON catalog.PrepAccessOffers (CatalogItemId, DurationDays)
+        WHERE IsLifetimeAccess = 0;
+    CREATE UNIQUE NONCLUSTERED INDEX UX_PrepAccessOffers_CatalogItem_Lifetime
+        ON catalog.PrepAccessOffers (CatalogItemId)
+        WHERE IsLifetimeAccess = 1;
+END
 GO
 
 /* --- Preguntas de muestra (3) --- */

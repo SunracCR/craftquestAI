@@ -60,7 +60,8 @@ public class PrepLandingController(
         var result = await prepReferralService.OpenPublishedCoverAsync(slug, cancellationToken);
         if (result is null)
         {
-            return NotFound();
+            var fallbackUrl = PrepReferralLinkUrlBuilder.ResolveDefaultOgImageUrl(joinLinkOptions.Value);
+            return Redirect(fallbackUrl);
         }
 
         var (stream, contentType, fileSizeBytes) = result.Value;

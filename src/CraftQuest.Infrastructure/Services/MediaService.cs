@@ -93,8 +93,37 @@ public class MediaService(
             throw new AppException("Media file is missing on storage.", 404);
         }
 
-        var stream = await storage.OpenReadAsync(asset.BlobPath, cancellationToken);
-        return (stream, asset.ContentType ?? "application/octet-stream", asset.OriginalFileName);
+        try
+        {
+            var stream = await storage.OpenReadAsync(asset.BlobPath, cancellationToken);
+            return (stream, asset.ContentType ?? "application/octet-stream", asset.OriginalFileName);
+        }
+        catch (FileNotFoundException)
+        {
+            throw new AppException("Media file is missing on storage.", 404);
+        }
+    }
+
+    public async Task<bool> ExistsAsync(Guid mediaAssetId, CancellationToken cancellationToken = default)
+    {
+        var asset = await dbContext.MediaAssets
+            .AsNoTracking()
+            .FirstOrDefaultAsync(m => m.MediaAssetId == mediaAssetId && m.Status == "active", cancellationToken);
+
+        if (asset is null)
+        {
+            return false;
+        }
+
+        try
+        {
+            var storage = ResolveStorageProvider(asset.StorageProvider);
+            return storage.Exists(asset.BlobPath);
+        }
+        catch (Exception)
+        {
+            return false;
+        }
     }
 
     public string BuildPublicUrl(Guid mediaAssetId) =>

@@ -192,12 +192,7 @@ public static class PrepLandingPageRenderer
             return preview.CoverMediaUrl;
         }
 
-        if (!string.IsNullOrWhiteSpace(options.DefaultOgImageUrl))
-        {
-            return options.DefaultOgImageUrl.Trim();
-        }
-
-        return $"{options.WebAppUrl.TrimEnd('/')}/icons/Icon-512.png";
+        return PrepReferralLinkUrlBuilder.ResolveDefaultOgImageUrl(options);
     }
 
     private static PrepLabels ResolveLabels(string? acceptLanguage)
