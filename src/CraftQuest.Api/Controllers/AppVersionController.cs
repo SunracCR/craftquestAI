@@ -8,7 +8,7 @@ namespace CraftQuest.Api.Controllers;
 /// <summary>
 /// Requisitos de versión mínima de la app móvil, usados por el cliente para
 /// forzar actualización. Lectura pública (sin auth: debe funcionar incluso sin
-/// sesión o con token vencido); escritura restringida a super admin.
+/// sesión o con token vencido); escritura restringida a content admin.
 /// </summary>
 [ApiController]
 [Route("api/app-version")]
@@ -35,7 +35,7 @@ public class AppVersionController(IAppVersionService appVersionService) : Contro
     }
 
     [HttpPut("{platform}")]
-    [Authorize(Policy = "SuperAdmin")]
+    [Authorize(Policy = "ContentAdmin")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> Upsert(
         string platform,

@@ -1,5 +1,6 @@
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
+import 'package:craftquest_app/core/update/presentation/app_version_admin_page.dart';
 import 'package:craftquest_app/core/widgets/app_section_card.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/features/prep_plus/presentation/admin/prep_plus_admin_categories_page.dart';
@@ -57,6 +58,21 @@ class PrepPlusAdminHubPage extends StatelessWidget {
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
                           builder: (_) => const PrepPlusAdminItemsPage(),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.system_update_outlined,
+                        color: AppColors.accentCool),
+                    title: Text(l10n.appVersionAdminAction),
+                    subtitle: Text(l10n.appVersionAdminSubtitle),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const AppVersionAdminPage(),
                         ),
                       );
                     },

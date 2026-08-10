@@ -169,20 +169,34 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  static const double _loginLogoSize = 204;
+  static const double _loginLogoSize = 192;
   static const double _loginMaxWidth = 420;
+  static const double _loginCardHorizontalPadding = 20;
 
-  bool _fitLoginWithoutScroll(BuildContext context) {
+  bool _isMobileNative() {
     if (kIsWeb) {
       return false;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
       case TargetPlatform.iOS:
-        return MediaQuery.viewInsetsOf(context).bottom == 0;
+        return true;
       default:
         return false;
     }
+  }
+
+  double _loginLogoSizeForHeight(double maxHeight) {
+    if (maxHeight < 680) {
+      return 152;
+    }
+    if (maxHeight < 740) {
+      return 168;
+    }
+    if (maxHeight < 820) {
+      return 184;
+    }
+    return _loginLogoSize;
   }
 
   @override
@@ -209,15 +223,35 @@ class _LoginPageState extends State<LoginPage> {
                         constraints.maxWidth - horizontalPadding * 2,
                       );
 
-                      final fitWithoutScroll = _fitLoginWithoutScroll(context);
-                      final compactHeight = constraints.maxHeight < 720;
-                      final logoSize = compactHeight ? 188.0 : _loginLogoSize;
+                      final keyboardOpen = viewInsets.bottom > 0;
+                      final useFixedLoginLayout =
+                          _isMobileNative() && !keyboardOpen;
+                      final compactHeight = constraints.maxHeight < 740;
+                      final logoSize =
+                          _loginLogoSizeForHeight(constraints.maxHeight);
                       final horizontalPad = EdgeInsets.fromLTRB(
                         horizontalPadding,
                         AppSpacing.sm,
                         horizontalPadding,
                         AppSpacing.sm + viewInsets.bottom,
                       );
+                      final innerFormWidth =
+                          maxFormWidth - (_loginCardHorizontalPadding * 2);
+                      final titleHeight =
+                          (Theme.of(context).textTheme.headlineSmall?.fontSize ??
+                                  24) *
+                              1.2;
+                      final headerBlockHeight = logoSize + 6 + titleHeight;
+                      final gapAfterHeader =
+                          compactHeight ? AppSpacing.sm : AppSpacing.md;
+                      const cardInnerPadding = 32.0;
+                      final fieldsMaxHeight = (constraints.maxHeight -
+                              viewInsets.bottom -
+                              (AppSpacing.sm * 2) -
+                              cardInnerPadding -
+                              headerBlockHeight -
+                              gapAfterHeader)
+                          .clamp(300.0, double.infinity);
 
                       final loginHeader = AuthPremiumHeader(
                         dense: true,
@@ -392,42 +426,51 @@ class _LoginPageState extends State<LoginPage> {
                           const SizedBox(height: AppSpacing.sm),
                           const GuestPracticePromoCard(compact: true),
                           const LegalLinksRow(),
-                          Center(
-                            child: TextButton(
-                              onPressed: () async {
-                                await BirthDateCorrection
-                                    .requestFullAgeScreen();
-                              },
-                              child: Text(
-                                l10n.correctBirthDateLoginHint,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelMedium
-                                    ?.copyWith(
-                                      color: AppColors.textSecondary,
-                                    ),
+                          if (!compactHeight)
+                            Center(
+                              child: TextButton(
+                                onPressed: () async {
+                                  await BirthDateCorrection
+                                      .requestFullAgeScreen();
+                                },
+                                child: Text(
+                                  l10n.correctBirthDateLoginHint,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .labelMedium
+                                      ?.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                ),
                               ),
                             ),
-                          ),
                         ],
                       );
+
+                      final Widget fieldsSection;
+                      if (useFixedLoginLayout) {
+                        fieldsSection = SizedBox(
+                          height: fieldsMaxHeight,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.topCenter,
+                            child: SizedBox(
+                              width: innerFormWidth,
+                              child: formFields,
+                            ),
+                          ),
+                        );
+                      } else {
+                        fieldsSection = formFields;
+                      }
 
                       final cardBody = Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           loginHeader,
-                          SizedBox(
-                            height: compactHeight ? AppSpacing.sm : AppSpacing.md,
-                          ),
-                          if (fitWithoutScroll)
-                            FittedBox(
-                              fit: BoxFit.scaleDown,
-                              alignment: Alignment.topCenter,
-                              child: formFields,
-                            )
-                          else
-                            formFields,
+                          SizedBox(height: gapAfterHeader),
+                          fieldsSection,
                         ],
                       );
 
@@ -444,10 +487,13 @@ class _LoginPageState extends State<LoginPage> {
                         child: loginCard,
                       );
 
-                      if (fitWithoutScroll) {
+                      if (useFixedLoginLayout) {
                         return Padding(
                           padding: horizontalPad,
-                          child: Center(child: sizedCard),
+                          child: Align(
+                            alignment: Alignment.topCenter,
+                            child: sizedCard,
+                          ),
                         );
                       }
 
@@ -463,7 +509,10 @@ class _LoginPageState extends State<LoginPage> {
                                     viewInsets.bottom)
                                 .clamp(0.0, double.infinity),
                           ),
-                          child: Center(child: sizedCard),
+                          child: Align(
+                            alignment: Alignment.topCenter,
+                            child: sizedCard,
+                          ),
                         ),
                       );
                     },

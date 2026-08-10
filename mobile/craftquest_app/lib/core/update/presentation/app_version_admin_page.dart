@@ -15,7 +15,7 @@ import 'package:flutter/material.dart';
 
 const _platforms = ['android', 'ios'];
 
-/// Panel simple (super_admin) para gestionar la versión mínima forzada por
+/// Panel (content_admin / super_admin) para gestionar la versión mínima forzada por
 /// plataforma. Escritura vía `PUT /api/app-version/{platform}`.
 class AppVersionAdminPage extends StatefulWidget {
   const AppVersionAdminPage({super.key});

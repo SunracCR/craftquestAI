@@ -230,8 +230,6 @@ class _ProfilePageState extends State<ProfilePage> {
       widget.user.roles.contains('content_admin') ||
       widget.user.roles.contains('super_admin');
 
-  bool get _isSuperAdmin => widget.user.roles.contains('super_admin');
-
   Future<void> _editDisplayName() async {
     if (_savingName) return;
 
@@ -557,47 +555,44 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: AppSpacing.xs),
             AppSectionCard(
               padding: EdgeInsets.zero,
-              child: ListTile(
-                leading: const Icon(
-                  Icons.admin_panel_settings_outlined,
-                  color: AppColors.accentGold,
-                ),
-                title: Text(l10n.prepAdminProfileAction),
-                subtitle: Text(l10n.prepAdminProfileSubtitle),
-                trailing: const Icon(Icons.chevron_right_rounded,
-                    color: AppColors.textSecondary),
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const PrepPlusAdminHubPage(),
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(
+                      Icons.admin_panel_settings_outlined,
+                      color: AppColors.accentGold,
                     ),
-                  );
-                },
-              ),
-            ),
-          ],
-          if (_isSuperAdmin) ...[
-            const SizedBox(height: AppSpacing.lg),
-            AppSectionTitle(title: l10n.appVersionAdminSectionTitle),
-            const SizedBox(height: AppSpacing.xs),
-            AppSectionCard(
-              padding: EdgeInsets.zero,
-              child: ListTile(
-                leading: const Icon(
-                  Icons.system_update_outlined,
-                  color: AppColors.accentCool,
-                ),
-                title: Text(l10n.appVersionAdminAction),
-                subtitle: Text(l10n.appVersionAdminSubtitle),
-                trailing: const Icon(Icons.chevron_right_rounded,
-                    color: AppColors.textSecondary),
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const AppVersionAdminPage(),
+                    title: Text(l10n.prepAdminProfileAction),
+                    subtitle: Text(l10n.prepAdminProfileSubtitle),
+                    trailing: const Icon(Icons.chevron_right_rounded,
+                        color: AppColors.textSecondary),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const PrepPlusAdminHubPage(),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.system_update_outlined,
+                      color: AppColors.accentCool,
                     ),
-                  );
-                },
+                    title: Text(l10n.appVersionAdminAction),
+                    subtitle: Text(l10n.appVersionAdminSubtitle),
+                    trailing: const Icon(Icons.chevron_right_rounded,
+                        color: AppColors.textSecondary),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const AppVersionAdminPage(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
           ],

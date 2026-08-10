@@ -53,7 +53,7 @@ class AppVersionRepository {
     }
   }
 
-  /// Requiere rol `super_admin` en el backend.
+  /// Requiere rol `content_admin` o `super_admin` en el backend.
   Future<AppVersionRequirement> upsertRequirement(
     String platform,
     Map<String, dynamic> body,
