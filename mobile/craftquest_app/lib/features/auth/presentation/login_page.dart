@@ -209,229 +209,253 @@ class _LoginPageState extends State<LoginPage> {
                         constraints.maxWidth - horizontalPadding * 2,
                       );
 
-                      final form = Form(
-                        key: _formKey,
-                        child: AuthPremiumCard(
-                          dense: true,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              AuthPremiumHeader(
-                                dense: true,
-                                logoSize: _loginLogoSize,
-                                title: l10n.loginTitle,
-                              ),
-                              const SizedBox(height: AppSpacing.md),
-                              AutofillGroup(
-                                child: Column(
-                                  children: [
-                                    TextFormField(
-                                      controller: _emailController,
-                                      keyboardType: TextInputType.emailAddress,
-                                      autofillHints: const [
-                                        AutofillHints.username,
-                                      ],
-                                      enabled: !isLoading,
-                                      textInputAction: TextInputAction.next,
-                                      decoration: _fieldDecoration(
-                                        label: l10n.emailLabel,
-                                        icon: Icons.mail_outline_rounded,
-                                      ),
-                                      validator: (value) {
-                                        if (value == null ||
-                                            value.trim().isEmpty) {
-                                          return l10n.fieldRequired;
-                                        }
-                                        return null;
-                                      },
-                                    ),
-                                    const SizedBox(height: AppSpacing.sm),
-                                    TextFormField(
-                                      controller: _passwordController,
-                                      obscureText: _obscurePassword,
-                                      autofillHints: const [
-                                        AutofillHints.password,
-                                      ],
-                                      enabled: !isLoading,
-                                      textInputAction: TextInputAction.done,
-                                      onFieldSubmitted: (_) => _submit(),
-                                      decoration: _fieldDecoration(
-                                        label: l10n.passwordLabel,
-                                        icon: Icons.lock_outline_rounded,
-                                        suffix: IconButton(
-                                          onPressed: isLoading
-                                              ? null
-                                              : () {
-                                                  setState(() {
-                                                    _obscurePassword =
-                                                        !_obscurePassword;
-                                                  });
-                                                },
-                                          icon: Icon(
-                                            _obscurePassword
-                                                ? Icons.visibility_outlined
-                                                : Icons.visibility_off_outlined,
-                                            size: 22,
-                                            color: AppColors.textSecondary,
-                                          ),
-                                        ),
-                                      ),
-                                      validator: (value) {
-                                        if (value == null ||
-                                            value.length < 8) {
-                                          return l10n.passwordMinLength;
-                                        }
-                                        return null;
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: TextButton(
-                                  style: TextButton.styleFrom(
-                                    padding: EdgeInsets.zero,
-                                    minimumSize: Size.zero,
-                                    tapTargetSize:
-                                        MaterialTapTargetSize.shrinkWrap,
-                                  ),
-                                  onPressed: isLoading
-                                      ? null
-                                      : () {
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute<void>(
-                                              builder: (_) =>
-                                                  const ForgotPasswordPage(),
-                                            ),
-                                          );
-                                        },
-                                  child: Text(
-                                    l10n.forgotPasswordLink,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelMedium
-                                        ?.copyWith(color: AppColors.accent),
-                                  ),
-                                ),
-                              ),
-                              _RememberCredentialsTile(
-                                value: _rememberLogin,
-                                label: l10n.loginRememberCredentials,
-                                enabled: !isLoading,
-                                onChanged: (value) {
-                                  setState(() => _rememberLogin = value);
-                                },
-                              ),
-                              const SizedBox(height: AppSpacing.md),
-                              AppGradientPrimaryButton(
-                                label: l10n.loginAction,
-                                icon: Icons.login_rounded,
-                                isLoading: isLoading,
-                                onPressed: _submit,
-                              ),
-                              const SizedBox(height: AppSpacing.md),
-                              OAuthSignInButtons(enabled: !isLoading),
-                              const SizedBox(height: AppSpacing.sm),
-                              Divider(
-                                height: 1,
-                                color: AppColors.textSecondary
-                                    .withValues(alpha: 0.2),
-                              ),
-                              const SizedBox(height: AppSpacing.xs),
-                              Center(
-                                child: TextButton(
-                                  style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: AppSpacing.xs,
-                                    ),
-                                    minimumSize: Size.zero,
-                                    tapTargetSize:
-                                        MaterialTapTargetSize.shrinkWrap,
-                                  ),
-                                  onPressed: isLoading
-                                      ? null
-                                      : () {
-                                          final authBloc =
-                                              context.read<AuthBloc>();
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute<void>(
-                                              builder: (_) =>
-                                                  BlocProvider.value(
-                                                value: authBloc,
-                                                child: const RegisterPage(),
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                  child: Text(
-                                    l10n.goToRegister,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelLarge
-                                        ?.copyWith(
-                                          color: AppColors.accent,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              Divider(
-                                height: 1,
-                                color: AppColors.textSecondary
-                                    .withValues(alpha: 0.15),
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              const GuestPracticePromoCard(compact: true),
-                              const LegalLinksRow(),
-                              Center(
-                                child: TextButton(
-                                  onPressed: () async {
-                                    await BirthDateCorrection
-                                        .requestFullAgeScreen();
-                                  },
-                                  child: Text(
-                                    l10n.correctBirthDateLoginHint,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelMedium
-                                        ?.copyWith(
-                                          color: AppColors.textSecondary,
-                                        ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-
                       final fitWithoutScroll = _fitLoginWithoutScroll(context);
+                      final compactHeight = constraints.maxHeight < 720;
+                      final logoSize = compactHeight ? 188.0 : _loginLogoSize;
                       final horizontalPad = EdgeInsets.fromLTRB(
                         horizontalPadding,
                         AppSpacing.sm,
                         horizontalPadding,
                         AppSpacing.sm + viewInsets.bottom,
                       );
-                      final sizedForm = SizedBox(
+
+                      final loginHeader = AuthPremiumHeader(
+                        dense: true,
+                        logoSize: logoSize,
+                        title: l10n.loginTitle,
+                      );
+
+                      final formFields = Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          AutofillGroup(
+                            child: Column(
+                              children: [
+                                TextFormField(
+                                  controller: _emailController,
+                                  keyboardType: TextInputType.emailAddress,
+                                  autofillHints: const [
+                                    AutofillHints.username,
+                                  ],
+                                  enabled: !isLoading,
+                                  textInputAction: TextInputAction.next,
+                                  decoration: _fieldDecoration(
+                                    label: l10n.emailLabel,
+                                    icon: Icons.mail_outline_rounded,
+                                  ),
+                                  validator: (value) {
+                                    if (value == null ||
+                                        value.trim().isEmpty) {
+                                      return l10n.fieldRequired;
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                TextFormField(
+                                  controller: _passwordController,
+                                  obscureText: _obscurePassword,
+                                  autofillHints: const [
+                                    AutofillHints.password,
+                                  ],
+                                  enabled: !isLoading,
+                                  textInputAction: TextInputAction.done,
+                                  onFieldSubmitted: (_) => _submit(),
+                                  decoration: _fieldDecoration(
+                                    label: l10n.passwordLabel,
+                                    icon: Icons.lock_outline_rounded,
+                                    suffix: IconButton(
+                                      onPressed: isLoading
+                                          ? null
+                                          : () {
+                                              setState(() {
+                                                _obscurePassword =
+                                                    !_obscurePassword;
+                                              });
+                                            },
+                                      icon: Icon(
+                                        _obscurePassword
+                                            ? Icons.visibility_outlined
+                                            : Icons.visibility_off_outlined,
+                                        size: 22,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ),
+                                  validator: (value) {
+                                    if (value == null || value.length < 8) {
+                                      return l10n.passwordMinLength;
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              onPressed: isLoading
+                                  ? null
+                                  : () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute<void>(
+                                          builder: (_) =>
+                                              const ForgotPasswordPage(),
+                                        ),
+                                      );
+                                    },
+                              child: Text(
+                                l10n.forgotPasswordLink,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelMedium
+                                    ?.copyWith(color: AppColors.accent),
+                              ),
+                            ),
+                          ),
+                          _RememberCredentialsTile(
+                            value: _rememberLogin,
+                            label: l10n.loginRememberCredentials,
+                            enabled: !isLoading,
+                            onChanged: (value) {
+                              setState(() => _rememberLogin = value);
+                            },
+                          ),
+                          SizedBox(
+                            height: compactHeight ? AppSpacing.sm : AppSpacing.md,
+                          ),
+                          AppGradientPrimaryButton(
+                            label: l10n.loginAction,
+                            icon: Icons.login_rounded,
+                            isLoading: isLoading,
+                            onPressed: _submit,
+                          ),
+                          SizedBox(
+                            height: compactHeight ? AppSpacing.sm : AppSpacing.md,
+                          ),
+                          OAuthSignInButtons(enabled: !isLoading),
+                          const SizedBox(height: AppSpacing.sm),
+                          Divider(
+                            height: 1,
+                            color: AppColors.textSecondary
+                                .withValues(alpha: 0.2),
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          Center(
+                            child: TextButton(
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: AppSpacing.xs,
+                                ),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              onPressed: isLoading
+                                  ? null
+                                  : () {
+                                      final authBloc =
+                                          context.read<AuthBloc>();
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute<void>(
+                                          builder: (_) => BlocProvider.value(
+                                            value: authBloc,
+                                            child: const RegisterPage(),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                              child: Text(
+                                l10n.goToRegister,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelLarge
+                                    ?.copyWith(
+                                      color: AppColors.accent,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          Divider(
+                            height: 1,
+                            color: AppColors.textSecondary
+                                .withValues(alpha: 0.15),
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          const GuestPracticePromoCard(compact: true),
+                          const LegalLinksRow(),
+                          Center(
+                            child: TextButton(
+                              onPressed: () async {
+                                await BirthDateCorrection
+                                    .requestFullAgeScreen();
+                              },
+                              child: Text(
+                                l10n.correctBirthDateLoginHint,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelMedium
+                                    ?.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+
+                      final loginCard = Form(
+                        key: _formKey,
+                        child: AuthPremiumCard(
+                          dense: true,
+                          child: formFields,
+                        ),
+                      );
+
+                      final sizedCard = SizedBox(
                         width: maxFormWidth,
-                        child: form,
+                        child: loginCard,
                       );
 
                       if (fitWithoutScroll) {
+                        // Logo fuera del FittedBox: evita pixelado por reescalado.
                         return Padding(
                           padding: horizontalPad,
-                          child: Center(
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              alignment: Alignment.center,
-                              child: sizedForm,
-                            ),
+                          child: Column(
+                            children: [
+                              loginHeader,
+                              SizedBox(height: compactHeight ? 6 : 10),
+                              Flexible(
+                                child: Align(
+                                  alignment: Alignment.topCenter,
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.topCenter,
+                                    child: sizedCard,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         );
                       }
+
+                      final scrollBody = Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          loginHeader,
+                          const SizedBox(height: AppSpacing.sm),
+                          sizedCard,
+                        ],
+                      );
 
                       return SingleChildScrollView(
                         keyboardDismissBehavior:
@@ -445,7 +469,7 @@ class _LoginPageState extends State<LoginPage> {
                                     viewInsets.bottom)
                                 .clamp(0.0, double.infinity),
                           ),
-                          child: Center(child: sizedForm),
+                          child: Center(child: scrollBody),
                         ),
                       );
                     },

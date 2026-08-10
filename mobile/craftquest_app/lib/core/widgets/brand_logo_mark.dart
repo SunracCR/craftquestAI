@@ -13,6 +13,10 @@ class BrandLogoMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    // Decodificar al tamaño físico de pantalla para evitar blur al escalar.
+    final cachePx = (size * dpr).ceil().clamp(64, 2048);
+
     return SizedBox(
       width: size,
       height: size,
@@ -20,6 +24,9 @@ class BrandLogoMark extends StatelessWidget {
         BrandAssets.logo,
         fit: BoxFit.contain,
         filterQuality: FilterQuality.high,
+        isAntiAlias: true,
+        cacheWidth: cachePx,
+        cacheHeight: cachePx,
         errorBuilder: (_, __, ___) => _BrandLogoMarkFallback(size: size),
       ),
     );
