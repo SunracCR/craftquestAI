@@ -1386,6 +1386,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get practiceSelectSingleHint => 'Select one option';
+
+  @override
+  String get practiceSelectMultipleHint => 'Select all that apply';
+
+  @override
   String get practiceSelectAnswer => 'Select at least one answer';
 
   @override

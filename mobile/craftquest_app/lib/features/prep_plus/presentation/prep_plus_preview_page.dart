@@ -4,12 +4,14 @@ import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
+import 'package:craftquest_app/core/utils/question_type_labels.dart';
 import 'package:craftquest_app/core/widgets/app_answer_tile.dart';
 import 'package:craftquest_app/core/widgets/app_bottom_bar.dart';
 import 'package:craftquest_app/core/widgets/app_buttons.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
+import 'package:craftquest_app/core/widgets/practice_selection_hint.dart';
 import 'package:craftquest_app/features/prep_plus/data/models/prep_plus_models.dart';
 import 'package:craftquest_app/features/prep_plus/data/prep_plus_repository.dart';
 import 'package:craftquest_app/features/prep_plus/domain/prep_preview_grader.dart';
@@ -90,8 +92,12 @@ class _PrepPlusPreviewPageState extends State<PrepPlusPreviewPage> {
   PrepPreviewQuestionModel? get _question =>
       _questions.isEmpty ? null : _questions[_currentIndex];
 
-  bool _isSingleSelect(String type) =>
-      type == 'single_choice' || type == 'true_false';
+  bool _isSingleSelect(String type) => isSingleSelectQuestionType(type);
+
+  AnswerSelectionMode _selectionModeFor(String type) =>
+      _isSingleSelect(type)
+          ? AnswerSelectionMode.single
+          : AnswerSelectionMode.multiple;
 
   Set<String> _selectionFor(String questionId) =>
       _selections[questionId] ?? {};
@@ -276,15 +282,14 @@ class _PrepPlusPreviewPageState extends State<PrepPlusPreviewPage> {
                                         height: 1.25,
                                       ),
                                 ),
-                                const SizedBox(height: AppSpacing.sm),
-                                Text(
-                                  l10n.prepPlusPreviewTryInteraction,
-                                  style: const TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 13,
+                                const SizedBox(height: AppSpacing.md),
+                                PracticeSelectionHint(
+                                  isSingleSelect: _isSingleSelect(
+                                    question.questionType,
                                   ),
+                                  questionType: question.questionType,
                                 ),
-                                const SizedBox(height: AppSpacing.lg),
+                                const SizedBox(height: AppSpacing.sm),
                                 ...question.answerOptions.asMap().entries.map(
                                   (entry) {
                                     final option = entry.value;
@@ -303,6 +308,9 @@ class _PrepPlusPreviewPageState extends State<PrepPlusPreviewPage> {
                                     return AppAnswerTile(
                                       label: label,
                                       selected: selected,
+                                      selectionMode: _selectionModeFor(
+                                        question.questionType,
+                                      ),
                                       onTap: () => _toggleOption(
                                         question,
                                         option.answerOptionId,

@@ -2433,6 +2433,18 @@ abstract class AppLocalizations {
   /// **'Pregunta {current} de {total}'**
   String practiceQuestionCounter(int current, int total);
 
+  /// No description provided for @practiceSelectSingleHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Selecciona una opción'**
+  String get practiceSelectSingleHint;
+
+  /// No description provided for @practiceSelectMultipleHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Selecciona todas las que apliquen'**
+  String get practiceSelectMultipleHint;
+
   /// No description provided for @practiceSelectAnswer.
   ///
   /// In es, this message translates to:

@@ -3,9 +3,12 @@ import 'dart:io';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
+import 'package:craftquest_app/core/utils/question_type_labels.dart';
+import 'package:craftquest_app/core/widgets/app_answer_tile.dart';
 import 'package:craftquest_app/core/widgets/app_buttons.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
+import 'package:craftquest_app/core/widgets/practice_selection_hint.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_local_grader.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_package_repository.dart';
 import 'package:craftquest_app/features/offline_practice/domain/offline_sync_manager.dart';
@@ -85,6 +88,10 @@ class _QuestionView extends StatelessWidget {
       ..sort((a, b) => a.defaultSortOrder.compareTo(b.defaultSortOrder));
 
     final isLastQuestion = state.currentIndex + 1 >= state.totalQuestions;
+    final isSingleSelect = isSingleSelectQuestionType(question.questionType);
+    final selectionMode = isSingleSelect
+        ? AnswerSelectionMode.single
+        : AnswerSelectionMode.multiple;
 
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -110,50 +117,37 @@ class _QuestionView extends StatelessWidget {
               mediaAssetId: question.questionMediaAssetId!,
             ),
           ],
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.md),
+          PracticeSelectionHint(
+            isSingleSelect: isSingleSelect,
+            questionType: question.questionType,
+          ),
+          const SizedBox(height: AppSpacing.sm),
           Expanded(
             child: ListView.separated(
               itemCount: displayOptions.length,
-              separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+              separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.xs),
               itemBuilder: (context, index) {
                 final option = displayOptions[index];
                 final isSelected = selected.contains(option.answerOptionId);
-                return Material(
-                  color: isSelected
-                      ? AppColors.accent.withValues(alpha: 0.12)
-                      : Theme.of(context).colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(12),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(12),
-                    onTap: () => cubit.toggleSelection(
-                      questionId: question.questionId,
-                      answerOptionId: option.answerOptionId,
-                      supportsMultiple: question.supportsMultipleCorrectAnswers,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (option.answerText != null &&
-                                    option.answerText!.isNotEmpty)
-                                  Text(option.answerText!),
-                                if (option.mediaAssetId != null)
-                                  _OfflineMediaImage(
-                                    quizId: state.quiz!.quizId,
-                                    mediaAssetId: option.mediaAssetId!,
-                                  ),
-                              ],
-                            ),
-                          ),
-                          if (isSelected)
-                            const Icon(Icons.check_circle, color: AppColors.accent),
-                        ],
-                      ),
-                    ),
+                final answerText = option.answerText?.trim();
+                final label = answerText != null && answerText.isNotEmpty
+                    ? answerText
+                    : option.stableKey;
+                return AppAnswerTile(
+                  label: label,
+                  selected: isSelected,
+                  selectionMode: selectionMode,
+                  mediaChild: option.mediaAssetId != null
+                      ? _OfflineMediaImage(
+                          quizId: state.quiz!.quizId,
+                          mediaAssetId: option.mediaAssetId!,
+                        )
+                      : null,
+                  onTap: () => cubit.toggleSelection(
+                    questionId: question.questionId,
+                    answerOptionId: option.answerOptionId,
+                    supportsMultiple: question.supportsMultipleCorrectAnswers,
                   ),
                 );
               },

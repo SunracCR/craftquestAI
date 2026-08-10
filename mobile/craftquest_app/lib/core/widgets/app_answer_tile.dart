@@ -4,6 +4,11 @@ import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_zoomable_network_image.dart';
 import 'package:flutter/material.dart';
 
+enum AnswerSelectionMode {
+  single,
+  multiple,
+}
+
 /// Opción de respuesta seleccionable (práctica) — sustituye chips sueltos.
 class AppAnswerTile extends StatelessWidget {
   const AppAnswerTile({
@@ -14,7 +19,9 @@ class AppAnswerTile extends StatelessWidget {
     this.enabled = true,
     this.leading,
     this.mediaImageUrl,
+    this.mediaChild,
     this.mediaHeight = AppMediaDisplay.optionImageHeight,
+    this.selectionMode = AnswerSelectionMode.single,
   });
 
   final String label;
@@ -22,16 +29,17 @@ class AppAnswerTile extends StatelessWidget {
   final VoidCallback? onTap;
   final bool enabled;
   final Widget? leading;
-
-  /// URL de imagen mostrada dentro del recuadro (p. ej. opciones con imagen).
   final String? mediaImageUrl;
+  final Widget? mediaChild;
   final double mediaHeight;
+  final AnswerSelectionMode selectionMode;
 
   @override
   Widget build(BuildContext context) {
     final borderColor = selected
         ? AppColors.accent
         : AppColors.textSecondary.withValues(alpha: 0.35);
+    final selectionLeading = leading ?? _buildSelectionIcon();
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.xs),
@@ -50,7 +58,9 @@ class AppAnswerTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (mediaImageUrl != null)
+              if (mediaChild != null)
+                mediaChild!
+              else if (mediaImageUrl != null)
                 AppZoomableNetworkImage(
                   imageUrl: mediaImageUrl!,
                   height: mediaHeight,
@@ -58,17 +68,20 @@ class AppAnswerTile extends StatelessWidget {
               Padding(
                 padding: EdgeInsets.fromLTRB(
                   AppSpacing.md,
-                  mediaImageUrl != null ? AppSpacing.sm : AppSpacing.sm + 2,
+                  (mediaChild != null || mediaImageUrl != null)
+                      ? AppSpacing.sm
+                      : AppSpacing.sm + 2,
                   AppSpacing.md,
                   AppSpacing.sm + 2,
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (leading != null) ...[
-                      leading!,
-                      const SizedBox(width: AppSpacing.sm),
-                    ],
+                    Padding(
+                      padding: const EdgeInsets.only(top: 1),
+                      child: selectionLeading,
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Text(
                         label,
@@ -79,12 +92,6 @@ class AppAnswerTile extends StatelessWidget {
                             ),
                       ),
                     ),
-                    if (selected)
-                      const Icon(
-                        Icons.check_circle,
-                        color: AppColors.accent,
-                        size: 22,
-                      ),
                   ],
                 ),
               ),
@@ -93,5 +100,19 @@ class AppAnswerTile extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildSelectionIcon() {
+    final color = selected ? AppColors.accent : AppColors.textSecondary;
+    final icon = switch (selectionMode) {
+      AnswerSelectionMode.single => selected
+          ? Icons.radio_button_checked
+          : Icons.radio_button_unchecked,
+      AnswerSelectionMode.multiple => selected
+          ? Icons.check_box
+          : Icons.check_box_outline_blank,
+    };
+
+    return Icon(icon, color: color, size: 22);
   }
 }

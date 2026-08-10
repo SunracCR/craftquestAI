@@ -588,6 +588,8 @@
       "total": { "type": "int" }
     }
   },
+  "practiceSelectSingleHint": "Selecione uma opção",
+  "practiceSelectMultipleHint": "Selecione todas as que se aplicam",
   "practiceSelectAnswer": "Selecione pelo menos uma resposta",
   "practiceSubmitAnswerAction": "Confirmar resposta",
   "practiceNextQuestionAction": "Proxima pergunta",

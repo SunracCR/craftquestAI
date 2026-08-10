@@ -1395,6 +1395,12 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get practiceSelectSingleHint => 'Selecciona una opción';
+
+  @override
+  String get practiceSelectMultipleHint => 'Selecciona todas las que apliquen';
+
+  @override
   String get practiceSelectAnswer => 'Selecciona al menos una respuesta';
 
   @override

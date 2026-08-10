@@ -9,11 +9,13 @@ import 'package:craftquest_app/core/services/sound_service.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_media_display.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
+import 'package:craftquest_app/core/utils/question_type_labels.dart';
 import 'package:craftquest_app/core/widgets/app_answer_tile.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/core/widgets/app_zoomable_network_image.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
+import 'package:craftquest_app/core/widgets/practice_selection_hint.dart';
 import 'package:craftquest_app/features/practice/data/models/practice_models.dart';
 import 'package:craftquest_app/features/practice/data/practice_repository.dart';
 import 'package:craftquest_app/features/practice/data/practice_preferences_repository.dart';
@@ -607,12 +609,13 @@ class _PracticeSessionPageState extends State<PracticeSessionPage>
     );
   }
 
-  bool _isSingleSelect(String questionType) {
-    return questionType == 'single_choice' ||
-        questionType == 'true_false' ||
-        questionType == 'image_choice' ||
-        questionType == 'image_based_question';
-  }
+  bool _isSingleSelect(String questionType) =>
+      isSingleSelectQuestionType(questionType);
+
+  AnswerSelectionMode _selectionModeFor(String questionType) =>
+      _isSingleSelect(questionType)
+          ? AnswerSelectionMode.single
+          : AnswerSelectionMode.multiple;
 
   List<PracticeQuestionNavStatus> _navStatuses() {
     return _questionNav.map((nav) {
@@ -927,7 +930,14 @@ class _PracticeSessionPageState extends State<PracticeSessionPage>
                                     ),
                                   ),
                                 ],
-                                const SizedBox(height: AppSpacing.lg),
+                                const SizedBox(height: AppSpacing.md),
+                                PracticeSelectionHint(
+                                  isSingleSelect: _isSingleSelect(
+                                    question.questionType,
+                                  ),
+                                  questionType: question.questionType,
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
                                 IgnorePointer(
                                   ignoring: _finishing,
                                   child: Column(
@@ -948,6 +958,9 @@ class _PracticeSessionPageState extends State<PracticeSessionPage>
                                           label: label,
                                           selected: selected,
                                           mediaImageUrl: imageUrl,
+                                          selectionMode: _selectionModeFor(
+                                            question.questionType,
+                                          ),
                                           onTap: () => _toggleSingleOption(
                                             question,
                                             option.answerOptionId,
@@ -959,6 +972,9 @@ class _PracticeSessionPageState extends State<PracticeSessionPage>
                                         label: label,
                                         selected: selected,
                                         mediaImageUrl: imageUrl,
+                                        selectionMode: _selectionModeFor(
+                                          question.questionType,
+                                        ),
                                         onTap: () => _toggleMultiOption(
                                           question,
                                           option.answerOptionId,
