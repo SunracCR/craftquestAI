@@ -127,6 +127,50 @@ class AppLocalizationsEs extends AppLocalizations {
   String get offlineDownloadsDeleteAction => 'Eliminar descarga';
 
   @override
+  String get offlineDownloadsUpdateAction => 'Actualizar';
+
+  @override
+  String get offlineDownloadsUpdatingAction => 'Actualizando…';
+
+  @override
+  String get offlineDownloadsRemoveAction => 'Eliminar';
+
+  @override
+  String get offlineDownloadsAvailableOnDevice =>
+      'Disponible sin conexión en este dispositivo';
+
+  @override
+  String get offlineDownloadsSectionTitle => 'Practica sin conexión';
+
+  @override
+  String get offlineDownloadsUpgradeHint =>
+      'Descarga este cuestionario en tu dispositivo con un plan de pago.';
+
+  @override
+  String get offlineDownloadsDownloadHint =>
+      'Descarga este cuestionario en tu dispositivo para usarlo sin internet.';
+
+  @override
+  String get offlineDownloadsDownloadAction => 'Descargar en este dispositivo';
+
+  @override
+  String get offlineDownloadsDownloadingAction => 'Descargando…';
+
+  @override
+  String get offlineDownloadsViewPlansAction => 'Ver planes';
+
+  @override
+  String get offlineDownloadsRemoveDialogMessage =>
+      'Se eliminará este cuestionario de tu dispositivo. Podrás volver a descargarlo cuando tengas conexión.';
+
+  @override
+  String get offlineDownloadsRemoveDialogMessageShort =>
+      'Se eliminará este cuestionario de tu dispositivo.';
+
+  @override
+  String get offlineDownloadsRemovedMessage => 'Descarga offline eliminada.';
+
+  @override
   String get offlineDownloadsSyncTooltip => 'Sincronizar resultados';
 
   @override

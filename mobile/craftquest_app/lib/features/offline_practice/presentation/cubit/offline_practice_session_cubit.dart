@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:craftquest_app/features/offline_practice/data/models/offline_models.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_crypto.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_local_grader.dart';
+import 'package:craftquest_app/features/offline_practice/data/offline_order_generator.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_package_repository.dart';
+import 'package:craftquest_app/features/offline_practice/data/offline_session_checkpoint_repository.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_sync_repository.dart';
 import 'package:craftquest_app/features/offline_practice/presentation/cubit/offline_practice_session_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,15 +15,18 @@ class OfflinePracticeSessionCubit extends Cubit<OfflinePracticeSessionState> {
   OfflinePracticeSessionCubit({
     required OfflinePackageRepository packageRepository,
     required OfflineSyncRepository syncRepository,
+    required OfflineSessionCheckpointRepository checkpointRepository,
     required String quizId,
     this.showElapsedTimer = false,
   })  : _packageRepository = packageRepository,
         _syncRepository = syncRepository,
+        _checkpointRepository = checkpointRepository,
         _quizId = quizId,
         super(const OfflinePracticeSessionState());
 
   final OfflinePackageRepository _packageRepository;
   final OfflineSyncRepository _syncRepository;
+  final OfflineSessionCheckpointRepository _checkpointRepository;
   final String _quizId;
   final bool showElapsedTimer;
   final _uuid = const Uuid();
@@ -67,14 +74,46 @@ class OfflinePracticeSessionCubit extends Cubit<OfflinePracticeSessionState> {
         );
       }
 
+      final freshOrder = generateFreshOrder(quiz);
+
+      var pendingCheckpoint = await _checkpointRepository.loadCheckpoint(_quizId);
+      if (pendingCheckpoint != null &&
+          pendingCheckpoint.contentVersion != quiz.contentVersion) {
+        await _checkpointRepository.clearCheckpoint(_quizId);
+        pendingCheckpoint = null;
+      }
+
+      if (pendingCheckpoint != null &&
+          !isValidOrderForQuiz(
+            order: OfflineSessionOrder(
+              questionOrder: pendingCheckpoint.questionOrder,
+              answerOrderByQuestion: pendingCheckpoint.answerOrderByQuestion,
+            ),
+            quiz: quiz,
+          )) {
+        await _checkpointRepository.clearCheckpoint(_quizId);
+        pendingCheckpoint = null;
+      }
+
+      final hasPendingCheckpoint =
+          pendingCheckpoint != null && pendingCheckpoint.hasProgress;
+
       emit(
         state.copyWith(
           status: OfflinePracticeSessionStatus.ready,
           quiz: quiz,
           answerKeyByQuestion: answerKeys,
-          startedAt: DateTime.now().toUtc(),
+          questionOrder: freshOrder.questionOrder,
+          answerOrderByQuestion: freshOrder.answerOrderByQuestion,
+          startedAt: hasPendingCheckpoint ? null : DateTime.now().toUtc(),
+          pendingCheckpoint: hasPendingCheckpoint ? pendingCheckpoint : null,
+          clearPendingCheckpoint: !hasPendingCheckpoint,
         ),
       );
+
+      if (!hasPendingCheckpoint) {
+        unawaited(_persistCheckpoint());
+      }
     } catch (error) {
       emit(
         state.copyWith(
@@ -83,6 +122,37 @@ class OfflinePracticeSessionCubit extends Cubit<OfflinePracticeSessionState> {
         ),
       );
     }
+  }
+
+  void applyCheckpoint() {
+    final checkpoint = state.pendingCheckpoint;
+    if (checkpoint == null) {
+      return;
+    }
+
+    emit(
+      state.copyWith(
+        currentIndex: checkpoint.currentIndex,
+        selections: checkpoint.selections,
+        startedAt: checkpoint.startedAt,
+        questionOrder: checkpoint.questionOrder,
+        answerOrderByQuestion: checkpoint.answerOrderByQuestion,
+        clearPendingCheckpoint: true,
+      ),
+    );
+  }
+
+  Future<void> discardCheckpoint() async {
+    await _checkpointRepository.clearCheckpoint(_quizId);
+    emit(
+      state.copyWith(
+        currentIndex: 0,
+        selections: const {},
+        startedAt: DateTime.now().toUtc(),
+        clearPendingCheckpoint: true,
+      ),
+    );
+    unawaited(_persistCheckpoint());
   }
 
   void goToQuestion(int index) {
@@ -95,6 +165,7 @@ class OfflinePracticeSessionCubit extends Cubit<OfflinePracticeSessionState> {
         status: OfflinePracticeSessionStatus.answering,
       ),
     );
+    unawaited(_persistCheckpoint());
   }
 
   void toggleSelection({
@@ -118,6 +189,7 @@ class OfflinePracticeSessionCubit extends Cubit<OfflinePracticeSessionState> {
     final selections = Map<String, Set<String>>.from(state.selections)
       ..[questionId] = current;
     emit(state.copyWith(selections: selections));
+    unawaited(_persistCheckpoint());
   }
 
   Future<void> answerAndContinue() async {
@@ -152,9 +224,11 @@ class OfflinePracticeSessionCubit extends Cubit<OfflinePracticeSessionState> {
         entry.key: entry.value.correctAnswerOptionIds,
     };
 
+    final orderedQuestions = _orderedQuestions(quiz);
+
     final result = OfflineLocalGrader.finishSession(
       clientSessionId: clientSessionId,
-      questions: quiz.questions,
+      questions: orderedQuestions,
       selections: state.selections,
       correctAnswersByQuestion: correctAnswersByQuestion,
     );
@@ -165,7 +239,7 @@ class OfflinePracticeSessionCubit extends Cubit<OfflinePracticeSessionState> {
       answerKeyByQuestion: state.answerKeyByQuestion,
     );
 
-    final answers = quiz.questions
+    final answers = orderedQuestions
         .map(
           (question) => OfflineSyncAnswerModel(
             questionId: question.questionId,
@@ -188,6 +262,8 @@ class OfflinePracticeSessionCubit extends Cubit<OfflinePracticeSessionState> {
       answers: answers,
     );
 
+    await _checkpointRepository.clearCheckpoint(_quizId);
+
     emit(
       state.copyWith(
         status: OfflinePracticeSessionStatus.finished,
@@ -198,6 +274,45 @@ class OfflinePracticeSessionCubit extends Cubit<OfflinePracticeSessionState> {
     );
   }
 
+  Future<void> _persistCheckpoint() async {
+    final quiz = state.quiz;
+    final startedAt = state.startedAt;
+    if (quiz == null || startedAt == null || state.questionOrder.isEmpty) {
+      return;
+    }
+
+    try {
+      await _checkpointRepository.saveCheckpoint(
+        quizId: quiz.quizId,
+        contentVersion: quiz.contentVersion,
+        currentIndex: state.currentIndex,
+        selections: state.selections,
+        startedAt: startedAt,
+        questionOrder: state.questionOrder,
+        answerOrderByQuestion: state.answerOrderByQuestion,
+      );
+    } catch (_) {
+      // Best-effort persistence; session can continue in memory.
+    }
+  }
+
+  List<OfflinePackageQuestionModel> _orderedQuestions(
+    OfflineQuizPackageModel quiz,
+  ) {
+    if (state.questionOrder.isEmpty) {
+      return List<OfflinePackageQuestionModel>.from(quiz.questions)
+        ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    }
+
+    final questionsById = {
+      for (final question in quiz.questions) question.questionId: question,
+    };
+    return state.questionOrder
+        .map((id) => questionsById[id])
+        .whereType<OfflinePackageQuestionModel>()
+        .toList();
+  }
+
   List<OfflineReviewQuestionModel> _buildReviewQuestions({
     required OfflineQuizPackageModel quiz,
     required Map<String, Set<String>> selections,
@@ -205,7 +320,7 @@ class OfflinePracticeSessionCubit extends Cubit<OfflinePracticeSessionState> {
   }) {
     final reviewQuestions = <OfflineReviewQuestionModel>[];
 
-    for (final question in quiz.questions) {
+    for (final question in _orderedQuestions(quiz)) {
       final answerKey = answerKeyByQuestion[question.questionId];
       if (answerKey == null) {
         continue;
@@ -219,10 +334,7 @@ class OfflinePracticeSessionCubit extends Cubit<OfflinePracticeSessionState> {
         correctIds: answerKey.correctAnswerOptionIds,
       );
 
-      final displayOptions = question.answerOptions
-          .where((o) => !OfflineLocalGrader.isQuestionImageStem(o.stableKey))
-          .toList()
-        ..sort((a, b) => a.defaultSortOrder.compareTo(b.defaultSortOrder));
+      final displayOptions = state.orderedAnswerOptions(question);
 
       final reviewOptions = <OfflineReviewAnswerOptionModel>[];
       for (var i = 0; i < displayOptions.length; i++) {
@@ -260,7 +372,6 @@ class OfflinePracticeSessionCubit extends Cubit<OfflinePracticeSessionState> {
       );
     }
 
-    reviewQuestions.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
     return reviewQuestions;
   }
 }

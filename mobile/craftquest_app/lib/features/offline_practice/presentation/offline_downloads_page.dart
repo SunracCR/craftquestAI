@@ -5,6 +5,7 @@ import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/features/offline_practice/data/models/offline_models.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_package_repository.dart';
+import 'package:craftquest_app/features/offline_practice/data/offline_session_checkpoint_repository.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_sync_repository.dart';
 import 'package:craftquest_app/features/offline_practice/domain/offline_sync_manager.dart';
 import 'package:craftquest_app/features/offline_practice/presentation/cubit/offline_practice_session_cubit.dart';
@@ -75,6 +76,7 @@ class _OfflineDownloadsPageState extends State<OfflineDownloadsPage> {
           create: (_) => OfflinePracticeSessionCubit(
             packageRepository: _repository,
             syncRepository: _syncRepository,
+            checkpointRepository: getIt<OfflineSessionCheckpointRepository>(),
             quizId: item.quizId,
           )..load(),
           child: OfflinePracticeSessionPage(

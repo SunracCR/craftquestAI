@@ -316,6 +316,84 @@ abstract class AppLocalizations {
   /// **'Eliminar descarga'**
   String get offlineDownloadsDeleteAction;
 
+  /// No description provided for @offlineDownloadsUpdateAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Actualizar'**
+  String get offlineDownloadsUpdateAction;
+
+  /// No description provided for @offlineDownloadsUpdatingAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Actualizando…'**
+  String get offlineDownloadsUpdatingAction;
+
+  /// No description provided for @offlineDownloadsRemoveAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar'**
+  String get offlineDownloadsRemoveAction;
+
+  /// No description provided for @offlineDownloadsAvailableOnDevice.
+  ///
+  /// In es, this message translates to:
+  /// **'Disponible sin conexión en este dispositivo'**
+  String get offlineDownloadsAvailableOnDevice;
+
+  /// No description provided for @offlineDownloadsSectionTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Practica sin conexión'**
+  String get offlineDownloadsSectionTitle;
+
+  /// No description provided for @offlineDownloadsUpgradeHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Descarga este cuestionario en tu dispositivo con un plan de pago.'**
+  String get offlineDownloadsUpgradeHint;
+
+  /// No description provided for @offlineDownloadsDownloadHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Descarga este cuestionario en tu dispositivo para usarlo sin internet.'**
+  String get offlineDownloadsDownloadHint;
+
+  /// No description provided for @offlineDownloadsDownloadAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Descargar en este dispositivo'**
+  String get offlineDownloadsDownloadAction;
+
+  /// No description provided for @offlineDownloadsDownloadingAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Descargando…'**
+  String get offlineDownloadsDownloadingAction;
+
+  /// No description provided for @offlineDownloadsViewPlansAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver planes'**
+  String get offlineDownloadsViewPlansAction;
+
+  /// No description provided for @offlineDownloadsRemoveDialogMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Se eliminará este cuestionario de tu dispositivo. Podrás volver a descargarlo cuando tengas conexión.'**
+  String get offlineDownloadsRemoveDialogMessage;
+
+  /// No description provided for @offlineDownloadsRemoveDialogMessageShort.
+  ///
+  /// In es, this message translates to:
+  /// **'Se eliminará este cuestionario de tu dispositivo.'**
+  String get offlineDownloadsRemoveDialogMessageShort;
+
+  /// No description provided for @offlineDownloadsRemovedMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Descarga offline eliminada.'**
+  String get offlineDownloadsRemovedMessage;
+
   /// No description provided for @offlineDownloadsSyncTooltip.
   ///
   /// In es, this message translates to:

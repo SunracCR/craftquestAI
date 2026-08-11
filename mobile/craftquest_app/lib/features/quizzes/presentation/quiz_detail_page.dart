@@ -42,6 +42,7 @@ import 'package:craftquest_app/features/sharing/data/models/sharing_models.dart'
 import 'package:craftquest_app/features/billing/data/billing_repository.dart';
 import 'package:craftquest_app/features/billing/presentation/upgrade_plan_page.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_package_repository.dart';
+import 'package:craftquest_app/features/offline_practice/data/offline_session_checkpoint_repository.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_storage_bootstrap.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_sync_repository.dart';
 import 'package:craftquest_app/features/offline_practice/presentation/cubit/offline_practice_session_cubit.dart';
@@ -655,6 +656,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
           create: (_) => OfflinePracticeSessionCubit(
             packageRepository: _offlineRepository,
             syncRepository: getIt<OfflineSyncRepository>(),
+            checkpointRepository: getIt<OfflineSessionCheckpointRepository>(),
             quizId: widget.quizId,
             showElapsedTimer: _showTimer,
           )..load(),
@@ -666,21 +668,20 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
   }
 
   Future<void> _confirmRemoveOfflineDownload() async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Quitar descarga offline'),
-        content: const Text(
-          'Se eliminará este cuestionario de tu dispositivo. Podrás volver a descargarlo cuando tengas conexión.',
-        ),
+        title: Text(l10n.offlineDownloadsDeleteAction),
+        content: Text(l10n.offlineDownloadsRemoveDialogMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Quitar'),
+            child: Text(l10n.offlineDownloadsRemoveAction),
           ),
         ],
       ),
@@ -690,7 +691,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
     await _offlineRepository.deleteDownloadedQuiz(widget.quizId);
     if (!mounted) return;
     setState(() => _isOfflineDownloaded = false);
-    AppSnackBars.showSuccess('Descarga offline eliminada.');
+    AppSnackBars.showSuccess(l10n.offlineDownloadsRemovedMessage);
   }
 
   Future<void> _promptPdfUpgrade() async {

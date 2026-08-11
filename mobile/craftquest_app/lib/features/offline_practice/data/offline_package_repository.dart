@@ -79,6 +79,11 @@ class OfflinePackageRepository {
     final db = await _database.database;
     await db.transaction((txn) async {
       await txn.delete(
+        'offline_session_checkpoints',
+        where: 'quiz_id = ?',
+        whereArgs: [package.quizId],
+      );
+      await txn.delete(
         'offline_answer_options',
         where: 'quiz_id = ?',
         whereArgs: [package.quizId],
@@ -327,6 +332,11 @@ class OfflinePackageRepository {
   Future<void> deleteDownloadedQuiz(String quizId) async {
     final db = await _database.database;
     await db.transaction((txn) async {
+      await txn.delete(
+        'offline_session_checkpoints',
+        where: 'quiz_id = ?',
+        whereArgs: [quizId],
+      );
       await txn.delete(
         'pending_sync_sessions',
         where: 'quiz_id = ?',

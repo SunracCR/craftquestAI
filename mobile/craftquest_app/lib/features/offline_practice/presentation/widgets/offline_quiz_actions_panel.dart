@@ -3,6 +3,7 @@ import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_buttons.dart';
 import 'package:craftquest_app/core/widgets/app_section_card.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_storage_bootstrap.dart';
+import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class OfflineQuizActionsPanel extends StatelessWidget {
@@ -29,6 +30,8 @@ class OfflineQuizActionsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     if (!isPlatformSupported) {
       return AppSectionCard(
         child: Row(
@@ -57,21 +60,21 @@ class OfflineQuizActionsPanel extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Practica sin conexión',
+              l10n.offlineDownloadsSectionTitle,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              'Descarga este cuestionario en tu dispositivo con un plan de pago.',
+              l10n.offlineDownloadsUpgradeHint,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppColors.textSecondary,
                   ),
             ),
             const SizedBox(height: AppSpacing.md),
             AppSecondaryButton(
-              label: 'Ver planes',
+              label: l10n.offlineDownloadsViewPlansAction,
               icon: Icons.lock_outline_rounded,
               onPressed: onUpgradePrompt,
             ),
@@ -95,7 +98,7 @@ class OfflineQuizActionsPanel extends StatelessWidget {
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
-                    'Disponible sin conexión en este dispositivo',
+                    l10n.offlineDownloadsAvailableOnDevice,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -105,7 +108,7 @@ class OfflineQuizActionsPanel extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             AppPrimaryButton(
-              label: 'Practicar offline',
+              label: l10n.offlineDownloadsPlayAction,
               icon: Icons.play_arrow_rounded,
               onPressed: onPracticeOffline,
             ),
@@ -114,7 +117,10 @@ class OfflineQuizActionsPanel extends StatelessWidget {
               children: [
                 Expanded(
                   child: AppSecondaryButton(
-                    label: isDownloading ? 'Actualizando...' : 'Actualizar',
+                    label: isDownloading
+                        ? l10n.offlineDownloadsUpdatingAction
+                        : l10n.offlineDownloadsUpdateAction,
+                    icon: Icons.refresh_rounded,
                     isLoading: isDownloading,
                     onPressed: isDownloading ? null : onDownload,
                   ),
@@ -122,7 +128,8 @@ class OfflineQuizActionsPanel extends StatelessWidget {
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: AppSecondaryButton(
-                    label: 'Quitar descarga',
+                    label: l10n.offlineDownloadsRemoveAction,
+                    icon: Icons.delete_outline_rounded,
                     onPressed: isDownloading ? null : onRemoveDownload,
                   ),
                 ),
@@ -138,21 +145,23 @@ class OfflineQuizActionsPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Practica sin conexión',
+            l10n.offlineDownloadsSectionTitle,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'Descarga este cuestionario en tu dispositivo para usarlo sin internet.',
+            l10n.offlineDownloadsDownloadHint,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: AppColors.textSecondary,
                 ),
           ),
           const SizedBox(height: AppSpacing.md),
           AppPrimaryButton(
-            label: isDownloading ? 'Descargando...' : 'Descargar en este dispositivo',
+            label: isDownloading
+                ? l10n.offlineDownloadsDownloadingAction
+                : l10n.offlineDownloadsDownloadAction,
             icon: Icons.download_for_offline_rounded,
             isLoading: isDownloading,
             onPressed: isDownloading ? null : onDownload,

@@ -408,6 +408,35 @@ class OfflineDownloadedQuizSummaryModel {
   final int mediaTotal;
 }
 
+class OfflineSessionCheckpointModel {
+  const OfflineSessionCheckpointModel({
+    required this.quizId,
+    required this.contentVersion,
+    required this.currentIndex,
+    required this.selections,
+    required this.startedAt,
+    required this.updatedAt,
+    required this.questionOrder,
+    required this.answerOrderByQuestion,
+  });
+
+  final String quizId;
+  final String contentVersion;
+  final int currentIndex;
+  final Map<String, Set<String>> selections;
+  final DateTime startedAt;
+  final DateTime updatedAt;
+  final List<String> questionOrder;
+  final Map<String, List<String>> answerOrderByQuestion;
+
+  int get answeredCount =>
+      selections.values.where((selected) => selected.isNotEmpty).length;
+
+  bool get hasProgress =>
+      currentIndex > 0 ||
+      selections.values.any((selected) => selected.isNotEmpty);
+}
+
 class OfflineLocalFinishResultModel {
   const OfflineLocalFinishResultModel({
     required this.clientSessionId,

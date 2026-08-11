@@ -13,7 +13,7 @@ class OfflineLocalDatabase {
     final path = await offlineDatabaseFilePath();
     _db = await openDatabase(
       path,
-      version: 2,
+      version: 4,
       onCreate: (db, version) async {
         await _createSchema(db);
       },
@@ -21,6 +21,26 @@ class OfflineLocalDatabase {
         if (oldVersion < 2) {
           await db.execute(
             'ALTER TABLE offline_questions ADD COLUMN answer_key_blob TEXT',
+          );
+        }
+        if (oldVersion < 3) {
+          await db.execute('''
+            CREATE TABLE offline_session_checkpoints (
+              quiz_id TEXT PRIMARY KEY,
+              content_version TEXT NOT NULL,
+              current_index INTEGER NOT NULL,
+              selections_json TEXT NOT NULL,
+              started_at TEXT NOT NULL,
+              updated_at TEXT NOT NULL
+            )
+          ''');
+        }
+        if (oldVersion < 4) {
+          await db.execute(
+            "ALTER TABLE offline_session_checkpoints ADD COLUMN question_order_json TEXT NOT NULL DEFAULT '[]'",
+          );
+          await db.execute(
+            "ALTER TABLE offline_session_checkpoints ADD COLUMN answer_order_json TEXT NOT NULL DEFAULT '{}'",
           );
         }
       },
@@ -99,6 +119,18 @@ class OfflineLocalDatabase {
         last_sync_attempt_at TEXT,
         server_session_id TEXT,
         sync_error TEXT
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE offline_session_checkpoints (
+        quiz_id TEXT PRIMARY KEY,
+        content_version TEXT NOT NULL,
+        current_index INTEGER NOT NULL,
+        selections_json TEXT NOT NULL,
+        started_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        question_order_json TEXT NOT NULL DEFAULT '[]',
+        answer_order_json TEXT NOT NULL DEFAULT '{}'
       )
     ''');
   }

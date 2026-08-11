@@ -127,6 +127,50 @@ class AppLocalizationsEn extends AppLocalizations {
   String get offlineDownloadsDeleteAction => 'Remove download';
 
   @override
+  String get offlineDownloadsUpdateAction => 'Update';
+
+  @override
+  String get offlineDownloadsUpdatingAction => 'Updating…';
+
+  @override
+  String get offlineDownloadsRemoveAction => 'Remove';
+
+  @override
+  String get offlineDownloadsAvailableOnDevice =>
+      'Available offline on this device';
+
+  @override
+  String get offlineDownloadsSectionTitle => 'Practice offline';
+
+  @override
+  String get offlineDownloadsUpgradeHint =>
+      'Download this quiz on your device with a paid plan.';
+
+  @override
+  String get offlineDownloadsDownloadHint =>
+      'Download this quiz on your device to use it without internet.';
+
+  @override
+  String get offlineDownloadsDownloadAction => 'Download on this device';
+
+  @override
+  String get offlineDownloadsDownloadingAction => 'Downloading…';
+
+  @override
+  String get offlineDownloadsViewPlansAction => 'View plans';
+
+  @override
+  String get offlineDownloadsRemoveDialogMessage =>
+      'This quiz will be removed from your device. You can download it again when you are online.';
+
+  @override
+  String get offlineDownloadsRemoveDialogMessageShort =>
+      'This quiz will be removed from your device.';
+
+  @override
+  String get offlineDownloadsRemovedMessage => 'Offline download removed.';
+
+  @override
   String get offlineDownloadsSyncTooltip => 'Sync results';
 
   @override

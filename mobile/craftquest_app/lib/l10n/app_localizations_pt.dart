@@ -127,6 +127,50 @@ class AppLocalizationsPt extends AppLocalizations {
   String get offlineDownloadsDeleteAction => 'Remover download';
 
   @override
+  String get offlineDownloadsUpdateAction => 'Atualizar';
+
+  @override
+  String get offlineDownloadsUpdatingAction => 'Atualizando…';
+
+  @override
+  String get offlineDownloadsRemoveAction => 'Remover';
+
+  @override
+  String get offlineDownloadsAvailableOnDevice =>
+      'Disponivel offline neste dispositivo';
+
+  @override
+  String get offlineDownloadsSectionTitle => 'Pratique offline';
+
+  @override
+  String get offlineDownloadsUpgradeHint =>
+      'Baixe este questionario no seu dispositivo com um plano pago.';
+
+  @override
+  String get offlineDownloadsDownloadHint =>
+      'Baixe este questionario no seu dispositivo para usar sem internet.';
+
+  @override
+  String get offlineDownloadsDownloadAction => 'Baixar neste dispositivo';
+
+  @override
+  String get offlineDownloadsDownloadingAction => 'Baixando…';
+
+  @override
+  String get offlineDownloadsViewPlansAction => 'Ver planos';
+
+  @override
+  String get offlineDownloadsRemoveDialogMessage =>
+      'Este questionario sera removido do seu dispositivo. Voce podera baixa-lo novamente quando estiver online.';
+
+  @override
+  String get offlineDownloadsRemoveDialogMessageShort =>
+      'Este questionario sera removido do seu dispositivo.';
+
+  @override
+  String get offlineDownloadsRemovedMessage => 'Download offline removido.';
+
+  @override
   String get offlineDownloadsSyncTooltip => 'Sincronizar resultados';
 
   @override

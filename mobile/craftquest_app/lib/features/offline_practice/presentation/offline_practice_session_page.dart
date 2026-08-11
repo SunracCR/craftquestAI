@@ -9,12 +9,12 @@ import 'package:craftquest_app/core/widgets/app_buttons.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/core/widgets/practice_selection_hint.dart';
-import 'package:craftquest_app/features/offline_practice/data/offline_local_grader.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_package_repository.dart';
 import 'package:craftquest_app/features/offline_practice/domain/offline_sync_manager.dart';
 import 'package:craftquest_app/features/offline_practice/presentation/cubit/offline_practice_session_cubit.dart';
 import 'package:craftquest_app/features/offline_practice/presentation/cubit/offline_practice_session_state.dart';
 import 'package:craftquest_app/features/offline_practice/presentation/offline_practice_review_page.dart';
+import 'package:craftquest_app/features/offline_practice/presentation/widgets/offline_practice_resume_dialog.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -35,30 +35,62 @@ class OfflinePracticeSessionPage extends StatelessWidget {
       appBar: AppBar(
         title: Text(quizTitle),
       ),
-      body: BlocBuilder<OfflinePracticeSessionCubit, OfflinePracticeSessionState>(
-        builder: (context, state) {
-          switch (state.status) {
-            case OfflinePracticeSessionStatus.loading:
-              return const Center(child: CircularProgressIndicator());
-            case OfflinePracticeSessionStatus.error:
-              final message = state.errorMessage == 'offline_download_needs_update'
-                  ? l10n.offlineDownloadNeedsUpdate
-                  : (state.errorMessage ?? l10n.genericRequestErrorMessage);
-              return AppErrorView(
-                message: message,
-                retryLabel: l10n.retry,
-                onRetry: () => context.read<OfflinePracticeSessionCubit>().load(),
-              );
-            case OfflinePracticeSessionStatus.finished:
-              return _FinishedView(
-                state: state,
-                quizTitle: quizTitle,
-              );
-            case OfflinePracticeSessionStatus.ready:
-            case OfflinePracticeSessionStatus.answering:
-              return _QuestionView(state: state);
+      body: BlocListener<OfflinePracticeSessionCubit, OfflinePracticeSessionState>(
+        listenWhen: (previous, current) =>
+            previous.pendingCheckpoint == null &&
+            current.pendingCheckpoint != null,
+        listener: (context, state) async {
+          final checkpoint = state.pendingCheckpoint!;
+          final choice = await showOfflinePracticeResumeDialog(
+            context,
+            answeredCount: checkpoint.answeredCount,
+            totalQuestions: state.totalQuestions,
+          );
+          if (!context.mounted) {
+            return;
+          }
+
+          final cubit = context.read<OfflinePracticeSessionCubit>();
+          switch (choice) {
+            case OfflinePracticeResumeChoice.resume:
+              cubit.applyCheckpoint();
+            case OfflinePracticeResumeChoice.startNew:
+              await cubit.discardCheckpoint();
+            case OfflinePracticeResumeChoice.cancel:
+            case null:
+              Navigator.of(context).pop();
           }
         },
+        child: BlocBuilder<OfflinePracticeSessionCubit, OfflinePracticeSessionState>(
+          builder: (context, state) {
+            switch (state.status) {
+              case OfflinePracticeSessionStatus.loading:
+                return const Center(child: CircularProgressIndicator());
+              case OfflinePracticeSessionStatus.error:
+                final message =
+                    state.errorMessage == 'offline_download_needs_update'
+                        ? l10n.offlineDownloadNeedsUpdate
+                        : (state.errorMessage ?? l10n.genericRequestErrorMessage);
+                return AppErrorView(
+                  message: message,
+                  retryLabel: l10n.retry,
+                  onRetry: () =>
+                      context.read<OfflinePracticeSessionCubit>().load(),
+                );
+              case OfflinePracticeSessionStatus.finished:
+                return _FinishedView(
+                  state: state,
+                  quizTitle: quizTitle,
+                );
+              case OfflinePracticeSessionStatus.ready:
+              case OfflinePracticeSessionStatus.answering:
+                if (state.pendingCheckpoint != null) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                return _QuestionView(state: state);
+            }
+          },
+        ),
       ),
     );
   }
@@ -82,10 +114,7 @@ class _QuestionView extends StatelessWidget {
     }
 
     final selected = state.selections[question.questionId] ?? {};
-    final displayOptions = question.answerOptions
-        .where((o) => !OfflineLocalGrader.isQuestionImageStem(o.stableKey))
-        .toList()
-      ..sort((a, b) => a.defaultSortOrder.compareTo(b.defaultSortOrder));
+    final displayOptions = state.orderedAnswerOptions(question);
 
     final isLastQuestion = state.currentIndex + 1 >= state.totalQuestions;
     final isSingleSelect = isSingleSelectQuestionType(question.questionType);
