@@ -398,7 +398,7 @@ class _CompactQuizListTile extends StatelessWidget {
               tooltip: moveTooltip,
               visualDensity: VisualDensity.compact,
               icon: const Icon(
-                Icons.drive_file_move_outline_rounded,
+                Icons.drive_file_move_outlined,
                 size: 20,
                 color: AppColors.textSecondary,
               ),

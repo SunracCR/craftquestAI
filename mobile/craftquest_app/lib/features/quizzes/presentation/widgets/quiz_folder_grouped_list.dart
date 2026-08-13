@@ -754,7 +754,7 @@ Future<void> showQuizFolderOptionsSheet({
           ),
           if (onMove != null)
             ListTile(
-              leading: const Icon(Icons.drive_file_move_outline_rounded),
+              leading: const Icon(Icons.drive_file_move_outlined),
               title: Text(l10n.quizFolderMoveFolderAction),
               onTap: () {
                 Navigator.pop(ctx);
