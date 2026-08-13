@@ -53,8 +53,10 @@ internal static class QuestionJustificationWriter
             dbContext.Set<QuestionJustificationSource>().RemoveRange(existingSources);
             justification.Sources.Clear();
         }
-        else if (justification.QuestionJustificationId != Guid.Empty)
+        else if (dbContext.Entry(justification).State != EntityState.Added)
         {
+            // New justifications have nothing in the database yet. ExecuteDelete
+            // with pending inserts fails when SQL Server retry-on-failure is on.
             await dbContext.Set<QuestionJustificationSource>()
                 .Where(s => s.QuestionJustificationId == justification.QuestionJustificationId)
                 .ExecuteDeleteAsync(cancellationToken);

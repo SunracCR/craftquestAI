@@ -27,7 +27,7 @@ La app Flutter envía `verify-purchase` tras `in_app_purchase`; el backend valid
   "PlanProducts": {
     "pro": {
       "GooglePlayProductId": "craftquest_pro_monthly",
-      "GooglePlayAnnualProductId": "craftquest_pro_annual",
+      "GooglePlayAnnualProductId": "craftquest_pro_annualv2",
       "AppStoreProductId": "craftquest_pro_monthly",
       "AppStoreAnnualProductId": "craftquest_pro_annual"
     },

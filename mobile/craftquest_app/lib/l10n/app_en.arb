@@ -403,6 +403,8 @@
   "quizFolderCreateSubfolderAction": "Create subfolder",
   "quizFolderMoveQuizAction": "Move to folder",
   "quizFolderMoveQuizTitle": "Move quiz",
+  "quizFolderMoveFolderAction": "Move folder",
+  "quizFolderMoveFolderTitle": "Move folder",
   "quizFolderUncategorized": "Uncategorized",
   "quizFolderNameHint": "Folder name",
   "quizFolderDeleteConfirmTitle": "Delete folder?",

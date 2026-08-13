@@ -997,6 +997,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quizFolderMoveQuizTitle => 'Move quiz';
 
   @override
+  String get quizFolderMoveFolderAction => 'Move folder';
+
+  @override
+  String get quizFolderMoveFolderTitle => 'Move folder';
+
+  @override
   String get quizFolderUncategorized => 'Uncategorized';
 
   @override

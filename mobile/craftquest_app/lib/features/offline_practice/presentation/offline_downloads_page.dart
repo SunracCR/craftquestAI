@@ -10,6 +10,7 @@ import 'package:craftquest_app/features/offline_practice/data/offline_sync_repos
 import 'package:craftquest_app/features/offline_practice/domain/offline_sync_manager.dart';
 import 'package:craftquest_app/features/offline_practice/presentation/cubit/offline_practice_session_cubit.dart';
 import 'package:craftquest_app/features/offline_practice/presentation/offline_practice_session_page.dart';
+import 'package:craftquest_app/features/practice/data/practice_preferences_repository.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -70,6 +71,20 @@ class _OfflineDownloadsPageState extends State<OfflineDownloadsPage> {
   }
 
   Future<void> _openOfflineQuiz(OfflineDownloadedQuizSummaryModel item) async {
+    bool? randomizeQuestions;
+    try {
+      final prefs =
+          await getIt<PracticePreferencesRepository>().loadLaunchOptions(
+        item.quizId,
+      );
+      randomizeQuestions = prefs.randomizeQuestions;
+    } catch (_) {
+      try {
+        final package = await _repository.loadStoredQuizContent(item.quizId);
+        randomizeQuestions = package?.randomizeQuestions;
+      } catch (_) {}
+    }
+
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         builder: (_) => BlocProvider(
@@ -78,6 +93,7 @@ class _OfflineDownloadsPageState extends State<OfflineDownloadsPage> {
             syncRepository: _syncRepository,
             checkpointRepository: getIt<OfflineSessionCheckpointRepository>(),
             quizId: item.quizId,
+            randomizeQuestions: randomizeQuestions,
           )..load(),
           child: OfflinePracticeSessionPage(
             quizTitle: item.title,

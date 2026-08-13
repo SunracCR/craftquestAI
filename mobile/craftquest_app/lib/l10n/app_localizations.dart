@@ -1767,6 +1767,18 @@ abstract class AppLocalizations {
   /// **'Mover cuestionario'**
   String get quizFolderMoveQuizTitle;
 
+  /// No description provided for @quizFolderMoveFolderAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Mover carpeta'**
+  String get quizFolderMoveFolderAction;
+
+  /// No description provided for @quizFolderMoveFolderTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Mover carpeta'**
+  String get quizFolderMoveFolderTitle;
+
   /// No description provided for @quizFolderUncategorized.
   ///
   /// In es, this message translates to:

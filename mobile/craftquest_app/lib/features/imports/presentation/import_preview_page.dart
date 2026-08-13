@@ -143,27 +143,67 @@ class _ImportPreviewPageState extends State<ImportPreviewPage> {
     try {
       final result = await _repository.confirm(widget.importId);
       if (!mounted) return;
-      if (result.skippedDueToPlanLimit > 0 &&
-          result.maxQuestionsPerQuiz != null) {
-        context.showInfoSnackBar(
-          l10n.importPlanLimitConfirmNotice(
-            result.createdQuestions,
-            result.planName ?? 'Free',
-            result.maxQuestionsPerQuiz!,
-            result.skippedDueToPlanLimit,
-          ),
-        );
-      } else {
-        context.showSuccessSnackBar(
-          l10n.importConfirmSuccess(result.createdQuestions),
-        );
-      }
-      Navigator.of(context).pop(true);
+      _finishConfirm(l10n, result);
     } on DioException catch (e) {
       if (!mounted) return;
+      final recovered = await _recoverIfAlreadyImported();
+      if (!mounted) return;
+      if (recovered != null) {
+        _finishConfirm(l10n, recovered);
+        return;
+      }
       context.showDioErrorSnackBar(e);
+    } catch (_) {
+      if (!mounted) return;
+      final recovered = await _recoverIfAlreadyImported();
+      if (!mounted) return;
+      if (recovered != null) {
+        _finishConfirm(l10n, recovered);
+        return;
+      }
+      context.showErrorSnackBar(DioErrorMapper.genericMessage());
     } finally {
       if (mounted) setState(() => _confirming = false);
+    }
+  }
+
+  void _finishConfirm(AppLocalizations l10n, ImportConfirmResultModel result) {
+    if (result.skippedDueToPlanLimit > 0 && result.maxQuestionsPerQuiz != null) {
+      context.showInfoSnackBar(
+        l10n.importPlanLimitConfirmNotice(
+          result.createdQuestions,
+          result.planName ?? 'Free',
+          result.maxQuestionsPerQuiz!,
+          result.skippedDueToPlanLimit,
+        ),
+      );
+    } else {
+      context.showSuccessSnackBar(
+        l10n.importConfirmSuccess(result.createdQuestions),
+      );
+    }
+    Navigator.of(context).pop(true);
+  }
+
+  Future<ImportConfirmResultModel?> _recoverIfAlreadyImported() async {
+    try {
+      final preview = await _repository.getPreview(
+        widget.importId,
+        forceRefresh: true,
+      );
+      final completed = preview.status == 'completed' ||
+          preview.status == 'completed_with_errors' ||
+          preview.status == 'confirmed';
+      if (!completed || preview.validQuestions <= 0) {
+        return null;
+      }
+      return ImportConfirmResultModel(
+        importId: preview.importId,
+        createdQuestions: preview.validQuestions,
+        skippedQuestions: preview.questionsWithErrors,
+      );
+    } catch (_) {
+      return null;
     }
   }
 

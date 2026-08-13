@@ -53,6 +53,10 @@ class ImportRepository {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/api/quizzes/$quizId/question-imports/process-file',
       data: formData,
+      options: Options(
+        receiveTimeout: const Duration(minutes: 2),
+        sendTimeout: const Duration(seconds: 60),
+      ),
     );
     return ImportStatusModel.fromJson(response.data!);
   }

@@ -659,6 +659,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
             checkpointRepository: getIt<OfflineSessionCheckpointRepository>(),
             quizId: widget.quizId,
             showElapsedTimer: _showTimer,
+            randomizeQuestions: _randomizeQuestions,
           )..load(),
           child: OfflinePracticeSessionPage(quizTitle: _quizTitle),
         ),

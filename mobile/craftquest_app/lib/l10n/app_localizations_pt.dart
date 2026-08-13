@@ -999,6 +999,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get quizFolderMoveQuizTitle => 'Mover questionario';
 
   @override
+  String get quizFolderMoveFolderAction => 'Mover pasta';
+
+  @override
+  String get quizFolderMoveFolderTitle => 'Mover pasta';
+
+  @override
   String get quizFolderUncategorized => 'Sem pasta';
 
   @override

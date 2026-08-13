@@ -403,6 +403,8 @@
   "quizFolderCreateSubfolderAction": "Crear subcarpeta",
   "quizFolderMoveQuizAction": "Mover a carpeta",
   "quizFolderMoveQuizTitle": "Mover cuestionario",
+  "quizFolderMoveFolderAction": "Mover carpeta",
+  "quizFolderMoveFolderTitle": "Mover carpeta",
   "quizFolderUncategorized": "Sin carpeta",
   "quizFolderNameHint": "Nombre de la carpeta",
   "quizFolderDeleteConfirmTitle": "¿Eliminar carpeta?",

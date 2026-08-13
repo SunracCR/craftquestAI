@@ -15,14 +15,17 @@ class OfflineSessionOrder {
 
 OfflineSessionOrder generateFreshOrder(
   OfflineQuizPackageModel quiz, {
+  bool? randomizeQuestionsOverride,
   Random? random,
 }) {
   final rng = random ?? Random();
+  final shouldRandomizeQuestions =
+      randomizeQuestionsOverride ?? quiz.randomizeQuestions;
   final canonicalQuestions = List<OfflinePackageQuestionModel>.from(quiz.questions)
     ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
   final questionOrder = canonicalQuestions.map((q) => q.questionId).toList();
-  if (quiz.randomizeQuestions && questionOrder.length > 1) {
+  if (shouldRandomizeQuestions && questionOrder.length > 1) {
     _shuffleInPlace(questionOrder, rng);
   }
 

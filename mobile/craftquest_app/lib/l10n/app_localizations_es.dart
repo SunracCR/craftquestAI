@@ -1003,6 +1003,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get quizFolderMoveQuizTitle => 'Mover cuestionario';
 
   @override
+  String get quizFolderMoveFolderAction => 'Mover carpeta';
+
+  @override
+  String get quizFolderMoveFolderTitle => 'Mover carpeta';
+
+  @override
   String get quizFolderUncategorized => 'Sin carpeta';
 
   @override

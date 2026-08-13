@@ -18,6 +18,7 @@ class OfflinePracticeSessionCubit extends Cubit<OfflinePracticeSessionState> {
     required OfflineSessionCheckpointRepository checkpointRepository,
     required String quizId,
     this.showElapsedTimer = false,
+    this.randomizeQuestions,
   })  : _packageRepository = packageRepository,
         _syncRepository = syncRepository,
         _checkpointRepository = checkpointRepository,
@@ -29,7 +30,14 @@ class OfflinePracticeSessionCubit extends Cubit<OfflinePracticeSessionState> {
   final OfflineSessionCheckpointRepository _checkpointRepository;
   final String _quizId;
   final bool showElapsedTimer;
+  final bool? randomizeQuestions;
   final _uuid = const Uuid();
+
+  OfflineSessionOrder _generateSessionOrder(OfflineQuizPackageModel quiz) =>
+      generateFreshOrder(
+        quiz,
+        randomizeQuestionsOverride: randomizeQuestions,
+      );
 
   Future<void> load() async {
     emit(state.copyWith(status: OfflinePracticeSessionStatus.loading));
@@ -74,7 +82,7 @@ class OfflinePracticeSessionCubit extends Cubit<OfflinePracticeSessionState> {
         );
       }
 
-      final freshOrder = generateFreshOrder(quiz);
+      final freshOrder = _generateSessionOrder(quiz);
 
       var pendingCheckpoint = await _checkpointRepository.loadCheckpoint(_quizId);
       if (pendingCheckpoint != null &&
@@ -144,11 +152,19 @@ class OfflinePracticeSessionCubit extends Cubit<OfflinePracticeSessionState> {
 
   Future<void> discardCheckpoint() async {
     await _checkpointRepository.clearCheckpoint(_quizId);
+    final quiz = state.quiz;
+    if (quiz == null) {
+      return;
+    }
+
+    final freshOrder = _generateSessionOrder(quiz);
     emit(
       state.copyWith(
         currentIndex: 0,
         selections: const {},
         startedAt: DateTime.now().toUtc(),
+        questionOrder: freshOrder.questionOrder,
+        answerOrderByQuestion: freshOrder.answerOrderByQuestion,
         clearPendingCheckpoint: true,
       ),
     );

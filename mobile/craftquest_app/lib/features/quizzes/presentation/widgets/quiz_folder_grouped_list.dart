@@ -3,6 +3,7 @@ import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/features/quizzes/data/models/quiz_models.dart';
 import 'package:craftquest_app/features/quizzes/presentation/utils/quiz_folder_tree.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 typedef QuizListItemBuilder = Widget Function(QuizModel quiz);
@@ -455,7 +456,7 @@ class _FolderSection extends StatelessWidget {
     );
 
     if (enableDrag) {
-      header = LongPressDraggable<QuizDragData>(
+      header = _folderOrQuizDraggable(
         data: QuizFolderDrag(node.folder),
         feedback: _DragFeedbackChip(
           label: node.folder.name,
@@ -463,8 +464,7 @@ class _FolderSection extends StatelessWidget {
           icon: Icons.folder_rounded,
         ),
         onDragStarted: () => onDragStarted?.call(QuizFolderDrag(node.folder)),
-        onDragEnd: (_) => onDragEnded?.call(),
-        childWhenDragging: Opacity(opacity: 0.45, child: header),
+        onDragEnded: onDragEnded,
         child: header,
       );
     }
@@ -631,7 +631,7 @@ class _QuizTileWrapper extends StatelessWidget {
       );
     }
 
-    return LongPressDraggable<QuizDragData>(
+    return _folderOrQuizDraggable(
       data: QuizItemDrag(quiz),
       feedback: _DragFeedbackChip(
         label: quiz.title,
@@ -639,11 +639,44 @@ class _QuizTileWrapper extends StatelessWidget {
         icon: Icons.quiz_outlined,
       ),
       onDragStarted: () => onDragStarted?.call(QuizItemDrag(quiz)),
+      onDragEnded: onDragEnded,
+      child: child,
+    );
+  }
+}
+
+bool get _usesPointerDrag =>
+    kIsWeb ||
+    defaultTargetPlatform == TargetPlatform.windows ||
+    defaultTargetPlatform == TargetPlatform.macOS ||
+    defaultTargetPlatform == TargetPlatform.linux;
+
+Widget _folderOrQuizDraggable({
+  required QuizDragData data,
+  required Widget feedback,
+  required Widget child,
+  required VoidCallback onDragStarted,
+  VoidCallback? onDragEnded,
+}) {
+  if (_usesPointerDrag) {
+    return Draggable<QuizDragData>(
+      data: data,
+      feedback: feedback,
+      onDragStarted: onDragStarted,
       onDragEnd: (_) => onDragEnded?.call(),
       childWhenDragging: Opacity(opacity: 0.45, child: child),
       child: child,
     );
   }
+
+  return LongPressDraggable<QuizDragData>(
+    data: data,
+    feedback: feedback,
+    onDragStarted: onDragStarted,
+    onDragEnd: (_) => onDragEnded?.call(),
+    childWhenDragging: Opacity(opacity: 0.45, child: child),
+    child: child,
+  );
 }
 
 class _DragFeedbackChip extends StatelessWidget {
@@ -697,6 +730,7 @@ Future<void> showQuizFolderOptionsSheet({
   required VoidCallback onRename,
   required VoidCallback onDelete,
   VoidCallback? onCreateSubfolder,
+  VoidCallback? onMove,
 }) async {
   final l10n = AppLocalizations.of(context)!;
 
@@ -718,6 +752,15 @@ Future<void> showQuizFolderOptionsSheet({
               onRename();
             },
           ),
+          if (onMove != null)
+            ListTile(
+              leading: const Icon(Icons.drive_file_move_outline_rounded),
+              title: Text(l10n.quizFolderMoveFolderAction),
+              onTap: () {
+                Navigator.pop(ctx);
+                onMove();
+              },
+            ),
           if (onCreateSubfolder != null && node.folder.canHaveSubfolders)
             ListTile(
               leading: const Icon(Icons.create_new_folder_outlined),

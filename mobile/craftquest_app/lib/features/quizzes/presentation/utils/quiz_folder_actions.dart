@@ -87,6 +87,8 @@ Future<String?> showMoveQuizFolderPicker({
   required List<QuizFolderNode> folderTree,
   String? currentFolderId,
   String? excludeFolderId,
+  String? title,
+  String? movingFolderId,
 }) async {
   final l10n = AppLocalizations.of(context)!;
 
@@ -105,7 +107,19 @@ Future<String?> showMoveQuizFolderPicker({
           depth: 0,
         ),
         ...flattenFolderTree(folderTree)
-            .where((folder) => folder.quizFolderId != excludeFolderId)
+            .where((folder) {
+              if (folder.quizFolderId == excludeFolderId) {
+                return false;
+              }
+              if (movingFolderId == null) {
+                return true;
+              }
+              return canDropFolderInto(
+                folders: folders,
+                dragFolderId: movingFolderId,
+                targetFolderId: folder.quizFolderId,
+              );
+            })
             .map(
               (folder) => _FolderPickOption(
                 id: folder.quizFolderId,
@@ -123,7 +137,7 @@ Future<String?> showMoveQuizFolderPicker({
             Padding(
               padding: const EdgeInsets.all(AppSpacing.md),
               child: Text(
-                l10n.quizFolderMoveQuizTitle,
+                title ?? l10n.quizFolderMoveQuizTitle,
                 style: Theme.of(ctx).textTheme.titleMedium,
               ),
             ),
@@ -387,6 +401,35 @@ Future<void> moveQuizToFolderFlow({
         );
       }
     },
+    onSuccess: onSuccess,
+  );
+}
+
+Future<void> moveFolderToFolderFlow({
+  required BuildContext context,
+  required QuizRepository repository,
+  required QuizFolderModel folder,
+  required List<QuizFolderModel> folders,
+  required List<QuizFolderNode> folderTree,
+  required VoidCallback onSuccess,
+}) async {
+  final l10n = AppLocalizations.of(context)!;
+  final picked = await showMoveQuizFolderPicker(
+    context: context,
+    folders: folders,
+    folderTree: folderTree,
+    currentFolderId: folder.parentFolderId,
+    excludeFolderId: folder.quizFolderId,
+    movingFolderId: folder.quizFolderId,
+    title: l10n.quizFolderMoveFolderTitle,
+  );
+  if (picked == null || !context.mounted) return;
+
+  await moveFolderFlow(
+    context: context,
+    repository: repository,
+    folder: folder,
+    newParentId: picked == '__uncategorized__' ? null : picked,
     onSuccess: onSuccess,
   );
 }

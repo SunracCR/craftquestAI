@@ -151,6 +151,14 @@ class _QuizListPageState extends State<QuizListPage> with ScreenLoadGeneration {
         folder: node.folder,
         onSuccess: _load,
       ),
+      onMove: () => moveFolderToFolderFlow(
+        context: context,
+        repository: _repository,
+        folder: node.folder,
+        folders: _folders,
+        folderTree: _folderTree,
+        onSuccess: _load,
+      ),
       onDelete: () => deleteQuizFolderFlow(
         context: context,
         repository: _repository,
@@ -216,6 +224,8 @@ class _QuizListPageState extends State<QuizListPage> with ScreenLoadGeneration {
       accentColor: accent,
       leadingIcon:
           isPublished ? Icons.check_circle_rounded : Icons.edit_note_rounded,
+      onMove: _folders.isEmpty ? null : () => _moveQuiz(quiz),
+      moveTooltip: l10n.quizFolderMoveQuizAction,
       onTap: () async {
         await Navigator.of(context).push(
           MaterialPageRoute<void>(
@@ -313,6 +323,8 @@ class _CompactQuizListTile extends StatelessWidget {
     required this.accentColor,
     required this.leadingIcon,
     required this.onTap,
+    this.onMove,
+    this.moveTooltip,
   });
 
   final String title;
@@ -320,6 +332,8 @@ class _CompactQuizListTile extends StatelessWidget {
   final Color accentColor;
   final IconData leadingIcon;
   final VoidCallback onTap;
+  final VoidCallback? onMove;
+  final String? moveTooltip;
 
   @override
   Widget build(BuildContext context) {
@@ -327,53 +341,70 @@ class _CompactQuizListTile extends StatelessWidget {
       color: AppColors.surfaceHighlight,
       borderRadius: BorderRadius.circular(AppColors.radiusSm),
       clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm,
-            vertical: AppSpacing.xs,
-          ),
-          child: Row(
-            children: [
-              Icon(
-                leadingIcon,
-                size: 18,
-                color: accentColor,
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        children: [
+          Expanded(
+            child: InkWell(
+              onTap: onTap,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm,
+                  vertical: AppSpacing.xs,
+                ),
+                child: Row(
                   children: [
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                    Icon(
+                      leadingIcon,
+                      size: 18,
+                      color: accentColor,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: AppColors.textSecondary,
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
                           ),
+                          const SizedBox(height: 2),
+                          Text(
+                            subtitle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 20,
+                      color: accentColor.withValues(alpha: 0.75),
                     ),
                   ],
                 ),
               ),
-              Icon(
-                Icons.chevron_right_rounded,
-                size: 20,
-                color: accentColor.withValues(alpha: 0.75),
-              ),
-            ],
+            ),
           ),
-        ),
+          if (onMove != null)
+            IconButton(
+              tooltip: moveTooltip,
+              visualDensity: VisualDensity.compact,
+              icon: const Icon(
+                Icons.drive_file_move_outline_rounded,
+                size: 20,
+                color: AppColors.textSecondary,
+              ),
+              onPressed: onMove,
+            ),
+        ],
       ),
     );
   }

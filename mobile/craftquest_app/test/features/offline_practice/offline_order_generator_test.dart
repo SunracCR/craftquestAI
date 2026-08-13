@@ -41,6 +41,25 @@ void main() {
       expect(sawDifferentQuestionOrder, isTrue);
       expect(sawDifferentAnswerOrder, isTrue);
     });
+
+    test('uses randomizeQuestionsOverride over quiz setting', () {
+      final quiz = _buildQuiz(
+        randomizeQuestions: false,
+        randomizeAnswerOptions: false,
+      );
+
+      var sawDifferentQuestionOrder = false;
+      for (var seed = 0; seed < 100; seed++) {
+        final order = generateFreshOrder(
+          quiz,
+          randomizeQuestionsOverride: true,
+          random: Random(seed),
+        );
+        sawDifferentQuestionOrder |= order.questionOrder != ['q1', 'q2'];
+      }
+
+      expect(sawDifferentQuestionOrder, isTrue);
+    });
   });
 
   group('isValidOrderForQuiz', () {

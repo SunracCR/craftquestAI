@@ -177,6 +177,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
             checkpointRepository: getIt<OfflineSessionCheckpointRepository>(),
             quizId: quizId,
             showElapsedTimer: _showTimer,
+            randomizeQuestions: _randomizeQuestions,
           )..load(),
           child: OfflinePracticeSessionPage(quizTitle: title),
         ),

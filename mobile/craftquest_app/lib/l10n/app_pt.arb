@@ -403,6 +403,8 @@
   "quizFolderCreateSubfolderAction": "Criar subpasta",
   "quizFolderMoveQuizAction": "Mover para pasta",
   "quizFolderMoveQuizTitle": "Mover questionario",
+  "quizFolderMoveFolderAction": "Mover pasta",
+  "quizFolderMoveFolderTitle": "Mover pasta",
   "quizFolderUncategorized": "Sem pasta",
   "quizFolderNameHint": "Nome da pasta",
   "quizFolderDeleteConfirmTitle": "Excluir pasta?",

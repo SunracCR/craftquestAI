@@ -8,6 +8,7 @@ using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.Services.Ai;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace CraftQuest.Infrastructure.Services;
 
@@ -15,7 +16,8 @@ public class QuestionImportService(
     CraftQuestDbContext dbContext,
     IQuizService quizService,
     IBillingService billingService,
-    AiGenerationTraceContext trace) : IQuestionImportService
+    AiGenerationTraceContext trace,
+    ILogger<QuestionImportService> logger) : IQuestionImportService
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -299,7 +301,7 @@ public class QuestionImportService(
 
         if (batch.Status is "confirmed" or "completed" or "completed_with_errors")
         {
-            throw new AppException("Import batch was already confirmed.", 400);
+            return await MapCompletedConfirmResultAsync(userId, batch, cancellationToken);
         }
 
         if (batch.QuizId is null)
@@ -325,7 +327,6 @@ public class QuestionImportService(
             quizId,
             cancellationToken);
         var createdIds = new List<Guid>();
-        var rowOutcomes = new Dictionary<Guid, (string Status, Guid? CreatedQuestionId)>();
         var confirmErrors = new List<QuestionImportError>();
         var skippedDueToPlanLimit = 0;
 
@@ -357,7 +358,7 @@ public class QuestionImportService(
             if (capacity.MaxQuestionsPerQuiz.HasValue
                 && createdIds.Count >= capacity.RemainingSlots)
             {
-                rowOutcomes[row.QuestionImportRowId] = ("skipped", null);
+                row.Status = "skipped";
                 skippedDueToPlanLimit++;
                 continue;
             }
@@ -371,7 +372,7 @@ public class QuestionImportService(
 
             if (!questionTypes.TryGetValue(createRequest.QuestionType, out var questionType))
             {
-                rowOutcomes[row.QuestionImportRowId] = ("error", null);
+                row.Status = "error";
                 confirmErrors.Add(new QuestionImportError
                 {
                     QuestionImportErrorId = Guid.NewGuid(),
@@ -401,11 +402,12 @@ public class QuestionImportService(
                     preloadedQuestionType: questionType);
 
                 createdIds.Add(created.QuestionId);
-                rowOutcomes[row.QuestionImportRowId] = ("created", created.QuestionId);
+                row.Status = "created";
+                row.CreatedQuestionId = created.QuestionId;
             }
-            catch (AppException ex)
+            catch (Exception ex)
             {
-                rowOutcomes[row.QuestionImportRowId] = ("error", null);
+                row.Status = "error";
                 confirmErrors.Add(new QuestionImportError
                 {
                     QuestionImportErrorId = Guid.NewGuid(),
@@ -413,37 +415,18 @@ public class QuestionImportService(
                     QuestionImportRowId = row.QuestionImportRowId,
                     FieldName = "confirm",
                     ErrorCode = "CONFIRM_FAILED",
-                    ErrorMessage = ex.Message,
+                    ErrorMessage = ex is AppException ? ex.Message : "Question could not be imported.",
                     Severity = "error",
                     CreatedAt = DateTime.UtcNow,
                 });
-            }
-        }
-
-        if (createdIds.Count > 0)
-        {
-            await dbContext.SaveChangesAsync(cancellationToken);
-        }
-
-        // CreateQuestionAsync may track entities in the same DbContext; clear the tracker
-        // so import row/batch updates are not applied with stale state (DbUpdateConcurrencyException).
-        dbContext.ChangeTracker.Clear();
-
-        batch = await dbContext.QuestionImportBatches
-            .Include(b => b.Rows)
-            .FirstAsync(b => b.QuestionImportBatchId == batchId, cancellationToken);
-
-        if (batch.UploadedByUserId != userId)
-        {
-            throw new AppException("Import batch not found.", 404);
-        }
-
-        foreach (var row in batch.Rows)
-        {
-            if (rowOutcomes.TryGetValue(row.QuestionImportRowId, out var outcome))
-            {
-                row.Status = outcome.Status;
-                row.CreatedQuestionId = outcome.CreatedQuestionId;
+                if (ex is not AppException)
+                {
+                    logger.LogError(
+                        ex,
+                        "Unexpected error confirming import row {RowNumber} for batch {BatchId}",
+                        row.RowNumber,
+                        batchId);
+                }
             }
         }
 
@@ -472,6 +455,38 @@ public class QuestionImportService(
             SkippedDueToPlanLimit = skippedDueToPlanLimit,
             MaxQuestionsPerQuiz = capacity.MaxQuestionsPerQuiz,
             PlanName = capacity.PlanName,
+            CreatedQuestionIds = createdIds,
+        };
+    }
+
+    private async Task<QuestionImportConfirmResultDto> MapCompletedConfirmResultAsync(
+        Guid userId,
+        QuestionImportBatch batch,
+        CancellationToken cancellationToken)
+    {
+        QuizQuestionCapacityDto? capacity = null;
+        if (batch.QuizId is Guid quizId)
+        {
+            capacity = await billingService.GetQuizQuestionCapacityAsync(
+                userId,
+                quizId,
+                cancellationToken);
+        }
+
+        var createdIds = batch.Rows
+            .Where(r => r.CreatedQuestionId is not null)
+            .OrderBy(r => r.RowNumber)
+            .Select(r => r.CreatedQuestionId!.Value)
+            .ToList();
+
+        return new QuestionImportConfirmResultDto
+        {
+            ImportId = batch.QuestionImportBatchId,
+            CreatedQuestions = createdIds.Count,
+            SkippedQuestions = batch.Rows.Count(r => r.Status is not "created"),
+            SkippedDueToPlanLimit = batch.Rows.Count(r => r.Status == "skipped"),
+            MaxQuestionsPerQuiz = capacity?.MaxQuestionsPerQuiz,
+            PlanName = capacity?.PlanName,
             CreatedQuestionIds = createdIds,
         };
     }
