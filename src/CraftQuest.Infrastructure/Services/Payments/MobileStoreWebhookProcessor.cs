@@ -6,6 +6,7 @@ using CraftQuest.Application.Options;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace CraftQuest.Infrastructure.Services.Payments;
@@ -14,39 +15,123 @@ public sealed class MobileStoreWebhookProcessor(
     CraftQuestDbContext dbContext,
     IBillingService billingService,
     AppleAppStoreJwsVerifier appleJwsVerifier,
-    IOptions<PaymentOptions> options)
+    IOptions<PaymentOptions> options,
+    ILogger<MobileStoreWebhookProcessor> logger)
 {
     public async Task ProcessGooglePlayPubSubAsync(
         string rawBody,
         CancellationToken cancellationToken = default)
     {
-        using var doc = JsonDocument.Parse(rawBody);
-        if (!doc.RootElement.TryGetProperty("message", out var message)
-            || !message.TryGetProperty("data", out var dataEl))
+        if (string.IsNullOrWhiteSpace(rawBody))
         {
-            throw new AppException("Invalid Google Play Pub/Sub payload.", 400);
-        }
-
-        var decoded = Encoding.UTF8.GetString(
-            Convert.FromBase64String(dataEl.GetString()!));
-
-        using var notification = JsonDocument.Parse(decoded);
-        var root = notification.RootElement;
-        if (!root.TryGetProperty("subscriptionNotification", out var subNotification))
-        {
+            logger.LogWarning("Google Play Pub/Sub webhook received an empty body.");
             return;
         }
 
-        var purchaseToken = subNotification.GetProperty("purchaseToken").GetString();
-        var notificationType = subNotification.GetProperty("notificationType").GetInt32();
-        if (string.IsNullOrWhiteSpace(purchaseToken))
+        JsonDocument pubSubEnvelope;
+        try
         {
+            pubSubEnvelope = JsonDocument.Parse(rawBody);
+        }
+        catch (JsonException ex)
+        {
+            logger.LogWarning(ex, "Google Play Pub/Sub webhook body is not valid JSON.");
             return;
         }
 
-        var eventId = root.TryGetProperty("eventIdMillis", out var eventIdEl)
-            ? $"gp-{eventIdEl.GetInt64()}"
-            : $"gp-{Guid.NewGuid():N}";
+        using (pubSubEnvelope)
+        {
+            if (!pubSubEnvelope.RootElement.TryGetProperty("message", out var message)
+                || !message.TryGetProperty("data", out var dataEl))
+            {
+                logger.LogWarning("Google Play Pub/Sub payload is missing message.data.");
+                return;
+            }
+
+            var dataBase64 = dataEl.GetString();
+            if (string.IsNullOrWhiteSpace(dataBase64))
+            {
+                logger.LogWarning("Google Play Pub/Sub payload has an empty message.data field.");
+                return;
+            }
+
+            string decoded;
+            try
+            {
+                decoded = Encoding.UTF8.GetString(Convert.FromBase64String(dataBase64));
+            }
+            catch (FormatException ex)
+            {
+                logger.LogWarning(ex, "Google Play Pub/Sub message.data is not valid Base64.");
+                return;
+            }
+
+            JsonDocument notification;
+            try
+            {
+                notification = JsonDocument.Parse(decoded);
+            }
+            catch (JsonException ex)
+            {
+                logger.LogWarning(ex, "Google Play Pub/Sub decoded payload is not valid JSON.");
+                return;
+            }
+
+            using (notification)
+            {
+                var root = notification.RootElement;
+
+                if (root.TryGetProperty("testNotification", out _))
+                {
+                    logger.LogInformation("Google Play Pub/Sub test notification received.");
+                    return;
+                }
+
+                if (!root.TryGetProperty("subscriptionNotification", out var subNotification))
+                {
+                    logger.LogInformation(
+                        "Google Play Pub/Sub notification ignored (no subscriptionNotification).");
+                    return;
+                }
+
+                if (!subNotification.TryGetProperty("purchaseToken", out var purchaseTokenEl)
+                    || !subNotification.TryGetProperty("notificationType", out var notificationTypeEl))
+                {
+                    logger.LogWarning(
+                        "Google Play subscriptionNotification is missing purchaseToken or notificationType.");
+                    return;
+                }
+
+                var purchaseToken = purchaseTokenEl.GetString();
+                if (!notificationTypeEl.TryGetInt32(out var notificationType)
+                    || string.IsNullOrWhiteSpace(purchaseToken))
+                {
+                    return;
+                }
+
+                await ProcessGooglePlaySubscriptionNotificationAsync(
+                    root,
+                    purchaseToken,
+                    notificationType,
+                    cancellationToken);
+            }
+        }
+    }
+
+    private async Task ProcessGooglePlaySubscriptionNotificationAsync(
+        JsonElement root,
+        string purchaseToken,
+        int notificationType,
+        CancellationToken cancellationToken)
+    {
+
+        var eventTimeMillis = ReadLong(root, "eventTimeMillis");
+        var eventIdMillis = ReadLong(root, "eventIdMillis");
+        var eventId = eventTimeMillis > 0
+            ? $"gp-{eventTimeMillis}"
+            : eventIdMillis > 0
+                ? $"gp-{eventIdMillis}"
+                : $"gp-{Guid.NewGuid():N}";
 
         if (await IsDuplicateEventAsync("google_play", eventId, cancellationToken))
         {
@@ -63,6 +148,9 @@ public sealed class MobileStoreWebhookProcessor(
 
         if (subscription is null)
         {
+            logger.LogInformation(
+                "Google Play Pub/Sub event {EventId} ignored: no subscription for purchase token.",
+                eventId);
             await dbContext.SaveChangesAsync(cancellationToken);
             return;
         }

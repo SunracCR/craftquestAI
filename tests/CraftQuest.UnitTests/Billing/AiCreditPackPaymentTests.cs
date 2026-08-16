@@ -6,6 +6,7 @@ using CraftQuest.Infrastructure.Services;
 using CraftQuest.UnitTests.Billing;
 using CraftQuest.Infrastructure.Services.Payments;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
 namespace CraftQuest.UnitTests.Billing;
@@ -135,7 +136,8 @@ public class AiCreditPackPaymentTests
             db,
             billing,
             new AppleAppStoreJwsVerifier(paymentOptions),
-            paymentOptions);
+            paymentOptions,
+            NullLogger<MobileStoreWebhookProcessor>.Instance);
         return new PaymentService(
             db,
             billing,

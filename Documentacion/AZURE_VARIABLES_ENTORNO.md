@@ -50,7 +50,7 @@ Sin esta sección, la API crea notificaciones **in-app** pero **no envía push**
 | Variable | Producción | Notas |
 |----------|------------|--------|
 | `Push__Enabled` | `true` | `false` = solo log, sin FCM |
-| `Push__CredentialsPath` | Ruta absoluta al JSON (Linux: `/home/site/secrets/firebase-service-account.json`) |
+| `Push__CredentialsPath` | Ruta absoluta al JSON (Linux prod.: `/home/site/secrets/firebase-credentials.json`) |
 
 **Archivo en App Service:** Firebase Console → Project settings → Service accounts → Generate new private key. Subir vía Kudu/FTP y apuntar `Push__CredentialsPath`.
 

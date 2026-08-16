@@ -3,6 +3,7 @@ using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Exceptions;
 using CraftQuest.Infrastructure.Services.Payments;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CraftQuest.Api.Controllers;
@@ -10,9 +11,11 @@ namespace CraftQuest.Api.Controllers;
 [ApiController]
 [Route("api/webhooks")]
 [AllowAnonymous]
+[DisableCors]
 public class PaymentWebhooksController(
     IPaymentService paymentService,
-    PaymentWebhookSecurityService webhookSecurity) : ControllerBase
+    PaymentWebhookSecurityService webhookSecurity,
+    ILogger<PaymentWebhooksController> logger) : ControllerBase
 {
     [HttpPost("paypal")]
     public async Task<IActionResult> PayPal(CancellationToken cancellationToken)
@@ -54,14 +57,16 @@ public class PaymentWebhooksController(
         return Ok();
     }
 
-    [HttpPost("google-play")]
+    // Absolute route so the path is exactly /api/webhooks/google-play (Pub/Sub push URL).
+    [HttpPost("/api/webhooks/google-play")]
     public async Task<IActionResult> GooglePlay(CancellationToken cancellationToken)
     {
         using var reader = new StreamReader(Request.Body, Encoding.UTF8);
         var body = await reader.ReadToEndAsync(cancellationToken);
         if (string.IsNullOrWhiteSpace(body))
         {
-            return BadRequest();
+            logger.LogWarning("Google Play Pub/Sub webhook received an empty request body.");
+            return Ok();
         }
 
         try
@@ -72,7 +77,15 @@ public class PaymentWebhooksController(
         }
         catch (AppException ex) when (ex.StatusCode is 401 or 503)
         {
+            logger.LogWarning(
+                "Google Play Pub/Sub webhook rejected: {StatusCode} {Message}",
+                ex.StatusCode,
+                ex.Message);
             return StatusCode(ex.StatusCode, new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Google Play Pub/Sub webhook processing failed.");
         }
 
         return Ok();

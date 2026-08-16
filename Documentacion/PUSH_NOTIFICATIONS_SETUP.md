@@ -20,9 +20,11 @@ Las notificaciones **in-app** (campana / lista) y las **push del teléfono** son
 
 | Entorno | Ejemplo |
 |---------|---------|
-| Azure App Service **Linux** | `/home/site/secrets/firebase-service-account.json` |
-| Azure App Service Windows | `D:\home\secrets\firebase-service-account.json` |
-| VM / contenedor Linux | `/var/secrets/firebase-service-account.json` |
+| Azure App Service **Linux** (producción) | `/home/site/secrets/firebase-credentials.json` |
+| Azure App Service Windows | `D:\home\secrets\firebase-credentials.json` |
+| VM / contenedor Linux | `/var/secrets/firebase-credentials.json` |
+
+El JSON descargado de Firebase puede tener cualquier nombre al subirlo; en producción usamos `firebase-credentials.json`. Verificar que `"project_id"` sea **`craftquestai`** (no `craftquest-713aa`).
 
 En `appsettings.Production.json` dejamos `CredentialsPath` vacío: la ruta real debe venir de **`Push__CredentialsPath`** en variables de entorno (evita rutas Windows en servidores Linux).
 
