@@ -31,6 +31,9 @@ public static class PrepPlusErrorCodes
     public const string ActiveOfferRequiredPublish = "PREP_ACTIVE_OFFER_REQUIRED_PUBLISH";
     public const string SamplesRequiredPublish = "PREP_SAMPLES_REQUIRED_PUBLISH";
     public const string QuizNoQuestions = "PREP_QUIZ_NO_QUESTIONS";
+    public const string QuizCuratedVisibilityNotSupported = "PREP_QUIZ_CURATED_VISIBILITY_NOT_SUPPORTED";
+    public const string QuizIsCuratedColumnMissing = "PREP_QUIZ_IS_CURATED_COLUMN_MISSING";
+    public const string PublishDatabaseConstraint = "PREP_PUBLISH_DATABASE_CONSTRAINT";
     public const string ListingEndBeforeStart = "PREP_LISTING_END_BEFORE_START";
     public const string PreviewNotAvailable = "PREP_PREVIEW_NOT_AVAILABLE";
     public const string PreviewInvalidQuestion = "PREP_PREVIEW_INVALID_QUESTION";

@@ -214,8 +214,12 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
     for (final purchase in purchases) {
       if (purchase.status == PurchaseStatus.purchased ||
           purchase.status == PurchaseStatus.restored) {
+        if (!_isAiCreditProduct(purchase.productID)) {
+          continue;
+        }
+
         final purchaseKey = _purchaseKey(purchase);
-        if (!_handledPurchaseKeys.add(purchaseKey)) {
+        if (!_storePurchases.claimPurchase(purchaseKey)) {
           continue;
         }
 
@@ -252,7 +256,7 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
             setState(() => _billing = billing);
           }
         } on DioException catch (e) {
-          _handledPurchaseKeys.remove(purchaseKey);
+          _storePurchases.releasePurchase(purchaseKey);
           if (!mounted) return;
           if (userInitiated) {
             context.showDioErrorSnackBar(e);
@@ -278,6 +282,24 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
       return '${purchase.productID}|$token';
     }
     return '${purchase.productID}|${purchase.purchaseID ?? purchase.transactionDate ?? ''}';
+  }
+
+  bool _isAiCreditProduct(String productId) {
+    if (_storePurchases.isAiCreditProduct(productId)) {
+      return true;
+    }
+    final isIos = defaultTargetPlatform == TargetPlatform.iOS;
+    for (final pack in _packs) {
+      if (pack.storeProductId(isIos: isIos) == productId) {
+        return true;
+      }
+    }
+    for (final product in _storeProducts) {
+      if (product.id == productId) {
+        return true;
+      }
+    }
+    return false;
   }
 
   String _formatPrice(AiCreditPackModel pack, AppLocalizations l10n) {

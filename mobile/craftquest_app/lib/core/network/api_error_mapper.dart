@@ -485,6 +485,10 @@ abstract final class ApiErrorMapper {
         );
       case 'PREP_QUIZ_NO_QUESTIONS':
         return l10n.errorPrepQuizNoQuestions;
+      case 'PREP_QUIZ_CURATED_VISIBILITY_NOT_SUPPORTED':
+      case 'PREP_QUIZ_IS_CURATED_COLUMN_MISSING':
+      case 'PREP_PUBLISH_DATABASE_CONSTRAINT':
+        return (data['title'] as String?) ?? l10n.genericRequestErrorMessage;
       case 'PREP_LISTING_END_BEFORE_START':
         return l10n.errorPrepListingEndBeforeStart;
       case 'PREP_PREVIEW_NOT_AVAILABLE':

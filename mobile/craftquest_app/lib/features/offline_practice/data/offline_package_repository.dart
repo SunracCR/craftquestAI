@@ -7,6 +7,7 @@ import 'package:craftquest_app/features/offline_practice/data/models/offline_mod
 import 'package:craftquest_app/features/offline_practice/data/offline_key_storage.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_media_downloader.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_paths.dart';
+import 'package:craftquest_app/features/offline_practice/data/offline_storage_bootstrap.dart';
 import 'package:sqflite/sqflite.dart';
 
 class OfflinePackageRepository {
@@ -373,12 +374,18 @@ class OfflinePackageRepository {
   }
 
   Future<int> countDownloadedQuizzes() async {
+    if (!OfflinePlatformSupport.isSupported) {
+      return 0;
+    }
     final db = await _database.database;
     final result = await db.rawQuery('SELECT COUNT(*) AS c FROM offline_quizzes');
     return Sqflite.firstIntValue(result) ?? 0;
   }
 
   Future<int> totalStorageBytes() async {
+    if (!OfflinePlatformSupport.isSupported) {
+      return 0;
+    }
     final db = await _database.database;
     final result = await db.rawQuery(
       'SELECT COALESCE(SUM(total_bytes), 0) AS total FROM offline_quizzes',

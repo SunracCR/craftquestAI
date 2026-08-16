@@ -7,6 +7,7 @@ using CraftQuest.Application.Options;
 using CraftQuest.Domain.Constants;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -531,10 +532,47 @@ public class PrepPlusAdminService(
         entity.Quiz.PublicationStatus = "published";
         entity.Quiz.UpdatedAt = DateTime.UtcNow;
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is SqlException sql)
+        {
+            throw MapPublishDatabaseException(sql);
+        }
 
         var loaded = await LoadCatalogItemDetailAsync(catalogItemId, cancellationToken);
         return await MapDetailAsync(loaded, cancellationToken);
+    }
+
+    private static AppException MapPublishDatabaseException(SqlException sql)
+    {
+        if (sql.Number == 547)
+        {
+            var message = sql.Message;
+            if (message.Contains("CK_Quizzes_Visibility", StringComparison.OrdinalIgnoreCase)
+                || message.Contains("'curated'", StringComparison.OrdinalIgnoreCase))
+            {
+                return new AppException(
+                    "La base de datos no admite visibilidad 'curated'. Ejecuta Documentacion/PrepPlus_Publish_Quiz_Schema_Patch.sql.",
+                    409,
+                    PrepPlusErrorCodes.QuizCuratedVisibilityNotSupported);
+            }
+
+            if (message.Contains("IsCurated", StringComparison.OrdinalIgnoreCase))
+            {
+                return new AppException(
+                    "Falta la columna Quizzes.IsCurated. Ejecuta Documentacion/PrepPlus_Publish_Quiz_Schema_Patch.sql.",
+                    409,
+                    PrepPlusErrorCodes.QuizIsCuratedColumnMissing);
+            }
+        }
+
+        return new AppException(
+            "No se pudo publicar en el catálogo por una restricción de base de datos.",
+            409,
+            PrepPlusErrorCodes.PublishDatabaseConstraint,
+            new Dictionary<string, object?> { ["detail"] = sql.Message });
     }
 
     public async Task<PrepCatalogItemDetailDto> UnpublishCatalogItemAsync(

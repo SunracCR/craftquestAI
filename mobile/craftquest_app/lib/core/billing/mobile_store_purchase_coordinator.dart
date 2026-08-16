@@ -36,6 +36,15 @@ class MobileStorePurchaseCoordinator {
 
   bool get isBillingPageHandlingPurchases => _billingPageHandlers > 0;
 
+  bool isAiCreditProduct(String productId) => _isAiCreditProduct(productId);
+
+  bool isSubscriptionProduct(String productId) => _isSubscriptionProduct(productId);
+
+  bool isPrepProduct(String productId) => _isPrepProduct(productId);
+
+  String billingCycleForProduct(String productId) =>
+      _billingCycleForProduct(productId);
+
   void pushBillingPageHandler() {
     _billingPageHandlers++;
   }
@@ -134,10 +143,6 @@ class MobileStorePurchaseCoordinator {
   }
 
   Future<void> _onPurchaseUpdate(List<PurchaseDetails> purchases) async {
-    if (isBillingPageHandlingPurchases) {
-      return;
-    }
-
     for (final purchase in purchases) {
       if (purchase.status != PurchaseStatus.purchased &&
           purchase.status != PurchaseStatus.restored) {
@@ -167,12 +172,12 @@ class MobileStorePurchaseCoordinator {
 
   Future<bool> _verifyPurchase(PurchaseDetails purchase) async {
     final productId = purchase.productID;
-    if (_isAiCreditProduct(productId)) {
-      await _verifyAiCreditPurchase(purchase);
-      return true;
-    }
     if (_isSubscriptionProduct(productId)) {
       await _verifySubscriptionPurchase(purchase);
+      return true;
+    }
+    if (_isAiCreditProduct(productId)) {
+      await _verifyAiCreditPurchase(purchase);
       return true;
     }
     if (_isPrepProduct(productId)) {

@@ -649,13 +649,13 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
     for (final purchase in purchases) {
       if (purchase.status == PurchaseStatus.purchased ||
           purchase.status == PurchaseStatus.restored) {
-        final purchaseKey = _purchaseKey(purchase);
-        if (!_handledPurchaseKeys.add(purchaseKey)) {
+        final offer = _offerForProductId(purchase.productID, item.offers);
+        if (offer == null) {
           continue;
         }
 
-        final offer = _offerForProductId(purchase.productID, item.offers);
-        if (offer == null) {
+        final purchaseKey = _purchaseKey(purchase);
+        if (!_storePurchases.claimPurchase(purchaseKey)) {
           continue;
         }
 
@@ -688,7 +688,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
             }
           }
         } catch (e) {
-          _handledPurchaseKeys.remove(purchaseKey);
+          _storePurchases.releasePurchase(purchaseKey);
           if (!mounted) return;
           if (userInitiated) {
             context.showErrorSnackBar(l10n.purchaseVerificationFailed);

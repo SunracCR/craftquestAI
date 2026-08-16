@@ -619,6 +619,27 @@ class _PrepPlusAdminItemEditPageState extends State<PrepPlusAdminItemEditPage> {
   Future<void> _publish(bool publish) async {
     if (widget.isCreate) return;
     final l10n = AppLocalizations.of(context)!;
+
+    if (publish) {
+      final item = _item;
+      if (item != null) {
+        final issues = <String>[];
+        if (!item.offers.any((offer) => offer.isActive)) {
+          issues.add(l10n.errorPrepActiveOfferRequiredPublish);
+        }
+        if (item.sampleQuestions.length != 3) {
+          issues.add(l10n.errorPrepSamplesRequiredPublish(3));
+        }
+        if (item.questionCount == 0) {
+          issues.add(l10n.errorPrepQuizNoQuestions);
+        }
+        if (issues.isNotEmpty) {
+          context.showErrorSnackBar(issues.first);
+          return;
+        }
+      }
+    }
+
     setState(() => _saving = true);
     try {
       final updated = publish

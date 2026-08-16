@@ -135,40 +135,44 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _load({bool forceRefresh = false}) async {
+    UserBillingModel? billing;
+    var offlineCount = _offlineDownloadCount;
+
     try {
-      final results = await Future.wait([
-        _billingRepository.getMyBilling(forceRefresh: forceRefresh),
-        _offlinePackageRepository.countDownloadedQuizzes(),
-      ]);
-      if (!mounted) return;
-      final billing = results[0] as UserBillingModel;
-      final offlineCount = results[1] as int;
-      if (!forceRefresh &&
-          _billing != null &&
-          _billing!.plan.code.toLowerCase() != 'free' &&
-          billing.plan.code.toLowerCase() == 'free') {
-        setState(() => _offlineDownloadCount = offlineCount);
-        return;
-      }
+      billing = await _billingRepository.getMyBilling(forceRefresh: forceRefresh);
+    } catch (_) {
+      billing = _billingRepository.cachedBilling;
+    }
+
+    try {
+      offlineCount =
+          await _offlinePackageRepository.countDownloadedQuizzes();
+    } catch (_) {
+      offlineCount = 0;
+    }
+
+    if (!mounted) return;
+
+    if (billing == null) {
       setState(() {
-        _billing = billing;
+        _billing = null;
         _offlineDownloadCount = offlineCount;
       });
-    } catch (_) {
-      if (!mounted) return;
-      try {
-        final offlineCount =
-            await _offlinePackageRepository.countDownloadedQuizzes();
-        if (!mounted) return;
-        setState(() {
-          _billing = null;
-          _offlineDownloadCount = offlineCount;
-        });
-      } catch (_) {
-        if (!mounted) return;
-        setState(() => _billing = null);
-      }
+      return;
     }
+
+    if (!forceRefresh &&
+        _billing != null &&
+        _billing!.plan.code.toLowerCase() != 'free' &&
+        billing.plan.code.toLowerCase() == 'free') {
+      setState(() => _offlineDownloadCount = offlineCount);
+      return;
+    }
+
+    setState(() {
+      _billing = billing;
+      _offlineDownloadCount = offlineCount;
+    });
   }
 
   Future<void> _openOfflineDownloads() async {

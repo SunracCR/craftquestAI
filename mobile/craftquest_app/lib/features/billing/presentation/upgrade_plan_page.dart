@@ -291,8 +291,12 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
     for (final purchase in purchases) {
       if (purchase.status == PurchaseStatus.purchased ||
           purchase.status == PurchaseStatus.restored) {
+        if (!_isSubscriptionProduct(purchase.productID)) {
+          continue;
+        }
+
         final purchaseKey = _purchaseKey(purchase);
-        if (!_handledPurchaseKeys.add(purchaseKey)) {
+        if (!_storePurchases.claimPurchase(purchaseKey)) {
           continue;
         }
 
@@ -307,7 +311,7 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
             productId: purchase.productID,
             purchaseToken: token.isNotEmpty ? token : purchase.purchaseID ?? '',
             transactionId: purchase.purchaseID,
-            billingCycle: _billingCycle.apiValue,
+            billingCycle: _billingCycleForProduct(purchase.productID),
           );
           if (purchase.pendingCompletePurchase) {
             await InAppPurchase.instance.completePurchase(purchase);
@@ -329,7 +333,7 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
             await _load(forceRefreshBilling: true);
           }
         } catch (_) {
-          _handledPurchaseKeys.remove(purchaseKey);
+          _storePurchases.releasePurchase(purchaseKey);
           if (!mounted) return;
           if (userInitiated) {
             context.showErrorSnackBar(l10n.purchaseVerificationFailed);
@@ -359,6 +363,35 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
       return '${purchase.productID}|$token';
     }
     return '${purchase.productID}|${purchase.purchaseID ?? purchase.transactionDate ?? ''}';
+  }
+
+  bool _isSubscriptionProduct(String productId) {
+    if (_storePurchases.isSubscriptionProduct(productId)) {
+      return true;
+    }
+    for (final plan in _plans) {
+      for (final id in [
+        plan.googlePlayProductId,
+        plan.googlePlayAnnualProductId,
+        plan.appStoreProductId,
+        plan.appStoreAnnualProductId,
+      ]) {
+        if (id != null && id.isNotEmpty && id == productId) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  String _billingCycleForProduct(String productId) {
+    for (final plan in _plans) {
+      if (plan.googlePlayAnnualProductId == productId ||
+          plan.appStoreAnnualProductId == productId) {
+        return 'annual';
+      }
+    }
+    return _storePurchases.billingCycleForProduct(productId);
   }
 
   @override
