@@ -4585,6 +4585,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'The linked quiz must have at least one question.';
 
   @override
+  String get errorPrepQuizCuratedVisibilityNotSupported =>
+      'The database does not support publishing curated quizzes. Run the PrepPlus_Publish_Quiz_Schema_Patch.sql script on Azure SQL.';
+
+  @override
+  String get errorPrepQuizIsCuratedColumnMissing =>
+      'The IsCurated column is missing from the quizzes table. Run the PrepPlus_Publish_Quiz_Schema_Patch.sql script on Azure SQL.';
+
+  @override
+  String get errorPrepPublishDatabaseConstraint =>
+      'Could not publish due to a database constraint. Check the Prep+ schema or contact support.';
+
+  @override
   String get errorPrepListingEndBeforeStart =>
       'Sale end date must be after the start date.';
 

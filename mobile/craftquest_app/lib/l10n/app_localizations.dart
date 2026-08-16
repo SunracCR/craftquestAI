@@ -7744,6 +7744,24 @@ abstract class AppLocalizations {
   /// **'El cuestionario vinculado debe tener al menos una pregunta.'**
   String get errorPrepQuizNoQuestions;
 
+  /// No description provided for @errorPrepQuizCuratedVisibilityNotSupported.
+  ///
+  /// In es, this message translates to:
+  /// **'La base de datos no admite publicar cuestionarios curados. Ejecuta el parche SQL PrepPlus_Publish_Quiz_Schema_Patch.sql en Azure SQL.'**
+  String get errorPrepQuizCuratedVisibilityNotSupported;
+
+  /// No description provided for @errorPrepQuizIsCuratedColumnMissing.
+  ///
+  /// In es, this message translates to:
+  /// **'Falta la columna IsCurated en la tabla de cuestionarios. Ejecuta el parche SQL PrepPlus_Publish_Quiz_Schema_Patch.sql en Azure SQL.'**
+  String get errorPrepQuizIsCuratedColumnMissing;
+
+  /// No description provided for @errorPrepPublishDatabaseConstraint.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo publicar por una restricción de base de datos. Revisa el esquema Prep+ o contacta soporte.'**
+  String get errorPrepPublishDatabaseConstraint;
+
   /// No description provided for @errorPrepListingEndBeforeStart.
   ///
   /// In es, this message translates to:

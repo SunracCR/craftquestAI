@@ -10,7 +10,7 @@ public static partial class PrepSlugHelper
 
     public static string GenerateFromTitle(string title, Guid catalogItemId)
     {
-        var normalized = title.Trim().ToLowerInvariant();
+        var normalized = (title ?? string.Empty).Trim().ToLowerInvariant();
         normalized = normalized
             .Replace('á', 'a').Replace('é', 'e').Replace('í', 'i')
             .Replace('ó', 'o').Replace('ú', 'u').Replace('ñ', 'n').Replace('ü', 'u');
@@ -27,7 +27,13 @@ public static partial class PrepSlugHelper
             normalized = normalized[..120].Trim('-');
         }
 
-        return $"{normalized}-{catalogItemId:N}"[..160];
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            normalized = "prep-item";
+        }
+
+        var slug = $"{normalized}-{catalogItemId:N}";
+        return slug.Length > 160 ? slug[..160] : slug;
     }
 
     [GeneratedRegex(@"[^a-z0-9\-]+", RegexOptions.Compiled)]

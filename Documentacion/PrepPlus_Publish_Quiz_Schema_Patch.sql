@@ -1,6 +1,9 @@
 /* Prep+ — Parche para publicar cuestionarios curados
    Ejecutar en Azure SQL si falla POST /api/admin/prep/items/{id}/publish con error 500
-   o restricción CHECK al guardar Visibility = 'curated'. */
+   o restricción CHECK al guardar Visibility = 'curated'.
+
+   Azure Portal → SQL Database → Query editor (o SSMS / Azure Data Studio).
+   Ejecutar este script completo contra la base de datos de producción. */
 
 /* 1) Columna IsCurated en Quizzes */
 IF COL_LENGTH('quiz.Quizzes', 'IsCurated') IS NULL
@@ -37,4 +40,13 @@ BEGIN
                 'public',
                 'curated'));
 END
+GO
+
+/* 3) Verificación (debe devolver IsCurated=1 y Visibility con 'curated') */
+SELECT
+    CASE WHEN COL_LENGTH('quiz.Quizzes', 'IsCurated') IS NOT NULL THEN 1 ELSE 0 END AS HasIsCuratedColumn,
+    cc.definition AS VisibilityCheckDefinition
+FROM sys.check_constraints cc
+WHERE cc.parent_object_id = OBJECT_ID(N'quiz.Quizzes')
+  AND cc.name = N'CK_Quizzes_Visibility';
 GO

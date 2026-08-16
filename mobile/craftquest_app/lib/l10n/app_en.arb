@@ -2042,6 +2042,9 @@
     "placeholders": { "count": { "type": "int" } }
   },
   "errorPrepQuizNoQuestions": "The linked quiz must have at least one question.",
+  "errorPrepQuizCuratedVisibilityNotSupported": "The database does not support publishing curated quizzes. Run the PrepPlus_Publish_Quiz_Schema_Patch.sql script on Azure SQL.",
+  "errorPrepQuizIsCuratedColumnMissing": "The IsCurated column is missing from the quizzes table. Run the PrepPlus_Publish_Quiz_Schema_Patch.sql script on Azure SQL.",
+  "errorPrepPublishDatabaseConstraint": "Could not publish due to a database constraint. Check the Prep+ schema or contact support.",
   "errorPrepListingEndBeforeStart": "Sale end date must be after the start date.",
   "errorPrepPreviewNotAvailable": "Preview is not available for this item.",
   "errorPrepItemNotAvailable": "This item is not available for purchase right now.",

@@ -2041,6 +2041,9 @@
     "placeholders": { "count": { "type": "int" } }
   },
   "errorPrepQuizNoQuestions": "O questionário vinculado deve ter pelo menos uma pergunta.",
+  "errorPrepQuizCuratedVisibilityNotSupported": "A base de dados não suporta publicar questionários curados. Execute o script PrepPlus_Publish_Quiz_Schema_Patch.sql no Azure SQL.",
+  "errorPrepQuizIsCuratedColumnMissing": "Falta a coluna IsCurated na tabela de questionários. Execute o script PrepPlus_Publish_Quiz_Schema_Patch.sql no Azure SQL.",
+  "errorPrepPublishDatabaseConstraint": "Não foi possível publicar por uma restrição da base de dados. Verifique o esquema Prep+ ou contacte o suporte.",
   "errorPrepListingEndBeforeStart": "A data de fim da venda deve ser posterior ao início.",
   "errorPrepPreviewNotAvailable": "A pré-visualização não está disponível para este item.",
   "errorPrepItemNotAvailable": "Este item não está disponível para compra no momento.",

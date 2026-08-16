@@ -536,43 +536,60 @@ public class PrepPlusAdminService(
         {
             await dbContext.SaveChangesAsync(cancellationToken);
         }
-        catch (DbUpdateException ex) when (ex.InnerException is SqlException sql)
+        catch (DbUpdateException ex)
         {
-            throw MapPublishDatabaseException(sql);
+            var sql = FindSqlException(ex);
+            if (sql is not null)
+            {
+                throw MapPublishDatabaseException(sql);
+            }
+
+            throw;
         }
 
         var loaded = await LoadCatalogItemDetailAsync(catalogItemId, cancellationToken);
         return await MapDetailAsync(loaded, cancellationToken);
     }
 
+    private static SqlException? FindSqlException(Exception exception)
+    {
+        for (var current = exception; current is not null; current = current.InnerException)
+        {
+            if (current is SqlException sql)
+            {
+                return sql;
+            }
+        }
+
+        return null;
+    }
+
     private static AppException MapPublishDatabaseException(SqlException sql)
     {
-        if (sql.Number == 547)
-        {
-            var message = sql.Message;
-            if (message.Contains("CK_Quizzes_Visibility", StringComparison.OrdinalIgnoreCase)
-                || message.Contains("'curated'", StringComparison.OrdinalIgnoreCase))
-            {
-                return new AppException(
-                    "La base de datos no admite visibilidad 'curated'. Ejecuta Documentacion/PrepPlus_Publish_Quiz_Schema_Patch.sql.",
-                    409,
-                    PrepPlusErrorCodes.QuizCuratedVisibilityNotSupported);
-            }
+        var message = sql.Message;
 
-            if (message.Contains("IsCurated", StringComparison.OrdinalIgnoreCase))
-            {
-                return new AppException(
-                    "Falta la columna Quizzes.IsCurated. Ejecuta Documentacion/PrepPlus_Publish_Quiz_Schema_Patch.sql.",
-                    409,
-                    PrepPlusErrorCodes.QuizIsCuratedColumnMissing);
-            }
+        if (message.Contains("CK_Quizzes_Visibility", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("'curated'", StringComparison.OrdinalIgnoreCase))
+        {
+            return new AppException(
+                "La base de datos no admite visibilidad 'curated'. Ejecuta Documentacion/PrepPlus_Publish_Quiz_Schema_Patch.sql en Azure SQL.",
+                409,
+                PrepPlusErrorCodes.QuizCuratedVisibilityNotSupported);
+        }
+
+        if (message.Contains("IsCurated", StringComparison.OrdinalIgnoreCase))
+        {
+            return new AppException(
+                "Falta la columna Quizzes.IsCurated. Ejecuta Documentacion/PrepPlus_Publish_Quiz_Schema_Patch.sql en Azure SQL.",
+                409,
+                PrepPlusErrorCodes.QuizIsCuratedColumnMissing);
         }
 
         return new AppException(
             "No se pudo publicar en el catálogo por una restricción de base de datos.",
             409,
             PrepPlusErrorCodes.PublishDatabaseConstraint,
-            new Dictionary<string, object?> { ["detail"] = sql.Message });
+            new Dictionary<string, object?> { ["detail"] = message, ["sqlNumber"] = sql.Number });
     }
 
     public async Task<PrepCatalogItemDetailDto> UnpublishCatalogItemAsync(
@@ -929,7 +946,7 @@ public class PrepPlusAdminService(
                 {
                     QuestionId = s.QuestionId,
                     SortOrder = s.SortOrder,
-                    PromptPreview = Truncate(s.Question.QuestionText, 120),
+                    PromptPreview = Truncate(s.Question?.QuestionText ?? string.Empty, 120),
                 })
                 .ToList(),
         };

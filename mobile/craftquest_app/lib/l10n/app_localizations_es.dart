@@ -4616,6 +4616,18 @@ class AppLocalizationsEs extends AppLocalizations {
       'El cuestionario vinculado debe tener al menos una pregunta.';
 
   @override
+  String get errorPrepQuizCuratedVisibilityNotSupported =>
+      'La base de datos no admite publicar cuestionarios curados. Ejecuta el parche SQL PrepPlus_Publish_Quiz_Schema_Patch.sql en Azure SQL.';
+
+  @override
+  String get errorPrepQuizIsCuratedColumnMissing =>
+      'Falta la columna IsCurated en la tabla de cuestionarios. Ejecuta el parche SQL PrepPlus_Publish_Quiz_Schema_Patch.sql en Azure SQL.';
+
+  @override
+  String get errorPrepPublishDatabaseConstraint =>
+      'No se pudo publicar por una restricción de base de datos. Revisa el esquema Prep+ o contacta soporte.';
+
+  @override
   String get errorPrepListingEndBeforeStart =>
       'La fecha de fin de venta debe ser posterior al inicio.';
 
