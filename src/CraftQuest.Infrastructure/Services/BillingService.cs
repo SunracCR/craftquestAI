@@ -334,6 +334,14 @@ public class BillingService(
         }
 
         var subscription = await GetActiveSubscriptionAsync(userId, cancellationToken);
+        if (subscription.PaymentIssuePending)
+        {
+            throw new AppException(
+                "Hay un problema con tu método de pago. Actualízalo en Google Play para seguir generando con IA.",
+                402,
+                "PAYMENT_ISSUE_PENDING");
+        }
+
         await EnsureMonthlyAiCreditsAsync(userId, subscription, cancellationToken);
         await EnsureAiCreditBalanceMatchesPlanAsync(userId, subscription, cancellationToken);
 
@@ -701,6 +709,7 @@ public class BillingService(
         subscription.LastPaymentAt = now;
         subscription.AutoRenewEnabled = true;
         subscription.CancelAtPeriodEnd = false;
+        subscription.PaymentIssuePending = false;
         subscription.EndsAt = periodEnd
             ?? SubscriptionPeriodCalculator.CalculatePeriodEnd(now, subscription.BillingCycle);
 
@@ -744,6 +753,26 @@ public class BillingService(
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RevokeSubscriptionImmediatelyAsync(
+        string providerSubscriptionId,
+        string providerCode,
+        CancellationToken cancellationToken = default)
+    {
+        var subscription = await dbContext.UserSubscriptions
+            .Where(s => s.ProviderSubscriptionId == providerSubscriptionId
+                        && s.ProviderCode == providerCode
+                        && s.Status == SubscriptionStatuses.Active)
+            .OrderByDescending(s => s.StartedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (subscription is null)
+        {
+            return;
+        }
+
+        await DowngradeToFreePlanAsync(subscription.UserId, cancellationToken);
     }
 
     private async Task DowngradeToFreePlanAsync(

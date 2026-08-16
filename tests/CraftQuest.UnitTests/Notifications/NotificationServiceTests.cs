@@ -118,7 +118,8 @@ public class NotificationServiceTests
         foreach (var item in prefs.Preferences)
         {
             var expectedEmail = item.Type is NotificationTypes.MembershipExpiring
-                or NotificationTypes.MembershipExpired;
+                or NotificationTypes.MembershipExpired
+                or NotificationTypes.PaymentIssuePending;
             Assert.Equal(expectedEmail, item.EmailEnabled);
             Assert.True(item.InAppEnabled);
             Assert.True(item.PushEnabled);

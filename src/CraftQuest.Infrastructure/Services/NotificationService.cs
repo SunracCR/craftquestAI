@@ -46,6 +46,7 @@ public class NotificationService(
         NotificationTypes.AiJobFailed,
         NotificationTypes.MembershipExpiring,
         NotificationTypes.MembershipExpired,
+        NotificationTypes.PaymentIssuePending,
     ];
 
     public async Task NotifyAsync(
@@ -602,6 +603,8 @@ public class NotificationService(
                 EmailTemplateBuilder.BuildMembershipExpiring(language, payload),
             NotificationTypes.MembershipExpired =>
                 EmailTemplateBuilder.BuildMembershipExpired(language, payload),
+            NotificationTypes.PaymentIssuePending =>
+                EmailTemplateBuilder.BuildPaymentIssuePending(language, payload),
             _ => default,
         };
 
@@ -631,6 +634,7 @@ public class NotificationService(
         NotificationTypes.AiJobFailed,
         NotificationTypes.MembershipExpiring,
         NotificationTypes.MembershipExpired,
+        NotificationTypes.PaymentIssuePending,
     ];
 
     private static bool ResolvePreference(bool? stored, bool defaultValue) =>
@@ -638,5 +642,6 @@ public class NotificationService(
 
     private static bool GetDefaultEmailEnabled(string type) =>
         type is NotificationTypes.MembershipExpiring
-            or NotificationTypes.MembershipExpired;
+            or NotificationTypes.MembershipExpired
+            or NotificationTypes.PaymentIssuePending;
 }

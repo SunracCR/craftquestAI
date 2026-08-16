@@ -10,6 +10,7 @@ public static class NotificationTypes
     public const string AiJobFailed = "ai_job_failed";
     public const string MembershipExpiring = "membership_expiring";
     public const string MembershipExpired = "membership_expired";
+    public const string PaymentIssuePending = "payment_issue_pending";
 }
 
 public static class NotificationOutboxEventTypes

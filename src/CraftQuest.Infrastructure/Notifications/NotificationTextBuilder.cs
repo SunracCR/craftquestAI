@@ -18,6 +18,7 @@ public static class NotificationTextBuilder
             NotificationTypes.AiJobFailed => BuildAiJobFailed(lang, payload),
             NotificationTypes.MembershipExpiring => BuildMembershipExpiring(lang, payload),
             NotificationTypes.MembershipExpired => BuildMembershipExpired(lang, payload),
+            NotificationTypes.PaymentIssuePending => BuildPaymentIssuePending(lang, payload),
             _ => ("CraftQuest", "You have a new notification."),
         };
     }
@@ -118,6 +119,17 @@ public static class NotificationTextBuilder
             "en" => ("Membership ended", $"Your {plan} plan has ended. You are now on the Free plan."),
             "pt" => ("Assinatura encerrada", $"Seu plano {plan} terminou. Voce esta no plano Free."),
             _ => ("Membresía vencida", $"Tu plan {plan} terminó. Ahora estás en el plan Free."),
+        };
+    }
+
+    private static (string, string) BuildPaymentIssuePending(string lang, NotificationPayload p)
+    {
+        var plan = p.PlanName ?? "Plan";
+        return lang switch
+        {
+            "en" => ("Payment issue", $"There is a payment problem with your {plan} subscription. Update your payment method in Google Play."),
+            "pt" => ("Problema de pagamento", $"Ha um problema de pagamento com sua assinatura {plan}. Atualize seu metodo de pagamento no Google Play."),
+            _ => ("Problema de pago", $"Hay un problema de pago con tu suscripción {plan}. Actualiza tu método de pago en Google Play."),
         };
     }
 }

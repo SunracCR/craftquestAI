@@ -2,8 +2,11 @@ using System.Text;
 using System.Text.Json;
 using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Exceptions;
+using CraftQuest.Application.Models.Notifications;
 using CraftQuest.Application.Options;
+using CraftQuest.Domain.Constants;
 using CraftQuest.Domain.Entities;
+using CraftQuest.Infrastructure.Notifications;
 using CraftQuest.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -14,6 +17,8 @@ namespace CraftQuest.Infrastructure.Services.Payments;
 public sealed class MobileStoreWebhookProcessor(
     CraftQuestDbContext dbContext,
     IBillingService billingService,
+    GooglePlaySubscriptionVerifier googlePlayVerifier,
+    INotificationService notificationService,
     AppleAppStoreJwsVerifier appleJwsVerifier,
     IOptions<PaymentOptions> options,
     ILogger<MobileStoreWebhookProcessor> logger)
@@ -141,6 +146,7 @@ public sealed class MobileStoreWebhookProcessor(
         await RecordEventAsync("google_play", eventId, $"type-{notificationType}", cancellationToken);
 
         var subscription = await dbContext.UserSubscriptions
+            .Include(s => s.Plan)
             .Where(s => s.ProviderSubscriptionId == purchaseToken
                         && s.ProviderCode == "google_play")
             .OrderByDescending(s => s.StartedAt)
@@ -158,18 +164,60 @@ public sealed class MobileStoreWebhookProcessor(
         // 1=RECOVERED, 2=RENEWED, 4=NEW, 7=RESTARTED
         if (notificationType is 1 or 2 or 4 or 7)
         {
+            DateTime? periodEnd = null;
+            try
+            {
+                var googleSub = await googlePlayVerifier.GetSubscriptionAsync(
+                    purchaseToken,
+                    cancellationToken);
+                periodEnd = googleSub.LineItems?.FirstOrDefault()?.ExpiryTimeDateTimeOffset?.UtcDateTime;
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(
+                    ex,
+                    "Could not fetch Google Play subscription for {PurchaseToken}; using local period fallback.",
+                    purchaseToken);
+            }
+
             await billingService.RenewSubscriptionPeriodAsync(
                 purchaseToken,
                 "google_play",
-                null,
+                periodEnd,
                 eventId,
                 cancellationToken);
         }
-        else if (notificationType is 3 or 12 or 13)
+        else if (notificationType == 12)
+        {
+            await billingService.RevokeSubscriptionImmediatelyAsync(
+                purchaseToken,
+                "google_play",
+                cancellationToken);
+        }
+        else if (notificationType is 3 or 13)
         {
             subscription.AutoRenewEnabled = false;
             subscription.CancelAtPeriodEnd = true;
             await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        else if (notificationType is 5 or 6)
+        {
+            subscription.PaymentIssuePending = true;
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            await NotificationPublisher.TryNotifyAsync(
+                () => notificationService.NotifyAsync(
+                    subscription.UserId,
+                    NotificationTypes.PaymentIssuePending,
+                    new NotificationPayload
+                    {
+                        PlanName = subscription.Plan?.Name ?? subscription.Plan?.Code,
+                        Route = "profile/billing",
+                    },
+                    $"payment_issue:{subscription.UserId}:{eventId}",
+                    cancellationToken),
+                logger,
+                "payment_issue_pending");
         }
         else
         {

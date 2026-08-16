@@ -490,6 +490,46 @@ public static class EmailTemplateBuilder
         };
     }
 
+    public static (string Subject, string PlainText, string Html) BuildPaymentIssuePending(
+        string language,
+        NotificationPayload payload)
+    {
+        var plan = payload.PlanName ?? "Plan";
+        return language switch
+        {
+            "en" => (
+                "Payment issue with your subscription",
+                $"There is a payment problem with your {plan} subscription. Update your payment method in Google Play.",
+                BuildHtml(
+                    "Billing",
+                    "Payment issue",
+                    $"There is a payment problem with your {plan} subscription. Update your payment method in Google Play to keep AI features active.",
+                    "Manage billing",
+                    "https://app.craftquestai.com/",
+                    "Other premium features may still be available during the grace period.")),
+            "pt" => (
+                "Problema de pagamento na sua assinatura",
+                $"Ha um problema de pagamento com sua assinatura {plan}. Atualize seu metodo de pagamento no Google Play.",
+                BuildHtml(
+                    "Cobranca",
+                    "Problema de pagamento",
+                    $"Ha um problema de pagamento com sua assinatura {plan}. Atualize seu metodo de pagamento no Google Play para manter recursos de IA.",
+                    "Gerenciar cobranca",
+                    "https://app.craftquestai.com/",
+                    "Outros recursos premium podem continuar disponiveis durante o periodo de graca.")),
+            _ => (
+                "Problema de pago con tu suscripción",
+                $"Hay un problema de pago con tu suscripción {plan}. Actualiza tu método de pago en Google Play.",
+                BuildHtml(
+                    "Facturación",
+                    "Problema de pago",
+                    $"Hay un problema de pago con tu suscripción {plan}. Actualiza tu método de pago en Google Play para mantener las funciones de IA.",
+                    "Gestionar facturación",
+                    "https://app.craftquestai.com/",
+                    "Otras funciones premium pueden seguir disponibles durante el periodo de gracia.")),
+        };
+    }
+
     private static string BuildHtml(
         string preheader,
         string title,

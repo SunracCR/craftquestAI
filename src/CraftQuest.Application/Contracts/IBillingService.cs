@@ -116,4 +116,9 @@ public interface IBillingService
         DateTime? periodEnd,
         string? paymentTransactionId,
         CancellationToken cancellationToken = default);
+
+    Task RevokeSubscriptionImmediatelyAsync(
+        string providerSubscriptionId,
+        string providerCode,
+        CancellationToken cancellationToken = default);
 }

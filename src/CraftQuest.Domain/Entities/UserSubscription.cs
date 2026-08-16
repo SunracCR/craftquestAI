@@ -23,6 +23,9 @@ public class UserSubscription
 
     public DateTime? LastPaymentAt { get; set; }
 
+    /// <summary>Google Play on hold / grace period: payment issue pending resolution.</summary>
+    public bool PaymentIssuePending { get; set; }
+
     public User User { get; set; } = null!;
     public Plan Plan { get; set; } = null!;
 }
