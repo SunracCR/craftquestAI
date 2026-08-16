@@ -92,6 +92,8 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
   String? _error;
   String? _pendingPayPalOrderId;
   StreamSubscription<List<PurchaseDetails>>? _purchaseSub;
+  bool _userInitiatedPurchase = false;
+  final Set<String> _handledPurchaseKeys = {};
   Future<PracticeActiveSessionModel?>? _activeSessionPrefetch;
 
   static bool get _supportsStorePurchase =>
@@ -234,6 +236,15 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
         _selectedOfferId ??= _defaultOfferId(item.offers);
         _loading = false;
       });
+      if (_supportsStorePurchase) {
+        final hasStoreOffer = item.offers.any(
+          (offer) =>
+              offer.storeProductId != null && offer.storeProductId!.isNotEmpty,
+        );
+        if (hasStoreOffer && await InAppPurchase.instance.isAvailable()) {
+          await InAppPurchase.instance.restorePurchases();
+        }
+      }
       if (item.canPractice) {
         _warmPracticeLaunch(item.quizId);
         unawaited(_refreshOfflineDownloadState(item.quizId));
@@ -619,6 +630,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
     }
 
     setState(() => _checkingOut = true);
+    _userInitiatedPurchase = true;
     final product = response.productDetails.first;
     await InAppPurchase.instance.buyConsumable(
       purchaseParam: PurchaseParam(productDetails: product),
@@ -627,12 +639,23 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
 
   Future<void> _onPurchaseUpdate(List<PurchaseDetails> purchases) async {
     final l10n = AppLocalizations.of(context)!;
-    final offer = _selectedOffer;
-    if (offer == null) return;
+    final item = _item;
+    if (item == null) return;
 
     for (final purchase in purchases) {
       if (purchase.status == PurchaseStatus.purchased ||
           purchase.status == PurchaseStatus.restored) {
+        final purchaseKey = _purchaseKey(purchase);
+        if (!_handledPurchaseKeys.add(purchaseKey)) {
+          continue;
+        }
+
+        final offer = _offerForProductId(purchase.productID, item.offers);
+        if (offer == null) {
+          continue;
+        }
+
+        final userInitiated = _userInitiatedPurchase;
         try {
           final platform = defaultTargetPlatform == TargetPlatform.iOS
               ? 'app_store'
@@ -653,22 +676,56 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
           }
           if (!mounted) return;
           if (result.status == 'granted') {
-            context.showSuccessSnackBar(l10n.prepPlusAccessGranted);
             await _clearReferralIfMatched();
             await _load();
+            if (!mounted) return;
+            if (userInitiated) {
+              context.showSuccessSnackBar(l10n.prepPlusAccessGranted);
+            }
           }
         } catch (e) {
+          _handledPurchaseKeys.remove(purchaseKey);
           if (!mounted) return;
-          context.showErrorSnackBar(l10n.purchaseVerificationFailed);
+          if (userInitiated) {
+            context.showErrorSnackBar(l10n.purchaseVerificationFailed);
+          }
         } finally {
+          if (userInitiated) {
+            _userInitiatedPurchase = false;
+          }
           if (mounted) setState(() => _checkingOut = false);
         }
-      } else if (purchase.status == PurchaseStatus.error) {
-        if (mounted) setState(() => _checkingOut = false);
-      } else if (purchase.status == PurchaseStatus.canceled) {
+        continue;
+      }
+
+      if (purchase.status == PurchaseStatus.error ||
+          purchase.status == PurchaseStatus.canceled) {
         if (mounted) setState(() => _checkingOut = false);
       }
     }
+  }
+
+  PrepAccessOfferModel? _offerForProductId(
+    String productId,
+    List<PrepAccessOfferModel> offers,
+  ) {
+    for (final offer in offers) {
+      final storeProductId = offer.storeProductId;
+      if (storeProductId != null &&
+          storeProductId.isNotEmpty &&
+          storeProductId == productId) {
+        return offer;
+      }
+    }
+    return null;
+  }
+
+  String _purchaseKey(PurchaseDetails purchase) {
+    final token = purchase.verificationData.serverVerificationData;
+    if (token.isNotEmpty) {
+      return '${purchase.productID}|$token';
+    }
+    return '${purchase.productID}|${purchase.purchaseID ?? purchase.transactionDate ?? ''}';
   }
 
   Future<void> _openAccessOptionsSheet() async {

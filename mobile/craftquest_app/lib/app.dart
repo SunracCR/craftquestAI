@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:craftquest_app/core/billing/membership_billing_refresh_coordinator.dart';
 import 'package:craftquest_app/core/compliance/age_collection_gate.dart';
 import 'package:craftquest_app/core/compliance/parental_consent_gate.dart';
 import 'package:craftquest_app/core/update/force_update_gate.dart';
@@ -670,6 +671,7 @@ class _AuthenticatedShellState extends State<_AuthenticatedShell>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       unawaited(getIt<NotificationsCubit>().refreshUnreadCount());
+      unawaited(getIt<MembershipBillingRefreshCoordinator>().refreshOnAppResume());
     }
   }
 

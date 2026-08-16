@@ -49,6 +49,8 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
   String? _error;
   StreamSubscription<List<PurchaseDetails>>? _purchaseSub;
   bool _storeAvailable = false;
+  bool _userInitiatedPurchase = false;
+  final Set<String> _handledPurchaseKeys = {};
 
   static bool get _supportsStorePurchase =>
       !kIsWeb &&
@@ -106,6 +108,7 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
           final response = await InAppPurchase.instance.queryProductDetails(ids);
           storeProducts = response.productDetails;
         }
+        await InAppPurchase.instance.restorePurchases();
       }
 
       if (!mounted) return;
@@ -158,6 +161,7 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
     }
 
     setState(() => _purchasing = true);
+    _userInitiatedPurchase = true;
     final param = PurchaseParam(productDetails: product);
     await InAppPurchase.instance.buyNonConsumable(purchaseParam: param);
   }
@@ -283,6 +287,12 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
     for (final purchase in purchases) {
       if (purchase.status == PurchaseStatus.purchased ||
           purchase.status == PurchaseStatus.restored) {
+        final purchaseKey = _purchaseKey(purchase);
+        if (!_handledPurchaseKeys.add(purchaseKey)) {
+          continue;
+        }
+
+        final userInitiated = _userInitiatedPurchase;
         try {
           final platform = defaultTargetPlatform == TargetPlatform.iOS
               ? 'app_store'
@@ -299,19 +309,37 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
             await InAppPurchase.instance.completePurchase(purchase);
           }
           if (!mounted) return;
-          await refreshAppSessionAfterCheckout(context);
-          if (!mounted) return;
-          context.showSuccessSnackBar(
-            l10n.upgradeSuccess(
-              BillingDisplay.localizedPlanName(l10n, code: verified.planCode),
-            ),
-          );
-          Navigator.of(context).pop(true);
+
+          if (userInitiated) {
+            await refreshAppSessionAfterCheckout(context);
+            if (!mounted) return;
+            context.showSuccessSnackBar(
+              l10n.upgradeSuccess(
+                BillingDisplay.localizedPlanName(l10n, code: verified.planCode),
+              ),
+            );
+            Navigator.of(context).pop(true);
+          } else {
+            await refreshAppSessionAfterCheckout(context);
+            if (!mounted) return;
+            await _load(forceRefreshBilling: true);
+          }
         } catch (_) {
+          _handledPurchaseKeys.remove(purchaseKey);
           if (!mounted) return;
-          context.showErrorSnackBar(l10n.purchaseVerificationFailed);
+          if (userInitiated) {
+            context.showErrorSnackBar(l10n.purchaseVerificationFailed);
+          }
+        } finally {
+          if (userInitiated) {
+            _userInitiatedPurchase = false;
+          }
+          if (mounted) setState(() => _purchasing = false);
         }
-      } else if (purchase.status == PurchaseStatus.error) {
+        continue;
+      }
+
+      if (purchase.status == PurchaseStatus.error) {
         if (!mounted) return;
         context.showErrorSnackBar(
           purchase.error?.message ?? l10n.purchaseFailed,
@@ -319,6 +347,14 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
       }
       if (mounted) setState(() => _purchasing = false);
     }
+  }
+
+  String _purchaseKey(PurchaseDetails purchase) {
+    final token = purchase.verificationData.serverVerificationData;
+    if (token.isNotEmpty) {
+      return '${purchase.productID}|$token';
+    }
+    return '${purchase.productID}|${purchase.purchaseID ?? purchase.transactionDate ?? ''}';
   }
 
   @override

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:craftquest_app/core/auth/token_storage.dart';
+import 'package:craftquest_app/core/billing/membership_billing_refresh_coordinator.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/navigation/app_keys.dart';
 import 'package:craftquest_app/features/notifications/data/notification_repository.dart';
@@ -184,6 +185,12 @@ class PushNotificationService {
 
   void _listenForForegroundMessages() {
     FirebaseMessaging.onMessage.listen((message) async {
+      final type = message.data['type'] as String?;
+      final coordinator = getIt<MembershipBillingRefreshCoordinator>();
+      if (coordinator.shouldRefreshForNotification(type)) {
+        unawaited(coordinator.refreshForNotification(type!));
+      }
+
       final notification = message.notification;
       if (notification == null) {
         return;
@@ -231,8 +238,14 @@ class PushNotificationService {
   }
 
   Future<void> _openFromData(Map<String, dynamic> data) async {
+    final type = data['type'] as String? ?? '';
+    final coordinator = getIt<MembershipBillingRefreshCoordinator>();
+    if (coordinator.shouldRefreshForNotification(type)) {
+      await coordinator.refreshForNotification(type);
+    }
+
     final context = rootNavigatorKey.currentContext;
-    if (context == null) {
+    if (context == null || !context.mounted) {
       return;
     }
 
