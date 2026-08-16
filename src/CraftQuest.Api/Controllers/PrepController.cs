@@ -156,6 +156,14 @@ public class PrepController(
         return Ok(result);
     }
 
+    [HttpGet("mobile/store-products")]
+    [ProducesResponseType(typeof(IReadOnlyList<PrepMobileStoreProductDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ListMobileStoreProducts(CancellationToken cancellationToken)
+    {
+        var products = await prepPlusCatalogService.ListMobileStoreProductsAsync(cancellationToken);
+        return Ok(products);
+    }
+
     [HttpPost("mobile/verify-purchase")]
     [ProducesResponseType(typeof(PrepCheckoutResultDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> VerifyMobilePurchase(

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:craftquest_app/core/billing/post_checkout_session_refresh.dart';
+import 'package:craftquest_app/core/billing/mobile_store_purchase_coordinator.dart';
 import 'package:craftquest_app/core/billing/paypal_web_launcher.dart';
 import 'package:craftquest_app/core/billing/payment_platform.dart';
 import 'package:craftquest_app/core/compliance/parental_gate_dialog.dart';
@@ -43,6 +44,7 @@ class TeacherUpgradePage extends StatefulWidget {
 
 class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
   final _repo = getIt<BillingRepository>();
+  final _storePurchases = getIt<MobileStorePurchaseCoordinator>();
 
   UpgradeablePlanModel? _teacherPlan;
   SubscriptionModel? _subscription;
@@ -68,6 +70,7 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
   @override
   void initState() {
     super.initState();
+    _storePurchases.pushBillingPageHandler();
     if (_supportsStorePurchase) {
       _purchaseSub =
           InAppPurchase.instance.purchaseStream.listen(_onPurchaseUpdate);
@@ -77,6 +80,7 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
 
   @override
   void dispose() {
+    _storePurchases.popBillingPageHandler();
     _purchaseSub?.cancel();
     super.dispose();
   }

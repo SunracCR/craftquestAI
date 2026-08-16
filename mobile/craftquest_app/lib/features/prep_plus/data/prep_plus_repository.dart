@@ -390,6 +390,16 @@ class PrepPlusRepository {
     return PrepCheckoutResultModel.fromJson(response.data!);
   }
 
+  Future<List<PrepMobileStoreProductModel>> getMobileStoreProducts() async {
+    final response =
+        await _apiClient.dio.get<List<dynamic>>('/api/prep/mobile/store-products');
+    return (response.data ?? [])
+        .map(
+          (e) => PrepMobileStoreProductModel.fromJson(e as Map<String, dynamic>),
+        )
+        .toList();
+  }
+
   Future<PrepCheckoutResultModel> verifyMobilePurchase({
     required String catalogItemId,
     required String offerId,

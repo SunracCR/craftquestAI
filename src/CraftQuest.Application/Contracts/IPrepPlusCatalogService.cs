@@ -50,4 +50,7 @@ public interface IPrepPlusCatalogService
     Task<PrepCatalogItemSlugDto> ResolveCatalogItemIdBySlugAsync(
         string slug,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<PrepMobileStoreProductDto>> ListMobileStoreProductsAsync(
+        CancellationToken cancellationToken = default);
 }

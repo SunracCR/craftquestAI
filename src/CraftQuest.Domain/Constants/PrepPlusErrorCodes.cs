@@ -41,6 +41,7 @@ public static class PrepPlusErrorCodes
     public const string PayPalPurchaseNotFound = "PREP_PAYPAL_PURCHASE_NOT_FOUND";
     public const string MobilePlatformInvalid = "PREP_MOBILE_PLATFORM_INVALID";
     public const string StoreProductMismatch = "PREP_STORE_PRODUCT_MISMATCH";
+    public const string StoreProductNotFound = "PREP_STORE_PRODUCT_NOT_FOUND";
     public const string OfferNoLongerExists = "PREP_OFFER_NO_LONGER_EXISTS";
     public const string InvalidProductCode = "PREP_INVALID_PRODUCT_CODE";
     public const string AlreadyOwned = "PREP_ALREADY_OWNED";

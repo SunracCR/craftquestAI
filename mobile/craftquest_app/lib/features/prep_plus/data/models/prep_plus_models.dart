@@ -141,6 +141,26 @@ class PrepAccessOfferModel {
   final String? storeProductId;
 }
 
+class PrepMobileStoreProductModel {
+  const PrepMobileStoreProductModel({
+    required this.storeProductId,
+    required this.catalogItemId,
+    required this.offerId,
+  });
+
+  factory PrepMobileStoreProductModel.fromJson(Map<String, dynamic> json) {
+    return PrepMobileStoreProductModel(
+      storeProductId: json['storeProductId'] as String,
+      catalogItemId: json['catalogItemId'] as String,
+      offerId: json['offerId'] as String,
+    );
+  }
+
+  final String storeProductId;
+  final String catalogItemId;
+  final String offerId;
+}
+
 class PrepItemDetailModel {
   const PrepItemDetailModel({
     required this.catalogItemId,

@@ -157,10 +157,15 @@ public class PrepPlusPaymentService(
                 PrepPlusErrorCodes.MobilePlatformInvalid);
         }
 
-        var (item, offer) = await GetOfferContextAsync(
-            request.CatalogItemId,
-            request.OfferId,
-            cancellationToken);
+        var (item, offer) = request.CatalogItemId == Guid.Empty || request.OfferId == Guid.Empty
+            ? await GetOfferContextByStoreProductIdAsync(request.ProductId, cancellationToken)
+            : await GetOfferContextAsync(
+                request.CatalogItemId,
+                request.OfferId,
+                cancellationToken);
+
+        var catalogItemId = item.CatalogItemId;
+        var offerId = offer.OfferId;
 
         if (offer.IsFree)
         {
@@ -192,10 +197,10 @@ public class PrepPlusPaymentService(
 
         var providerCode = platform == "google_play" ? "google_play" : "app_store";
         var transactionId = request.TransactionId ?? request.PurchaseToken;
-        var productCode = BuildProductCode(request.CatalogItemId, request.OfferId);
+        var productCode = BuildProductCode(catalogItemId, offerId);
         var referralCodeId = await prepReferralService.ResolveReferralCodeIdAsync(
             request.ReferralCode,
-            request.CatalogItemId,
+            catalogItemId,
             cancellationToken);
 
         var existing = await dbContext.Purchases
@@ -345,6 +350,47 @@ public class PrepPlusPaymentService(
         var offer = item.AccessOffers
             .FirstOrDefault(o => o.OfferId == offerId && o.IsActive)
             ?? throw new AppException("Offer not found.", 404, PrepPlusErrorCodes.OfferNotFound);
+
+        return (item, offer);
+    }
+
+    private async Task<(PrepCatalogItem Item, PrepAccessOffer Offer)> GetOfferContextByStoreProductIdAsync(
+        string productId,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(productId))
+        {
+            throw new AppException(
+                "Store product id is required.",
+                400,
+                PrepPlusErrorCodes.StoreProductNotFound);
+        }
+
+        var now = DateTime.UtcNow;
+        var offer = await dbContext.PrepAccessOffers
+            .Include(o => o.CatalogItem)
+            .ThenInclude(i => i.Quiz)
+            .FirstOrDefaultAsync(
+                o => o.IsActive
+                    && o.StoreProductId != null
+                    && o.StoreProductId == productId
+                    && o.CatalogItem.IsPublished
+                    && !o.CatalogItem.IsDeleted,
+                cancellationToken)
+            ?? throw new AppException(
+                "Store product not found.",
+                404,
+                PrepPlusErrorCodes.StoreProductNotFound);
+
+        var item = offer.CatalogItem;
+        if (item.ListingStartsAt.HasValue && item.ListingStartsAt > now
+            || item.ListingEndsAt.HasValue && item.ListingEndsAt <= now)
+        {
+            throw new AppException(
+                "This item is not available for purchase.",
+                400,
+                PrepPlusErrorCodes.ItemNotAvailable);
+        }
 
         return (item, offer);
     }

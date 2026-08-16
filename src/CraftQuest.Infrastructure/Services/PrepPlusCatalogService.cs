@@ -714,6 +714,30 @@ public class PrepPlusCatalogService(
         };
     }
 
+    public async Task<IReadOnlyList<PrepMobileStoreProductDto>> ListMobileStoreProductsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var now = DateTime.UtcNow;
+        return await dbContext.PrepAccessOffers
+            .AsNoTracking()
+            .Where(o => o.IsActive
+                && !o.IsFree
+                && o.PriceAmount > 0
+                && o.StoreProductId != null
+                && o.StoreProductId != string.Empty
+                && o.CatalogItem.IsPublished
+                && !o.CatalogItem.IsDeleted
+                && (!o.CatalogItem.ListingStartsAt.HasValue || o.CatalogItem.ListingStartsAt <= now)
+                && (!o.CatalogItem.ListingEndsAt.HasValue || o.CatalogItem.ListingEndsAt > now))
+            .Select(o => new PrepMobileStoreProductDto
+            {
+                StoreProductId = o.StoreProductId!,
+                CatalogItemId = o.CatalogItemId,
+                OfferId = o.OfferId,
+            })
+            .ToListAsync(cancellationToken);
+    }
+
     private async Task<PrepCatalogItem> LoadPublishedItemAsync(
         Guid catalogItemId,
         CancellationToken cancellationToken)

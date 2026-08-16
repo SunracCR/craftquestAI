@@ -131,6 +131,13 @@ public class PrepMobilePurchaseRequest
     public string? ReferralCode { get; set; }
 }
 
+public sealed class PrepMobileStoreProductDto
+{
+    public required string StoreProductId { get; init; }
+    public required Guid CatalogItemId { get; init; }
+    public required Guid OfferId { get; init; }
+}
+
 public sealed class PrepCheckoutResultDto
 {
     public required string Status { get; init; }
