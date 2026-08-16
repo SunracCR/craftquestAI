@@ -686,12 +686,12 @@ class _ProfilePageState extends State<ProfilePage> {
                   color: AppColors.textSecondary,
                 ),
                 onTap: () async {
-                  await Navigator.of(context).push<bool>(
+                  final bought = await Navigator.of(context).push<bool>(
                     MaterialPageRoute<bool>(
                       builder: (_) => const AiCreditPacksPage(),
                     ),
                   );
-                  await _loadBilling();
+                  await _loadBilling(forceRefresh: bought == true);
                 },
               ),
             ),

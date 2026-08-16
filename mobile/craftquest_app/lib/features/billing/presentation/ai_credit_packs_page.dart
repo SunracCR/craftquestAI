@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:craftquest_app/core/billing/post_checkout_session_refresh.dart';
+import 'package:craftquest_app/core/billing/checkout_refresh_notifier.dart';
 import 'package:craftquest_app/core/billing/paypal_web_launcher.dart';
 import 'package:craftquest_app/core/billing/payment_platform.dart';
 import 'package:craftquest_app/core/compliance/parental_gate_dialog.dart';
@@ -43,6 +45,7 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
   String? _error;
   StreamSubscription<List<PurchaseDetails>>? _purchaseSub;
   bool _storeAvailable = false;
+  final Set<String> _handledPurchaseKeys = {};
 
   static bool get _supportsStorePurchase =>
       !kIsWeb &&
@@ -138,6 +141,8 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
         final captured =
             await _repository.capturePayPalAiCreditOrder(order.orderId);
         if (!mounted) return;
+        await refreshAppSessionAfterCheckout(context);
+        if (!mounted) return;
         context.showSuccessSnackBar(
           l10n.aiCreditPacksPurchaseSuccess(captured.creditsGranted),
         );
@@ -205,6 +210,12 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
     for (final purchase in purchases) {
       if (purchase.status == PurchaseStatus.purchased ||
           purchase.status == PurchaseStatus.restored) {
+        final purchaseKey = _purchaseKey(purchase);
+        if (!_handledPurchaseKeys.add(purchaseKey)) {
+          continue;
+        }
+
+        final userInitiated = _userInitiatedPurchase;
         try {
           final platform = defaultTargetPlatform == TargetPlatform.iOS
               ? 'app_store'
@@ -220,27 +231,49 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
             await InAppPurchase.instance.completePurchase(purchase);
           }
           if (!mounted) return;
-          context.showSuccessSnackBar(
-            l10n.aiCreditPacksPurchaseSuccess(result.creditsGranted),
-          );
-          if (_userInitiatedPurchase) {
+
+          if (userInitiated) {
+            await refreshAppSessionAfterCheckout(context);
+            if (!mounted) return;
+            context.showSuccessSnackBar(
+              l10n.aiCreditPacksPurchaseSuccess(result.creditsGranted),
+            );
             Navigator.of(context).pop(true);
           } else {
             final billing = await _repository.getMyBilling(forceRefresh: true);
             if (!mounted) return;
+            getIt<CheckoutRefreshNotifier>().notifyCheckoutCompleted(
+              billing: billing,
+            );
             setState(() => _billing = billing);
           }
         } on DioException catch (e) {
+          _handledPurchaseKeys.remove(purchaseKey);
           if (!mounted) return;
-          if (_userInitiatedPurchase) {
+          if (userInitiated) {
             context.showDioErrorSnackBar(e);
           }
         } finally {
-          _userInitiatedPurchase = false;
+          if (userInitiated) {
+            _userInitiatedPurchase = false;
+          }
+          if (mounted) setState(() => _purchasing = false);
         }
+        continue;
       }
-      if (mounted) setState(() => _purchasing = false);
+
+      if (purchase.status == PurchaseStatus.error && mounted) {
+        setState(() => _purchasing = false);
+      }
     }
+  }
+
+  String _purchaseKey(PurchaseDetails purchase) {
+    final token = purchase.verificationData.serverVerificationData;
+    if (token.isNotEmpty) {
+      return '${purchase.productID}|$token';
+    }
+    return '${purchase.productID}|${purchase.purchaseID ?? purchase.transactionDate ?? ''}';
   }
 
   String _formatPrice(AiCreditPackModel pack, AppLocalizations l10n) {

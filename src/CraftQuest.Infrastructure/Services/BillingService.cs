@@ -469,6 +469,7 @@ public class BillingService(
         });
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        InvalidateBillingCache(userId);
         return await GetTotalAiCreditsBalanceAsync(userId, cancellationToken);
     }
 
@@ -753,6 +754,7 @@ public class BillingService(
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        InvalidateBillingCache(subscription.UserId);
     }
 
     public async Task RevokeSubscriptionImmediatelyAsync(
@@ -830,6 +832,7 @@ public class BillingService(
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        InvalidateBillingCache(userId);
 
         await NotificationPublisher.TryNotifyAsync(
             () => notificationService.NotifyAsync(

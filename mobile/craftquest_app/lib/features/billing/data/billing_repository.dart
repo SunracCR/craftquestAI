@@ -57,7 +57,12 @@ class BillingRepository {
       _cachedAt = DateTime.now();
       return billing;
     }
-    return _cachedBilling ?? billing;
+    if (_cachedBilling != null &&
+        _cachedAt != null &&
+        DateTime.now().difference(_cachedAt!) < _cacheTtl) {
+      return _cachedBilling!;
+    }
+    return getMyBilling();
   }
 
   Future<List<PurchaseHistoryItemModel>> getMyPurchases() async {

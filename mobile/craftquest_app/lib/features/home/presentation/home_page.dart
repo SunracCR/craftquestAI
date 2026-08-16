@@ -516,7 +516,7 @@ class _HomePageState extends State<HomePage> {
                                           ),
                                         );
                                         if (upgraded == true) {
-                                          await _load();
+                                          await _load(forceRefresh: true);
                                         }
                                       },
                                     ),
@@ -535,7 +535,7 @@ class _HomePageState extends State<HomePage> {
                                             ),
                                           );
                                           if (bought == true) {
-                                            await _load();
+                                            await _load(forceRefresh: true);
                                           }
                                         },
                                         icon: const Icon(
