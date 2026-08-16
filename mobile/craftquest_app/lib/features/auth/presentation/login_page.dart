@@ -492,7 +492,11 @@ class _LoginPageState extends State<LoginPage> {
                           padding: horizontalPad,
                           child: Align(
                             alignment: Alignment.topCenter,
-                            child: sizedCard,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.topCenter,
+                              child: sizedCard,
+                            ),
                           ),
                         );
                       }

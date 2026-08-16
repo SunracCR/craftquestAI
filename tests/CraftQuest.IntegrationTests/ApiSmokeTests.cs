@@ -34,16 +34,18 @@ public class ApiSmokeTests : IClassFixture<CraftQuestWebApplicationFactory>
     }
 
     [Fact]
-    public async Task Auth_Google_ReturnsNotImplemented()
+    public async Task Auth_Google_WithoutConfiguredClient_ReturnsServiceUnavailable()
     {
-        var response = await _client.PostAsync("/api/auth/google", null);
+        var response = await _client.PostAsJsonAsync(
+            "/api/auth/google",
+            new { idToken = "invalid-token" });
 
-        Assert.Equal(HttpStatusCode.NotImplemented, response.StatusCode);
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
 
         var body = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(body);
-        Assert.True(doc.RootElement.TryGetProperty("message", out var message));
-        Assert.Contains("Google", message.GetString(), StringComparison.OrdinalIgnoreCase);
+        Assert.True(doc.RootElement.TryGetProperty("title", out var title));
+        Assert.Contains("Google", title.GetString(), StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

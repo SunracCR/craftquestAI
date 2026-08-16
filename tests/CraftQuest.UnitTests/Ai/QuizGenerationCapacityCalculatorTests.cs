@@ -30,7 +30,7 @@ public class QuizGenerationCapacityCalculatorTests
     }
 
     [Fact]
-    public void ComputeMaterialCapacity_ShortDenseDocument_UsesWordCap()
+    public void ComputeMaterialCapacity_ShortDenseDocument_UsesChunkCapForSingleChunk()
     {
         var result = QuizGenerationCapacityCalculator.ComputeMaterialCapacity(
             words: 600,
@@ -39,7 +39,8 @@ public class QuizGenerationCapacityCalculatorTests
 
         Assert.Equal(6, result.WordCap);
         Assert.Equal(8, result.PageCap);
-        Assert.Equal(8, result.MaterialCap);
+        Assert.Equal(18, result.ChunkCap);
+        Assert.Equal(18, result.MaterialCap);
     }
 
     [Fact]

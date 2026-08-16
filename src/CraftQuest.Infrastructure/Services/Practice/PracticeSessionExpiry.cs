@@ -17,15 +17,34 @@ internal static class PracticeSessionExpiry
     {
         var cutoff = StaleCutoffUtc();
         var now = DateTime.UtcNow;
-        await dbContext.PracticeSessions
+        var staleQuery = dbContext.PracticeSessions
             .Where(s =>
                 s.StudentUserId == userId
                 && s.Status == "in_progress"
-                && (s.LastActivityAt ?? s.StartedAt) < cutoff)
-            .ExecuteUpdateAsync(
+                && (s.LastActivityAt ?? s.StartedAt) < cutoff);
+
+        if (dbContext.Database.IsSqlServer())
+        {
+            await staleQuery.ExecuteUpdateAsync(
                 setters => setters
                     .SetProperty(s => s.Status, "expired")
                     .SetProperty(s => s.FinishedAt, now),
                 cancellationToken);
+            return;
+        }
+
+        var staleSessions = await staleQuery.ToListAsync(cancellationToken);
+        if (staleSessions.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var session in staleSessions)
+        {
+            session.Status = "expired";
+            session.FinishedAt = now;
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 }
