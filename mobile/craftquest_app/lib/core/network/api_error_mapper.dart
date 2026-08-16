@@ -330,6 +330,11 @@ abstract final class ApiErrorMapper {
         return l10n.errorAiCreditsInsufficient;
       case 'AI_CREDIT_PACKS_NOT_AVAILABLE':
         return l10n.errorAiCreditPacksNotAvailable;
+      case 'AI_CREDIT_MOBILE_VERIFY_NOT_CONFIGURED':
+      case 'AI_CREDIT_PACK_UNKNOWN_PRODUCT':
+      case 'STORE_PURCHASE_VERIFY_FAILED':
+      case 'STORE_PURCHASE_INVALID':
+        return l10n.purchaseVerificationFailed;
       case 'MATERIAL_NEEDS_OCR':
         return l10n.errorMaterialNeedsOcr;
       case 'MATERIAL_NOT_SELECTABLE_TEXT':

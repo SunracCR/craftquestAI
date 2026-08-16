@@ -39,6 +39,7 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
   UserBillingModel? _billing;
   bool _loading = true;
   bool _purchasing = false;
+  bool _userInitiatedPurchase = false;
   String? _error;
   StreamSubscription<List<PurchaseDetails>>? _purchaseSub;
   bool _storeAvailable = false;
@@ -91,6 +92,8 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
               await InAppPurchase.instance.queryProductDetails(ids);
           storeProducts = response.productDetails;
         }
+        // Reintenta compras pendientes (p. ej. verify falló tras el cobro en Play).
+        await InAppPurchase.instance.restorePurchases();
       }
 
       if (!mounted) return;
@@ -191,6 +194,7 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
     }
 
     setState(() => _purchasing = true);
+    _userInitiatedPurchase = true;
     await InAppPurchase.instance.buyConsumable(
       purchaseParam: PurchaseParam(productDetails: product),
     );
@@ -199,7 +203,8 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
   Future<void> _onPurchaseUpdate(List<PurchaseDetails> purchases) async {
     final l10n = AppLocalizations.of(context)!;
     for (final purchase in purchases) {
-      if (purchase.status == PurchaseStatus.purchased) {
+      if (purchase.status == PurchaseStatus.purchased ||
+          purchase.status == PurchaseStatus.restored) {
         try {
           final platform = defaultTargetPlatform == TargetPlatform.iOS
               ? 'app_store'
@@ -208,21 +213,30 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
           final result = await _repository.verifyMobileAiCreditPurchase(
             platform: platform,
             productId: purchase.productID,
-            purchaseToken: token,
+            purchaseToken: token.isNotEmpty ? token : purchase.purchaseID ?? '',
             transactionId: purchase.purchaseID,
           );
+          if (purchase.pendingCompletePurchase) {
+            await InAppPurchase.instance.completePurchase(purchase);
+          }
           if (!mounted) return;
           context.showSuccessSnackBar(
             l10n.aiCreditPacksPurchaseSuccess(result.creditsGranted),
           );
-          Navigator.of(context).pop(true);
+          if (_userInitiatedPurchase) {
+            Navigator.of(context).pop(true);
+          } else {
+            final billing = await _repository.getMyBilling(forceRefresh: true);
+            if (!mounted) return;
+            setState(() => _billing = billing);
+          }
         } on DioException catch (e) {
           if (!mounted) return;
-          context.showDioErrorSnackBar(e);
-        } finally {
-          if (purchase.pendingCompletePurchase) {
-            await InAppPurchase.instance.completePurchase(purchase);
+          if (_userInitiatedPurchase) {
+            context.showDioErrorSnackBar(e);
           }
+        } finally {
+          _userInitiatedPurchase = false;
         }
       }
       if (mounted) setState(() => _purchasing = false);

@@ -14,4 +14,9 @@ public interface IMobileStoreProductVerifier
         string purchaseToken,
         string? transactionId,
         CancellationToken cancellationToken = default);
+
+    Task ConsumeGooglePlayConsumableAsync(
+        string productId,
+        string purchaseToken,
+        CancellationToken cancellationToken = default);
 }

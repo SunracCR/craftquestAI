@@ -1155,6 +1155,14 @@ public class PaymentService(
             purchase.PurchaseId,
             cancellationToken);
 
+        if (!options.Value.UseMockPayments && platform == "google_play")
+        {
+            await mobileProductVerifier.ConsumeGooglePlayConsumableAsync(
+                request.ProductId,
+                request.PurchaseToken,
+                cancellationToken);
+        }
+
         return new VerifyMobileAiCreditPurchaseResponse
         {
             PackCode = pack.Code,
@@ -1195,7 +1203,10 @@ public class PaymentService(
             || (!string.IsNullOrWhiteSpace(p.AppStoreProductId)
                 && p.AppStoreProductId.Equals(productId, StringComparison.OrdinalIgnoreCase)));
 
-        return pack ?? throw new AppException($"Unknown AI credit pack product id '{productId}'.", 400);
+        return pack ?? throw new AppException(
+            $"Unknown AI credit pack product id '{productId}'.",
+            400,
+            "AI_CREDIT_PACK_UNKNOWN_PRODUCT");
     }
 
     private static IReadOnlyList<AiCreditPackDto> MapAiCreditPacks(PaymentOptions paymentOptions) =>

@@ -11,7 +11,13 @@ public sealed class MobileStoreProductVerifier(
         string productId,
         string purchaseToken,
         CancellationToken cancellationToken = default) =>
-        googlePlay.VerifyAndConsumeAsync(productId, purchaseToken, cancellationToken);
+        googlePlay.VerifyAsync(productId, purchaseToken, cancellationToken);
+
+    public Task ConsumeGooglePlayConsumableAsync(
+        string productId,
+        string purchaseToken,
+        CancellationToken cancellationToken = default) =>
+        googlePlay.ConsumeAsync(productId, purchaseToken, cancellationToken);
 
     public Task<MobileStoreProductDetails> VerifyAppStoreConsumableAsync(
         string productId,

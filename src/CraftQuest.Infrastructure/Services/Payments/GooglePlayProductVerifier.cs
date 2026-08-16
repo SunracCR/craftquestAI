@@ -14,28 +14,12 @@ public sealed class GooglePlayProductVerifier(IOptions<PaymentOptions> options)
     private const int PurchaseStatePurchased = 0;
     private const int ConsumptionStateNotConsumed = 0;
 
-    public async Task<MobileStoreProductDetails> VerifyAndConsumeAsync(
+    public async Task<MobileStoreProductDetails> VerifyAsync(
         string productId,
         string purchaseToken,
         CancellationToken cancellationToken)
     {
-        var service = CreateService();
-        var packageName = options.Value.Mobile.GooglePlayPackageName;
-
-        ProductPurchase purchase;
-        try
-        {
-            purchase = await service.Purchases.Products
-                .Get(packageName, productId, purchaseToken)
-                .ExecuteAsync(cancellationToken);
-        }
-        catch (Exception)
-        {
-            throw new AppException(
-                "Google Play product purchase could not be verified.",
-                502,
-                "STORE_PURCHASE_VERIFY_FAILED");
-        }
+        var purchase = await GetProductPurchaseAsync(productId, purchaseToken, cancellationToken);
 
         if (purchase.PurchaseState != PurchaseStatePurchased)
         {
@@ -49,18 +33,58 @@ public sealed class GooglePlayProductVerifier(IOptions<PaymentOptions> options)
             ? purchaseToken
             : purchase.OrderId;
 
-        if (purchase.ConsumptionState == ConsumptionStateNotConsumed)
-        {
-            await service.Purchases.Products
-                .Consume(packageName, productId, purchaseToken)
-                .ExecuteAsync(cancellationToken);
-        }
-
         return new MobileStoreProductDetails
         {
             IsValid = true,
             TransactionId = transactionId,
         };
+    }
+
+    public async Task ConsumeAsync(
+        string productId,
+        string purchaseToken,
+        CancellationToken cancellationToken)
+    {
+        var purchase = await GetProductPurchaseAsync(productId, purchaseToken, cancellationToken);
+
+        if (purchase.PurchaseState != PurchaseStatePurchased)
+        {
+            return;
+        }
+
+        if (purchase.ConsumptionState != ConsumptionStateNotConsumed)
+        {
+            return;
+        }
+
+        var service = CreateService();
+        var packageName = options.Value.Mobile.GooglePlayPackageName;
+        await service.Purchases.Products
+            .Consume(packageName, productId, purchaseToken)
+            .ExecuteAsync(cancellationToken);
+    }
+
+    private async Task<ProductPurchase> GetProductPurchaseAsync(
+        string productId,
+        string purchaseToken,
+        CancellationToken cancellationToken)
+    {
+        var service = CreateService();
+        var packageName = options.Value.Mobile.GooglePlayPackageName;
+
+        try
+        {
+            return await service.Purchases.Products
+                .Get(packageName, productId, purchaseToken)
+                .ExecuteAsync(cancellationToken);
+        }
+        catch (Exception)
+        {
+            throw new AppException(
+                "Google Play product purchase could not be verified.",
+                502,
+                "STORE_PURCHASE_VERIFY_FAILED");
+        }
     }
 
     private AndroidPublisherService CreateService()
