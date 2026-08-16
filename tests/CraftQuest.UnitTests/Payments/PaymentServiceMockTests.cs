@@ -245,7 +245,9 @@ public class PaymentServiceMockTests
         });
         var payPal = new PayPalApiClient(new HttpClient(), paymentOptions);
         var google = new GooglePlaySubscriptionVerifier(paymentOptions);
-        var googleProducts = new GooglePlayProductVerifier(paymentOptions);
+        var googleProducts = new GooglePlayProductVerifier(
+            paymentOptions,
+            NullLogger<GooglePlayProductVerifier>.Instance);
         var apple = new AppleAppStoreSubscriptionVerifier(
             new HttpClientFactoryStub(),
             paymentOptions);

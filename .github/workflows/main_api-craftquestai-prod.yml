@@ -67,3 +67,5 @@ jobs:
           app-name: 'api-craftquestai-prod'
           slot-name: 'Production'
           package: .
+          clean: true
+          restart: true
