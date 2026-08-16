@@ -17,6 +17,7 @@ public class PaymentService(
     IBillingService billingService,
     PayPalApiClient payPalApiClient,
     IMobileStoreSubscriptionVerifier mobileStoreVerifier,
+    IMobileStoreProductVerifier mobileProductVerifier,
     MobileStoreWebhookProcessor mobileStoreWebhooks,
     IOptions<PaymentOptions> options) : IPaymentService
 {
@@ -1073,7 +1074,41 @@ public class PaymentService(
         }
 
         var pack = ResolveAiCreditPackByProductId(request.ProductId);
-        var paymentTransactionId = request.TransactionId ?? request.PurchaseToken;
+
+        MobileStoreProductDetails storeDetails;
+        if (options.Value.UseMockPayments)
+        {
+            storeDetails = new MobileStoreProductDetails
+            {
+                IsValid = true,
+                TransactionId = request.TransactionId ?? request.PurchaseToken,
+            };
+        }
+        else if (platform == "google_play")
+        {
+            storeDetails = await mobileProductVerifier.VerifyGooglePlayConsumableAsync(
+                request.ProductId,
+                request.PurchaseToken,
+                cancellationToken);
+        }
+        else
+        {
+            storeDetails = await mobileProductVerifier.VerifyAppStoreConsumableAsync(
+                request.ProductId,
+                request.PurchaseToken,
+                request.TransactionId,
+                cancellationToken);
+        }
+
+        if (!storeDetails.IsValid)
+        {
+            throw new AppException(
+                "Store product purchase is not valid.",
+                400,
+                "STORE_PURCHASE_INVALID");
+        }
+
+        var paymentTransactionId = storeDetails.TransactionId;
 
         var existingPurchase = await dbContext.Purchases
             .FirstOrDefaultAsync(
@@ -1092,14 +1127,6 @@ public class PaymentService(
                 Status = existingPurchase.Status,
                 MockMode = options.Value.UseMockPayments,
             };
-        }
-
-        if (!options.Value.UseMockPayments)
-        {
-            throw new AppException(
-                "Mobile AI credit pack verification requires store configuration or mock payments.",
-                501,
-                "AI_CREDIT_MOBILE_VERIFY_NOT_CONFIGURED");
         }
 
         var purchase = existingPurchase ?? new Purchase
@@ -1134,7 +1161,7 @@ public class PaymentService(
             CreditsGranted = pack.Credits,
             AiCreditsBalance = newBalance,
             Status = "validated",
-            MockMode = true,
+            MockMode = options.Value.UseMockPayments,
         };
     }
 

@@ -245,10 +245,12 @@ public class PaymentServiceMockTests
         });
         var payPal = new PayPalApiClient(new HttpClient(), paymentOptions);
         var google = new GooglePlaySubscriptionVerifier(paymentOptions);
+        var googleProducts = new GooglePlayProductVerifier(paymentOptions);
         var apple = new AppleAppStoreSubscriptionVerifier(
             new HttpClientFactoryStub(),
             paymentOptions);
         var mobileVerifier = new MobileStoreSubscriptionVerifier(google, apple);
+        var mobileProductVerifier = new MobileStoreProductVerifier(googleProducts, apple);
         var webhooks = new MobileStoreWebhookProcessor(
             db,
             billing,
@@ -262,6 +264,7 @@ public class PaymentServiceMockTests
             billing,
             payPal,
             mobileVerifier,
+            mobileProductVerifier,
             webhooks,
             paymentOptions);
     }

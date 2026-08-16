@@ -130,8 +130,10 @@ public static class DependencyInjection
         services.AddScoped<IMediaAccessService, MediaAccessService>();
         services.AddHttpClient(nameof(AppleAppStoreSubscriptionVerifier));
         services.AddSingleton<GooglePlaySubscriptionVerifier>();
+        services.AddSingleton<GooglePlayProductVerifier>();
         services.AddSingleton<AppleAppStoreSubscriptionVerifier>();
         services.AddScoped<IMobileStoreSubscriptionVerifier, MobileStoreSubscriptionVerifier>();
+        services.AddScoped<IMobileStoreProductVerifier, MobileStoreProductVerifier>();
         services.AddScoped<AppleAppStoreJwsVerifier>();
         services.AddScoped<GooglePubSubJwtValidator>();
         services.AddScoped<PaymentWebhookSecurityService>();

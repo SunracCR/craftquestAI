@@ -27,6 +27,32 @@ public class AiCreditPackPaymentTests
     }
 
     [Fact]
+    public async Task VerifyMobileAiCreditPurchase_GrantsCredits_ForProUser_MockMode()
+    {
+        await using var db = CreateDb();
+        var userId = Guid.NewGuid();
+        await SeedUserWithPlanAsync(db, userId, "pro", monthlyAiCredits: 150);
+
+        var service = CreatePaymentService(db);
+
+        var result = await service.VerifyMobileAiCreditPurchaseAsync(
+            userId,
+            new VerifyMobileAiCreditPurchaseRequest
+            {
+                Platform = "google_play",
+                ProductId = "craftquest_ai_credits_50",
+                PurchaseToken = "gp-ai-test-token",
+                TransactionId = "GPA.test-order",
+            });
+
+        Assert.Equal("pack_50", result.PackCode);
+        Assert.Equal(30, result.CreditsGranted);
+        Assert.Equal(180, result.AiCreditsBalance);
+        Assert.Equal("validated", result.Status);
+        Assert.True(result.MockMode);
+    }
+
+    [Fact]
     public async Task CapturePayPalAiCreditOrder_GrantsCredits_ForProUser_MockMode()
     {
         await using var db = CreateDb();
@@ -123,15 +149,19 @@ public class AiCreditPackPaymentTests
                     Credits = 30,
                     PriceUsd = 4.99m,
                     SortOrder = 1,
+                    GooglePlayProductId = "craftquest_ai_credits_50",
+                    AppStoreProductId = "craftquest_ai_credits_50",
                 },
             ],
         });
         var payPal = new PayPalApiClient(new HttpClient(), paymentOptions);
         var google = new GooglePlaySubscriptionVerifier(paymentOptions);
+        var googleProducts = new GooglePlayProductVerifier(paymentOptions);
         var apple = new AppleAppStoreSubscriptionVerifier(
             new HttpClientFactoryStub(),
             paymentOptions);
         var mobileVerifier = new MobileStoreSubscriptionVerifier(google, apple);
+        var mobileProductVerifier = new MobileStoreProductVerifier(googleProducts, apple);
         var webhooks = new MobileStoreWebhookProcessor(
             db,
             billing,
@@ -145,6 +175,7 @@ public class AiCreditPackPaymentTests
             billing,
             payPal,
             mobileVerifier,
+            mobileProductVerifier,
             webhooks,
             paymentOptions);
     }

@@ -58,6 +58,149 @@ public sealed class AppleAppStoreSubscriptionVerifier(
             503);
     }
 
+    public async Task<MobileStoreProductDetails> VerifyConsumableAsync(
+        string productId,
+        string purchaseToken,
+        string? transactionId,
+        CancellationToken cancellationToken)
+    {
+        var mobile = options.Value.Mobile;
+
+        if (!string.IsNullOrWhiteSpace(transactionId)
+            && !string.IsNullOrWhiteSpace(mobile.AppleIssuerId)
+            && !string.IsNullOrWhiteSpace(mobile.AppleKeyId)
+            && !string.IsNullOrWhiteSpace(mobile.ApplePrivateKeyPath)
+            && File.Exists(mobile.ApplePrivateKeyPath))
+        {
+            return await VerifyConsumableViaAppStoreServerApiAsync(
+                productId,
+                transactionId,
+                mobile,
+                cancellationToken);
+        }
+
+        if (!string.IsNullOrWhiteSpace(mobile.AppleSharedSecret))
+        {
+            return await VerifyConsumableViaReceiptAsync(
+                purchaseToken,
+                productId,
+                mobile,
+                cancellationToken);
+        }
+
+        throw new AppException(
+            "App Store is not configured. Set Apple Issuer/Key/PrivateKey or AppleSharedSecret.",
+            503);
+    }
+
+    private async Task<MobileStoreProductDetails> VerifyConsumableViaAppStoreServerApiAsync(
+        string expectedProductId,
+        string transactionId,
+        MobileStoreOptions mobile,
+        CancellationToken cancellationToken)
+    {
+        var pem = await File.ReadAllTextAsync(mobile.ApplePrivateKeyPath, cancellationToken);
+        var jwt = AppleAppStoreJwtFactory.CreateToken(
+            mobile.AppleIssuerId,
+            mobile.AppleKeyId,
+            mobile.AppleBundleId,
+            pem);
+
+        var baseUrl = mobile.AppleEnvironment.Equals("Production", StringComparison.OrdinalIgnoreCase)
+            ? "https://api.storekit.itunes.apple.com"
+            : "https://api.storekit-sandbox.itunes.apple.com";
+
+        var client = httpClientFactory.CreateClient(nameof(AppleAppStoreSubscriptionVerifier));
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"{baseUrl}/inApps/v1/transactions/{transactionId}");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+
+        var response = await client.SendAsync(request, cancellationToken);
+        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new AppException($"App Store transaction lookup failed: {body}", 502);
+        }
+
+        using var doc = JsonDocument.Parse(body);
+        if (!doc.RootElement.TryGetProperty("signedTransactionInfo", out var signedInfoEl))
+        {
+            throw new AppException("App Store response missing signedTransactionInfo.", 502);
+        }
+
+        var payload = DecodeAppleJwsPayload(signedInfoEl.GetString()!);
+        var storeProductId = ReadString(payload, "productId");
+        if (!string.Equals(storeProductId, expectedProductId, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new AppException(
+                "App Store transaction product does not match the requested pack.",
+                400,
+                "STORE_PURCHASE_INVALID");
+        }
+
+        var resolvedTransactionId = ReadString(payload, "transactionId") ?? transactionId;
+        return new MobileStoreProductDetails
+        {
+            IsValid = true,
+            TransactionId = resolvedTransactionId,
+        };
+    }
+
+    private async Task<MobileStoreProductDetails> VerifyConsumableViaReceiptAsync(
+        string receiptData,
+        string productId,
+        MobileStoreOptions mobile,
+        CancellationToken cancellationToken)
+    {
+        var verifyUrl = mobile.AppleEnvironment.Equals("Production", StringComparison.OrdinalIgnoreCase)
+            ? "https://buy.itunes.apple.com/verifyReceipt"
+            : "https://sandbox.itunes.apple.com/verifyReceipt";
+
+        var client = httpClientFactory.CreateClient(nameof(AppleAppStoreSubscriptionVerifier));
+        var payload = JsonSerializer.Serialize(new Dictionary<string, object>
+        {
+            ["receipt-data"] = receiptData,
+            ["password"] = mobile.AppleSharedSecret,
+            ["exclude-old-transactions"] = true,
+        });
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, verifyUrl)
+        {
+            Content = new StringContent(payload, Encoding.UTF8, "application/json"),
+        };
+
+        var response = await client.SendAsync(request, cancellationToken);
+        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new AppException($"Apple verifyReceipt failed: {body}", 502);
+        }
+
+        using var doc = JsonDocument.Parse(body);
+        var status = doc.RootElement.GetProperty("status").GetInt32();
+        if (status != 0)
+        {
+            throw new AppException($"Apple verifyReceipt status {status}.", 400);
+        }
+
+        var latest = FindLatestConsumableReceiptEntry(doc.RootElement, productId);
+        if (latest is null)
+        {
+            throw new AppException("No matching consumable purchase in Apple receipt.", 400);
+        }
+
+        var transactionId = ReadString(latest.Value, "transaction_id")
+            ?? ReadString(latest.Value, "original_transaction_id")
+            ?? receiptData;
+
+        return new MobileStoreProductDetails
+        {
+            IsValid = true,
+            TransactionId = transactionId,
+        };
+    }
+
     private async Task<MobileStoreSubscriptionDetails> VerifyViaAppStoreServerApiAsync(
         string productId,
         string planCode,
@@ -206,6 +349,34 @@ public sealed class AppleAppStoreSubscriptionVerifier(
             if (expires >= bestExpires)
             {
                 bestExpires = expires;
+                best = entry;
+            }
+        }
+
+        return best;
+    }
+
+    private static JsonElement? FindLatestConsumableReceiptEntry(JsonElement root, string productId)
+    {
+        if (!root.TryGetProperty("latest_receipt_info", out var entries))
+        {
+            return null;
+        }
+
+        JsonElement? best = null;
+        long bestPurchased = 0;
+        foreach (var entry in entries.EnumerateArray())
+        {
+            if (!entry.TryGetProperty("product_id", out var pid)
+                || !string.Equals(pid.GetString(), productId, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var purchased = ReadLong(entry, "purchase_date_ms");
+            if (purchased >= bestPurchased)
+            {
+                bestPurchased = purchased;
                 best = entry;
             }
         }
