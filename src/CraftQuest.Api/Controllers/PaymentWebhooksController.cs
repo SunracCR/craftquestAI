@@ -98,7 +98,8 @@ public class PaymentWebhooksController(
         var body = await reader.ReadToEndAsync(cancellationToken);
         if (string.IsNullOrWhiteSpace(body))
         {
-            return BadRequest();
+            logger.LogWarning("App Store webhook received an empty request body.");
+            return Ok();
         }
 
         try
@@ -108,7 +109,15 @@ public class PaymentWebhooksController(
         }
         catch (AppException ex) when (ex.StatusCode is 401 or 503)
         {
+            logger.LogWarning(
+                "App Store webhook rejected: {StatusCode} {Message}",
+                ex.StatusCode,
+                ex.Message);
             return StatusCode(ex.StatusCode, new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "App Store webhook processing failed.");
         }
 
         return Ok();

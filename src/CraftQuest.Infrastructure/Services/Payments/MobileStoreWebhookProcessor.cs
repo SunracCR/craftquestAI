@@ -229,87 +229,254 @@ public sealed class MobileStoreWebhookProcessor(
         string rawBody,
         CancellationToken cancellationToken = default)
     {
-        using var doc = JsonDocument.Parse(rawBody);
-        if (!doc.RootElement.TryGetProperty("signedPayload", out var signedPayloadEl))
+        if (string.IsNullOrWhiteSpace(rawBody))
         {
-            throw new AppException("Invalid Apple notification payload.", 400);
-        }
-
-        var payload = AppleAppStoreJwsVerifier.DecodePayload(signedPayloadEl.GetString()!);
-        var notificationType = payload.TryGetProperty("notificationType", out var typeEl)
-            ? typeEl.GetString()
-            : null;
-        var notificationUuid = payload.TryGetProperty("notificationUUID", out var uuidEl)
-            ? uuidEl.GetString()
-            : Guid.NewGuid().ToString();
-
-        if (string.IsNullOrWhiteSpace(notificationUuid)
-            || await IsDuplicateEventAsync("app_store", notificationUuid, cancellationToken))
-        {
+            logger.LogWarning("App Store webhook received an empty body.");
             return;
         }
 
-        await RecordEventAsync("app_store", notificationUuid, notificationType ?? "unknown", cancellationToken);
-
-        if (!payload.TryGetProperty("data", out var data)
-            || !data.TryGetProperty("signedTransactionInfo", out var signedTxEl))
+        JsonDocument doc;
+        try
         {
-            await dbContext.SaveChangesAsync(cancellationToken);
+            doc = JsonDocument.Parse(rawBody);
+        }
+        catch (JsonException ex)
+        {
+            logger.LogWarning(ex, "App Store webhook body is not valid JSON.");
             return;
         }
 
-        var signedTx = signedTxEl.GetString()!;
-        VerifyNestedJwsIfEnabled(signedTx);
-        var tx = AppleAppStoreJwsVerifier.DecodePayload(signedTx);
-        var originalTransactionId = ReadString(tx, "originalTransactionId");
-        if (string.IsNullOrWhiteSpace(originalTransactionId))
+        using (doc)
         {
-            await dbContext.SaveChangesAsync(cancellationToken);
-            return;
-        }
+            if (!doc.RootElement.TryGetProperty("signedPayload", out var signedPayloadEl))
+            {
+                logger.LogWarning("App Store webhook payload is missing signedPayload.");
+                return;
+            }
 
-        var expiresMs = ReadLong(tx, "expiresDate");
-        var periodEnd = expiresMs > 0
-            ? DateTimeOffset.FromUnixTimeMilliseconds(expiresMs).UtcDateTime
-            : (DateTime?)null;
+            JsonElement payload;
+            try
+            {
+                payload = AppleAppStoreJwsVerifier.DecodePayload(signedPayloadEl.GetString()!);
+            }
+            catch (AppException ex)
+            {
+                logger.LogWarning(ex, "App Store webhook signedPayload could not be decoded.");
+                return;
+            }
 
-        switch (notificationType)
-        {
-            case "DID_RENEW":
-            case "SUBSCRIBED":
-            case "DID_CHANGE_RENEWAL_PREF":
-                await billingService.RenewSubscriptionPeriodAsync(
-                    originalTransactionId,
-                    "app_store",
-                    periodEnd,
-                    ReadString(tx, "transactionId"),
-                    cancellationToken);
-                break;
-            case "EXPIRED":
-            case "REVOKE":
-            case "DID_FAIL_TO_RENEW":
-                var subscription = await dbContext.UserSubscriptions
-                    .Where(s => s.ProviderSubscriptionId == originalTransactionId
-                                && s.ProviderCode == "app_store"
-                                && s.Status == "active")
-                    .FirstOrDefaultAsync(cancellationToken);
-                if (subscription is not null)
+            var notificationType = payload.TryGetProperty("notificationType", out var typeEl)
+                ? typeEl.GetString()
+                : null;
+            var subtype = payload.TryGetProperty("subtype", out var subtypeEl)
+                ? subtypeEl.GetString()
+                : null;
+
+            if (string.Equals(notificationType, "TEST", StringComparison.Ordinal))
+            {
+                logger.LogInformation("App Store test notification received.");
+                return;
+            }
+
+            var notificationUuid = payload.TryGetProperty("notificationUUID", out var uuidEl)
+                ? uuidEl.GetString()
+                : Guid.NewGuid().ToString();
+
+            if (string.IsNullOrWhiteSpace(notificationUuid)
+                || await IsDuplicateEventAsync("app_store", notificationUuid, cancellationToken))
+            {
+                return;
+            }
+
+            var eventType = string.IsNullOrWhiteSpace(subtype)
+                ? notificationType ?? "unknown"
+                : $"{notificationType}:{subtype}";
+            await RecordEventAsync("app_store", notificationUuid, eventType, cancellationToken);
+
+            if (!payload.TryGetProperty("data", out var data)
+                || !data.TryGetProperty("signedTransactionInfo", out var signedTxEl))
+            {
+                await dbContext.SaveChangesAsync(cancellationToken);
+                return;
+            }
+
+            var signedTx = signedTxEl.GetString()!;
+            VerifyNestedJwsIfEnabled(signedTx);
+            var tx = AppleAppStoreJwsVerifier.DecodePayload(signedTx);
+            var originalTransactionId = ReadString(tx, "originalTransactionId");
+            if (string.IsNullOrWhiteSpace(originalTransactionId))
+            {
+                await dbContext.SaveChangesAsync(cancellationToken);
+                return;
+            }
+
+            var expiresMs = ReadLong(tx, "expiresDate");
+            var periodEnd = expiresMs > 0
+                ? DateTimeOffset.FromUnixTimeMilliseconds(expiresMs).UtcDateTime
+                : (DateTime?)null;
+
+            bool? autoRenewEnabled = null;
+            if (data.TryGetProperty("signedRenewalInfo", out var signedRenewalEl))
+            {
+                var signedRenewal = signedRenewalEl.GetString();
+                if (!string.IsNullOrWhiteSpace(signedRenewal))
                 {
-                    subscription.AutoRenewEnabled = false;
-                    subscription.CancelAtPeriodEnd = true;
-                    if (periodEnd.HasValue)
+                    VerifyNestedJwsIfEnabled(signedRenewal);
+                    var renewalInfo = AppleAppStoreJwsVerifier.DecodePayload(signedRenewal);
+                    if (renewalInfo.TryGetProperty("autoRenewStatus", out var autoRenewEl))
                     {
-                        subscription.EndsAt = periodEnd;
+                        autoRenewEnabled = ReadInt(autoRenewEl) == 1;
                     }
                 }
+            }
 
-                await dbContext.SaveChangesAsync(cancellationToken);
-                break;
-            default:
-                await dbContext.SaveChangesAsync(cancellationToken);
-                break;
+            switch (notificationType)
+            {
+                case "DID_RENEW":
+                case "SUBSCRIBED":
+                case "DID_CHANGE_RENEWAL_PREF":
+                    await billingService.RenewSubscriptionPeriodAsync(
+                        originalTransactionId,
+                        "app_store",
+                        periodEnd,
+                        ReadString(tx, "transactionId"),
+                        cancellationToken);
+                    if (autoRenewEnabled.HasValue)
+                    {
+                        await ApplyAutoRenewStatusAsync(
+                            originalTransactionId,
+                            autoRenewEnabled.Value,
+                            cancellationToken);
+                    }
+
+                    break;
+                case "REVOKE":
+                case "REFUND":
+                    await billingService.RevokeSubscriptionImmediatelyAsync(
+                        originalTransactionId,
+                        "app_store",
+                        cancellationToken);
+                    break;
+                case "DID_FAIL_TO_RENEW" when string.Equals(subtype, "GRACE_PERIOD", StringComparison.Ordinal):
+                    await ApplyPaymentIssuePendingAsync(
+                        originalTransactionId,
+                        notificationUuid,
+                        autoRenewEnabled,
+                        cancellationToken);
+                    break;
+                case "EXPIRED":
+                case "DID_FAIL_TO_RENEW":
+                    await ApplyCancelAtPeriodEndAsync(
+                        originalTransactionId,
+                        periodEnd,
+                        autoRenewEnabled,
+                        cancellationToken);
+                    break;
+                default:
+                    if (autoRenewEnabled.HasValue)
+                    {
+                        await ApplyAutoRenewStatusAsync(
+                            originalTransactionId,
+                            autoRenewEnabled.Value,
+                            cancellationToken);
+                    }
+                    else
+                    {
+                        await dbContext.SaveChangesAsync(cancellationToken);
+                    }
+
+                    break;
+            }
         }
     }
+
+    private async Task ApplyCancelAtPeriodEndAsync(
+        string originalTransactionId,
+        DateTime? periodEnd,
+        bool? autoRenewEnabled,
+        CancellationToken cancellationToken)
+    {
+        var subscription = await FindActiveAppStoreSubscriptionAsync(
+            originalTransactionId,
+            cancellationToken);
+        if (subscription is not null)
+        {
+            subscription.AutoRenewEnabled = autoRenewEnabled ?? false;
+            subscription.CancelAtPeriodEnd = true;
+            if (periodEnd.HasValue)
+            {
+                subscription.EndsAt = periodEnd;
+            }
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task ApplyPaymentIssuePendingAsync(
+        string originalTransactionId,
+        string eventId,
+        bool? autoRenewEnabled,
+        CancellationToken cancellationToken)
+    {
+        var subscription = await dbContext.UserSubscriptions
+            .Include(s => s.Plan)
+            .Where(s => s.ProviderSubscriptionId == originalTransactionId
+                        && s.ProviderCode == "app_store"
+                        && s.Status == "active")
+            .FirstOrDefaultAsync(cancellationToken);
+        if (subscription is null)
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return;
+        }
+
+        subscription.PaymentIssuePending = true;
+        if (autoRenewEnabled.HasValue)
+        {
+            subscription.AutoRenewEnabled = autoRenewEnabled.Value;
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        await NotificationPublisher.TryNotifyAsync(
+            () => notificationService.NotifyAsync(
+                subscription.UserId,
+                NotificationTypes.PaymentIssuePending,
+                new NotificationPayload
+                {
+                    PlanName = subscription.Plan?.Name ?? subscription.Plan?.Code,
+                    Route = "profile/billing",
+                },
+                $"payment_issue:{subscription.UserId}:{eventId}",
+                cancellationToken),
+            logger,
+            "payment_issue_pending");
+    }
+
+    private async Task ApplyAutoRenewStatusAsync(
+        string originalTransactionId,
+        bool autoRenewEnabled,
+        CancellationToken cancellationToken)
+    {
+        var subscription = await FindActiveAppStoreSubscriptionAsync(
+            originalTransactionId,
+            cancellationToken);
+        if (subscription is not null)
+        {
+            subscription.AutoRenewEnabled = autoRenewEnabled;
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private Task<UserSubscription?> FindActiveAppStoreSubscriptionAsync(
+        string originalTransactionId,
+        CancellationToken cancellationToken) =>
+        dbContext.UserSubscriptions
+            .Where(s => s.ProviderSubscriptionId == originalTransactionId
+                        && s.ProviderCode == "app_store"
+                        && s.Status == "active")
+            .FirstOrDefaultAsync(cancellationToken);
 
     private async Task<bool> IsDuplicateEventAsync(
         string provider,
@@ -353,11 +520,22 @@ public sealed class MobileStoreWebhookProcessor(
             return 0;
         }
 
-        return prop.ValueKind switch
+        return ReadLong(prop);
+    }
+
+    private static long ReadLong(JsonElement prop) =>
+        prop.ValueKind switch
         {
             JsonValueKind.Number => prop.GetInt64(),
             JsonValueKind.String when long.TryParse(prop.GetString(), out var n) => n,
             _ => 0,
         };
-    }
+
+    private static int ReadInt(JsonElement prop) =>
+        prop.ValueKind switch
+        {
+            JsonValueKind.Number => prop.GetInt32(),
+            JsonValueKind.String when int.TryParse(prop.GetString(), out var n) => n,
+            _ => 0,
+        };
 }
