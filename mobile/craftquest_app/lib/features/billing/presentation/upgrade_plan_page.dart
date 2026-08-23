@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:craftquest_app/core/billing/mobile_store_product_query.dart';
 import 'package:craftquest_app/core/billing/post_checkout_session_refresh.dart';
 import 'package:craftquest_app/core/billing/mobile_store_purchase_coordinator.dart';
 import 'package:craftquest_app/core/billing/paypal_web_launcher.dart';
@@ -91,25 +92,16 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
         billing = null;
       }
       _storeAvailable =
-          _supportsStorePurchase && await InAppPurchase.instance.isAvailable();
+          _supportsStorePurchase && await isMobileStoreAvailable();
 
       var storeProducts = <ProductDetails>[];
       if (_storeAvailable) {
-        final ids = <String>{};
-        for (final plan in plans) {
-          for (final id in [
-            plan.googlePlayProductId,
-            plan.googlePlayAnnualProductId,
-            plan.appStoreProductId,
-            plan.appStoreAnnualProductId,
-          ]) {
-            if (id != null && id.isNotEmpty) {
-              ids.add(id);
-            }
-          }
-        }
+        final isIos = defaultTargetPlatform == TargetPlatform.iOS;
+        final ids = <String>{
+          for (final plan in plans) ...plan.nativeStoreProductIds(isIos: isIos),
+        };
         if (ids.isNotEmpty) {
-          final response = await InAppPurchase.instance.queryProductDetails(ids);
+          final response = await queryMobileStoreProducts(ids);
           storeProducts = response.productDetails;
         }
         await InAppPurchase.instance.restorePurchases();
@@ -159,8 +151,11 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
         break;
       }
     }
+    product ??= await findMobileStoreProduct(productId);
     if (product == null) {
-      context.showErrorSnackBar(l10n.storeProductNotFound(productId));
+      if (mounted) {
+        context.showErrorSnackBar(l10n.storeProductNotFound(productId));
+      }
       return;
     }
 

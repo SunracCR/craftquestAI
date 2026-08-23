@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:craftquest_app/core/billing/post_checkout_session_refresh.dart';
 import 'package:craftquest_app/core/billing/checkout_refresh_notifier.dart';
+import 'package:craftquest_app/core/billing/mobile_store_product_query.dart';
 import 'package:craftquest_app/core/billing/mobile_store_purchase_coordinator.dart';
 import 'package:craftquest_app/core/billing/paypal_web_launcher.dart';
 import 'package:craftquest_app/core/billing/payment_platform.dart';
@@ -81,7 +82,7 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
       final packs = await _repository.getAiCreditPacks();
       final billing = await _repository.getMyBilling();
       _storeAvailable =
-          _supportsStorePurchase && await InAppPurchase.instance.isAvailable();
+          _supportsStorePurchase && await isMobileStoreAvailable();
 
       var storeProducts = <ProductDetails>[];
       if (_storeAvailable) {
@@ -95,8 +96,7 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
           }
         }
         if (ids.isNotEmpty) {
-          final response =
-              await InAppPurchase.instance.queryProductDetails(ids);
+          final response = await queryMobileStoreProducts(ids);
           storeProducts = response.productDetails;
         }
         // Reintenta compras pendientes (p. ej. verify falló tras el cobro en Play).
@@ -197,8 +197,11 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
         break;
       }
     }
+    product ??= await findMobileStoreProduct(productId);
     if (product == null) {
-      context.showErrorSnackBar(l10n.storeProductNotFound(productId));
+      if (mounted) {
+        context.showErrorSnackBar(l10n.storeProductNotFound(productId));
+      }
       return;
     }
 

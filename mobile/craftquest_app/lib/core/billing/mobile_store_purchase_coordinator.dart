@@ -89,9 +89,9 @@ class MobileStorePurchaseCoordinator {
 
   Future<void> _refreshProductCatalog() async {
     final billingRepo = getIt<BillingRepository>();
+    final isIos = defaultTargetPlatform == TargetPlatform.iOS;
     try {
       final packs = await billingRepo.getAiCreditPacks();
-      final isIos = defaultTargetPlatform == TargetPlatform.iOS;
       _aiCreditProductIds = {
         for (final pack in packs)
           if (pack.storeProductId(isIos: isIos) != null)
@@ -106,12 +106,7 @@ class MobileStorePurchaseCoordinator {
       _plans = plans;
       _subscriptionProductIds = {
         for (final plan in plans)
-          ...{
-            plan.googlePlayProductId,
-            plan.googlePlayAnnualProductId,
-            plan.appStoreProductId,
-            plan.appStoreAnnualProductId,
-          }.whereType<String>().where((id) => id.isNotEmpty),
+          ...plan.nativeStoreProductIds(isIos: isIos),
       };
     } catch (_) {
       // Mantener catálogo previo o heurísticas.

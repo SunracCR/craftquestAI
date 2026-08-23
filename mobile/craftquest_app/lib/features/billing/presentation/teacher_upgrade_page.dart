@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:craftquest_app/core/billing/mobile_store_product_query.dart';
 import 'package:craftquest_app/core/billing/post_checkout_session_refresh.dart';
 import 'package:craftquest_app/core/billing/mobile_store_purchase_coordinator.dart';
 import 'package:craftquest_app/core/billing/paypal_web_launcher.dart';
@@ -137,7 +138,7 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
     }
 
     if (_supportsStorePurchase) {
-      final storeAvailable = await InAppPurchase.instance.isAvailable();
+      final storeAvailable = await isMobileStoreAvailable();
       if (storeAvailable) {
         await _buyWithStore(plan);
         return;
@@ -161,14 +162,16 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
       context.showErrorSnackBar(l10n.storeProductNotConfigured);
       return;
     }
-    final response = await iap.queryProductDetails({productId});
-    if (response.productDetails.isEmpty) {
-      context.showErrorSnackBar(l10n.storeProductNotFound(productId));
+    final product = await findMobileStoreProduct(productId);
+    if (product == null) {
+      if (mounted) {
+        context.showErrorSnackBar(l10n.storeProductNotFound(productId));
+      }
       return;
     }
     setState(() => _purchasing = true);
     _userInitiatedPurchase = true;
-    final param = PurchaseParam(productDetails: response.productDetails.first);
+    final param = PurchaseParam(productDetails: product);
     await iap.buyNonConsumable(purchaseParam: param);
   }
 

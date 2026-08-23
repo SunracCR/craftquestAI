@@ -281,6 +281,27 @@ class UpgradeablePlanModel {
         : googlePlayProductId;
   }
 
+  /// IDs de la tienda nativa (solo App Store en iOS, solo Play en Android).
+  Iterable<String> nativeStoreProductIds({required bool isIos}) sync* {
+    if (isIos) {
+      if (appStoreProductId != null && appStoreProductId!.isNotEmpty) {
+        yield appStoreProductId!;
+      }
+      if (appStoreAnnualProductId != null &&
+          appStoreAnnualProductId!.isNotEmpty) {
+        yield appStoreAnnualProductId!;
+      }
+    } else {
+      if (googlePlayProductId != null && googlePlayProductId!.isNotEmpty) {
+        yield googlePlayProductId!;
+      }
+      if (googlePlayAnnualProductId != null &&
+          googlePlayAnnualProductId!.isNotEmpty) {
+        yield googlePlayAnnualProductId!;
+      }
+    }
+  }
+
   bool get isInstitutionPlan =>
       requiresContactSales || code.toLowerCase() == 'institution';
 }
