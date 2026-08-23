@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -12,10 +13,16 @@ public sealed class AppleAppStoreSubscriptionVerifier(
     IHttpClientFactory httpClientFactory,
     IOptions<PaymentOptions> options)
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNameCaseInsensitive = true,
-    };
+    private const string ProductionReceiptVerifyUrl = "https://buy.itunes.apple.com/verifyReceipt";
+    private const string SandboxReceiptVerifyUrl = "https://sandbox.itunes.apple.com/verifyReceipt";
+    private const string ProductionStoreKitApiBaseUrl = "https://api.storekit.itunes.apple.com";
+    private const string SandboxStoreKitApiBaseUrl = "https://api.storekit-sandbox.itunes.apple.com";
+
+    /// <summary>Sandbox receipt sent to production verifyReceipt endpoint.</summary>
+    private const int ReceiptStatusSandboxReceiptOnProduction = 21007;
+
+    /// <summary>Production receipt sent to sandbox verifyReceipt endpoint.</summary>
+    private const int ReceiptStatusProductionReceiptOnSandbox = 21008;
 
     public async Task<MobileStoreSubscriptionDetails> VerifyAsync(
         string productId,
@@ -99,31 +106,13 @@ public sealed class AppleAppStoreSubscriptionVerifier(
         MobileStoreOptions mobile,
         CancellationToken cancellationToken)
     {
-        var pem = await File.ReadAllTextAsync(mobile.ApplePrivateKeyPath, cancellationToken);
-        var jwt = AppleAppStoreJwtFactory.CreateToken(
-            mobile.AppleIssuerId,
-            mobile.AppleKeyId,
-            mobile.AppleBundleId,
-            pem);
+        var jwt = await CreateAppStoreJwtAsync(mobile, cancellationToken);
+        using var doc = await GetTransactionDocumentWithEnvironmentFallbackAsync(
+            transactionId,
+            jwt,
+            mobile,
+            cancellationToken);
 
-        var baseUrl = mobile.AppleEnvironment.Equals("Production", StringComparison.OrdinalIgnoreCase)
-            ? "https://api.storekit.itunes.apple.com"
-            : "https://api.storekit-sandbox.itunes.apple.com";
-
-        var client = httpClientFactory.CreateClient(nameof(AppleAppStoreSubscriptionVerifier));
-        using var request = new HttpRequestMessage(
-            HttpMethod.Get,
-            $"{baseUrl}/inApps/v1/transactions/{transactionId}");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
-
-        var response = await client.SendAsync(request, cancellationToken);
-        var body = await response.Content.ReadAsStringAsync(cancellationToken);
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new AppException($"App Store transaction lookup failed: {body}", 502);
-        }
-
-        using var doc = JsonDocument.Parse(body);
         if (!doc.RootElement.TryGetProperty("signedTransactionInfo", out var signedInfoEl))
         {
             throw new AppException("App Store response missing signedTransactionInfo.", 502);
@@ -153,36 +142,10 @@ public sealed class AppleAppStoreSubscriptionVerifier(
         MobileStoreOptions mobile,
         CancellationToken cancellationToken)
     {
-        var verifyUrl = mobile.AppleEnvironment.Equals("Production", StringComparison.OrdinalIgnoreCase)
-            ? "https://buy.itunes.apple.com/verifyReceipt"
-            : "https://sandbox.itunes.apple.com/verifyReceipt";
-
-        var client = httpClientFactory.CreateClient(nameof(AppleAppStoreSubscriptionVerifier));
-        var payload = JsonSerializer.Serialize(new Dictionary<string, object>
-        {
-            ["receipt-data"] = receiptData,
-            ["password"] = mobile.AppleSharedSecret,
-            ["exclude-old-transactions"] = true,
-        });
-
-        using var request = new HttpRequestMessage(HttpMethod.Post, verifyUrl)
-        {
-            Content = new StringContent(payload, Encoding.UTF8, "application/json"),
-        };
-
-        var response = await client.SendAsync(request, cancellationToken);
-        var body = await response.Content.ReadAsStringAsync(cancellationToken);
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new AppException($"Apple verifyReceipt failed: {body}", 502);
-        }
-
-        using var doc = JsonDocument.Parse(body);
-        var status = doc.RootElement.GetProperty("status").GetInt32();
-        if (status != 0)
-        {
-            throw new AppException($"Apple verifyReceipt status {status}.", 400);
-        }
+        using var doc = await PostVerifyReceiptDocumentWithEnvironmentFallbackAsync(
+            receiptData,
+            mobile,
+            cancellationToken);
 
         var latest = FindLatestConsumableReceiptEntry(doc.RootElement, productId);
         if (latest is null)
@@ -209,31 +172,13 @@ public sealed class AppleAppStoreSubscriptionVerifier(
         MobileStoreOptions mobile,
         CancellationToken cancellationToken)
     {
-        var pem = await File.ReadAllTextAsync(mobile.ApplePrivateKeyPath, cancellationToken);
-        var jwt = AppleAppStoreJwtFactory.CreateToken(
-            mobile.AppleIssuerId,
-            mobile.AppleKeyId,
-            mobile.AppleBundleId,
-            pem);
+        var jwt = await CreateAppStoreJwtAsync(mobile, cancellationToken);
+        using var doc = await GetTransactionDocumentWithEnvironmentFallbackAsync(
+            transactionId,
+            jwt,
+            mobile,
+            cancellationToken);
 
-        var baseUrl = mobile.AppleEnvironment.Equals("Production", StringComparison.OrdinalIgnoreCase)
-            ? "https://api.storekit.itunes.apple.com"
-            : "https://api.storekit-sandbox.itunes.apple.com";
-
-        var client = httpClientFactory.CreateClient(nameof(AppleAppStoreSubscriptionVerifier));
-        using var request = new HttpRequestMessage(
-            HttpMethod.Get,
-            $"{baseUrl}/inApps/v1/transactions/{transactionId}");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
-
-        var response = await client.SendAsync(request, cancellationToken);
-        var body = await response.Content.ReadAsStringAsync(cancellationToken);
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new AppException($"App Store transaction lookup failed: {body}", 502);
-        }
-
-        using var doc = JsonDocument.Parse(body);
         if (!doc.RootElement.TryGetProperty("signedTransactionInfo", out var signedInfoEl))
         {
             throw new AppException("App Store response missing signedTransactionInfo.", 502);
@@ -271,36 +216,10 @@ public sealed class AppleAppStoreSubscriptionVerifier(
         MobileStoreOptions mobile,
         CancellationToken cancellationToken)
     {
-        var verifyUrl = mobile.AppleEnvironment.Equals("Production", StringComparison.OrdinalIgnoreCase)
-            ? "https://buy.itunes.apple.com/verifyReceipt"
-            : "https://sandbox.itunes.apple.com/verifyReceipt";
-
-        var client = httpClientFactory.CreateClient(nameof(AppleAppStoreSubscriptionVerifier));
-        var payload = JsonSerializer.Serialize(new Dictionary<string, object>
-        {
-            ["receipt-data"] = receiptData,
-            ["password"] = mobile.AppleSharedSecret,
-            ["exclude-old-transactions"] = true,
-        });
-
-        using var request = new HttpRequestMessage(HttpMethod.Post, verifyUrl)
-        {
-            Content = new StringContent(payload, Encoding.UTF8, "application/json"),
-        };
-
-        var response = await client.SendAsync(request, cancellationToken);
-        var body = await response.Content.ReadAsStringAsync(cancellationToken);
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new AppException($"Apple verifyReceipt failed: {body}", 502);
-        }
-
-        using var doc = JsonDocument.Parse(body);
-        var status = doc.RootElement.GetProperty("status").GetInt32();
-        if (status != 0)
-        {
-            throw new AppException($"Apple verifyReceipt status {status}.", 400);
-        }
+        using var doc = await PostVerifyReceiptDocumentWithEnvironmentFallbackAsync(
+            receiptData,
+            mobile,
+            cancellationToken);
 
         var latest = FindLatestReceiptEntry(doc.RootElement, productId);
         if (latest is null)
@@ -326,6 +245,186 @@ public sealed class AppleAppStoreSubscriptionVerifier(
             PeriodEnd = periodEnd,
             LatestTransactionId = ReadString(latest.Value, "transaction_id"),
         };
+    }
+
+    private async Task<JsonDocument> PostVerifyReceiptDocumentWithEnvironmentFallbackAsync(
+        string receiptData,
+        MobileStoreOptions mobile,
+        CancellationToken cancellationToken)
+    {
+        var useProductionFirst = mobile.AppleEnvironment.Equals(
+            "Production",
+            StringComparison.OrdinalIgnoreCase);
+        var primaryUrl = useProductionFirst ? ProductionReceiptVerifyUrl : SandboxReceiptVerifyUrl;
+        var fallbackUrl = useProductionFirst ? SandboxReceiptVerifyUrl : ProductionReceiptVerifyUrl;
+
+        var primaryDoc = await PostVerifyReceiptDocumentAsync(
+            receiptData,
+            mobile,
+            primaryUrl,
+            cancellationToken);
+        var status = primaryDoc.RootElement.GetProperty("status").GetInt32();
+        if (status == 0)
+        {
+            return primaryDoc;
+        }
+
+        if (status == ReceiptStatusSandboxReceiptOnProduction
+            && primaryUrl == ProductionReceiptVerifyUrl)
+        {
+            primaryDoc.Dispose();
+            var fallbackDoc = await PostVerifyReceiptDocumentAsync(
+                receiptData,
+                mobile,
+                fallbackUrl,
+                cancellationToken);
+            var fallbackStatus = fallbackDoc.RootElement.GetProperty("status").GetInt32();
+            if (fallbackStatus == 0)
+            {
+                return fallbackDoc;
+            }
+
+            fallbackDoc.Dispose();
+            throw new AppException($"Apple verifyReceipt status {fallbackStatus}.", 400);
+        }
+
+        if (status == ReceiptStatusProductionReceiptOnSandbox
+            && primaryUrl == SandboxReceiptVerifyUrl)
+        {
+            primaryDoc.Dispose();
+            var fallbackDoc = await PostVerifyReceiptDocumentAsync(
+                receiptData,
+                mobile,
+                fallbackUrl,
+                cancellationToken);
+            var fallbackStatus = fallbackDoc.RootElement.GetProperty("status").GetInt32();
+            if (fallbackStatus == 0)
+            {
+                return fallbackDoc;
+            }
+
+            fallbackDoc.Dispose();
+            throw new AppException($"Apple verifyReceipt status {fallbackStatus}.", 400);
+        }
+
+        primaryDoc.Dispose();
+        throw new AppException($"Apple verifyReceipt status {status}.", 400);
+    }
+
+    private async Task<JsonDocument> PostVerifyReceiptDocumentAsync(
+        string receiptData,
+        MobileStoreOptions mobile,
+        string verifyUrl,
+        CancellationToken cancellationToken)
+    {
+        var client = httpClientFactory.CreateClient(nameof(AppleAppStoreSubscriptionVerifier));
+        var payload = JsonSerializer.Serialize(new Dictionary<string, object>
+        {
+            ["receipt-data"] = receiptData,
+            ["password"] = mobile.AppleSharedSecret,
+            ["exclude-old-transactions"] = true,
+        });
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, verifyUrl)
+        {
+            Content = new StringContent(payload, Encoding.UTF8, "application/json"),
+        };
+
+        var response = await client.SendAsync(request, cancellationToken);
+        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new AppException($"Apple verifyReceipt failed: {body}", 502);
+        }
+
+        return JsonDocument.Parse(body);
+    }
+
+    private async Task<JsonDocument> GetTransactionDocumentWithEnvironmentFallbackAsync(
+        string transactionId,
+        string jwt,
+        MobileStoreOptions mobile,
+        CancellationToken cancellationToken)
+    {
+        var useProductionFirst = mobile.AppleEnvironment.Equals(
+            "Production",
+            StringComparison.OrdinalIgnoreCase);
+        var primaryBaseUrl = useProductionFirst
+            ? ProductionStoreKitApiBaseUrl
+            : SandboxStoreKitApiBaseUrl;
+        var fallbackBaseUrl = useProductionFirst
+            ? SandboxStoreKitApiBaseUrl
+            : ProductionStoreKitApiBaseUrl;
+
+        var (primaryStatusCode, primaryBody) = await GetTransactionAsync(
+            transactionId,
+            jwt,
+            primaryBaseUrl,
+            cancellationToken);
+        if ((int)primaryStatusCode >= 200 && (int)primaryStatusCode <= 299)
+        {
+            return JsonDocument.Parse(primaryBody);
+        }
+
+        if (ShouldRetryTransactionLookupInAlternateEnvironment(primaryStatusCode, primaryBody))
+        {
+            var (fallbackStatusCode, fallbackBody) = await GetTransactionAsync(
+                transactionId,
+                jwt,
+                fallbackBaseUrl,
+                cancellationToken);
+            if ((int)fallbackStatusCode >= 200 && (int)fallbackStatusCode <= 299)
+            {
+                return JsonDocument.Parse(fallbackBody);
+            }
+
+            throw new AppException($"App Store transaction lookup failed: {fallbackBody}", 502);
+        }
+
+        throw new AppException($"App Store transaction lookup failed: {primaryBody}", 502);
+    }
+
+    private async Task<(HttpStatusCode StatusCode, string Body)> GetTransactionAsync(
+        string transactionId,
+        string jwt,
+        string baseUrl,
+        CancellationToken cancellationToken)
+    {
+        var client = httpClientFactory.CreateClient(nameof(AppleAppStoreSubscriptionVerifier));
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"{baseUrl}/inApps/v1/transactions/{transactionId}");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+
+        using var response = await client.SendAsync(request, cancellationToken);
+        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+        return (response.StatusCode, body);
+    }
+
+    private static bool ShouldRetryTransactionLookupInAlternateEnvironment(
+        HttpStatusCode statusCode,
+        string body)
+    {
+        if (statusCode == HttpStatusCode.NotFound)
+        {
+            return true;
+        }
+
+        return body.Contains("4040010", StringComparison.Ordinal)
+            || body.Contains("TransactionIdNotFound", StringComparison.OrdinalIgnoreCase)
+            || body.Contains("TRANSACTION_ID_NOT_FOUND", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static async Task<string> CreateAppStoreJwtAsync(
+        MobileStoreOptions mobile,
+        CancellationToken cancellationToken)
+    {
+        var pem = await File.ReadAllTextAsync(mobile.ApplePrivateKeyPath, cancellationToken);
+        return AppleAppStoreJwtFactory.CreateToken(
+            mobile.AppleIssuerId,
+            mobile.AppleKeyId,
+            mobile.AppleBundleId,
+            pem);
     }
 
     private static JsonElement? FindLatestReceiptEntry(JsonElement root, string productId)
