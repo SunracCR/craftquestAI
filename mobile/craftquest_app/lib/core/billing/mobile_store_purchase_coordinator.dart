@@ -1,11 +1,9 @@
 import 'dart:async';
 
 import 'package:craftquest_app/core/billing/mobile_store_purchase_completion.dart';
-import 'package:craftquest_app/core/billing/checkout_refresh_notifier.dart';
 import 'package:craftquest_app/core/billing/post_checkout_session_refresh.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/navigation/app_keys.dart';
-import 'package:craftquest_app/features/auth/data/auth_repository.dart';
 import 'package:craftquest_app/features/billing/data/billing_repository.dart';
 import 'package:craftquest_app/features/billing/data/models/billing_models.dart';
 import 'package:craftquest_app/features/prep_plus/data/models/prep_plus_models.dart';
@@ -242,10 +240,7 @@ class MobileStorePurchaseCoordinator {
       transactionId: purchase.purchaseID,
     );
 
-    final billing = await billingRepo.getMyBilling(forceRefresh: true);
-    getIt<CheckoutRefreshNotifier>().notifyCheckoutCompleted(
-      billing: billing,
-    );
+    await _refreshAfterBackgroundStorePurchase();
   }
 
   Future<void> _verifySubscriptionPurchase(PurchaseDetails purchase) async {
@@ -263,27 +258,17 @@ class MobileStorePurchaseCoordinator {
       billingCycle: _billingCycleForProduct(purchase.productID),
     );
 
+    await _refreshAfterBackgroundStorePurchase();
+  }
+
+  Future<void> _refreshAfterBackgroundStorePurchase() async {
     final context = rootNavigatorKey.currentContext;
     if (context != null && context.mounted) {
       await refreshAppSessionAfterCheckout(context);
       return;
     }
 
-    final authRepo = getIt<AuthRepository>();
-    try {
-      await authRepo.refreshSession();
-    } catch (_) {
-      try {
-        await authRepo.getProfile();
-      } catch (_) {
-        // Sin red: solo intentamos billing.
-      }
-    }
-
-    final billing = await billingRepo.getMyBilling(forceRefresh: true);
-    getIt<CheckoutRefreshNotifier>().notifyCheckoutCompleted(
-      billing: billing,
-    );
+    await refreshBillingAfterStorePurchase();
   }
 
   String _billingCycleForProduct(String productId) {

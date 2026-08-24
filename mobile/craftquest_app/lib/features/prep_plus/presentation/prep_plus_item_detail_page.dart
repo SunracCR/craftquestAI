@@ -661,11 +661,19 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
 
         final purchaseKey = _purchaseKey(purchase);
         if (!_storePurchases.claimPurchase(purchaseKey)) {
+          if (_userInitiatedPurchase) {
+            unawaited(Future<void>(() async {
+              await Future.delayed(const Duration(milliseconds: 1500));
+              if (!mounted) return;
+              await _load();
+            }));
+          }
           _resetCheckingOutIfUserInitiated(purchase);
           continue;
         }
 
         final userInitiated = _userInitiatedPurchase;
+        var verified = false;
         try {
           final platform = defaultTargetPlatform == TargetPlatform.iOS
               ? 'app_store'
@@ -681,6 +689,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
             transactionId: purchase.purchaseID,
             referralCode: referralCode,
           );
+          verified = true;
           await completeMobileStorePurchaseIfNeeded(purchase);
           if (!mounted) return;
           if (result.status == 'granted') {
@@ -694,7 +703,9 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
             context.showErrorSnackBar(l10n.purchaseVerificationFailed);
           }
         } catch (e) {
-          _storePurchases.releasePurchase(purchaseKey);
+          if (!verified) {
+            _storePurchases.releasePurchase(purchaseKey);
+          }
           if (!mounted) return;
           if (userInitiated) {
             context.showErrorSnackBar(l10n.purchaseVerificationFailed);

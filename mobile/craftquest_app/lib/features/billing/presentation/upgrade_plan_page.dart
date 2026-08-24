@@ -54,7 +54,6 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
   StreamSubscription<List<PurchaseDetails>>? _purchaseSub;
   bool _storeAvailable = false;
   bool _userInitiatedPurchase = false;
-  final Set<String> _handledPurchaseKeys = {};
 
   static bool get _supportsStorePurchase =>
       !kIsWeb &&
@@ -293,42 +292,48 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
 
         final purchaseKey = _purchaseKey(purchase);
         if (!_storePurchases.claimPurchase(purchaseKey)) {
+          if (_userInitiatedPurchase) {
+            scheduleDeferredCheckoutRefresh(context);
+          }
           _resetPurchasingIfUserInitiated(purchase);
           continue;
         }
 
         final userInitiated = _userInitiatedPurchase;
+        var verified = false;
         try {
           final platform = defaultTargetPlatform == TargetPlatform.iOS
               ? 'app_store'
               : 'google_play';
           final token = purchase.verificationData.serverVerificationData;
-          final verified = await _repository.verifyMobilePurchase(
+          final result = await _repository.verifyMobilePurchase(
             platform: platform,
             productId: purchase.productID,
             purchaseToken: token.isNotEmpty ? token : purchase.purchaseID ?? '',
             transactionId: purchase.purchaseID,
             billingCycle: _billingCycleForProduct(purchase.productID),
           );
+          verified = true;
           await completeMobileStorePurchaseIfNeeded(purchase);
           if (!mounted) return;
 
+          await refreshAppSessionAfterCheckout(context);
+          if (!mounted) return;
+
           if (userInitiated) {
-            await refreshAppSessionAfterCheckout(context);
-            if (!mounted) return;
             context.showSuccessSnackBar(
               l10n.upgradeSuccess(
-                BillingDisplay.localizedPlanName(l10n, code: verified.planCode),
+                BillingDisplay.localizedPlanName(l10n, code: result.planCode),
               ),
             );
             Navigator.of(context).pop(true);
           } else {
-            await refreshAppSessionAfterCheckout(context);
-            if (!mounted) return;
             await _load(forceRefreshBilling: true);
           }
         } catch (_) {
-          _storePurchases.releasePurchase(purchaseKey);
+          if (!verified) {
+            _storePurchases.releasePurchase(purchaseKey);
+          }
           if (!mounted) return;
           if (userInitiated) {
             context.showErrorSnackBar(l10n.purchaseVerificationFailed);
