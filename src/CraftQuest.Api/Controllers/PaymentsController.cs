@@ -138,4 +138,15 @@ public class PaymentsController(IPaymentService paymentService) : ApiControllerB
 
         return Ok(result);
     }
+
+    [HttpPost("reconcile-pending")]
+    [ProducesResponseType(typeof(ReconcilePendingPurchasesResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ReconcilePendingPurchases(CancellationToken cancellationToken)
+    {
+        var result = await paymentService.ReconcileUserPendingPurchasesAsync(
+            GetUserId(),
+            cancellationToken);
+
+        return Ok(result);
+    }
 }

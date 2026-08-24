@@ -1,4 +1,5 @@
 import 'package:craftquest_app/core/billing/mobile_store_product_query.dart';
+import 'package:craftquest_app/core/billing/paypal_payment_reconciler.dart';
 import 'package:craftquest_app/core/billing/post_checkout_session_refresh.dart';
 import 'package:craftquest_app/core/billing/purchase_flow_state.dart';
 import 'package:craftquest_app/core/billing/purchase_orchestrator.dart';
@@ -11,6 +12,7 @@ import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/utils/ai_generation_allowance.dart';
+import 'package:craftquest_app/core/widgets/app_buttons.dart';
 import 'package:craftquest_app/core/widgets/app_page_header.dart';
 import 'package:craftquest_app/core/widgets/app_section_card.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
@@ -45,6 +47,7 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
   bool _paypalPurchasing = false;
   String? _error;
   bool _storeAvailable = false;
+  String? _pendingPayPalOrderId;
 
   bool get _purchasing => _orchestrator.isBusy || _paypalPurchasing;
 
@@ -109,11 +112,16 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
       }
 
       if (!mounted) return;
+      final pendingPayPal = await getIt<PendingPayPalPaymentStore>().read();
       setState(() {
         _packs = packs;
         _billing = billing;
         _storeProducts = storeProducts;
         _loading = false;
+        _pendingPayPalOrderId =
+            pendingPayPal?.flow == PendingPayPalPaymentFlow.aiCredit
+                ? pendingPayPal!.id
+                : null;
       });
     } on DioException catch (e) {
       if (!mounted) return;
@@ -172,11 +180,39 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
           );
           await launchPayPalApproval(uri);
           if (!mounted) return;
+          setState(() => _pendingPayPalOrderId = order.orderId);
           if (!kIsWeb) {
             context.showInfoSnackBar(l10n.paypalAwaitingCapture);
           }
         }
       }
+    } on DioException catch (e) {
+      if (!mounted) return;
+      context.showDioErrorSnackBar(e);
+    } finally {
+      if (mounted) setState(() => _paypalPurchasing = false);
+    }
+  }
+
+  Future<void> _confirmPayPalCapture() async {
+    if (_pendingPayPalOrderId == null) {
+      return;
+    }
+
+    final l10n = AppLocalizations.of(context)!;
+    setState(() => _paypalPurchasing = true);
+    try {
+      final fulfilled = await getIt<PayPalPaymentReconciler>().tryFulfillStoredPending();
+      if (!mounted) return;
+      if (fulfilled) {
+        setState(() => _pendingPayPalOrderId = null);
+        await refreshAppSessionAfterCheckout(context);
+        if (!mounted) return;
+        context.showSuccessSnackBar(l10n.paypalReturnSuccessCredits);
+        Navigator.of(context).pop(true);
+        return;
+      }
+      context.showErrorSnackBar(l10n.paypalReturnError);
     } on DioException catch (e) {
       if (!mounted) return;
       context.showDioErrorSnackBar(e);
@@ -280,6 +316,30 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
                             _billing!.credits.aiCredits,
                           ),
                           style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                      ),
+                    ],
+                    if (_pendingPayPalOrderId != null) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      AppSectionCard(
+                        variant: AppCardVariant.highlight,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              l10n.paypalAwaitingCapture,
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            AppPrimaryButton(
+                              label: l10n.prepPlusConfirmPayPalPayment,
+                              isLoading: _paypalPurchasing,
+                              onPressed:
+                                  _paypalPurchasing ? null : _confirmPayPalCapture,
+                            ),
+                          ],
                         ),
                       ),
                     ],

@@ -76,4 +76,8 @@ public interface IPaymentService
 
     Task<int> ReconcilePendingPurchasesAsync(
         CancellationToken cancellationToken = default);
+
+    Task<ReconcilePendingPurchasesResponse> ReconcileUserPendingPurchasesAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
 }

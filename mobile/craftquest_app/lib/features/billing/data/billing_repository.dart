@@ -223,5 +223,13 @@ class BillingRepository {
     return response.data ?? false;
   }
 
+  Future<ReconcilePendingPurchasesModel> reconcilePendingPurchases() async {
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/api/billing/reconcile-pending',
+    );
+    invalidateMyBillingCache();
+    return ReconcilePendingPurchasesModel.fromJson(response.data!);
+  }
+
   String mapError(DioException error) => DioErrorMapper.map(error);
 }

@@ -66,7 +66,7 @@ class PendingPayPalPaymentStore {
   PendingPayPalPaymentStore(this._preferencesFuture);
 
   static const _storageKey = 'pending_paypal_payment';
-  static const _maxAge = Duration(hours: 1);
+  static const _maxAge = Duration(hours: 24);
 
   final Future<SharedPreferences> _preferencesFuture;
 

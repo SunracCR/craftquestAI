@@ -483,6 +483,18 @@ class PayPalCaptureModel {
   final String status;
 }
 
+class ReconcilePendingPurchasesModel {
+  const ReconcilePendingPurchasesModel({required this.fulfilledCount});
+
+  factory ReconcilePendingPurchasesModel.fromJson(Map<String, dynamic> json) {
+    return ReconcilePendingPurchasesModel(
+      fulfilledCount: (json['fulfilledCount'] as num?)?.toInt() ?? 0,
+    );
+  }
+
+  final int fulfilledCount;
+}
+
 class PurchaseHistoryItemModel {
   const PurchaseHistoryItemModel({
     required this.purchaseId,

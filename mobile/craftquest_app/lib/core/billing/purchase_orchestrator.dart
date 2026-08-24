@@ -7,10 +7,12 @@ import 'package:craftquest_app/core/billing/post_checkout_session_refresh.dart';
 import 'package:craftquest_app/core/billing/purchase_flow_state.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/navigation/app_keys.dart';
+import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/features/billing/data/billing_repository.dart';
 import 'package:craftquest_app/features/billing/data/models/billing_models.dart';
 import 'package:craftquest_app/features/prep_plus/data/models/prep_plus_models.dart';
 import 'package:craftquest_app/features/prep_plus/data/prep_plus_repository.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
@@ -104,12 +106,6 @@ class PurchaseOrchestrator extends ChangeNotifier {
       return;
     }
     _expireStaleInFlightKeys();
-    if (_inFlight && _state is! PurchaseVerifying) {
-      _inFlight = false;
-      _activeRequest = null;
-      _cancelWatchdog();
-      _setState(const PurchaseIdle());
-    }
     await _refreshProductCatalog();
     await _restorePurchases();
     await _reconcilePendingIntent();
@@ -247,7 +243,7 @@ class PurchaseOrchestrator extends ChangeNotifier {
       _setState(const PurchaseVerifying());
 
       try {
-        final result = await _verifyAndFulfill(purchase);
+        final result = await _verifyAndFulfillWithRetry(purchase);
         if (result == null) {
           _releasePurchase(purchaseKey);
           _fail(PurchaseFailureReason.verificationFailed);
@@ -260,16 +256,55 @@ class PurchaseOrchestrator extends ChangeNotifier {
 
         await _pendingStore.clear();
         _markPurchaseCompleted(purchaseKey);
+        await _reconcileServerPurchases();
         await _refreshAfterPurchase(userInitiated: _activeRequest?.userInitiated ?? false);
 
         _inFlight = false;
         _activeRequest = null;
         _setState(PurchaseSucceeded(result));
+      } on DioException catch (e) {
+        if (kDebugMode) {
+          debugPrint(
+            '[IAP] verify failed product=${purchase.productID} '
+            'status=${e.response?.statusCode} code=${_readApiErrorCode(e)}',
+          );
+        }
+        _releasePurchase(purchaseKey);
+        final recovered = await _tryRecoverViaServerReconcile(purchase);
+        if (recovered != null) {
+          if (purchase.pendingCompletePurchase) {
+            await completeMobileStorePurchaseIfNeeded(purchase);
+          }
+          await _pendingStore.clear();
+          _markPurchaseCompleted(purchaseKey);
+          await _refreshAfterPurchase(userInitiated: _activeRequest?.userInitiated ?? false);
+          _inFlight = false;
+          _activeRequest = null;
+          _setState(PurchaseSucceeded(recovered));
+          continue;
+        }
+        _fail(
+          PurchaseFailureReason.verificationFailed,
+          message: DioErrorMapper.map(e),
+        );
       } catch (e) {
         if (kDebugMode) {
           debugPrint('[IAP] verify failed product=${purchase.productID} error=$e');
         }
         _releasePurchase(purchaseKey);
+        final recovered = await _tryRecoverViaServerReconcile(purchase);
+        if (recovered != null) {
+          if (purchase.pendingCompletePurchase) {
+            await completeMobileStorePurchaseIfNeeded(purchase);
+          }
+          await _pendingStore.clear();
+          _markPurchaseCompleted(purchaseKey);
+          await _refreshAfterPurchase(userInitiated: _activeRequest?.userInitiated ?? false);
+          _inFlight = false;
+          _activeRequest = null;
+          _setState(PurchaseSucceeded(recovered));
+          continue;
+        }
         _fail(PurchaseFailureReason.verificationFailed);
       }
     }
@@ -298,7 +333,54 @@ class PurchaseOrchestrator extends ChangeNotifier {
     }
   }
 
+  Future<PurchaseFlowResult?> _verifyAndFulfillWithRetry(
+    PurchaseDetails purchase,
+  ) async {
+    DioException? lastError;
+    for (var attempt = 0; attempt < 3; attempt++) {
+      if (attempt > 0) {
+        await Future<void>.delayed(Duration(seconds: 2 * attempt));
+      }
+      try {
+        return await _verifyAndFulfill(purchase);
+      } on DioException catch (e) {
+        lastError = e;
+        if (attempt == 2 || !DioErrorMapper.isTransientFailure(e)) {
+          rethrow;
+        }
+      }
+    }
+    if (lastError != null) {
+      throw lastError;
+    }
+    return null;
+  }
+
+  Future<void> _reconcileServerPurchases() async {
+    try {
+      await _billingRepository.reconcilePendingPurchases();
+    } catch (_) {}
+  }
+
+  Future<PurchaseFlowResult?> _tryRecoverViaServerReconcile(
+    PurchaseDetails purchase,
+  ) async {
+    try {
+      final result = await _billingRepository.reconcilePendingPurchases();
+      if (result.fulfilledCount <= 0) {
+        return null;
+      }
+      return await _verifyAndFulfill(purchase);
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<PurchaseFlowResult?> _verifyAndFulfill(PurchaseDetails purchase) async {
+    final pendingIntent = _activeRequest == null
+        ? await _pendingStore.read()
+        : null;
+
     final productId = purchase.productID;
     final platform = defaultTargetPlatform == TargetPlatform.iOS
         ? 'app_store'
@@ -314,6 +396,7 @@ class PurchaseOrchestrator extends ChangeNotifier {
         purchaseToken: purchaseToken,
         transactionId: purchase.purchaseID,
         billingCycle: _activeRequest?.billingCycle ??
+            pendingIntent?.billingCycle ??
             _billingCycleForProduct(productId),
       );
       return SubscriptionPurchaseResult(planCode: result.planCode);
@@ -333,13 +416,19 @@ class PurchaseOrchestrator extends ChangeNotifier {
       final prepProduct = _prepProducts[productId];
       await _prepPlusRepository.verifyMobilePurchase(
         catalogItemId:
-            _activeRequest?.catalogItemId ?? prepProduct?.catalogItemId ?? _emptyGuid,
-        offerId: _activeRequest?.offerId ?? prepProduct?.offerId ?? _emptyGuid,
+            _activeRequest?.catalogItemId ??
+            pendingIntent?.catalogItemId ??
+            prepProduct?.catalogItemId ??
+            _emptyGuid,
+        offerId: _activeRequest?.offerId ??
+            pendingIntent?.offerId ??
+            prepProduct?.offerId ??
+            _emptyGuid,
         platform: platform,
         productId: productId,
         purchaseToken: purchaseToken,
         transactionId: purchase.purchaseID,
-        referralCode: _activeRequest?.referralCode,
+        referralCode: _activeRequest?.referralCode ?? pendingIntent?.referralCode,
       );
       return const PrepPlusPurchaseResult();
     }
@@ -361,6 +450,19 @@ class PurchaseOrchestrator extends ChangeNotifier {
     if (pending == null) {
       return;
     }
+
+    if (!_inFlight && _activeRequest == null) {
+      _activeRequest = StorePurchaseRequest(
+        kind: pending.kind,
+        productId: pending.productId,
+        billingCycle: pending.billingCycle,
+        catalogItemId: pending.catalogItemId,
+        offerId: pending.offerId,
+        referralCode: pending.referralCode,
+        userInitiated: false,
+      );
+    }
+
     await _restorePurchases(force: true);
   }
 
@@ -512,5 +614,13 @@ class PurchaseOrchestrator extends ChangeNotifier {
       return '${purchase.productID}|$token';
     }
     return '${purchase.productID}|${purchase.purchaseID ?? purchase.transactionDate ?? ''}';
+  }
+
+  String? _readApiErrorCode(DioException error) {
+    final data = error.response?.data;
+    if (data is Map<String, dynamic>) {
+      return data['code']?.toString();
+    }
+    return null;
   }
 }

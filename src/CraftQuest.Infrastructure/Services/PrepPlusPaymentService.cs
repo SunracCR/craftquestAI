@@ -1,3 +1,4 @@
+using CraftQuest.Application.Billing;
 using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Exceptions;
 using CraftQuest.Application.Models.Billing;
@@ -102,7 +103,7 @@ public class PrepPlusPaymentService(
             orderId,
             offer.PriceAmount,
             offer.CurrencyCode,
-            "pending",
+            PurchaseStatuses.AwaitingPayment,
             now,
             referralCodeId,
             cancellationToken);
@@ -133,9 +134,16 @@ public class PrepPlusPaymentService(
                 404,
                 PrepPlusErrorCodes.PayPalPurchaseNotFound);
 
-        if (purchase.Status == "validated")
+        if (purchase.Status == PurchaseStatuses.Validated)
         {
             return await BuildGrantedResultFromPurchaseAsync(purchase, cancellationToken);
+        }
+
+        if (!PurchaseStatuses.NeedsFulfillment(purchase.Status))
+        {
+            throw new AppException(
+                $"Prep+ PayPal purchase cannot be captured in status '{purchase.Status}'.",
+                409);
         }
 
         if (!options.Value.UseMockPayments)
@@ -307,7 +315,7 @@ public class PrepPlusPaymentService(
                 404,
                 PrepPlusErrorCodes.OfferNoLongerExists);
 
-        purchase.Status = "validated";
+        purchase.Status = PurchaseStatuses.Validated;
         purchase.PurchasedAt = DateTime.UtcNow;
 
         await prepPlusAccessService.EnsureCanPurchaseOfferAsync(

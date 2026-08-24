@@ -11,7 +11,8 @@ void showStorePurchaseFailure(
   final message = switch (failure.reason) {
     PurchaseFailureReason.storeUnavailable => l10n.storeProductNotConfigured,
     PurchaseFailureReason.productNotFound => l10n.storeProductNotConfigured,
-    PurchaseFailureReason.verificationFailed => l10n.purchaseVerificationFailed,
+    PurchaseFailureReason.verificationFailed =>
+      failure.message ?? l10n.purchaseVerificationFailed,
     PurchaseFailureReason.timeout => l10n.purchaseTimedOut,
     PurchaseFailureReason.cancelled => l10n.purchaseFailed,
     PurchaseFailureReason.duplicateInFlight => l10n.purchaseFailed,

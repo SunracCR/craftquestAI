@@ -12,7 +12,7 @@ public sealed class PendingPurchaseReconciliationHostedService(
     IServiceScopeFactory scopeFactory,
     ILogger<PendingPurchaseReconciliationHostedService> logger) : BackgroundService
 {
-    private static readonly TimeSpan Interval = TimeSpan.FromHours(1);
+    private static readonly TimeSpan Interval = TimeSpan.FromMinutes(2);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {

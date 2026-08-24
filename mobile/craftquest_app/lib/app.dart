@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:craftquest_app/core/billing/membership_billing_refresh_coordinator.dart';
+import 'package:craftquest_app/core/billing/paypal_payment_reconciler.dart';
 import 'package:craftquest_app/core/billing/purchase_orchestrator.dart';
 import 'package:craftquest_app/core/compliance/age_collection_gate.dart';
 import 'package:craftquest_app/core/compliance/parental_consent_gate.dart';
@@ -675,6 +676,7 @@ class _AuthenticatedShellState extends State<_AuthenticatedShell>
     if (state == AppLifecycleState.resumed) {
       unawaited(getIt<NotificationsCubit>().refreshUnreadCount());
       unawaited(getIt<PurchaseOrchestrator>().onAppResume());
+      unawaited(getIt<PayPalPaymentReconciler>().tryReconcileOnAppResume());
       unawaited(getIt<MembershipBillingRefreshCoordinator>().refreshOnAppResume());
     }
   }

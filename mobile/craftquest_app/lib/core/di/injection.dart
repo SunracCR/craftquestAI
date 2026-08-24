@@ -1,4 +1,5 @@
 import 'package:craftquest_app/core/billing/checkout_refresh_notifier.dart';
+import 'package:craftquest_app/core/billing/paypal_payment_reconciler.dart';
 import 'package:craftquest_app/core/billing/purchase_orchestrator.dart';
 import 'package:craftquest_app/core/billing/pending_store_purchase_store.dart';
 import 'package:craftquest_app/core/billing/membership_billing_refresh_coordinator.dart';
@@ -73,6 +74,7 @@ void configureDependencies() {
       pendingStore: getIt<PendingStorePurchaseStore>(),
     ),
   );
+  getIt.registerLazySingleton(PayPalPaymentReconciler.new);
   getIt.registerLazySingleton(MembershipBillingRefreshCoordinator.new);
   getIt.registerLazySingleton(MainShellTabSignal.new);
   getIt.registerLazySingleton(TokenStorage.new);

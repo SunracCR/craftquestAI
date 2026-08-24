@@ -1,4 +1,5 @@
 using System.Text.Json;
+using CraftQuest.Application.Billing;
 using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Exceptions;
 using CraftQuest.Application.Models.Billing;
@@ -136,7 +137,7 @@ public class PaymentService(
             "paypal",
             orderId,
             amount,
-            "pending",
+            PurchaseStatuses.AwaitingPayment,
             now,
             cancellationToken,
             billingCycle);
@@ -177,13 +178,21 @@ public class PaymentService(
                 400);
         }
 
-        if (purchase.Status == "validated")
+        if (purchase.Status == PurchaseStatuses.Validated)
         {
             return await BuildValidatedCaptureResponseAsync(
                 userId,
                 purchase,
                 request.OrderId,
                 cancellationToken);
+        }
+
+        if (!PurchaseStatuses.NeedsFulfillment(purchase.Status))
+        {
+            throw new AppException(
+                $"PayPal purchase cannot be captured in status '{purchase.Status}'.",
+                409,
+                "PURCHASE_NOT_CAPTURABLE");
         }
 
         if (!options.Value.UseMockPayments)
@@ -193,27 +202,31 @@ public class PaymentService(
 
         var billingCycle = await ResolveBillingCycleFromPurchaseAsync(purchase, cancellationToken);
         var now = DateTime.UtcNow;
-        await billingService.ActivatePlanAsync(
-            userId,
-            purchase.ProductCode,
-            "paypal",
-            request.OrderId,
-            new SubscriptionActivationOptions
-            {
-                BillingCycle = billingCycle,
-                AutoRenewEnabled = false,
-                PeriodStart = now,
-                PeriodEnd = SubscriptionPeriodCalculator.CalculatePeriodEnd(now, billingCycle),
-                LastPaymentAt = now,
-            },
-            cancellationToken);
+        await ExecuteInTransactionAsync(async () =>
+        {
+            await billingService.ActivatePlanAsync(
+                userId,
+                purchase.ProductCode,
+                "paypal",
+                request.OrderId,
+                new SubscriptionActivationOptions
+                {
+                    BillingCycle = billingCycle,
+                    AutoRenewEnabled = false,
+                    PeriodStart = now,
+                    PeriodEnd = SubscriptionPeriodCalculator.CalculatePeriodEnd(now, billingCycle),
+                    LastPaymentAt = now,
+                },
+                cancellationToken);
 
-        await CompletePurchaseAsync(purchase, cancellationToken);
+            await CompletePurchaseAsync(purchase, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }, cancellationToken);
 
         return new PayPalCaptureOrderResponse
         {
             PlanCode = purchase.ProductCode,
-            Status = "validated",
+            Status = PurchaseStatuses.Validated,
             MockMode = options.Value.UseMockPayments,
         };
     }
@@ -272,7 +285,7 @@ public class PaymentService(
             "paypal",
             subscriptionId,
             ResolvePrice(plan, billingCycle),
-            "pending",
+            PurchaseStatuses.AwaitingPayment,
             now,
             cancellationToken,
             billingCycle);
@@ -299,7 +312,7 @@ public class PaymentService(
                 cancellationToken)
             ?? throw new AppException("PayPal subscription purchase not found.", 404);
 
-        if (purchase.Status == "validated")
+        if (purchase.Status == PurchaseStatuses.Validated)
         {
             return await BuildValidatedSubscriptionActivationResponseAsync(
                 userId,
@@ -307,6 +320,14 @@ public class PaymentService(
                 request.SubscriptionId,
                 request.BillingCycle,
                 cancellationToken);
+        }
+
+        if (!PurchaseStatuses.NeedsFulfillment(purchase.Status))
+        {
+            throw new AppException(
+                $"PayPal subscription cannot be activated in status '{purchase.Status}'.",
+                409,
+                "PURCHASE_NOT_ACTIVATABLE");
         }
 
         var billingCycle = SubscriptionPeriodCalculator.NormalizeBillingCycle(
@@ -317,7 +338,7 @@ public class PaymentService(
 
         if (!options.Value.UseMockPayments)
         {
-            var details = await payPalApiClient.GetSubscriptionAsync(
+            var details = await WaitForActivePayPalSubscriptionAsync(
                 request.SubscriptionId,
                 cancellationToken);
             periodEnd = details.NextBillingTime;
@@ -326,27 +347,31 @@ public class PaymentService(
         var now = DateTime.UtcNow;
         periodEnd ??= SubscriptionPeriodCalculator.CalculatePeriodEnd(now, billingCycle);
 
-        await billingService.ActivatePlanAsync(
-            userId,
-            purchase.ProductCode,
-            "paypal",
-            request.SubscriptionId,
-            new SubscriptionActivationOptions
-            {
-                BillingCycle = billingCycle,
-                AutoRenewEnabled = true,
-                PeriodStart = now,
-                PeriodEnd = periodEnd,
-                LastPaymentAt = now,
-            },
-            cancellationToken);
+        await ExecuteInTransactionAsync(async () =>
+        {
+            await billingService.ActivatePlanAsync(
+                userId,
+                purchase.ProductCode,
+                "paypal",
+                request.SubscriptionId,
+                new SubscriptionActivationOptions
+                {
+                    BillingCycle = billingCycle,
+                    AutoRenewEnabled = true,
+                    PeriodStart = now,
+                    PeriodEnd = periodEnd,
+                    LastPaymentAt = now,
+                },
+                cancellationToken);
 
-        await CompletePurchaseAsync(purchase, cancellationToken);
+            await CompletePurchaseAsync(purchase, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }, cancellationToken);
 
         return new PayPalActivateSubscriptionResponse
         {
             PlanCode = purchase.ProductCode,
-            Status = "validated",
+            Status = PurchaseStatuses.Validated,
             CurrentPeriodEnd = periodEnd,
             AutoRenewEnabled = true,
             MockMode = options.Value.UseMockPayments,
@@ -611,7 +636,8 @@ public class PaymentService(
 
         EnsurePurchaseOwnership(existingPurchase, userId);
 
-        if (existingPurchase is { Status: "validated" })
+        if (existingPurchase is { Status: var status }
+            && string.Equals(status, PurchaseStatuses.Validated, StringComparison.OrdinalIgnoreCase))
         {
             var active = await dbContext.UserSubscriptions
                 .Include(s => s.Plan)
@@ -649,12 +675,6 @@ public class PaymentService(
             CreatedAt = DateTime.UtcNow,
         };
 
-        if (existingPurchase is null)
-        {
-            dbContext.Purchases.Add(purchase);
-            await dbContext.SaveChangesAsync(cancellationToken);
-        }
-
         var periodStart = DateTime.UtcNow;
         var periodEnd = storeDetails.PeriodEnd
             ?? SubscriptionPeriodCalculator.CalculatePeriodEnd(
@@ -663,6 +683,11 @@ public class PaymentService(
 
         await ExecuteInTransactionAsync(async () =>
         {
+            if (existingPurchase is null)
+            {
+                dbContext.Purchases.Add(purchase);
+            }
+
             var hasActiveSameProvider = await dbContext.UserSubscriptions.AnyAsync(
                 s => s.UserId == userId
                      && s.Status == SubscriptionStatuses.Active
@@ -710,7 +735,7 @@ public class PaymentService(
         return new VerifyMobilePurchaseResponse
         {
             PlanCode = plan.Code,
-            Status = "validated",
+            Status = PurchaseStatuses.Validated,
             BillingCycle = storeDetails.BillingCycle,
             CurrentPeriodEnd = periodEnd,
             AutoRenewEnabled = storeDetails.AutoRenewEnabled,
@@ -866,7 +891,8 @@ public class PaymentService(
             .FirstOrDefaultAsync(
                 p => p.ProviderCode == "paypal"
                     && p.ProviderTransactionId == subscriptionId
-                    && p.Status == "pending",
+                    && (p.Status == PurchaseStatuses.Pending
+                        || p.Status == PurchaseStatuses.AwaitingPayment),
                 cancellationToken);
 
         if (purchase is null)
@@ -895,7 +921,12 @@ public class PaymentService(
                     && p.ProviderTransactionId == orderId,
                 cancellationToken);
 
-        if (purchase is null || purchase.Status == "validated")
+        if (purchase is null || purchase.Status == PurchaseStatuses.Validated)
+        {
+            return;
+        }
+
+        if (!PurchaseStatuses.NeedsFulfillment(purchase.Status))
         {
             return;
         }
@@ -1003,7 +1034,7 @@ public class PaymentService(
 
     private async Task CompletePurchaseAsync(Purchase purchase, CancellationToken cancellationToken)
     {
-        purchase.Status = "validated";
+        purchase.Status = PurchaseStatuses.Validated;
         purchase.PurchasedAt = DateTime.UtcNow;
         await dbContext.SaveChangesAsync(cancellationToken);
     }
@@ -1174,7 +1205,7 @@ public class PaymentService(
             "paypal",
             orderId,
             pack.PriceUsd,
-            "pending",
+            PurchaseStatuses.AwaitingPayment,
             now,
             cancellationToken);
 
@@ -1201,7 +1232,7 @@ public class PaymentService(
                 cancellationToken)
             ?? throw new AppException("AI credits PayPal purchase not found.", 404);
 
-        if (purchase.Status == "validated")
+        if (purchase.Status == PurchaseStatuses.Validated)
         {
             var pack = GetAiCreditPackDefinition(purchase.ProductCode);
             var balance = await billingService.GetMyBillingAsync(userId, cancellationToken);
@@ -1215,25 +1246,39 @@ public class PaymentService(
             };
         }
 
+        if (!PurchaseStatuses.NeedsFulfillment(purchase.Status))
+        {
+            throw new AppException(
+                $"AI credits PayPal purchase cannot be captured in status '{purchase.Status}'.",
+                409,
+                "PURCHASE_NOT_CAPTURABLE");
+        }
+
         if (!options.Value.UseMockPayments)
         {
             await payPalApiClient.CaptureOrderAsync(request.OrderId, cancellationToken);
         }
 
-        await CompletePurchaseAsync(purchase, cancellationToken);
         var grantedPack = GetAiCreditPackDefinition(purchase.ProductCode);
-        var newBalance = await billingService.GrantPurchasedAiCreditsAsync(
-            userId,
-            grantedPack.Credits,
-            purchase.PurchaseId,
-            cancellationToken);
+        var newBalance = 0;
+        await ExecuteInTransactionAsync(async () =>
+        {
+            newBalance = await billingService.GrantPurchasedAiCreditsAsync(
+                userId,
+                grantedPack.Credits,
+                purchase.PurchaseId,
+                cancellationToken);
+
+            await CompletePurchaseAsync(purchase, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }, cancellationToken);
 
         return new PayPalCaptureAiCreditOrderResponse
         {
             PackCode = grantedPack.Code,
             CreditsGranted = grantedPack.Credits,
             AiCreditsBalance = newBalance,
-            Status = "validated",
+            Status = PurchaseStatuses.Validated,
             MockMode = options.Value.UseMockPayments,
         };
     }
@@ -1323,15 +1368,14 @@ public class PaymentService(
             CreatedAt = DateTime.UtcNow,
         };
 
-        if (existingPurchase is null)
-        {
-            dbContext.Purchases.Add(purchase);
-            await dbContext.SaveChangesAsync(cancellationToken);
-        }
-
         var aiCreditsBalance = 0;
         await ExecuteInTransactionAsync(async () =>
         {
+            if (existingPurchase is null)
+            {
+                dbContext.Purchases.Add(purchase);
+            }
+
             aiCreditsBalance = await billingService.GrantPurchasedAiCreditsAsync(
                 userId,
                 pack.Credits,
@@ -1369,47 +1413,182 @@ public class PaymentService(
     public async Task<int> ReconcilePendingPurchasesAsync(
         CancellationToken cancellationToken = default)
     {
-        var cutoff = DateTime.UtcNow.AddHours(-6);
-        var pendingPurchases = await dbContext.Purchases
-            .Where(p => p.Status == "pending" && p.CreatedAt < cutoff)
+        await ExpireStaleAwaitingPaymentsAsync(cancellationToken);
+
+        var cutoff = DateTime.UtcNow.AddSeconds(-30);
+        var openPurchases = await dbContext.Purchases
+            .Where(p => (p.Status == PurchaseStatuses.Pending
+                         || p.Status == PurchaseStatuses.AwaitingPayment)
+                        && p.CreatedAt < cutoff)
             .OrderBy(p => p.CreatedAt)
-            .Take(50)
+            .Take(100)
             .ToListAsync(cancellationToken);
 
         var reconciled = 0;
-        foreach (var purchase in pendingPurchases)
+        foreach (var purchase in openPurchases)
         {
-            try
+            if (await TryReconcilePendingPurchaseAsync(purchase, cancellationToken))
             {
-                if (purchase.ProviderCode == "paypal")
-                {
-                    if (purchase.ProductType == "subscription")
-                    {
-                        await TryActivatePendingPayPalSubscriptionAsync(
-                            purchase.ProviderTransactionId,
-                            cancellationToken);
-                    }
-                    else
-                    {
-                        await TryFulfillPendingPayPalOrderAsync(
-                            purchase.ProviderTransactionId,
-                            cancellationToken);
-                    }
-
-                    reconciled++;
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.LogWarning(
-                    ex,
-                    "Failed to reconcile pending purchase {PurchaseId} for user {UserId}",
-                    purchase.PurchaseId,
-                    purchase.UserId);
+                reconciled++;
             }
         }
 
         return reconciled;
+    }
+
+    public async Task<ReconcilePendingPurchasesResponse> ReconcileUserPendingPurchasesAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var openPurchases = await dbContext.Purchases
+            .Where(p => p.UserId == userId
+                        && (p.Status == PurchaseStatuses.Pending
+                            || p.Status == PurchaseStatuses.AwaitingPayment))
+            .OrderByDescending(p => p.CreatedAt)
+            .Take(20)
+            .ToListAsync(cancellationToken);
+
+        var fulfilled = 0;
+        foreach (var purchase in openPurchases)
+        {
+            if (await TryReconcilePendingPurchaseAsync(purchase, cancellationToken))
+            {
+                fulfilled++;
+            }
+        }
+
+        return new ReconcilePendingPurchasesResponse { FulfilledCount = fulfilled };
+    }
+
+    private async Task ExpireStaleAwaitingPaymentsAsync(CancellationToken cancellationToken)
+    {
+        var cutoff = DateTime.UtcNow.AddHours(-48);
+        var stale = await dbContext.Purchases
+            .Where(p => p.Status == PurchaseStatuses.AwaitingPayment && p.CreatedAt < cutoff)
+            .Take(100)
+            .ToListAsync(cancellationToken);
+
+        if (stale.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var purchase in stale)
+        {
+            purchase.Status = PurchaseStatuses.Cancelled;
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task<bool> TryReconcilePendingPurchaseAsync(
+        Purchase purchase,
+        CancellationToken cancellationToken)
+    {
+        if (!PurchaseStatuses.NeedsFulfillment(purchase.Status))
+        {
+            return false;
+        }
+
+        try
+        {
+            if (purchase.ProviderCode == "paypal")
+            {
+                var transactionId = purchase.ProviderTransactionId;
+                if (string.IsNullOrWhiteSpace(transactionId))
+                {
+                    return false;
+                }
+
+                if (purchase.ProductType == "subscription")
+                {
+                    await TryActivatePendingPayPalSubscriptionAsync(
+                        transactionId,
+                        cancellationToken);
+                }
+                else
+                {
+                    await TryFulfillPendingPayPalOrderAsync(
+                        transactionId,
+                        cancellationToken);
+                }
+            }
+            else if (purchase.ProviderCode is "google_play" or "app_store")
+            {
+                if (!await TryReconcileFulfilledMobilePurchaseAsync(purchase, cancellationToken))
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
+
+            await dbContext.Entry(purchase).ReloadAsync(cancellationToken);
+            return purchase.Status == PurchaseStatuses.Validated;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(
+                ex,
+                "Failed to reconcile open purchase {PurchaseId} for user {UserId}",
+                purchase.PurchaseId,
+                purchase.UserId);
+            return false;
+        }
+    }
+
+    private async Task<bool> TryReconcileFulfilledMobilePurchaseAsync(
+        Purchase purchase,
+        CancellationToken cancellationToken)
+    {
+        if (purchase.ProductType == "subscription")
+        {
+            var hasMatchingSubscription = await dbContext.UserSubscriptions.AnyAsync(
+                s => s.UserId == purchase.UserId
+                     && s.Status == SubscriptionStatuses.Active
+                     && s.ProviderCode == purchase.ProviderCode
+                     && s.StartedAt >= purchase.CreatedAt.AddMinutes(-5),
+                cancellationToken);
+
+            if (!hasMatchingSubscription)
+            {
+                return false;
+            }
+        }
+        else if (purchase.ProductType == "ai_credits")
+        {
+            var creditsGranted = await dbContext.CreditLedgerEntries.AnyAsync(
+                e => e.UserId == purchase.UserId
+                     && e.ReferenceId == purchase.PurchaseId,
+                cancellationToken);
+
+            if (!creditsGranted)
+            {
+                return false;
+            }
+        }
+        else if (purchase.ProductType == "prep_access")
+        {
+            var accessGranted = await dbContext.QuizAccesses.AnyAsync(
+                g => g.GrantedByPurchaseId == purchase.PurchaseId,
+                cancellationToken);
+
+            if (!accessGranted)
+            {
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
+
+        purchase.Status = PurchaseStatuses.Validated;
+        purchase.PurchasedAt ??= DateTime.UtcNow;
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
     private async Task HandlePayPalCaptureDeniedAsync(
@@ -1425,7 +1604,7 @@ public class PaymentService(
         var purchase = await dbContext.Purchases.FirstOrDefaultAsync(
             p => p.ProviderCode == "paypal" && p.ProviderTransactionId == orderId,
             cancellationToken);
-        if (purchase is null || purchase.Status != "pending")
+        if (purchase is null || !PurchaseStatuses.NeedsFulfillment(purchase.Status))
         {
             return;
         }
@@ -1500,6 +1679,52 @@ public class PaymentService(
                 "PURCHASE_OWNERSHIP_MISMATCH");
         }
     }
+
+    private async Task<PayPalSubscriptionDetails> WaitForActivePayPalSubscriptionAsync(
+        string subscriptionId,
+        CancellationToken cancellationToken)
+    {
+        var retryDelays = new[]
+        {
+            TimeSpan.Zero,
+            TimeSpan.FromSeconds(2),
+            TimeSpan.FromSeconds(4),
+            TimeSpan.FromSeconds(6),
+            TimeSpan.FromSeconds(8),
+        };
+
+        PayPalSubscriptionDetails? lastDetails = null;
+        foreach (var delay in retryDelays)
+        {
+            if (delay > TimeSpan.Zero)
+            {
+                await Task.Delay(delay, cancellationToken);
+            }
+
+            lastDetails = await payPalApiClient.GetSubscriptionAsync(
+                subscriptionId,
+                cancellationToken);
+
+            if (string.Equals(lastDetails.Status, "ACTIVE", StringComparison.OrdinalIgnoreCase))
+            {
+                return lastDetails;
+            }
+
+            if (!IsPayPalSubscriptionAwaitingActivation(lastDetails.Status))
+            {
+                break;
+            }
+        }
+
+        throw new AppException(
+            $"PayPal subscription is not active yet (status: {lastDetails?.Status ?? "UNKNOWN"}).",
+            409,
+            "PAYPAL_SUBSCRIPTION_NOT_ACTIVE");
+    }
+
+    private static bool IsPayPalSubscriptionAwaitingActivation(string? status) =>
+        string.Equals(status, "APPROVAL_PENDING", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(status, "APPROVED", StringComparison.OrdinalIgnoreCase);
 
     private async Task ExecuteInTransactionAsync(
         Func<Task> action,

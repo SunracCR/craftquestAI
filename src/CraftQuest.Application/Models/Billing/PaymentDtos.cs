@@ -123,3 +123,8 @@ public sealed class ProviderAutoRenewRestoreResult
     public bool RequiresResubscribe { get; init; }
     public string? ProviderCode { get; init; }
 }
+
+public sealed class ReconcilePendingPurchasesResponse
+{
+    public int FulfilledCount { get; init; }
+}

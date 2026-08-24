@@ -1,3 +1,4 @@
+using CraftQuest.Application.Billing;
 using CraftQuest.Application.Constants;
 using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Exceptions;
@@ -96,7 +97,8 @@ public class BillingService(
         const int maxItems = 100;
         var purchases = await dbContext.Purchases
             .AsNoTracking()
-            .Where(p => p.UserId == userId)
+            .Where(p => p.UserId == userId
+                        && p.Status != PurchaseStatuses.AwaitingPayment)
             .OrderByDescending(p => p.PurchasedAt ?? p.CreatedAt)
             .Take(maxItems)
             .ToListAsync(cancellationToken);

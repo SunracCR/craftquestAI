@@ -1,4 +1,5 @@
 import 'package:craftquest_app/core/billing/mobile_store_product_query.dart';
+import 'package:craftquest_app/core/billing/paypal_payment_reconciler.dart';
 import 'package:craftquest_app/core/billing/post_checkout_session_refresh.dart';
 import 'package:craftquest_app/core/billing/purchase_flow_state.dart';
 import 'package:craftquest_app/core/billing/purchase_orchestrator.dart';
@@ -11,6 +12,7 @@ import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/utils/billing_display.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
+import 'package:craftquest_app/core/widgets/app_buttons.dart';
 import 'package:craftquest_app/core/widgets/app_page_header.dart';
 import 'package:craftquest_app/core/widgets/app_section_card.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
@@ -51,6 +53,7 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
   bool _resuming = false;
   String? _error;
   bool _storeAvailable = false;
+  String? _pendingPayPalSubscriptionId;
 
   bool get _purchasing => _orchestrator.isBusy || _paypalPurchasing;
 
@@ -115,11 +118,16 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
       }
 
       if (!mounted) return;
+      final pendingPayPal = await getIt<PendingPayPalPaymentStore>().read();
       setState(() {
         _plans = plans;
         _storeProducts = storeProducts;
         _billing = billing;
         _loading = false;
+        _pendingPayPalSubscriptionId =
+            pendingPayPal?.flow == PendingPayPalPaymentFlow.subscription
+                ? pendingPayPal!.id
+                : null;
       });
     } on DioException catch (e) {
       if (!mounted) return;
@@ -231,11 +239,39 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
           );
           await launchPayPalApproval(uri);
           if (!mounted) return;
+          setState(() => _pendingPayPalSubscriptionId = subscription.subscriptionId);
           if (!kIsWeb) {
             context.showSuccessSnackBar(l10n.paypalAwaitingSubscriptionActivation);
           }
         }
       }
+    } on DioException catch (e) {
+      if (!mounted) return;
+      context.showDioErrorSnackBar(e);
+    } finally {
+      if (mounted) setState(() => _paypalPurchasing = false);
+    }
+  }
+
+  Future<void> _confirmPayPalActivation() async {
+    if (_pendingPayPalSubscriptionId == null) {
+      return;
+    }
+
+    final l10n = AppLocalizations.of(context)!;
+    setState(() => _paypalPurchasing = true);
+    try {
+      final fulfilled = await getIt<PayPalPaymentReconciler>().tryFulfillStoredPending();
+      if (!mounted) return;
+      if (fulfilled) {
+        setState(() => _pendingPayPalSubscriptionId = null);
+        await refreshAppSessionAfterCheckout(context);
+        if (!mounted) return;
+        context.showSuccessSnackBar(l10n.paypalReturnSuccessSubscription);
+        Navigator.of(context).pop(true);
+        return;
+      }
+      context.showErrorSnackBar(l10n.paypalReturnError);
     } on DioException catch (e) {
       if (!mounted) return;
       context.showDioErrorSnackBar(e);
@@ -377,6 +413,32 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
                             ),
                             const SizedBox(height: 16),
                           ],
+                          if (_pendingPayPalSubscriptionId != null)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: AppSectionCard(
+                                variant: AppCardVariant.highlight,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    Text(
+                                      l10n.paypalAwaitingSubscriptionActivation,
+                                      style: const TextStyle(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    AppPrimaryButton(
+                                      label: l10n.prepPlusConfirmPayPalPayment,
+                                      isLoading: _paypalPurchasing,
+                                      onPressed: _paypalPurchasing
+                                          ? null
+                                          : _confirmPayPalActivation,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ..._plans.asMap().entries.map(
                                 (e) => _planCard(e.value, l10n, e.key),
                               ),
