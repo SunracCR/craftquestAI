@@ -509,15 +509,7 @@ public class BillingService(
             ?? SubscriptionPeriodCalculator.CalculatePeriodEnd(now, billingCycle);
         var isRecurring = SubscriptionPeriodCalculator.IsRecurringProvider(providerCode);
 
-        var activeSubscriptions = await dbContext.UserSubscriptions
-            .Where(s => s.UserId == userId && s.Status == SubscriptionStatuses.Active)
-            .ToListAsync(cancellationToken);
-
-        foreach (var subscription in activeSubscriptions)
-        {
-            subscription.Status = SubscriptionStatuses.Cancelled;
-            subscription.EndsAt = now;
-        }
+        await CancelActiveSubscriptionsAsync(userId, now, disableAutoRenew: false, cancellationToken);
 
         dbContext.UserSubscriptions.Add(new UserSubscription
         {
@@ -550,6 +542,41 @@ public class BillingService(
         await SyncTeacherRoleAsync(userId, plan.IsTeacherPlan, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
         InvalidateBillingCache(userId);
+    }
+
+    /// <summary>
+    /// Cierra las suscripciones activas y persiste el cambio antes de insertar la nueva.
+    /// El índice filtrado UX_UserSubscriptions_OneActivePerUser rechaza el INSERT si la fila
+    /// anterior sigue en 'active' dentro del mismo lote de EF.
+    /// </summary>
+    private async Task<List<UserSubscription>> CancelActiveSubscriptionsAsync(
+        Guid userId,
+        DateTime endsAt,
+        bool disableAutoRenew,
+        CancellationToken cancellationToken)
+    {
+        var active = await dbContext.UserSubscriptions
+            .Include(s => s.Plan)
+            .Where(s => s.UserId == userId && s.Status == SubscriptionStatuses.Active)
+            .ToListAsync(cancellationToken);
+
+        if (active.Count == 0)
+        {
+            return active;
+        }
+
+        foreach (var subscription in active)
+        {
+            subscription.Status = SubscriptionStatuses.Cancelled;
+            subscription.EndsAt = endsAt;
+            if (disableAutoRenew)
+            {
+                subscription.AutoRenewEnabled = false;
+            }
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return active;
     }
 
     public async Task<CancelAutoRenewResponse> CancelAutoRenewAsync(
@@ -794,20 +821,14 @@ public class BillingService(
         CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
-        var active = await dbContext.UserSubscriptions
-            .Include(s => s.Plan)
-            .Where(s => s.UserId == userId && s.Status == SubscriptionStatuses.Active)
-            .ToListAsync(cancellationToken);
+        var active = await CancelActiveSubscriptionsAsync(
+            userId,
+            now,
+            disableAutoRenew: true,
+            cancellationToken);
 
         var wasTeacherPlan = active.Any(s => s.Plan.IsTeacherPlan);
         var expiredPlanName = active.FirstOrDefault()?.Plan.Name ?? "Premium";
-
-        foreach (var sub in active)
-        {
-            sub.Status = SubscriptionStatuses.Cancelled;
-            sub.EndsAt = now;
-            sub.AutoRenewEnabled = false;
-        }
 
         var freePlan = await dbContext.Plans
             .FirstOrDefaultAsync(p => p.Code == "free" && p.IsActive, cancellationToken)

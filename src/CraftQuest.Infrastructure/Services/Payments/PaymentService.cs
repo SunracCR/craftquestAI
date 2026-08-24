@@ -643,17 +643,26 @@ public class PaymentService(
                 .Include(s => s.Plan)
                 .Where(s => s.UserId == userId && s.Status == SubscriptionStatuses.Active)
                 .OrderByDescending(s => s.StartedAt)
-                .FirstAsync(cancellationToken);
+                .FirstOrDefaultAsync(cancellationToken);
 
-            return new VerifyMobilePurchaseResponse
+            if (active is not null)
             {
-                PlanCode = active.Plan.Code,
-                Status = existingPurchase.Status,
-                BillingCycle = active.BillingCycle,
-                CurrentPeriodEnd = active.EndsAt,
-                AutoRenewEnabled = active.AutoRenewEnabled,
-                MockMode = options.Value.UseMockPayments,
-            };
+                return new VerifyMobilePurchaseResponse
+                {
+                    PlanCode = active.Plan.Code,
+                    Status = existingPurchase.Status,
+                    BillingCycle = active.BillingCycle,
+                    CurrentPeriodEnd = active.EndsAt,
+                    AutoRenewEnabled = active.AutoRenewEnabled,
+                    MockMode = options.Value.UseMockPayments,
+                };
+            }
+
+            logger.LogWarning(
+                "Purchase {PurchaseId} is validated but user {UserId} has no active subscription. Re-activating from store transaction {TransactionId}.",
+                existingPurchase.PurchaseId,
+                userId,
+                paymentTransactionId);
         }
 
         var amount = billingCycle == BillingCycles.Annual
@@ -1147,7 +1156,11 @@ public class PaymentService(
             .Include(s => s.Plan)
             .Where(s => s.UserId == userId && s.Status == "active")
             .OrderByDescending(s => s.StartedAt)
-            .FirstAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken)
+            ?? throw new AppException(
+                "Subscription activation did not produce an active subscription.",
+                500,
+                "SUBSCRIPTION_ACTIVATION_FAILED");
     }
 
     public async Task<IReadOnlyList<AiCreditPackDto>> GetAiCreditPacksAsync(
