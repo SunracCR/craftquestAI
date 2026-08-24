@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:craftquest_app/core/billing/mobile_store_purchase_completion.dart';
 import 'package:craftquest_app/core/billing/checkout_refresh_notifier.dart';
 import 'package:craftquest_app/core/billing/post_checkout_session_refresh.dart';
 import 'package:craftquest_app/core/di/injection.dart';
@@ -138,6 +139,10 @@ class MobileStorePurchaseCoordinator {
   }
 
   Future<void> _onPurchaseUpdate(List<PurchaseDetails> purchases) async {
+    if (isBillingPageHandlingPurchases) {
+      return;
+    }
+
     for (final purchase in purchases) {
       if (purchase.status != PurchaseStatus.purchased &&
           purchase.status != PurchaseStatus.restored) {
@@ -157,7 +162,7 @@ class MobileStorePurchaseCoordinator {
         }
 
         if (purchase.pendingCompletePurchase) {
-          await InAppPurchase.instance.completePurchase(purchase);
+          await completeMobileStorePurchaseIfNeeded(purchase);
         }
       } catch (_) {
         releasePurchase(purchaseKey);

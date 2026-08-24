@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:craftquest_app/core/billing/post_checkout_session_refresh.dart';
 import 'package:craftquest_app/core/billing/checkout_refresh_notifier.dart';
+import 'package:craftquest_app/core/billing/mobile_store_purchase_completion.dart';
 import 'package:craftquest_app/core/billing/mobile_store_product_query.dart';
 import 'package:craftquest_app/core/billing/mobile_store_purchase_coordinator.dart';
 import 'package:craftquest_app/core/billing/paypal_web_launcher.dart';
@@ -223,6 +224,7 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
 
         final purchaseKey = _purchaseKey(purchase);
         if (!_storePurchases.claimPurchase(purchaseKey)) {
+          _resetPurchasingIfUserInitiated(purchase);
           continue;
         }
 
@@ -238,9 +240,7 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
             purchaseToken: token.isNotEmpty ? token : purchase.purchaseID ?? '',
             transactionId: purchase.purchaseID,
           );
-          if (purchase.pendingCompletePurchase) {
-            await InAppPurchase.instance.completePurchase(purchase);
-          }
+          await completeMobileStorePurchaseIfNeeded(purchase);
           if (!mounted) return;
 
           if (userInitiated) {
@@ -264,6 +264,12 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
           if (userInitiated) {
             context.showDioErrorSnackBar(e);
           }
+        } catch (_) {
+          _storePurchases.releasePurchase(purchaseKey);
+          if (!mounted) return;
+          if (userInitiated) {
+            context.showErrorSnackBar(l10n.purchaseVerificationFailed);
+          }
         } finally {
           if (userInitiated) {
             _userInitiatedPurchase = false;
@@ -273,9 +279,31 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
         continue;
       }
 
-      if (purchase.status == PurchaseStatus.error && mounted) {
+      if ((purchase.status == PurchaseStatus.error ||
+              purchase.status == PurchaseStatus.canceled) &&
+          mounted) {
+        if (purchase.status == PurchaseStatus.error) {
+          context.showErrorSnackBar(
+            purchase.error?.message ?? l10n.purchaseFailed,
+          );
+        }
+        _userInitiatedPurchase = false;
         setState(() => _purchasing = false);
       }
+    }
+  }
+
+  void _resetPurchasingIfUserInitiated(PurchaseDetails purchase) {
+    if (!_userInitiatedPurchase) {
+      return;
+    }
+    if (purchase.status != PurchaseStatus.purchased &&
+        purchase.status != PurchaseStatus.restored) {
+      return;
+    }
+    _userInitiatedPurchase = false;
+    if (mounted) {
+      setState(() => _purchasing = false);
     }
   }
 

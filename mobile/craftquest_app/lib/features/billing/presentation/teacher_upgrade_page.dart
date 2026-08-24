@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:craftquest_app/core/billing/mobile_store_purchase_completion.dart';
 import 'package:craftquest_app/core/billing/mobile_store_product_query.dart';
 import 'package:craftquest_app/core/billing/post_checkout_session_refresh.dart';
 import 'package:craftquest_app/core/billing/mobile_store_purchase_coordinator.dart';
@@ -239,6 +240,7 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
 
         final purchaseKey = _purchaseKey(purchase);
         if (!_storePurchases.claimPurchase(purchaseKey)) {
+          _resetPurchasingIfUserInitiated(purchase);
           continue;
         }
 
@@ -256,9 +258,7 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
             transactionId: purchase.purchaseID,
             billingCycle: _billingCycleForProduct(purchase.productID),
           );
-          if (purchase.pendingCompletePurchase) {
-            await InAppPurchase.instance.completePurchase(purchase);
-          }
+          await completeMobileStorePurchaseIfNeeded(purchase);
           if (!mounted) return;
 
           if (userInitiated) {
@@ -290,11 +290,31 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
         continue;
       }
 
-      if (purchase.status == PurchaseStatus.error) {
+      if (purchase.status == PurchaseStatus.error ||
+          purchase.status == PurchaseStatus.canceled) {
         if (!mounted) return;
-        context.showErrorSnackBar(purchase.error?.message ?? l10n.purchaseFailed);
+        if (purchase.status == PurchaseStatus.error) {
+          context.showErrorSnackBar(
+            purchase.error?.message ?? l10n.purchaseFailed,
+          );
+        }
+        _userInitiatedPurchase = false;
+        setState(() => _purchasing = false);
       }
-      if (mounted) setState(() => _purchasing = false);
+    }
+  }
+
+  void _resetPurchasingIfUserInitiated(PurchaseDetails purchase) {
+    if (!_userInitiatedPurchase) {
+      return;
+    }
+    if (purchase.status != PurchaseStatus.purchased &&
+        purchase.status != PurchaseStatus.restored) {
+      return;
+    }
+    _userInitiatedPurchase = false;
+    if (mounted) {
+      setState(() => _purchasing = false);
     }
   }
 

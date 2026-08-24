@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:craftquest_app/core/billing/mobile_store_product_query.dart';
+import 'package:craftquest_app/core/billing/mobile_store_purchase_completion.dart';
 import 'package:craftquest_app/core/billing/mobile_store_purchase_coordinator.dart';
 import 'package:craftquest_app/core/billing/paypal_web_launcher.dart';
 import 'package:craftquest_app/core/billing/payment_platform.dart';
@@ -619,15 +621,14 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
     final l10n = AppLocalizations.of(context)!;
     final productId = offer.storeProductId!;
 
-    if (!await InAppPurchase.instance.isAvailable()) {
+    if (!await isMobileStoreAvailable()) {
       if (!mounted) return;
       context.showErrorSnackBar(l10n.storeProductNotConfigured);
       return;
     }
 
-    final response =
-        await InAppPurchase.instance.queryProductDetails({productId});
-    if (response.productDetails.isEmpty) {
+    final product = await findMobileStoreProduct(productId);
+    if (product == null) {
       if (!mounted) return;
       context.showErrorSnackBar(l10n.storeProductNotFound(productId));
       return;
@@ -635,7 +636,6 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
 
     setState(() => _checkingOut = true);
     _userInitiatedPurchase = true;
-    final product = response.productDetails.first;
     await InAppPurchase.instance.buyConsumable(
       purchaseParam: PurchaseParam(productDetails: product),
     );
@@ -651,11 +651,17 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
           purchase.status == PurchaseStatus.restored) {
         final offer = _offerForProductId(purchase.productID, item.offers);
         if (offer == null) {
+          if (_userInitiatedPurchase) {
+            _userInitiatedPurchase = false;
+            if (mounted) setState(() => _checkingOut = false);
+            context.showErrorSnackBar(l10n.storeProductNotFound(purchase.productID));
+          }
           continue;
         }
 
         final purchaseKey = _purchaseKey(purchase);
         if (!_storePurchases.claimPurchase(purchaseKey)) {
+          _resetCheckingOutIfUserInitiated(purchase);
           continue;
         }
 
@@ -675,9 +681,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
             transactionId: purchase.purchaseID,
             referralCode: referralCode,
           );
-          if (purchase.pendingCompletePurchase) {
-            await InAppPurchase.instance.completePurchase(purchase);
-          }
+          await completeMobileStorePurchaseIfNeeded(purchase);
           if (!mounted) return;
           if (result.status == 'granted') {
             await _clearReferralIfMatched();
@@ -686,6 +690,8 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
             if (userInitiated) {
               context.showSuccessSnackBar(l10n.prepPlusAccessGranted);
             }
+          } else if (userInitiated) {
+            context.showErrorSnackBar(l10n.purchaseVerificationFailed);
           }
         } catch (e) {
           _storePurchases.releasePurchase(purchaseKey);
@@ -704,8 +710,23 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
 
       if (purchase.status == PurchaseStatus.error ||
           purchase.status == PurchaseStatus.canceled) {
+        _userInitiatedPurchase = false;
         if (mounted) setState(() => _checkingOut = false);
       }
+    }
+  }
+
+  void _resetCheckingOutIfUserInitiated(PurchaseDetails purchase) {
+    if (!_userInitiatedPurchase) {
+      return;
+    }
+    if (purchase.status != PurchaseStatus.purchased &&
+        purchase.status != PurchaseStatus.restored) {
+      return;
+    }
+    _userInitiatedPurchase = false;
+    if (mounted) {
+      setState(() => _checkingOut = false);
     }
   }
 

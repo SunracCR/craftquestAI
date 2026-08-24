@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:craftquest_app/core/billing/checkout_refresh_notifier.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/features/auth/data/auth_repository.dart';
@@ -8,6 +10,21 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Tras un checkout (PayPal, mock, etc.): renueva JWT, perfil/roles y billing en caché.
 Future<void> refreshAppSessionAfterCheckout(
+  BuildContext context, {
+  bool affectsHomeTab = true,
+  Duration timeout = const Duration(seconds: 45),
+}) async {
+  try {
+    await _refreshAppSessionAfterCheckout(
+      context,
+      affectsHomeTab: affectsHomeTab,
+    ).timeout(timeout);
+  } on TimeoutException {
+    // No bloquear la UI si el refresh tarda demasiado tras un pago ya confirmado.
+  }
+}
+
+Future<void> _refreshAppSessionAfterCheckout(
   BuildContext context, {
   bool affectsHomeTab = true,
 }) async {

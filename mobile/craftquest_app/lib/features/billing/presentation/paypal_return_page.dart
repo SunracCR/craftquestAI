@@ -144,41 +144,62 @@ class _PayPalReturnPageState extends State<PayPalReturnPage> {
     if (!mounted) return;
 
     final isPrep = _pending?.flow == PendingPayPalPaymentFlow.prep;
+    final catalogItemId = _pending?.catalogItemId;
 
     await _paymentStore.clear();
 
-    if (mounted) {
-      await refreshAppSessionAfterCheckout(
-        context,
-        affectsHomeTab: !isPrep,
-      );
+    try {
+      if (mounted) {
+        await refreshAppSessionAfterCheckout(
+          context,
+          affectsHomeTab: !isPrep,
+        );
+      }
+    } catch (_) {
+      // El cobro ya se confirmó; seguimos con la navegación aunque falle el refresh.
+    }
+
+    if (!mounted) {
+      return;
     }
 
     clearWebEntryDeepLinkUrl();
-
-    if (!mounted) return;
-
     AppSnackBars.showSuccess(message);
-    _returnToOrigin();
+    _returnToOrigin(
+      isPrepReturn: isPrep &&
+          catalogItemId != null &&
+          catalogItemId.isNotEmpty,
+      catalogItemId: catalogItemId,
+    );
   }
 
-  void _returnToOrigin() {
-    final catalogItemId = _pending?.catalogItemId;
-    final isPrepReturn = _pending?.flow == PendingPayPalPaymentFlow.prep &&
-        catalogItemId != null &&
-        catalogItemId.isNotEmpty;
-
-    if (isPrepReturn) {
+  void _returnToOrigin({
+    bool isPrepReturn = false,
+    String? catalogItemId,
+  }) {
+    if (isPrepReturn && catalogItemId != null && catalogItemId.isNotEmpty) {
       getIt<MainShellTabSignal>().requestTab(kPrepPlusTabIndex);
     }
 
     final navigator = rootNavigatorKey.currentState;
-    navigator?.popUntil((route) => route.isFirst);
+    if (navigator != null) {
+      navigator.popUntil((route) => route.isFirst);
+      if (isPrepReturn && catalogItemId != null && catalogItemId.isNotEmpty) {
+        navigator.push(
+          MaterialPageRoute<void>(
+            builder: (_) => PrepPlusItemDetailPage(catalogItemId: catalogItemId),
+          ),
+        );
+      }
+      return;
+    }
 
-    if (isPrepReturn) {
-      navigator?.push(
+    if (!mounted) return;
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    if (isPrepReturn && catalogItemId != null && catalogItemId.isNotEmpty) {
+      Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (_) => PrepPlusItemDetailPage(catalogItemId: catalogItemId!),
+          builder: (_) => PrepPlusItemDetailPage(catalogItemId: catalogItemId),
         ),
       );
     }

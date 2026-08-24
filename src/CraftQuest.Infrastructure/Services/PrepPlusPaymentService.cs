@@ -17,6 +17,7 @@ public class PrepPlusPaymentService(
     PayPalApiClient payPalApiClient,
     IPrepPlusAccessService prepPlusAccessService,
     IPrepReferralService prepReferralService,
+    IMobileStoreProductVerifier mobileProductVerifier,
     IOptions<PaymentOptions> options) : IPrepPlusPaymentService
 {
     private const string ProductType = "prep_access";
@@ -197,6 +198,37 @@ public class PrepPlusPaymentService(
 
         var providerCode = platform == "google_play" ? "google_play" : "app_store";
         var transactionId = request.TransactionId ?? request.PurchaseToken;
+
+        if (!options.Value.UseMockPayments)
+        {
+            MobileStoreProductDetails storeDetails;
+            if (platform == "google_play")
+            {
+                storeDetails = await mobileProductVerifier.VerifyGooglePlayConsumableAsync(
+                    request.ProductId,
+                    request.PurchaseToken,
+                    cancellationToken);
+            }
+            else
+            {
+                storeDetails = await mobileProductVerifier.VerifyAppStoreConsumableAsync(
+                    request.ProductId,
+                    request.PurchaseToken,
+                    request.TransactionId,
+                    cancellationToken);
+            }
+
+            if (!storeDetails.IsValid)
+            {
+                throw new AppException(
+                    "Store product purchase is not valid.",
+                    400,
+                    PrepPlusErrorCodes.StorePurchaseInvalid);
+            }
+
+            transactionId = storeDetails.TransactionId;
+        }
+
         var productCode = BuildProductCode(catalogItemId, offerId);
         var referralCodeId = await prepReferralService.ResolveReferralCodeIdAsync(
             request.ReferralCode,
@@ -457,13 +489,19 @@ public class PrepPlusPaymentService(
                 PrepPlusErrorCodes.GooglePlayNotConfigured);
         }
 
-        if (platform == "app_store" && string.IsNullOrWhiteSpace(mobile.AppleSharedSecret))
+        if (platform == "app_store")
         {
-            throw new AppException(
-                "App Store verification requires Payments:Mobile:AppleSharedSecret. " +
-                "Use UseMockPayments=true for local development.",
-                503,
-                PrepPlusErrorCodes.AppStoreNotConfigured);
+            var hasServerApi = !string.IsNullOrWhiteSpace(mobile.AppleIssuerId)
+                && !string.IsNullOrWhiteSpace(mobile.AppleKeyId)
+                && !string.IsNullOrWhiteSpace(mobile.ApplePrivateKeyPath);
+            var hasSharedSecret = !string.IsNullOrWhiteSpace(mobile.AppleSharedSecret);
+            if (!hasServerApi && !hasSharedSecret)
+            {
+                throw new AppException(
+                    "App Store is not configured. Set Apple Issuer/Key/PrivateKey or AppleSharedSecret.",
+                    503,
+                    PrepPlusErrorCodes.AppStoreNotConfigured);
+            }
         }
     }
 }
