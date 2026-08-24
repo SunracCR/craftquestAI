@@ -4,7 +4,7 @@ public class PaymentOptions
 {
     public const string SectionName = "Payments";
 
-    public bool UseMockPayments { get; set; } = true;
+    public bool UseMockPayments { get; set; } = false;
     public string CurrencyCode { get; set; } = "USD";
     public PaymentWebhookOptions Webhooks { get; set; } = new();
     public PayPalOptions PayPal { get; set; } = new();

@@ -3,13 +3,15 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using CraftQuest.Application.Exceptions;
 using CraftQuest.Application.Options;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace CraftQuest.Infrastructure.Services.Payments;
 
 public class PayPalApiClient(
     HttpClient httpClient,
-    IOptions<PaymentOptions> options)
+    IOptions<PaymentOptions> options,
+    ILogger<PayPalApiClient> logger)
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -22,7 +24,6 @@ public class PayPalApiClient(
         string description,
         CancellationToken cancellationToken)
     {
-        await EnsureAccessTokenAsync(cancellationToken);
         var paypal = options.Value.PayPal;
 
         var payload = new
@@ -48,17 +49,14 @@ public class PayPalApiClient(
             },
         };
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, "/v2/checkout/orders");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
-        request.Content = JsonContent.Create(payload, options: JsonOptions);
-
-        var response = await httpClient.SendAsync(request, cancellationToken);
-        var body = await response.Content.ReadAsStringAsync(cancellationToken);
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new AppException($"PayPal create order failed: {body}", 502);
-        }
-
+        var body = await SendAuthenticatedAsync(
+            () =>
+            {
+                var request = new HttpRequestMessage(HttpMethod.Post, "/v2/checkout/orders");
+                request.Content = JsonContent.Create(payload, options: JsonOptions);
+                return request;
+            },
+            cancellationToken);
         using var doc = JsonDocument.Parse(body);
         var orderId = doc.RootElement.GetProperty("id").GetString()
             ?? throw new AppException("PayPal order id missing.", 502);
@@ -84,7 +82,6 @@ public class PayPalApiClient(
         string customId,
         CancellationToken cancellationToken)
     {
-        await EnsureAccessTokenAsync(cancellationToken);
         var paypal = options.Value.PayPal;
 
         var payload = new
@@ -99,17 +96,14 @@ public class PayPalApiClient(
             },
         };
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, "/v1/billing/subscriptions");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
-        request.Content = JsonContent.Create(payload, options: JsonOptions);
-
-        var response = await httpClient.SendAsync(request, cancellationToken);
-        var body = await response.Content.ReadAsStringAsync(cancellationToken);
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new AppException($"PayPal create subscription failed: {body}", 502);
-        }
-
+        var body = await SendAuthenticatedAsync(
+            () =>
+            {
+                var request = new HttpRequestMessage(HttpMethod.Post, "/v1/billing/subscriptions");
+                request.Content = JsonContent.Create(payload, options: JsonOptions);
+                return request;
+            },
+            cancellationToken);
         using var doc = JsonDocument.Parse(body);
         var subscriptionId = doc.RootElement.GetProperty("id").GetString()
             ?? throw new AppException("PayPal subscription id missing.", 502);
@@ -134,20 +128,11 @@ public class PayPalApiClient(
         string subscriptionId,
         CancellationToken cancellationToken)
     {
-        await EnsureAccessTokenAsync(cancellationToken);
-
-        using var request = new HttpRequestMessage(
-            HttpMethod.Get,
-            $"/v1/billing/subscriptions/{subscriptionId}");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
-
-        var response = await httpClient.SendAsync(request, cancellationToken);
-        var body = await response.Content.ReadAsStringAsync(cancellationToken);
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new AppException($"PayPal get subscription failed: {body}", 502);
-        }
-
+        var body = await SendAuthenticatedAsync(
+            () => new HttpRequestMessage(
+                HttpMethod.Get,
+                $"/v1/billing/subscriptions/{subscriptionId}"),
+            cancellationToken);
         using var doc = JsonDocument.Parse(body);
         var root = doc.RootElement;
         var status = root.GetProperty("status").GetString() ?? "UNKNOWN";
@@ -186,22 +171,18 @@ public class PayPalApiClient(
         string reason,
         CancellationToken cancellationToken)
     {
-        await EnsureAccessTokenAsync(cancellationToken);
-
-        using var request = new HttpRequestMessage(
-            HttpMethod.Post,
-            $"/v1/billing/subscriptions/{subscriptionId}/suspend");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
-        request.Content = JsonContent.Create(
-            new { reason },
-            options: JsonOptions);
-
-        var response = await httpClient.SendAsync(request, cancellationToken);
-        var body = await response.Content.ReadAsStringAsync(cancellationToken);
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new AppException($"PayPal suspend subscription failed: {body}", 502);
-        }
+        await SendAuthenticatedAsync(
+            () =>
+            {
+                var request = new HttpRequestMessage(
+                    HttpMethod.Post,
+                    $"/v1/billing/subscriptions/{subscriptionId}/suspend");
+                request.Content = JsonContent.Create(
+                    new { reason },
+                    options: JsonOptions);
+                return request;
+            },
+            cancellationToken);
     }
 
     public async Task ActivateSubscriptionAsync(
@@ -209,22 +190,18 @@ public class PayPalApiClient(
         string reason,
         CancellationToken cancellationToken)
     {
-        await EnsureAccessTokenAsync(cancellationToken);
-
-        using var request = new HttpRequestMessage(
-            HttpMethod.Post,
-            $"/v1/billing/subscriptions/{subscriptionId}/activate");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
-        request.Content = JsonContent.Create(
-            new { reason },
-            options: JsonOptions);
-
-        var response = await httpClient.SendAsync(request, cancellationToken);
-        var body = await response.Content.ReadAsStringAsync(cancellationToken);
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new AppException($"PayPal activate subscription failed: {body}", 502);
-        }
+        await SendAuthenticatedAsync(
+            () =>
+            {
+                var request = new HttpRequestMessage(
+                    HttpMethod.Post,
+                    $"/v1/billing/subscriptions/{subscriptionId}/activate");
+                request.Content = JsonContent.Create(
+                    new { reason },
+                    options: JsonOptions);
+                return request;
+            },
+            cancellationToken);
     }
 
     public async Task<bool> VerifyWebhookSignatureAsync(
@@ -232,8 +209,6 @@ public class PayPalApiClient(
         string body,
         CancellationToken cancellationToken)
     {
-        await EnsureAccessTokenAsync(cancellationToken);
-
         static string GetHeader(IReadOnlyDictionary<string, string> map, string name) =>
             map.TryGetValue(name, out var value) ? value : string.Empty;
 
@@ -249,47 +224,100 @@ public class PayPalApiClient(
             webhook_event = webhookEvent.RootElement,
         };
 
-        using var request = new HttpRequestMessage(
-            HttpMethod.Post,
-            "/v1/notifications/verify-webhook-signature");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
-        request.Content = JsonContent.Create(payload, options: JsonOptions);
-
-        var response = await httpClient.SendAsync(request, cancellationToken);
-        var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
-        if (!response.IsSuccessStatusCode)
+        try
         {
+            var responseBody = await SendAuthenticatedAsync(
+                () =>
+                {
+                    var request = new HttpRequestMessage(
+                        HttpMethod.Post,
+                        "/v1/notifications/verify-webhook-signature");
+                    request.Content = JsonContent.Create(payload, options: JsonOptions);
+                    return request;
+                },
+                cancellationToken);
+            using var doc = JsonDocument.Parse(responseBody);
+            return doc.RootElement.TryGetProperty("verification_status", out var statusEl)
+                && statusEl.GetString()?.Equals("SUCCESS", StringComparison.OrdinalIgnoreCase) == true;
+        }
+        catch (AppException ex) when (ex.StatusCode == 502)
+        {
+            logger.LogWarning(ex, "PayPal webhook signature verification failed.");
             return false;
         }
-
-        using var doc = JsonDocument.Parse(responseBody);
-        return doc.RootElement.TryGetProperty("verification_status", out var statusEl)
-            && statusEl.GetString()?.Equals("SUCCESS", StringComparison.OrdinalIgnoreCase) == true;
     }
 
     public async Task CaptureOrderAsync(string orderId, CancellationToken cancellationToken)
     {
-        await EnsureAccessTokenAsync(cancellationToken);
-
-        using var request = new HttpRequestMessage(
-            HttpMethod.Post,
-            $"/v2/checkout/orders/{orderId}/capture");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
-        request.Content = JsonContent.Create(new { }, options: JsonOptions);
-
-        var response = await httpClient.SendAsync(request, cancellationToken);
-        var body = await response.Content.ReadAsStringAsync(cancellationToken);
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            throw new AppException($"PayPal capture failed: {body}", 502);
+            await SendAuthenticatedAsync(
+                () =>
+                {
+                    var captureRequest = new HttpRequestMessage(
+                        HttpMethod.Post,
+                        $"/v2/checkout/orders/{orderId}/capture");
+                    captureRequest.Content = JsonContent.Create(new { }, options: JsonOptions);
+                    return captureRequest;
+                },
+                cancellationToken);
+        }
+        catch (AppException ex) when (ex.StatusCode == 502 && IsPayPalOrderAlreadyCaptured(ex.Message))
+        {
+            logger.LogInformation("PayPal order {OrderId} was already captured.", orderId);
         }
     }
 
+    private static bool IsPayPalOrderAlreadyCaptured(string body) =>
+        body.Contains("ORDER_ALREADY_CAPTURED", StringComparison.OrdinalIgnoreCase);
+
     private string? _accessToken;
+    private DateTime _accessTokenExpiresAt = DateTime.MinValue;
+
+    private async Task<string> SendAuthenticatedAsync(
+        Func<HttpRequestMessage> requestFactory,
+        CancellationToken cancellationToken)
+    {
+        for (var attempt = 0; attempt < 2; attempt++)
+        {
+            await EnsureAccessTokenAsync(cancellationToken);
+            using var request = requestFactory();
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
+
+            var response = await httpClient.SendAsync(request, cancellationToken);
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized && attempt == 0)
+            {
+                InvalidateAccessToken();
+                continue;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new AppException(
+                    $"PayPal API call failed ({(int)response.StatusCode}): {body}",
+                    response.StatusCode is System.Net.HttpStatusCode.TooManyRequests
+                        or >= System.Net.HttpStatusCode.InternalServerError
+                        ? 503
+                        : 502);
+            }
+
+            return body;
+        }
+
+        throw new AppException("PayPal authentication failed after retry.", 502);
+    }
+
+    private void InvalidateAccessToken()
+    {
+        _accessToken = null;
+        _accessTokenExpiresAt = DateTime.MinValue;
+    }
 
     private async Task EnsureAccessTokenAsync(CancellationToken cancellationToken)
     {
-        if (!string.IsNullOrEmpty(_accessToken))
+        if (!string.IsNullOrEmpty(_accessToken)
+            && DateTime.UtcNow < _accessTokenExpiresAt.AddMinutes(-1))
         {
             return;
         }
@@ -319,6 +347,10 @@ public class PayPalApiClient(
 
         using var doc = JsonDocument.Parse(body);
         _accessToken = doc.RootElement.GetProperty("access_token").GetString();
+        var expiresIn = doc.RootElement.TryGetProperty("expires_in", out var expiresEl)
+            ? expiresEl.GetInt32()
+            : 3600;
+        _accessTokenExpiresAt = DateTime.UtcNow.AddSeconds(Math.Max(60, expiresIn));
     }
 }
 

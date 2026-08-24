@@ -122,13 +122,25 @@ public static class DependencyInjection
         services.AddScoped<IGuestService, GuestService>();
         services.AddHostedService<GuestCleanupHostedService>();
         services.AddHostedService<SubscriptionRenewalHostedService>();
+        services.AddHostedService<PendingPurchaseReconciliationHostedService>();
+        services.AddHostedService<PaymentStartupValidator>();
         services.AddHostedService<NotificationReminderHostedService>();
         services.AddScoped<IAnalyticsService, AnalyticsService>();
         services.AddSingleton<LocalMediaStorageProvider>();
         services.AddSingleton<AzureBlobMediaStorageProvider>();
         services.AddScoped<IMediaService, MediaService>();
         services.AddScoped<IMediaAccessService, MediaAccessService>();
-        services.AddHttpClient(nameof(AppleAppStoreSubscriptionVerifier));
+        services.AddHttpClient<PayPalApiClient>((sp, client) =>
+        {
+            var paymentOptions = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<PaymentOptions>>().Value;
+            client.BaseAddress = new Uri(paymentOptions.PayPal.ApiBaseUrl.TrimEnd('/') + "/");
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
+
+        services.AddHttpClient(nameof(AppleAppStoreSubscriptionVerifier), client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
         services.AddSingleton<GooglePlaySubscriptionVerifier>();
         services.AddSingleton<GooglePlayProductVerifier>();
         services.AddSingleton<AppleAppStoreSubscriptionVerifier>();
@@ -144,11 +156,6 @@ public static class DependencyInjection
         services.AddScoped<IPrepPlusCatalogService, PrepPlusCatalogService>();
         services.AddScoped<IPrepPlusPaymentService, PrepPlusPaymentService>();
         services.AddScoped<IPrepReferralService, PrepReferralService>();
-        services.AddHttpClient<PayPalApiClient>((sp, client) =>
-        {
-            var paymentOptions = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<PaymentOptions>>().Value;
-            client.BaseAddress = new Uri(paymentOptions.PayPal.ApiBaseUrl.TrimEnd('/') + "/");
-        });
 
         return services;
     }

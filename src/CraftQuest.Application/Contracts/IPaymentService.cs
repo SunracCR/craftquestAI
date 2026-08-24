@@ -73,4 +73,7 @@ public interface IPaymentService
         Guid userId,
         VerifyMobileAiCreditPurchaseRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<int> ReconcilePendingPurchasesAsync(
+        CancellationToken cancellationToken = default);
 }

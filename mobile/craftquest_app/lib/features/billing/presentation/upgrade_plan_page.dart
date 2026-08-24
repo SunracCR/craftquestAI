@@ -1,9 +1,8 @@
-import 'dart:async';
-
 import 'package:craftquest_app/core/billing/mobile_store_product_query.dart';
-import 'package:craftquest_app/core/billing/mobile_store_purchase_completion.dart';
 import 'package:craftquest_app/core/billing/post_checkout_session_refresh.dart';
-import 'package:craftquest_app/core/billing/mobile_store_purchase_coordinator.dart';
+import 'package:craftquest_app/core/billing/purchase_flow_state.dart';
+import 'package:craftquest_app/core/billing/purchase_orchestrator.dart';
+import 'package:craftquest_app/core/billing/store_purchase_feedback.dart';
 import 'package:craftquest_app/core/billing/paypal_web_launcher.dart';
 import 'package:craftquest_app/core/billing/payment_platform.dart';
 import 'package:craftquest_app/core/compliance/parental_gate_dialog.dart';
@@ -40,20 +39,20 @@ class UpgradePlanPage extends StatefulWidget {
 
 class _UpgradePlanPageState extends State<UpgradePlanPage> {
   final _repository = getIt<BillingRepository>();
-  final _storePurchases = getIt<MobileStorePurchaseCoordinator>();
+  final _orchestrator = getIt<PurchaseOrchestrator>();
 
   List<UpgradeablePlanModel> _plans = [];
   List<ProductDetails> _storeProducts = [];
   UserBillingModel? _billing;
   BillingCycle _billingCycle = BillingCycle.monthly;
   bool _loading = true;
-  bool _purchasing = false;
+  bool _paypalPurchasing = false;
   bool _cancelling = false;
   bool _resuming = false;
   String? _error;
-  StreamSubscription<List<PurchaseDetails>>? _purchaseSub;
   bool _storeAvailable = false;
-  bool _userInitiatedPurchase = false;
+
+  bool get _purchasing => _orchestrator.isBusy || _paypalPurchasing;
 
   static bool get _supportsStorePurchase =>
       !kIsWeb &&
@@ -63,19 +62,28 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
   @override
   void initState() {
     super.initState();
-    _storePurchases.pushBillingPageHandler();
-    if (_supportsStorePurchase) {
-      _purchaseSub =
-          InAppPurchase.instance.purchaseStream.listen(_onPurchaseUpdate);
-    }
+    _orchestrator.addListener(_onOrchestratorChanged);
     _load();
   }
 
   @override
   void dispose() {
-    _storePurchases.popBillingPageHandler();
-    _purchaseSub?.cancel();
+    _orchestrator.removeListener(_onOrchestratorChanged);
     super.dispose();
+  }
+
+  void _onOrchestratorChanged() {
+    if (!mounted) {
+      return;
+    }
+    final state = _orchestrator.state;
+    if (state is PurchaseDeferred) {
+      showStorePurchaseDeferred(context);
+    } else if (state is PurchaseFailed) {
+      showStorePurchaseFailure(context, state);
+      _orchestrator.resetToIdle();
+    }
+    setState(() {});
   }
 
   Future<void> _load({bool forceRefreshBilling = false}) async {
@@ -104,7 +112,6 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
           final response = await queryMobileStoreProducts(ids);
           storeProducts = response.productDetails;
         }
-        await InAppPurchase.instance.restorePurchases();
       }
 
       if (!mounted) return;
@@ -159,10 +166,26 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
       return;
     }
 
-    setState(() => _purchasing = true);
-    _userInitiatedPurchase = true;
-    final param = PurchaseParam(productDetails: product);
-    await InAppPurchase.instance.buyNonConsumable(purchaseParam: param);
+    final result = await _orchestrator.buy(
+      StorePurchaseRequest(
+        kind: PurchaseProductKind.subscription,
+        productId: productId,
+        product: product,
+        billingCycle: _billingCycle.apiValue,
+      ),
+    );
+
+    if (!mounted) return;
+    _orchestrator.resetToIdle();
+
+    if (result is SubscriptionPurchaseResult) {
+      context.showSuccessSnackBar(
+        l10n.upgradeSuccess(
+          BillingDisplay.localizedPlanName(l10n, code: result.planCode),
+        ),
+      );
+      Navigator.of(context).pop(true);
+    }
   }
 
   Future<void> _buyWithPayPal(UpgradeablePlanModel plan) async {
@@ -170,7 +193,7 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
       return;
     }
     final l10n = AppLocalizations.of(context)!;
-    setState(() => _purchasing = true);
+    setState(() => _paypalPurchasing = true);
     try {
       final subscription = await _repository.createPayPalSubscription(
         plan.code,
@@ -217,7 +240,7 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
       if (!mounted) return;
       context.showDioErrorSnackBar(e);
     } finally {
-      if (mounted) setState(() => _purchasing = false);
+      if (mounted) setState(() => _paypalPurchasing = false);
     }
   }
 
@@ -279,137 +302,6 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
         }
       },
     );
-  }
-
-  Future<void> _onPurchaseUpdate(List<PurchaseDetails> purchases) async {
-    final l10n = AppLocalizations.of(context)!;
-    for (final purchase in purchases) {
-      if (purchase.status == PurchaseStatus.purchased ||
-          purchase.status == PurchaseStatus.restored) {
-        if (!_isSubscriptionProduct(purchase.productID)) {
-          continue;
-        }
-
-        final purchaseKey = _purchaseKey(purchase);
-        if (!_storePurchases.claimPurchase(purchaseKey)) {
-          if (_userInitiatedPurchase) {
-            scheduleDeferredCheckoutRefresh(context);
-          }
-          _resetPurchasingIfUserInitiated(purchase);
-          continue;
-        }
-
-        final userInitiated = _userInitiatedPurchase;
-        var verified = false;
-        try {
-          final platform = defaultTargetPlatform == TargetPlatform.iOS
-              ? 'app_store'
-              : 'google_play';
-          final token = purchase.verificationData.serverVerificationData;
-          final result = await _repository.verifyMobilePurchase(
-            platform: platform,
-            productId: purchase.productID,
-            purchaseToken: token.isNotEmpty ? token : purchase.purchaseID ?? '',
-            transactionId: purchase.purchaseID,
-            billingCycle: _billingCycleForProduct(purchase.productID),
-          );
-          verified = true;
-          await completeMobileStorePurchaseIfNeeded(purchase);
-          if (!mounted) return;
-
-          await refreshAppSessionAfterCheckout(context);
-          if (!mounted) return;
-
-          if (userInitiated) {
-            context.showSuccessSnackBar(
-              l10n.upgradeSuccess(
-                BillingDisplay.localizedPlanName(l10n, code: result.planCode),
-              ),
-            );
-            Navigator.of(context).pop(true);
-          } else {
-            await _load(forceRefreshBilling: true);
-          }
-        } catch (_) {
-          if (!verified) {
-            _storePurchases.releasePurchase(purchaseKey);
-          }
-          if (!mounted) return;
-          if (userInitiated) {
-            context.showErrorSnackBar(l10n.purchaseVerificationFailed);
-          }
-        } finally {
-          if (userInitiated) {
-            _userInitiatedPurchase = false;
-          }
-          if (mounted) setState(() => _purchasing = false);
-        }
-        continue;
-      }
-
-      if (purchase.status == PurchaseStatus.error ||
-          purchase.status == PurchaseStatus.canceled) {
-        if (!mounted) return;
-        if (purchase.status == PurchaseStatus.error) {
-          context.showErrorSnackBar(
-            purchase.error?.message ?? l10n.purchaseFailed,
-          );
-        }
-        _userInitiatedPurchase = false;
-        setState(() => _purchasing = false);
-      }
-    }
-  }
-
-  void _resetPurchasingIfUserInitiated(PurchaseDetails purchase) {
-    if (!_userInitiatedPurchase) {
-      return;
-    }
-    if (purchase.status != PurchaseStatus.purchased &&
-        purchase.status != PurchaseStatus.restored) {
-      return;
-    }
-    _userInitiatedPurchase = false;
-    if (mounted) {
-      setState(() => _purchasing = false);
-    }
-  }
-
-  String _purchaseKey(PurchaseDetails purchase) {
-    final token = purchase.verificationData.serverVerificationData;
-    if (token.isNotEmpty) {
-      return '${purchase.productID}|$token';
-    }
-    return '${purchase.productID}|${purchase.purchaseID ?? purchase.transactionDate ?? ''}';
-  }
-
-  bool _isSubscriptionProduct(String productId) {
-    if (_storePurchases.isSubscriptionProduct(productId)) {
-      return true;
-    }
-    for (final plan in _plans) {
-      for (final id in [
-        plan.googlePlayProductId,
-        plan.googlePlayAnnualProductId,
-        plan.appStoreProductId,
-        plan.appStoreAnnualProductId,
-      ]) {
-        if (id != null && id.isNotEmpty && id == productId) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  String _billingCycleForProduct(String productId) {
-    for (final plan in _plans) {
-      if (plan.googlePlayAnnualProductId == productId ||
-          plan.appStoreAnnualProductId == productId) {
-        return 'annual';
-      }
-    }
-    return _storePurchases.billingCycleForProduct(productId);
   }
 
   @override

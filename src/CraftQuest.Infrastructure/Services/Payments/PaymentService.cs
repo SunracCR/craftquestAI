@@ -7,7 +7,9 @@ using CraftQuest.Domain.Constants;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.Services.Billing;
+using CraftQuest.Infrastructure.Services.Payments;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace CraftQuest.Infrastructure.Services.Payments;
@@ -19,7 +21,9 @@ public class PaymentService(
     IMobileStoreSubscriptionVerifier mobileStoreVerifier,
     IMobileStoreProductVerifier mobileProductVerifier,
     MobileStoreWebhookProcessor mobileStoreWebhooks,
-    IOptions<PaymentOptions> options) : IPaymentService
+    IPrepPlusPaymentService prepPlusPaymentService,
+    IOptions<PaymentOptions> options,
+    ILogger<PaymentService> logger) : IPaymentService
 {
     private static readonly HashSet<string> PaidPlanCodes = ["pro", "teacher"];
 
@@ -445,11 +449,75 @@ public class PaymentService(
         string rawBody,
         CancellationToken cancellationToken = default)
     {
+        using var doc = JsonDocument.Parse(rawBody);
+        var root = doc.RootElement;
+
+        if (root.TryGetProperty("id", out var webhookIdEl))
+        {
+            var webhookId = webhookIdEl.GetString();
+            if (!string.IsNullOrWhiteSpace(webhookId))
+            {
+                eventId = webhookId;
+            }
+        }
+
+        if (root.TryGetProperty("event_type", out var eventTypeEl))
+        {
+            var parsedEventType = eventTypeEl.GetString();
+            if (!string.IsNullOrWhiteSpace(parsedEventType))
+            {
+                eventType = parsedEventType;
+            }
+        }
+
         if (await dbContext.ProviderWebhookEvents.AnyAsync(
                 e => e.ProviderCode == "paypal" && e.EventId == eventId,
                 cancellationToken))
         {
             return;
+        }
+
+        if (!root.TryGetProperty("resource", out var resource))
+        {
+            dbContext.ProviderWebhookEvents.Add(new ProviderWebhookEvent
+            {
+                ProviderWebhookEventId = Guid.NewGuid(),
+                ProviderCode = "paypal",
+                EventId = eventId,
+                EventType = eventType,
+                ProcessedAt = DateTime.UtcNow,
+            });
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return;
+        }
+
+        switch (eventType)
+        {
+            case "BILLING.SUBSCRIPTION.ACTIVATED":
+                await HandlePayPalSubscriptionActivatedAsync(resource, cancellationToken);
+                break;
+            case "PAYMENT.SALE.COMPLETED":
+                await HandlePayPalSubscriptionPaymentAsync(resource, cancellationToken);
+                break;
+            case "CHECKOUT.ORDER.COMPLETED":
+            case "PAYMENT.CAPTURE.COMPLETED":
+                await HandlePayPalOrderCapturedAsync(resource, cancellationToken);
+                break;
+            case "PAYMENT.CAPTURE.DENIED":
+            case "PAYMENT.CAPTURE.DECLINED":
+                await HandlePayPalCaptureDeniedAsync(resource, cancellationToken);
+                break;
+            case "PAYMENT.CAPTURE.REFUNDED":
+            case "PAYMENT.SALE.REFUNDED":
+                await HandlePayPalRefundAsync(resource, cancellationToken);
+                break;
+            case "BILLING.SUBSCRIPTION.PAYMENT.FAILED":
+                await HandlePayPalSubscriptionPaymentFailedAsync(resource, cancellationToken);
+                break;
+            case "BILLING.SUBSCRIPTION.CANCELLED":
+            case "BILLING.SUBSCRIPTION.SUSPENDED":
+                await HandlePayPalSubscriptionEndedAsync(resource, cancellationToken);
+                break;
         }
 
         dbContext.ProviderWebhookEvents.Add(new ProviderWebhookEvent
@@ -461,27 +529,11 @@ public class PaymentService(
             ProcessedAt = DateTime.UtcNow,
         });
 
-        using var doc = JsonDocument.Parse(rawBody);
-        var root = doc.RootElement;
-        if (!root.TryGetProperty("resource", out var resource))
-        {
-            await dbContext.SaveChangesAsync(cancellationToken);
-            return;
-        }
-
-        switch (eventType)
-        {
-            case "BILLING.SUBSCRIPTION.ACTIVATED":
-            case "PAYMENT.SALE.COMPLETED":
-                await HandlePayPalRenewalAsync(resource, cancellationToken);
-                break;
-            case "BILLING.SUBSCRIPTION.CANCELLED":
-            case "BILLING.SUBSCRIPTION.SUSPENDED":
-                await HandlePayPalSubscriptionEndedAsync(resource, cancellationToken);
-                break;
-        }
-
         await dbContext.SaveChangesAsync(cancellationToken);
+        logger.LogInformation(
+            "Processed PayPal webhook {EventType} event {EventId}",
+            eventType,
+            eventId);
     }
 
     public Task ProcessGooglePlayPubSubAsync(
@@ -557,6 +609,8 @@ public class PaymentService(
                      && p.ProviderTransactionId == paymentTransactionId,
                 cancellationToken);
 
+        EnsurePurchaseOwnership(existingPurchase, userId);
+
         if (existingPurchase is { Status: "validated" })
         {
             var active = await dbContext.UserSubscriptions
@@ -598,9 +652,8 @@ public class PaymentService(
         if (existingPurchase is null)
         {
             dbContext.Purchases.Add(purchase);
+            await dbContext.SaveChangesAsync(cancellationToken);
         }
-
-        await CompletePurchaseAsync(purchase, cancellationToken);
 
         var periodStart = DateTime.UtcNow;
         var periodEnd = storeDetails.PeriodEnd
@@ -608,39 +661,51 @@ public class PaymentService(
                 periodStart,
                 storeDetails.BillingCycle);
 
-        var hasActiveSameProvider = await dbContext.UserSubscriptions.AnyAsync(
-            s => s.UserId == userId
-                 && s.Status == SubscriptionStatuses.Active
-                 && s.ProviderCode == providerCode
-                 && s.ProviderSubscriptionId == providerSubscriptionId,
-            cancellationToken);
+        await ExecuteInTransactionAsync(async () =>
+        {
+            var hasActiveSameProvider = await dbContext.UserSubscriptions.AnyAsync(
+                s => s.UserId == userId
+                     && s.Status == SubscriptionStatuses.Active
+                     && s.ProviderCode == providerCode
+                     && s.ProviderSubscriptionId == providerSubscriptionId,
+                cancellationToken);
 
-        if (hasActiveSameProvider)
-        {
-            await billingService.RenewSubscriptionPeriodAsync(
-                providerSubscriptionId,
-                providerCode,
-                periodEnd,
-                paymentTransactionId,
-                cancellationToken);
-        }
-        else
-        {
-            await billingService.ActivatePlanAsync(
-                userId,
-                plan.Code,
-                providerCode,
-                providerSubscriptionId,
-                new SubscriptionActivationOptions
-                {
-                    BillingCycle = storeDetails.BillingCycle,
-                    AutoRenewEnabled = storeDetails.AutoRenewEnabled,
-                    PeriodStart = periodStart,
-                    PeriodEnd = periodEnd,
-                    LastPaymentAt = periodStart,
-                },
-                cancellationToken);
-        }
+            if (hasActiveSameProvider)
+            {
+                await billingService.RenewSubscriptionPeriodAsync(
+                    providerSubscriptionId,
+                    providerCode,
+                    periodEnd,
+                    paymentTransactionId,
+                    cancellationToken);
+            }
+            else
+            {
+                await billingService.ActivatePlanAsync(
+                    userId,
+                    plan.Code,
+                    providerCode,
+                    providerSubscriptionId,
+                    new SubscriptionActivationOptions
+                    {
+                        BillingCycle = storeDetails.BillingCycle,
+                        AutoRenewEnabled = storeDetails.AutoRenewEnabled,
+                        PeriodStart = periodStart,
+                        PeriodEnd = periodEnd,
+                        LastPaymentAt = periodStart,
+                    },
+                    cancellationToken);
+            }
+
+            await CompletePurchaseAsync(purchase, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }, cancellationToken);
+
+        logger.LogInformation(
+            "Validated mobile subscription purchase for user {UserId} plan {PlanCode} transaction {TransactionId}",
+            userId,
+            plan.Code,
+            paymentTransactionId);
 
         return new VerifyMobilePurchaseResponse
         {
@@ -727,25 +792,33 @@ public class PaymentService(
         return BillingCycles.Monthly;
     }
 
-    private async Task HandlePayPalRenewalAsync(
+    private async Task HandlePayPalSubscriptionActivatedAsync(
+        JsonElement resource,
+        CancellationToken cancellationToken)
+    {
+        var subscriptionId = ReadPayPalResourceId(resource);
+        if (string.IsNullOrWhiteSpace(subscriptionId))
+        {
+            return;
+        }
+
+        await TryActivatePendingPayPalSubscriptionAsync(subscriptionId, cancellationToken);
+    }
+
+    private async Task HandlePayPalSubscriptionPaymentAsync(
         JsonElement resource,
         CancellationToken cancellationToken)
     {
         var subscriptionId = resource.TryGetProperty("billing_agreement_id", out var agreementEl)
             ? agreementEl.GetString()
-            : resource.TryGetProperty("id", out var idEl)
-                ? idEl.GetString()
-                : null;
+            : ReadPayPalResourceId(resource);
 
         if (string.IsNullOrWhiteSpace(subscriptionId))
         {
             return;
         }
 
-        var paymentId = resource.TryGetProperty("id", out var paymentEl)
-            ? paymentEl.GetString()
-            : null;
-
+        var paymentId = ReadPayPalResourceId(resource);
         DateTime? periodEnd = null;
         if (resource.TryGetProperty("billing_info", out var billingInfo)
             && billingInfo.TryGetProperty("next_billing_time", out var nextEl))
@@ -757,12 +830,117 @@ public class PaymentService(
             }
         }
 
-        await billingService.RenewSubscriptionPeriodAsync(
-            subscriptionId,
-            "paypal",
-            periodEnd,
-            paymentId,
+        try
+        {
+            await billingService.RenewSubscriptionPeriodAsync(
+                subscriptionId,
+                "paypal",
+                periodEnd,
+                paymentId,
+                cancellationToken);
+        }
+        catch (AppException ex) when (ex.StatusCode == 404)
+        {
+            await TryActivatePendingPayPalSubscriptionAsync(subscriptionId, cancellationToken);
+        }
+    }
+
+    private async Task HandlePayPalOrderCapturedAsync(
+        JsonElement resource,
+        CancellationToken cancellationToken)
+    {
+        var orderId = ResolvePayPalOrderIdFromResource(resource);
+        if (string.IsNullOrWhiteSpace(orderId))
+        {
+            return;
+        }
+
+        await TryFulfillPendingPayPalOrderAsync(orderId, cancellationToken);
+    }
+
+    private async Task TryActivatePendingPayPalSubscriptionAsync(
+        string subscriptionId,
+        CancellationToken cancellationToken)
+    {
+        var purchase = await dbContext.Purchases
+            .FirstOrDefaultAsync(
+                p => p.ProviderCode == "paypal"
+                    && p.ProviderTransactionId == subscriptionId
+                    && p.Status == "pending",
+                cancellationToken);
+
+        if (purchase is null)
+        {
+            return;
+        }
+
+        await ActivatePayPalSubscriptionAsync(
+            purchase.UserId,
+            new PayPalActivateSubscriptionRequest
+            {
+                SubscriptionId = subscriptionId,
+                BillingCycle = purchase.BillingCycle,
+            },
             cancellationToken);
+    }
+
+    private async Task TryFulfillPendingPayPalOrderAsync(
+        string orderId,
+        CancellationToken cancellationToken)
+    {
+        var purchase = await dbContext.Purchases
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                p => p.ProviderCode == "paypal"
+                    && p.ProviderTransactionId == orderId,
+                cancellationToken);
+
+        if (purchase is null || purchase.Status == "validated")
+        {
+            return;
+        }
+
+        if (purchase.ProductType == "prep_access")
+        {
+            await prepPlusPaymentService.CapturePayPalOrderAsync(
+                purchase.UserId,
+                new PayPalCaptureOrderRequest { OrderId = orderId },
+                cancellationToken);
+            return;
+        }
+
+        if (purchase.ProductType == "ai_credits")
+        {
+            await CapturePayPalAiCreditOrderAsync(
+                purchase.UserId,
+                new PayPalCaptureOrderRequest { OrderId = orderId },
+                cancellationToken);
+            return;
+        }
+
+        await CapturePayPalOrderAsync(
+            purchase.UserId,
+            new PayPalCaptureOrderRequest { OrderId = orderId },
+            cancellationToken);
+    }
+
+    private static string? ReadPayPalResourceId(JsonElement resource) =>
+        resource.TryGetProperty("id", out var idEl) ? idEl.GetString() : null;
+
+    private static string? ResolvePayPalOrderIdFromResource(JsonElement resource)
+    {
+        if (resource.TryGetProperty("supplementary_data", out var supplementary)
+            && supplementary.TryGetProperty("related_ids", out var relatedIds)
+            && relatedIds.TryGetProperty("order_id", out var orderIdEl))
+        {
+            var orderId = orderIdEl.GetString();
+            if (!string.IsNullOrWhiteSpace(orderId))
+            {
+                return orderId;
+            }
+        }
+
+        return ReadPayPalResourceId(resource);
     }
 
     private async Task HandlePayPalSubscriptionEndedAsync(
@@ -1116,6 +1294,8 @@ public class PaymentService(
                     && p.ProviderTransactionId == paymentTransactionId,
                 cancellationToken);
 
+        EnsurePurchaseOwnership(existingPurchase, userId);
+
         if (existingPurchase is { Status: "validated", ProductType: "ai_credits" })
         {
             var balance = await billingService.GetMyBillingAsync(userId, cancellationToken);
@@ -1146,31 +1326,202 @@ public class PaymentService(
         if (existingPurchase is null)
         {
             dbContext.Purchases.Add(purchase);
+            await dbContext.SaveChangesAsync(cancellationToken);
         }
 
-        await CompletePurchaseAsync(purchase, cancellationToken);
-        var newBalance = await billingService.GrantPurchasedAiCreditsAsync(
-            userId,
-            pack.Credits,
-            purchase.PurchaseId,
-            cancellationToken);
-
-        if (!options.Value.UseMockPayments && platform == "google_play")
+        var aiCreditsBalance = 0;
+        await ExecuteInTransactionAsync(async () =>
         {
-            await mobileProductVerifier.ConsumeGooglePlayConsumableAsync(
-                request.ProductId,
-                request.PurchaseToken,
+            aiCreditsBalance = await billingService.GrantPurchasedAiCreditsAsync(
+                userId,
+                pack.Credits,
+                purchase.PurchaseId,
                 cancellationToken);
-        }
+
+            await CompletePurchaseAsync(purchase, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            if (!options.Value.UseMockPayments && platform == "google_play")
+            {
+                await mobileProductVerifier.ConsumeGooglePlayConsumableAsync(
+                    request.ProductId,
+                    request.PurchaseToken,
+                    cancellationToken);
+            }
+
+            logger.LogInformation(
+                "Validated mobile AI credit purchase for user {UserId} pack {PackCode} transaction {TransactionId}",
+                userId,
+                pack.Code,
+                paymentTransactionId);
+        }, cancellationToken);
 
         return new VerifyMobileAiCreditPurchaseResponse
         {
             PackCode = pack.Code,
             CreditsGranted = pack.Credits,
-            AiCreditsBalance = newBalance,
+            AiCreditsBalance = aiCreditsBalance,
             Status = "validated",
             MockMode = options.Value.UseMockPayments,
         };
+    }
+
+    public async Task<int> ReconcilePendingPurchasesAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var cutoff = DateTime.UtcNow.AddHours(-6);
+        var pendingPurchases = await dbContext.Purchases
+            .Where(p => p.Status == "pending" && p.CreatedAt < cutoff)
+            .OrderBy(p => p.CreatedAt)
+            .Take(50)
+            .ToListAsync(cancellationToken);
+
+        var reconciled = 0;
+        foreach (var purchase in pendingPurchases)
+        {
+            try
+            {
+                if (purchase.ProviderCode == "paypal")
+                {
+                    if (purchase.ProductType == "subscription")
+                    {
+                        await TryActivatePendingPayPalSubscriptionAsync(
+                            purchase.ProviderTransactionId,
+                            cancellationToken);
+                    }
+                    else
+                    {
+                        await TryFulfillPendingPayPalOrderAsync(
+                            purchase.ProviderTransactionId,
+                            cancellationToken);
+                    }
+
+                    reconciled++;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(
+                    ex,
+                    "Failed to reconcile pending purchase {PurchaseId} for user {UserId}",
+                    purchase.PurchaseId,
+                    purchase.UserId);
+            }
+        }
+
+        return reconciled;
+    }
+
+    private async Task HandlePayPalCaptureDeniedAsync(
+        JsonElement resource,
+        CancellationToken cancellationToken)
+    {
+        var orderId = ResolvePayPalOrderIdFromResource(resource);
+        if (string.IsNullOrWhiteSpace(orderId))
+        {
+            return;
+        }
+
+        var purchase = await dbContext.Purchases.FirstOrDefaultAsync(
+            p => p.ProviderCode == "paypal" && p.ProviderTransactionId == orderId,
+            cancellationToken);
+        if (purchase is null || purchase.Status != "pending")
+        {
+            return;
+        }
+
+        logger.LogWarning(
+            "PayPal capture denied for pending purchase {PurchaseId} order {OrderId}",
+            purchase.PurchaseId,
+            orderId);
+    }
+
+    private async Task HandlePayPalRefundAsync(
+        JsonElement resource,
+        CancellationToken cancellationToken)
+    {
+        var transactionId = ReadPayPalResourceId(resource);
+        if (string.IsNullOrWhiteSpace(transactionId))
+        {
+            return;
+        }
+
+        var purchase = await dbContext.Purchases.FirstOrDefaultAsync(
+            p => p.ProviderTransactionId == transactionId,
+            cancellationToken);
+        if (purchase is null || purchase.Status != "validated")
+        {
+            return;
+        }
+
+        if (purchase.ProductType == "subscription")
+        {
+            await billingService.RevokeSubscriptionImmediatelyAsync(
+                purchase.ProviderTransactionId,
+                purchase.ProviderCode,
+                cancellationToken);
+        }
+
+        logger.LogWarning(
+            "PayPal refund received for purchase {PurchaseId} user {UserId}",
+            purchase.PurchaseId,
+            purchase.UserId);
+    }
+
+    private async Task HandlePayPalSubscriptionPaymentFailedAsync(
+        JsonElement resource,
+        CancellationToken cancellationToken)
+    {
+        var subscriptionId = ReadPayPalResourceId(resource);
+        if (string.IsNullOrWhiteSpace(subscriptionId))
+        {
+            return;
+        }
+
+        var subscription = await dbContext.UserSubscriptions.FirstOrDefaultAsync(
+            s => s.ProviderSubscriptionId == subscriptionId && s.ProviderCode == "paypal",
+            cancellationToken);
+        if (subscription is null)
+        {
+            return;
+        }
+
+        subscription.PaymentIssuePending = true;
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private static void EnsurePurchaseOwnership(Purchase? purchase, Guid userId)
+    {
+        if (purchase is not null && purchase.UserId != userId)
+        {
+            throw new AppException(
+                "This store transaction belongs to another account.",
+                409,
+                "PURCHASE_OWNERSHIP_MISMATCH");
+        }
+    }
+
+    private async Task ExecuteInTransactionAsync(
+        Func<Task> action,
+        CancellationToken cancellationToken)
+    {
+        if (!dbContext.Database.IsRelational())
+        {
+            await action();
+            return;
+        }
+
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            await action();
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
     }
 
     private async Task EnsureCanPurchaseAiCreditPacksAsync(

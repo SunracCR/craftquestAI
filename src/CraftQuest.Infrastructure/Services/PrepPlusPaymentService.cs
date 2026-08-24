@@ -8,6 +8,7 @@ using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.Services.Payments;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace CraftQuest.Infrastructure.Services;
@@ -18,7 +19,8 @@ public class PrepPlusPaymentService(
     IPrepPlusAccessService prepPlusAccessService,
     IPrepReferralService prepReferralService,
     IMobileStoreProductVerifier mobileProductVerifier,
-    IOptions<PaymentOptions> options) : IPrepPlusPaymentService
+    IOptions<PaymentOptions> options,
+    ILogger<PrepPlusPaymentService> logger) : IPrepPlusPaymentService
 {
     private const string ProductType = "prep_access";
 
@@ -141,7 +143,7 @@ public class PrepPlusPaymentService(
             await payPalApiClient.CaptureOrderAsync(request.OrderId, cancellationToken);
         }
 
-        return await FulfillPurchaseAsync(purchase, cancellationToken);
+        return await FulfillPurchaseAsync(purchase, cancellationToken: cancellationToken);
     }
 
     public async Task<PrepCheckoutResultDto> VerifyMobilePurchaseAsync(
@@ -241,6 +243,14 @@ public class PrepPlusPaymentService(
                     && p.ProviderTransactionId == transactionId,
                 cancellationToken);
 
+        if (existing is not null && existing.UserId != userId)
+        {
+            throw new AppException(
+                "This store transaction belongs to another account.",
+                409,
+                PrepPlusErrorCodes.StorePurchaseInvalid);
+        }
+
         if (existing is { Status: "validated", ProductType: ProductType })
         {
             return await BuildGrantedResultFromPurchaseAsync(existing, cancellationToken);
@@ -270,12 +280,20 @@ public class PrepPlusPaymentService(
             existing.PrepReferralCodeId = referralCodeId;
         }
 
-        return await FulfillPurchaseAsync(purchase, cancellationToken);
+        return await FulfillPurchaseAsync(
+            purchase,
+            platform,
+            request.ProductId,
+            request.PurchaseToken,
+            cancellationToken);
     }
 
     private async Task<PrepCheckoutResultDto> FulfillPurchaseAsync(
         Purchase purchase,
-        CancellationToken cancellationToken)
+        string? platform = null,
+        string? productId = null,
+        string? purchaseToken = null,
+        CancellationToken cancellationToken = default)
     {
         var (catalogItemId, offerId) = ParseProductCode(purchase.ProductCode);
         var offer = await dbContext.PrepAccessOffers
@@ -308,6 +326,22 @@ public class PrepPlusPaymentService(
             cancellationToken);
 
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        if (!options.Value.UseMockPayments
+            && platform == "google_play"
+            && !string.IsNullOrWhiteSpace(productId)
+            && !string.IsNullOrWhiteSpace(purchaseToken))
+        {
+            await mobileProductVerifier.ConsumeGooglePlayConsumableAsync(
+                productId,
+                purchaseToken,
+                cancellationToken);
+        }
+
+        logger.LogInformation(
+            "Fulfilled Prep+ purchase {PurchaseId} for user {UserId}",
+            purchase.PurchaseId,
+            purchase.UserId);
 
         if (!offer.IsFree && offer.PriceAmount > 0 && purchase.Amount > 0)
         {

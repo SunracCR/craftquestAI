@@ -439,6 +439,16 @@ public class BillingService(
             throw new AppException("Invalid credit amount.", 400);
         }
 
+        var alreadyGranted = await dbContext.CreditLedgerEntries.AnyAsync(
+            e => e.ReferenceType == "purchase"
+                 && e.ReferenceId == purchaseId
+                 && e.CreditType == BillingCreditTypes.AiPurchased,
+            cancellationToken);
+        if (alreadyGranted)
+        {
+            return await GetTotalAiCreditsBalanceAsync(userId, cancellationToken);
+        }
+
         var subscription = await GetActiveSubscriptionAsync(userId, cancellationToken);
         if (subscription.Plan.Code.Equals("free", StringComparison.OrdinalIgnoreCase))
         {

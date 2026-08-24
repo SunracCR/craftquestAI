@@ -22,9 +22,9 @@ public sealed class GooglePlaySubscriptionVerifier(IOptions<PaymentOptions> opti
         var (planCode, billingCycle) = resolver.Resolve(productId);
 
         var state = subscription.SubscriptionState ?? string.Empty;
-        var isActive = state.Equals(
-            "SUBSCRIPTION_STATE_ACTIVE",
-            StringComparison.OrdinalIgnoreCase);
+        var isActive = state.Equals("SUBSCRIPTION_STATE_ACTIVE", StringComparison.OrdinalIgnoreCase)
+            || state.Equals("SUBSCRIPTION_STATE_IN_GRACE_PERIOD", StringComparison.OrdinalIgnoreCase)
+            || state.Equals("SUBSCRIPTION_STATE_ON_HOLD", StringComparison.OrdinalIgnoreCase);
 
         DateTime? periodEnd = null;
         var lineItem = subscription.LineItems?.FirstOrDefault();

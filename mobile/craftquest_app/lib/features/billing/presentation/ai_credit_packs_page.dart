@@ -1,9 +1,8 @@
-import 'dart:async';
-
-import 'package:craftquest_app/core/billing/post_checkout_session_refresh.dart';
-import 'package:craftquest_app/core/billing/mobile_store_purchase_completion.dart';
 import 'package:craftquest_app/core/billing/mobile_store_product_query.dart';
-import 'package:craftquest_app/core/billing/mobile_store_purchase_coordinator.dart';
+import 'package:craftquest_app/core/billing/post_checkout_session_refresh.dart';
+import 'package:craftquest_app/core/billing/purchase_flow_state.dart';
+import 'package:craftquest_app/core/billing/purchase_orchestrator.dart';
+import 'package:craftquest_app/core/billing/store_purchase_feedback.dart';
 import 'package:craftquest_app/core/billing/paypal_web_launcher.dart';
 import 'package:craftquest_app/core/billing/payment_platform.dart';
 import 'package:craftquest_app/core/compliance/parental_gate_dialog.dart';
@@ -37,18 +36,17 @@ class AiCreditPacksPage extends StatefulWidget {
 
 class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
   final _repository = getIt<BillingRepository>();
-  final _storePurchases = getIt<MobileStorePurchaseCoordinator>();
+  final _orchestrator = getIt<PurchaseOrchestrator>();
 
   List<AiCreditPackModel> _packs = [];
   List<ProductDetails> _storeProducts = [];
   UserBillingModel? _billing;
   bool _loading = true;
-  bool _purchasing = false;
-  bool _userInitiatedPurchase = false;
+  bool _paypalPurchasing = false;
   String? _error;
-  StreamSubscription<List<PurchaseDetails>>? _purchaseSub;
   bool _storeAvailable = false;
-  final Set<String> _handledPurchaseKeys = {};
+
+  bool get _purchasing => _orchestrator.isBusy || _paypalPurchasing;
 
   static bool get _supportsStorePurchase =>
       !kIsWeb &&
@@ -58,19 +56,28 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
   @override
   void initState() {
     super.initState();
-    _storePurchases.pushBillingPageHandler();
-    if (_supportsStorePurchase) {
-      _purchaseSub =
-          InAppPurchase.instance.purchaseStream.listen(_onPurchaseUpdate);
-    }
+    _orchestrator.addListener(_onOrchestratorChanged);
     _load();
   }
 
   @override
   void dispose() {
-    _storePurchases.popBillingPageHandler();
-    _purchaseSub?.cancel();
+    _orchestrator.removeListener(_onOrchestratorChanged);
     super.dispose();
+  }
+
+  void _onOrchestratorChanged() {
+    if (!mounted) {
+      return;
+    }
+    final state = _orchestrator.state;
+    if (state is PurchaseDeferred) {
+      showStorePurchaseDeferred(context);
+    } else if (state is PurchaseFailed) {
+      showStorePurchaseFailure(context, state);
+      _orchestrator.resetToIdle();
+    }
+    setState(() {});
   }
 
   Future<void> _load() async {
@@ -99,8 +106,6 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
           final response = await queryMobileStoreProducts(ids);
           storeProducts = response.productDetails;
         }
-        // Reintenta compras pendientes (p. ej. verify falló tras el cobro en Play).
-        await InAppPurchase.instance.restorePurchases();
       }
 
       if (!mounted) return;
@@ -138,7 +143,7 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
 
   Future<void> _buyWithPayPal(AiCreditPackModel pack) async {
     final l10n = AppLocalizations.of(context)!;
-    setState(() => _purchasing = true);
+    setState(() => _paypalPurchasing = true);
     try {
       final order = await _repository.createPayPalAiCreditOrder(pack.code);
       if (order.mockMode) {
@@ -176,7 +181,7 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
       if (!mounted) return;
       context.showDioErrorSnackBar(e);
     } finally {
-      if (mounted) setState(() => _purchasing = false);
+      if (mounted) setState(() => _paypalPurchasing = false);
     }
   }
 
@@ -205,138 +210,23 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
       return;
     }
 
-    setState(() => _purchasing = true);
-    _userInitiatedPurchase = true;
-    await InAppPurchase.instance.buyConsumable(
-      purchaseParam: PurchaseParam(productDetails: product),
+    final result = await _orchestrator.buy(
+      StorePurchaseRequest(
+        kind: PurchaseProductKind.aiCredits,
+        productId: productId,
+        product: product,
+      ),
     );
-  }
 
-  Future<void> _onPurchaseUpdate(List<PurchaseDetails> purchases) async {
-    final l10n = AppLocalizations.of(context)!;
-    for (final purchase in purchases) {
-      if (purchase.status == PurchaseStatus.purchased ||
-          purchase.status == PurchaseStatus.restored) {
-        if (!_isAiCreditProduct(purchase.productID)) {
-          continue;
-        }
+    if (!mounted) return;
+    _orchestrator.resetToIdle();
 
-        final purchaseKey = _purchaseKey(purchase);
-        if (!_storePurchases.claimPurchase(purchaseKey)) {
-          if (_userInitiatedPurchase) {
-            scheduleDeferredCheckoutRefresh(context);
-          }
-          _resetPurchasingIfUserInitiated(purchase);
-          continue;
-        }
-
-        final userInitiated = _userInitiatedPurchase;
-        var verified = false;
-        try {
-          final platform = defaultTargetPlatform == TargetPlatform.iOS
-              ? 'app_store'
-              : 'google_play';
-          final token = purchase.verificationData.serverVerificationData;
-          final result = await _repository.verifyMobileAiCreditPurchase(
-            platform: platform,
-            productId: purchase.productID,
-            purchaseToken: token.isNotEmpty ? token : purchase.purchaseID ?? '',
-            transactionId: purchase.purchaseID,
-          );
-          verified = true;
-          await completeMobileStorePurchaseIfNeeded(purchase);
-          if (!mounted) return;
-
-          await refreshAppSessionAfterCheckout(context);
-          if (!mounted) return;
-
-          if (userInitiated) {
-            context.showSuccessSnackBar(
-              l10n.aiCreditPacksPurchaseSuccess(result.creditsGranted),
-            );
-            Navigator.of(context).pop(true);
-          } else {
-            final billing = await _repository.getMyBilling(forceRefresh: true);
-            if (!mounted) return;
-            setState(() => _billing = billing);
-          }
-        } on DioException catch (e) {
-          if (!verified) {
-            _storePurchases.releasePurchase(purchaseKey);
-          }
-          if (!mounted) return;
-          if (userInitiated) {
-            context.showDioErrorSnackBar(e);
-          }
-        } catch (_) {
-          if (!verified) {
-            _storePurchases.releasePurchase(purchaseKey);
-          }
-          if (!mounted) return;
-          if (userInitiated) {
-            context.showErrorSnackBar(l10n.purchaseVerificationFailed);
-          }
-        } finally {
-          if (userInitiated) {
-            _userInitiatedPurchase = false;
-          }
-          if (mounted) setState(() => _purchasing = false);
-        }
-        continue;
-      }
-
-      if ((purchase.status == PurchaseStatus.error ||
-              purchase.status == PurchaseStatus.canceled) &&
-          mounted) {
-        if (purchase.status == PurchaseStatus.error) {
-          context.showErrorSnackBar(
-            purchase.error?.message ?? l10n.purchaseFailed,
-          );
-        }
-        _userInitiatedPurchase = false;
-        setState(() => _purchasing = false);
-      }
+    if (result is AiCreditsPurchaseResult) {
+      context.showSuccessSnackBar(
+        l10n.aiCreditPacksPurchaseSuccess(result.creditsGranted),
+      );
+      Navigator.of(context).pop(true);
     }
-  }
-
-  void _resetPurchasingIfUserInitiated(PurchaseDetails purchase) {
-    if (!_userInitiatedPurchase) {
-      return;
-    }
-    if (purchase.status != PurchaseStatus.purchased &&
-        purchase.status != PurchaseStatus.restored) {
-      return;
-    }
-    _userInitiatedPurchase = false;
-    if (mounted) {
-      setState(() => _purchasing = false);
-    }
-  }
-
-  String _purchaseKey(PurchaseDetails purchase) {
-    final token = purchase.verificationData.serverVerificationData;
-    if (token.isNotEmpty) {
-      return '${purchase.productID}|$token';
-    }
-    return '${purchase.productID}|${purchase.purchaseID ?? purchase.transactionDate ?? ''}';
-  }
-
-  bool _isAiCreditProduct(String productId) {
-    if (_storePurchases.isAiCreditProduct(productId)) {
-      return true;
-    }
-    final isIos = defaultTargetPlatform == TargetPlatform.iOS;
-    for (final pack in _packs) {
-      if (pack.storeProductId(isIos: isIos) == productId) {
-        return true;
-      }
-    }
-    for (final product in _storeProducts) {
-      if (product.id == productId) {
-        return true;
-      }
-    }
-    return false;
   }
 
   String _formatPrice(AiCreditPackModel pack, AppLocalizations l10n) {

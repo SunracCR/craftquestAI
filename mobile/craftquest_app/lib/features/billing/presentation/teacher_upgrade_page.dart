@@ -1,9 +1,8 @@
-import 'dart:async';
-
-import 'package:craftquest_app/core/billing/mobile_store_purchase_completion.dart';
 import 'package:craftquest_app/core/billing/mobile_store_product_query.dart';
 import 'package:craftquest_app/core/billing/post_checkout_session_refresh.dart';
-import 'package:craftquest_app/core/billing/mobile_store_purchase_coordinator.dart';
+import 'package:craftquest_app/core/billing/purchase_flow_state.dart';
+import 'package:craftquest_app/core/billing/purchase_orchestrator.dart';
+import 'package:craftquest_app/core/billing/store_purchase_feedback.dart';
 import 'package:craftquest_app/core/billing/paypal_web_launcher.dart';
 import 'package:craftquest_app/core/billing/payment_platform.dart';
 import 'package:craftquest_app/core/compliance/parental_gate_dialog.dart';
@@ -16,7 +15,6 @@ import 'package:craftquest_app/core/widgets/app_notice_banner.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/features/auth/data/models/auth_models.dart';
-import 'package:craftquest_app/features/auth/presentation/auth_bloc.dart';
 import 'package:craftquest_app/features/billing/data/billing_repository.dart';
 import 'package:craftquest_app/features/billing/data/models/billing_models.dart';
 import 'package:craftquest_app/features/billing/data/pending_paypal_payment_store.dart';
@@ -28,8 +26,6 @@ import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Página de pitch premium para el plan Profesor.
@@ -46,19 +42,18 @@ class TeacherUpgradePage extends StatefulWidget {
 
 class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
   final _repo = getIt<BillingRepository>();
-  final _storePurchases = getIt<MobileStorePurchaseCoordinator>();
+  final _orchestrator = getIt<PurchaseOrchestrator>();
 
   UpgradeablePlanModel? _teacherPlan;
   SubscriptionModel? _subscription;
   BillingCycle _billingCycle = BillingCycle.monthly;
   bool _loadingPlans = true;
   String? _plansLoadError;
-  bool _purchasing = false;
+  bool _paypalPurchasing = false;
   bool _cancelling = false;
   bool _resuming = false;
-  StreamSubscription<List<PurchaseDetails>>? _purchaseSub;
-  bool _userInitiatedPurchase = false;
-  final Set<String> _handledPurchaseKeys = {};
+
+  bool get _purchasing => _orchestrator.isBusy || _paypalPurchasing;
 
   bool get _isAlreadyTeacher => widget.user.roles.contains('teacher');
 
@@ -72,19 +67,28 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
   @override
   void initState() {
     super.initState();
-    _storePurchases.pushBillingPageHandler();
-    if (_supportsStorePurchase) {
-      _purchaseSub =
-          InAppPurchase.instance.purchaseStream.listen(_onPurchaseUpdate);
-    }
+    _orchestrator.addListener(_onOrchestratorChanged);
     _load();
   }
 
   @override
   void dispose() {
-    _storePurchases.popBillingPageHandler();
-    _purchaseSub?.cancel();
+    _orchestrator.removeListener(_onOrchestratorChanged);
     super.dispose();
+  }
+
+  void _onOrchestratorChanged() {
+    if (!mounted) {
+      return;
+    }
+    final state = _orchestrator.state;
+    if (state is PurchaseDeferred) {
+      showStorePurchaseDeferred(context);
+    } else if (state is PurchaseFailed) {
+      showStorePurchaseFailure(context, state);
+      _orchestrator.resetToIdle();
+    }
+    setState(() {});
   }
 
   Future<void> _load({bool forceRefreshBilling = false}) async {
@@ -99,9 +103,6 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
       if (_isAlreadyTeacher) {
         final billing = await _repo.getMyBilling(forceRefresh: forceRefreshBilling);
         subscription = billing.subscription;
-      }
-      if (_supportsStorePurchase && await InAppPurchase.instance.isAvailable()) {
-        await InAppPurchase.instance.restorePurchases();
       }
       if (!mounted) return;
       setState(() {
@@ -153,7 +154,6 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
   }
 
   Future<void> _buyWithStore(UpgradeablePlanModel plan) async {
-    final iap = InAppPurchase.instance;
     final productId = plan.storeProductId(
       isIos: defaultTargetPlatform == TargetPlatform.iOS,
       billingCycle: _billingCycle.apiValue,
@@ -170,15 +170,32 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
       }
       return;
     }
-    setState(() => _purchasing = true);
-    _userInitiatedPurchase = true;
-    final param = PurchaseParam(productDetails: product);
-    await iap.buyNonConsumable(purchaseParam: param);
+
+    final result = await _orchestrator.buy(
+      StorePurchaseRequest(
+        kind: PurchaseProductKind.subscription,
+        productId: productId,
+        product: product,
+        billingCycle: _billingCycle.apiValue,
+      ),
+    );
+
+    if (!mounted) return;
+    _orchestrator.resetToIdle();
+
+    if (result is SubscriptionPurchaseResult) {
+      context.showSuccessSnackBar(
+        l10n.upgradeSuccess(
+          BillingDisplay.localizedPlanName(l10n, code: result.planCode),
+        ),
+      );
+      Navigator.of(context).pop(true);
+    }
   }
 
   Future<void> _buyWithPayPal(UpgradeablePlanModel plan) async {
     final l10n = AppLocalizations.of(context)!;
-    setState(() => _purchasing = true);
+    setState(() => _paypalPurchasing = true);
     try {
       final subscription = await _repo.createPayPalSubscription(
         plan.code,
@@ -225,139 +242,8 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
       if (!mounted) return;
       context.showDioErrorSnackBar(e);
     } finally {
-      if (mounted) setState(() => _purchasing = false);
+      if (mounted) setState(() => _paypalPurchasing = false);
     }
-  }
-
-  Future<void> _onPurchaseUpdate(List<PurchaseDetails> purchases) async {
-    final l10n = AppLocalizations.of(context)!;
-    for (final purchase in purchases) {
-      if (purchase.status == PurchaseStatus.purchased ||
-          purchase.status == PurchaseStatus.restored) {
-        if (!_isTeacherSubscriptionProduct(purchase.productID)) {
-          continue;
-        }
-
-        final purchaseKey = _purchaseKey(purchase);
-        if (!_storePurchases.claimPurchase(purchaseKey)) {
-          if (_userInitiatedPurchase) {
-            scheduleDeferredCheckoutRefresh(context);
-          }
-          _resetPurchasingIfUserInitiated(purchase);
-          continue;
-        }
-
-        final userInitiated = _userInitiatedPurchase;
-        var verified = false;
-        try {
-          final platform = defaultTargetPlatform == TargetPlatform.iOS
-              ? 'app_store'
-              : 'google_play';
-          final token =
-              purchase.verificationData.serverVerificationData;
-          final result = await _repo.verifyMobilePurchase(
-            platform: platform,
-            productId: purchase.productID,
-            purchaseToken: token.isNotEmpty ? token : purchase.purchaseID ?? '',
-            transactionId: purchase.purchaseID,
-            billingCycle: _billingCycleForProduct(purchase.productID),
-          );
-          verified = true;
-          await completeMobileStorePurchaseIfNeeded(purchase);
-          if (!mounted) return;
-
-          await refreshAppSessionAfterCheckout(context);
-          if (!mounted) return;
-
-          if (userInitiated) {
-            context.showSuccessSnackBar(
-              l10n.upgradeSuccess(
-                BillingDisplay.localizedPlanName(l10n, code: result.planCode),
-              ),
-            );
-            Navigator.of(context).pop(true);
-          } else {
-            await _load(forceRefreshBilling: true);
-          }
-        } catch (_) {
-          if (!verified) {
-            _storePurchases.releasePurchase(purchaseKey);
-          }
-          if (!mounted) return;
-          if (userInitiated) {
-            context.showErrorSnackBar(l10n.purchaseVerificationFailed);
-          }
-        } finally {
-          if (userInitiated) {
-            _userInitiatedPurchase = false;
-          }
-          if (mounted) setState(() => _purchasing = false);
-        }
-        continue;
-      }
-
-      if (purchase.status == PurchaseStatus.error ||
-          purchase.status == PurchaseStatus.canceled) {
-        if (!mounted) return;
-        if (purchase.status == PurchaseStatus.error) {
-          context.showErrorSnackBar(
-            purchase.error?.message ?? l10n.purchaseFailed,
-          );
-        }
-        _userInitiatedPurchase = false;
-        setState(() => _purchasing = false);
-      }
-    }
-  }
-
-  void _resetPurchasingIfUserInitiated(PurchaseDetails purchase) {
-    if (!_userInitiatedPurchase) {
-      return;
-    }
-    if (purchase.status != PurchaseStatus.purchased &&
-        purchase.status != PurchaseStatus.restored) {
-      return;
-    }
-    _userInitiatedPurchase = false;
-    if (mounted) {
-      setState(() => _purchasing = false);
-    }
-  }
-
-  String _purchaseKey(PurchaseDetails purchase) {
-    final token = purchase.verificationData.serverVerificationData;
-    if (token.isNotEmpty) {
-      return '${purchase.productID}|$token';
-    }
-    return '${purchase.productID}|${purchase.purchaseID ?? purchase.transactionDate ?? ''}';
-  }
-
-  bool _isTeacherSubscriptionProduct(String productId) {
-    final plan = _teacherPlan;
-    if (plan != null) {
-      for (final id in [
-        plan.googlePlayProductId,
-        plan.googlePlayAnnualProductId,
-        plan.appStoreProductId,
-        plan.appStoreAnnualProductId,
-      ]) {
-        if (id != null && id.isNotEmpty && id == productId) {
-          return true;
-        }
-      }
-    }
-    return _storePurchases.isSubscriptionProduct(productId);
-  }
-
-  String _billingCycleForProduct(String productId) {
-    final plan = _teacherPlan;
-    if (plan != null) {
-      if (plan.googlePlayAnnualProductId == productId ||
-          plan.appStoreAnnualProductId == productId) {
-        return 'annual';
-      }
-    }
-    return _storePurchases.billingCycleForProduct(productId);
   }
 
   Future<void> _cancelSubscription() async {

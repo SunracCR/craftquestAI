@@ -3971,6 +3971,18 @@ abstract class AppLocalizations {
   /// **'No pudimos verificar tu compra. Inténtalo de nuevo en unos momentos.'**
   String get purchaseVerificationFailed;
 
+  /// No description provided for @purchaseAwaitingApproval.
+  ///
+  /// In es, this message translates to:
+  /// **'Esperando aprobación. Actualizaremos tu cuenta cuando se complete el pago.'**
+  String get purchaseAwaitingApproval;
+
+  /// No description provided for @purchaseTimedOut.
+  ///
+  /// In es, this message translates to:
+  /// **'La tienda no respondió a tiempo. Si se te cobró, vuelve a abrir la app para sincronizar la compra.'**
+  String get purchaseTimedOut;
+
   /// No description provided for @contactSales.
   ///
   /// In es, this message translates to:

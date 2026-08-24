@@ -223,6 +223,101 @@ public class PaymentServiceMockTests
         Assert.Equal(1, await db.Purchases.CountAsync(p => p.UserId == userId));
     }
 
+
+    [Fact]
+    public async Task ProcessPayPalWebhook_SubscriptionActivated_ValidatesPendingPurchase()
+    {
+        await using var db = CreateDb();
+        await SeedPlansAndUserAsync(db);
+        var userId = await db.Users.Select(u => u.UserId).FirstAsync();
+        var service = CreatePaymentService(db);
+
+        var subscription = await service.CreatePayPalSubscriptionAsync(
+            userId,
+            new PayPalCreateSubscriptionRequest { PlanCode = "pro" });
+
+        var body = $$"""
+            {
+              "id": "WH-TEST-ACTIVATED",
+              "event_type": "BILLING.SUBSCRIPTION.ACTIVATED",
+              "resource": {
+                "id": "{{subscription.SubscriptionId}}"
+              }
+            }
+            """;
+
+        await service.ProcessPayPalWebhookAsync("ignored", "UNKNOWN", body);
+
+        var purchase = await db.Purchases.SingleAsync(p => p.UserId == userId);
+        Assert.Equal("validated", purchase.Status);
+
+        var activePlan = await db.UserSubscriptions
+            .Include(s => s.Plan)
+            .Where(s => s.UserId == userId && s.Status == "active")
+            .Select(s => s.Plan.Code)
+            .FirstAsync();
+        Assert.Equal("pro", activePlan);
+    }
+
+    [Fact]
+    public async Task ProcessPayPalWebhook_OrderCompleted_ValidatesPendingOneTimeOrder()
+    {
+        await using var db = CreateDb();
+        await SeedPlansAndUserAsync(db);
+        var userId = await db.Users.Select(u => u.UserId).FirstAsync();
+        var service = CreatePaymentService(db);
+
+        var order = await service.CreatePayPalOrderAsync(
+            userId,
+            new PayPalCreateOrderRequest { PlanCode = "pro" });
+
+        var body = $$"""
+            {
+              "id": "WH-TEST-ORDER",
+              "event_type": "CHECKOUT.ORDER.COMPLETED",
+              "resource": {
+                "id": "{{order.OrderId}}"
+              }
+            }
+            """;
+
+        await service.ProcessPayPalWebhookAsync("ignored", "UNKNOWN", body);
+
+        var purchase = await db.Purchases.SingleAsync(p => p.UserId == userId);
+        Assert.Equal("validated", purchase.Status);
+    }
+
+    [Fact]
+    public async Task ReconcilePendingPurchases_ActivatesOldPayPalSubscription_MockMode()
+    {
+        await using var db = CreateDb();
+        await SeedPlansAndUserAsync(db);
+        var userId = await db.Users.Select(u => u.UserId).FirstAsync();
+
+        db.Purchases.Add(new Purchase
+        {
+            PurchaseId = Guid.NewGuid(),
+            UserId = userId,
+            ProductCode = "pro",
+            ProductType = "subscription",
+            ProviderCode = "paypal",
+            ProviderTransactionId = "I-SUB-OLD-PENDING",
+            Amount = 9.99m,
+            CurrencyCode = "USD",
+            Status = "pending",
+            BillingCycle = "monthly",
+            CreatedAt = DateTime.UtcNow.AddHours(-7),
+        });
+        await db.SaveChangesAsync();
+
+        var service = CreatePaymentService(db);
+        var reconciled = await service.ReconcilePendingPurchasesAsync();
+
+        Assert.Equal(1, reconciled);
+        var purchase = await db.Purchases.SingleAsync(p => p.UserId == userId);
+        Assert.Equal("validated", purchase.Status);
+    }
+
     private static PaymentService CreatePaymentService(CraftQuestDbContext db)
     {
         var billing = BillingTestHelpers.CreateService(db);
@@ -243,7 +338,10 @@ public class PaymentServiceMockTests
                 },
             },
         });
-        var payPal = new PayPalApiClient(new HttpClient(), paymentOptions);
+        var payPal = new PayPalApiClient(
+            new HttpClient(),
+            paymentOptions,
+            NullLogger<PayPalApiClient>.Instance);
         var google = new GooglePlaySubscriptionVerifier(paymentOptions);
         var googleProducts = new GooglePlayProductVerifier(
             paymentOptions,
@@ -268,12 +366,40 @@ public class PaymentServiceMockTests
             mobileVerifier,
             mobileProductVerifier,
             webhooks,
-            paymentOptions);
+            PaymentServiceMockTests.CreateStubPrepPlusPaymentService(),
+            paymentOptions,
+            NullLogger<PaymentService>.Instance);
     }
 
     private sealed class HttpClientFactoryStub : IHttpClientFactory
     {
         public HttpClient CreateClient(string name) => new();
+    }
+
+    internal static StubPrepPlusPaymentService CreateStubPrepPlusPaymentService() =>
+        new();
+
+    internal sealed class StubPrepPlusPaymentService : CraftQuest.Application.Contracts.IPrepPlusPaymentService
+    {
+        public Task<PayPalCreateOrderResponse> CreatePayPalOrderAsync(
+            Guid userId,
+            Guid catalogItemId,
+            Guid offerId,
+            string? referralCode = null,
+            CancellationToken cancellationToken = default) =>
+            throw new InvalidOperationException("Prep+ PayPal create was not expected in this test.");
+
+        public Task<CraftQuest.Application.Models.PrepPlus.PrepCheckoutResultDto> CapturePayPalOrderAsync(
+            Guid userId,
+            PayPalCaptureOrderRequest request,
+            CancellationToken cancellationToken = default) =>
+            throw new InvalidOperationException("Prep+ PayPal capture was not expected in this test.");
+
+        public Task<CraftQuest.Application.Models.PrepPlus.PrepCheckoutResultDto> VerifyMobilePurchaseAsync(
+            Guid userId,
+            CraftQuest.Application.Models.PrepPlus.PrepMobilePurchaseRequest request,
+            CancellationToken cancellationToken = default) =>
+            throw new InvalidOperationException("Prep+ mobile verify was not expected in this test.");
     }
 
     private static CraftQuestDbContext CreateDb()

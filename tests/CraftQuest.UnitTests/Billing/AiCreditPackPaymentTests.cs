@@ -4,6 +4,7 @@ using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.Services;
 using CraftQuest.UnitTests.Billing;
+using CraftQuest.UnitTests.Payments;
 using CraftQuest.Infrastructure.Services.Payments;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -75,6 +76,30 @@ public class AiCreditPackPaymentTests
         var purchaseEntry = await db.CreditLedgerEntries.SingleAsync(
             e => e.UserId == userId && e.Reason == "purchase");
         Assert.Equal("ai_purchased", purchaseEntry.CreditType);
+    }
+
+    [Fact]
+    public async Task VerifyMobileAiCreditPurchase_IsIdempotent_ForSameTransaction()
+    {
+        await using var db = CreateDb();
+        var userId = Guid.NewGuid();
+        await SeedUserWithPlanAsync(db, userId, "pro", monthlyAiCredits: 150);
+
+        var service = CreatePaymentService(db);
+        var request = new VerifyMobileAiCreditPurchaseRequest
+        {
+            Platform = "google_play",
+            ProductId = "craftquest_ai_credits_50",
+            PurchaseToken = "gp-ai-idempotent-token",
+            TransactionId = "GPA.idempotent-order",
+        };
+
+        var first = await service.VerifyMobileAiCreditPurchaseAsync(userId, request);
+        var second = await service.VerifyMobileAiCreditPurchaseAsync(userId, request);
+
+        Assert.Equal(first.AiCreditsBalance, second.AiCreditsBalance);
+        Assert.Equal(1, await db.CreditLedgerEntries.CountAsync(
+            e => e.UserId == userId && e.Reason == "purchase"));
     }
 
     [Fact]
@@ -154,7 +179,10 @@ public class AiCreditPackPaymentTests
                 },
             ],
         });
-        var payPal = new PayPalApiClient(new HttpClient(), paymentOptions);
+        var payPal = new PayPalApiClient(
+            new HttpClient(),
+            paymentOptions,
+            NullLogger<PayPalApiClient>.Instance);
         var google = new GooglePlaySubscriptionVerifier(paymentOptions);
         var googleProducts = new GooglePlayProductVerifier(
             paymentOptions,
@@ -179,7 +207,9 @@ public class AiCreditPackPaymentTests
             mobileVerifier,
             mobileProductVerifier,
             webhooks,
-            paymentOptions);
+            PaymentServiceMockTests.CreateStubPrepPlusPaymentService(),
+            paymentOptions,
+            NullLogger<PaymentService>.Instance);
     }
 
     private static async Task SeedUserWithPlanAsync(

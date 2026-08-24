@@ -1,8 +1,9 @@
 import 'dart:async';
 
 import 'package:craftquest_app/core/billing/mobile_store_product_query.dart';
-import 'package:craftquest_app/core/billing/mobile_store_purchase_completion.dart';
-import 'package:craftquest_app/core/billing/mobile_store_purchase_coordinator.dart';
+import 'package:craftquest_app/core/billing/purchase_flow_state.dart';
+import 'package:craftquest_app/core/billing/purchase_orchestrator.dart';
+import 'package:craftquest_app/core/billing/store_purchase_feedback.dart';
 import 'package:craftquest_app/core/billing/paypal_web_launcher.dart';
 import 'package:craftquest_app/core/billing/payment_platform.dart';
 import 'package:craftquest_app/core/compliance/parental_gate_dialog.dart';
@@ -49,7 +50,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -79,7 +79,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
 
   final _repository = getIt<PrepPlusRepository>();
   final _referralStore = getIt<PendingPrepReferralStore>();
-  final _storePurchases = getIt<MobileStorePurchaseCoordinator>();
+  final _orchestrator = getIt<PurchaseOrchestrator>();
   final _preferencesRepository = getIt<PracticePreferencesRepository>();
   final _soundPreferenceStore = getIt<PracticeSoundPreferenceStore>();
   PrepItemDetailModel? _item;
@@ -95,10 +95,9 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
   bool _enableSoundEffects = PracticeLaunchOptions.defaults.enableSoundEffects;
   String? _error;
   String? _pendingPayPalOrderId;
-  StreamSubscription<List<PurchaseDetails>>? _purchaseSub;
-  bool _userInitiatedPurchase = false;
-  final Set<String> _handledPurchaseKeys = {};
   Future<PracticeActiveSessionModel?>? _activeSessionPrefetch;
+
+  bool get _isCheckoutBusy => _checkingOut || _orchestrator.isBusy;
 
   static bool get _supportsStorePurchase =>
       !kIsWeb &&
@@ -108,11 +107,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
   @override
   void initState() {
     super.initState();
-    _storePurchases.pushBillingPageHandler();
-    if (_supportsStorePurchase) {
-      _purchaseSub =
-          InAppPurchase.instance.purchaseStream.listen(_onPurchaseUpdate);
-    }
+    _orchestrator.addListener(_onOrchestratorChanged);
     final initial = widget.initialFromAccess;
     final previewInitial = widget.initialFromPreview;
     if (initial != null) {
@@ -221,9 +216,22 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
 
   @override
   void dispose() {
-    _storePurchases.popBillingPageHandler();
-    _purchaseSub?.cancel();
+    _orchestrator.removeListener(_onOrchestratorChanged);
     super.dispose();
+  }
+
+  void _onOrchestratorChanged() {
+    if (!mounted) {
+      return;
+    }
+    final state = _orchestrator.state;
+    if (state is PurchaseDeferred) {
+      showStorePurchaseDeferred(context);
+    } else if (state is PurchaseFailed) {
+      showStorePurchaseFailure(context, state);
+      _orchestrator.resetToIdle();
+    }
+    setState(() {});
   }
 
   Future<void> _load({bool fullScreenLoading = false}) async {
@@ -242,15 +250,6 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
         _selectedOfferId ??= _defaultOfferId(item.offers);
         _loading = false;
       });
-      if (_supportsStorePurchase) {
-        final hasStoreOffer = item.offers.any(
-          (offer) =>
-              offer.storeProductId != null && offer.storeProductId!.isNotEmpty,
-        );
-        if (hasStoreOffer && await InAppPurchase.instance.isAvailable()) {
-          await InAppPurchase.instance.restorePurchases();
-        }
-      }
       if (item.canPractice) {
         _warmPracticeLaunch(item.quizId);
         unawaited(_refreshOfflineDownloadState(item.quizId));
@@ -634,134 +633,27 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       return;
     }
 
-    setState(() => _checkingOut = true);
-    _userInitiatedPurchase = true;
-    await InAppPurchase.instance.buyConsumable(
-      purchaseParam: PurchaseParam(productDetails: product),
+    final referralCode = await _referralCodeForPurchase();
+    final result = await _orchestrator.buy(
+      StorePurchaseRequest(
+        kind: PurchaseProductKind.prepPlus,
+        productId: productId,
+        product: product,
+        catalogItemId: widget.catalogItemId,
+        offerId: offer.offerId,
+        referralCode: referralCode,
+      ),
     );
-  }
 
-  Future<void> _onPurchaseUpdate(List<PurchaseDetails> purchases) async {
-    final l10n = AppLocalizations.of(context)!;
-    final item = _item;
-    if (item == null) return;
+    if (!mounted) return;
+    _orchestrator.resetToIdle();
 
-    for (final purchase in purchases) {
-      if (purchase.status == PurchaseStatus.purchased ||
-          purchase.status == PurchaseStatus.restored) {
-        final offer = _offerForProductId(purchase.productID, item.offers);
-        if (offer == null) {
-          if (_userInitiatedPurchase) {
-            _userInitiatedPurchase = false;
-            if (mounted) setState(() => _checkingOut = false);
-            context.showErrorSnackBar(l10n.storeProductNotFound(purchase.productID));
-          }
-          continue;
-        }
-
-        final purchaseKey = _purchaseKey(purchase);
-        if (!_storePurchases.claimPurchase(purchaseKey)) {
-          if (_userInitiatedPurchase) {
-            unawaited(Future<void>(() async {
-              await Future.delayed(const Duration(milliseconds: 1500));
-              if (!mounted) return;
-              await _load();
-            }));
-          }
-          _resetCheckingOutIfUserInitiated(purchase);
-          continue;
-        }
-
-        final userInitiated = _userInitiatedPurchase;
-        var verified = false;
-        try {
-          final platform = defaultTargetPlatform == TargetPlatform.iOS
-              ? 'app_store'
-              : 'google_play';
-          final token = purchase.verificationData.serverVerificationData;
-          final referralCode = await _referralCodeForPurchase();
-          final result = await _repository.verifyMobilePurchase(
-            catalogItemId: widget.catalogItemId,
-            offerId: offer.offerId,
-            platform: platform,
-            productId: purchase.productID,
-            purchaseToken: token.isNotEmpty ? token : purchase.purchaseID ?? '',
-            transactionId: purchase.purchaseID,
-            referralCode: referralCode,
-          );
-          verified = true;
-          await completeMobileStorePurchaseIfNeeded(purchase);
-          if (!mounted) return;
-          if (result.status == 'granted') {
-            await _clearReferralIfMatched();
-            await _load();
-            if (!mounted) return;
-            if (userInitiated) {
-              context.showSuccessSnackBar(l10n.prepPlusAccessGranted);
-            }
-          } else if (userInitiated) {
-            context.showErrorSnackBar(l10n.purchaseVerificationFailed);
-          }
-        } catch (e) {
-          if (!verified) {
-            _storePurchases.releasePurchase(purchaseKey);
-          }
-          if (!mounted) return;
-          if (userInitiated) {
-            context.showErrorSnackBar(l10n.purchaseVerificationFailed);
-          }
-        } finally {
-          if (userInitiated) {
-            _userInitiatedPurchase = false;
-          }
-          if (mounted) setState(() => _checkingOut = false);
-        }
-        continue;
-      }
-
-      if (purchase.status == PurchaseStatus.error ||
-          purchase.status == PurchaseStatus.canceled) {
-        _userInitiatedPurchase = false;
-        if (mounted) setState(() => _checkingOut = false);
-      }
+    if (result is PrepPlusPurchaseResult) {
+      await _clearReferralIfMatched();
+      await _load();
+      if (!mounted) return;
+      context.showSuccessSnackBar(l10n.prepPlusAccessGranted);
     }
-  }
-
-  void _resetCheckingOutIfUserInitiated(PurchaseDetails purchase) {
-    if (!_userInitiatedPurchase) {
-      return;
-    }
-    if (purchase.status != PurchaseStatus.purchased &&
-        purchase.status != PurchaseStatus.restored) {
-      return;
-    }
-    _userInitiatedPurchase = false;
-    if (mounted) {
-      setState(() => _checkingOut = false);
-    }
-  }
-
-  PrepAccessOfferModel? _offerForProductId(
-    String productId,
-    List<PrepAccessOfferModel> offers,
-  ) {
-    for (final offer in offers) {
-      final storeProductId = offer.storeProductId;
-      if (storeProductId != null &&
-          storeProductId.isNotEmpty &&
-          storeProductId == productId) {
-        return offer;
-      }
-    }
-    return null;
-  }
-
-  String _purchaseKey(PurchaseDetails purchase) {
-    final token = purchase.verificationData.serverVerificationData;
-    if (token.isNotEmpty) {
-      return '${purchase.productID}|$token';
-    }
-    return '${purchase.productID}|${purchase.purchaseID ?? purchase.transactionDate ?? ''}';
   }
 
   Future<void> _openAccessOptionsSheet() async {
@@ -874,8 +766,8 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
                       padding: const EdgeInsets.all(AppSpacing.md),
                       child: AppPrimaryButton(
                         label: confirmLabel,
-                        isLoading: _checkingOut,
-                        onPressed: _checkingOut || sheetOffer == null
+                        isLoading: _isCheckoutBusy,
+                        onPressed: _isCheckoutBusy || sheetOffer == null
                             ? null
                             : () async {
                                 final offer = sheetOffer!;
@@ -1081,8 +973,8 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
                                   const SizedBox(height: AppSpacing.sm),
                                   AppPrimaryButton(
                                     label: l10n.prepPlusConfirmPayPalPayment,
-                                    isLoading: _checkingOut,
-                                    onPressed: _checkingOut
+                                    isLoading: _isCheckoutBusy,
+                                    onPressed: _isCheckoutBusy
                                         ? null
                                         : _confirmPayPalCapture,
                                   ),
@@ -1150,8 +1042,8 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
         children: [
           AppPrimaryButton(
             label: _purchaseActionLabel(l10n, item),
-            isLoading: _checkingOut,
-            onPressed: _checkingOut ? null : _openAccessOptionsSheet,
+            isLoading: _isCheckoutBusy,
+            onPressed: _isCheckoutBusy ? null : _openAccessOptionsSheet,
           ),
         ],
       );

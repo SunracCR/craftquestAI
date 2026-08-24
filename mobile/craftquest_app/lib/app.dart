@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:craftquest_app/core/billing/membership_billing_refresh_coordinator.dart';
-import 'package:craftquest_app/core/billing/mobile_store_purchase_coordinator.dart';
+import 'package:craftquest_app/core/billing/purchase_orchestrator.dart';
 import 'package:craftquest_app/core/compliance/age_collection_gate.dart';
 import 'package:craftquest_app/core/compliance/parental_consent_gate.dart';
 import 'package:craftquest_app/core/update/force_update_gate.dart';
@@ -659,14 +659,14 @@ class _AuthenticatedShellState extends State<_AuthenticatedShell>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(getIt<NotificationsCubit>().refreshUnreadCount());
       unawaited(getIt<PushNotificationService>().onAuthenticated());
-      unawaited(getIt<MobileStorePurchaseCoordinator>().start());
+      unawaited(getIt<PurchaseOrchestrator>().start());
     });
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    getIt<MobileStorePurchaseCoordinator>().stop();
+    getIt<PurchaseOrchestrator>().stop();
     super.dispose();
   }
 
@@ -674,7 +674,7 @@ class _AuthenticatedShellState extends State<_AuthenticatedShell>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       unawaited(getIt<NotificationsCubit>().refreshUnreadCount());
-      unawaited(getIt<MobileStorePurchaseCoordinator>().onAppResume());
+      unawaited(getIt<PurchaseOrchestrator>().onAppResume());
       unawaited(getIt<MembershipBillingRefreshCoordinator>().refreshOnAppResume());
     }
   }

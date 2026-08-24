@@ -92,6 +92,14 @@ public sealed class MobileStoreWebhookProcessor(
                     return;
                 }
 
+                if (root.TryGetProperty("oneTimeProductNotification", out var oneTimeNotification))
+                {
+                    await ProcessGooglePlayOneTimeProductNotificationAsync(
+                        oneTimeNotification,
+                        cancellationToken);
+                    return;
+                }
+
                 if (!root.TryGetProperty("subscriptionNotification", out var subNotification))
                 {
                     logger.LogInformation(
@@ -142,8 +150,6 @@ public sealed class MobileStoreWebhookProcessor(
         {
             return;
         }
-
-        await RecordEventAsync("google_play", eventId, $"type-{notificationType}", cancellationToken);
 
         var subscription = await dbContext.UserSubscriptions
             .Include(s => s.Plan)
@@ -223,6 +229,53 @@ public sealed class MobileStoreWebhookProcessor(
         {
             await dbContext.SaveChangesAsync(cancellationToken);
         }
+
+        await RecordEventAsync("google_play", eventId, $"type-{notificationType}", cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task ProcessGooglePlayOneTimeProductNotificationAsync(
+        JsonElement oneTimeNotification,
+        CancellationToken cancellationToken)
+    {
+        if (!oneTimeNotification.TryGetProperty("purchaseToken", out var purchaseTokenEl)
+            || !oneTimeNotification.TryGetProperty("notificationType", out var notificationTypeEl))
+        {
+            logger.LogWarning(
+                "Google Play oneTimeProductNotification missing purchaseToken or notificationType.");
+            return;
+        }
+
+        var purchaseToken = purchaseTokenEl.GetString();
+        if (!notificationTypeEl.TryGetInt32(out var notificationType)
+            || string.IsNullOrWhiteSpace(purchaseToken))
+        {
+            return;
+        }
+
+        var eventId = $"gp-one-time-{purchaseToken}-{notificationType}";
+        if (await IsDuplicateEventAsync("google_play", eventId, cancellationToken))
+        {
+            return;
+        }
+
+        if (notificationType is 2)
+        {
+            var purchase = await dbContext.Purchases.FirstOrDefaultAsync(
+                p => p.ProviderCode == "google_play"
+                     && p.ProviderTransactionId == purchaseToken
+                     && p.Status == "validated",
+                cancellationToken);
+            if (purchase is not null)
+            {
+                logger.LogWarning(
+                    "Google Play one-time product canceled/refunded for purchase {PurchaseId}",
+                    purchase.PurchaseId);
+            }
+        }
+
+        await RecordEventAsync("google_play", eventId, $"one-time-{notificationType}", cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task ProcessAppleNotificationAsync(

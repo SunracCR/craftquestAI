@@ -2376,6 +2376,14 @@ class AppLocalizationsPt extends AppLocalizations {
       'Não foi possível verificar sua compra. Tente novamente em instantes.';
 
   @override
+  String get purchaseAwaitingApproval =>
+      'Aguardando aprovação. Atualizaremos sua conta quando o pagamento for concluído.';
+
+  @override
+  String get purchaseTimedOut =>
+      'A loja não respondeu a tempo. Se você foi cobrado, reabra o app para sincronizar a compra.';
+
+  @override
   String get contactSales => 'Contactar vendas';
 
   @override

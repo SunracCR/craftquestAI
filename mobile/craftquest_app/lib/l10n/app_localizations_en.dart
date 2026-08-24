@@ -2358,6 +2358,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'We couldn\'t verify your purchase. Please try again in a moment.';
 
   @override
+  String get purchaseAwaitingApproval =>
+      'Waiting for approval. We\'ll update your account when the payment completes.';
+
+  @override
+  String get purchaseTimedOut =>
+      'The store did not respond in time. If you were charged, reopen the app to sync your purchase.';
+
+  @override
   String get contactSales => 'Contact sales';
 
   @override

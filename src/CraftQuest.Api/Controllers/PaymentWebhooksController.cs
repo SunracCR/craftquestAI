@@ -27,9 +27,45 @@ public class PaymentWebhooksController(
             ? transmissionId.ToString()
             : Guid.NewGuid().ToString();
 
-        var eventType = Request.Headers.TryGetValue("PAYPAL-EVENT-TYPE", out var eventTypeHeader)
-            ? eventTypeHeader.ToString()
-            : "UNKNOWN";
+        var eventType = "UNKNOWN";
+        if (!string.IsNullOrWhiteSpace(body))
+        {
+            try
+            {
+                using var doc = System.Text.Json.JsonDocument.Parse(body);
+                if (doc.RootElement.TryGetProperty("id", out var webhookIdEl))
+                {
+                    var webhookId = webhookIdEl.GetString();
+                    if (!string.IsNullOrWhiteSpace(webhookId))
+                    {
+                        eventId = webhookId;
+                    }
+                }
+
+                if (doc.RootElement.TryGetProperty("event_type", out var eventTypeEl))
+                {
+                    var parsedEventType = eventTypeEl.GetString();
+                    if (!string.IsNullOrWhiteSpace(parsedEventType))
+                    {
+                        eventType = parsedEventType;
+                    }
+                }
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                // Fallback al header si el body no es JSON válido.
+            }
+        }
+
+        if (eventType == "UNKNOWN"
+            && Request.Headers.TryGetValue("PAYPAL-EVENT-TYPE", out var eventTypeHeader))
+        {
+            var headerEventType = eventTypeHeader.ToString();
+            if (!string.IsNullOrWhiteSpace(headerEventType))
+            {
+                eventType = headerEventType;
+            }
+        }
 
         if (string.IsNullOrWhiteSpace(body))
         {
@@ -86,6 +122,7 @@ public class PaymentWebhooksController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Google Play Pub/Sub webhook processing failed.");
+            return StatusCode(500);
         }
 
         return Ok();
@@ -118,6 +155,7 @@ public class PaymentWebhooksController(
         catch (Exception ex)
         {
             logger.LogError(ex, "App Store webhook processing failed.");
+            return StatusCode(500);
         }
 
         return Ok();
