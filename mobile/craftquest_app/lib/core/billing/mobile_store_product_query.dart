@@ -6,6 +6,24 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 const _storeAvailabilityTimeout = Duration(seconds: 10);
 const _storeQueryTimeout = Duration(seconds: 15);
 
+String normalizeStoreProductId(String productId) => productId.trim();
+
+bool storeProductIdsMatch(String left, String right) =>
+    normalizeStoreProductId(left).toLowerCase() ==
+    normalizeStoreProductId(right).toLowerCase();
+
+ProductDetails? pickStoreProduct(
+  Iterable<ProductDetails> products,
+  String productId,
+) {
+  for (final product in products) {
+    if (storeProductIdsMatch(product.id, productId)) {
+      return product;
+    }
+  }
+  return null;
+}
+
 /// Indica si la tienda nativa está disponible y lo registra en debug.
 Future<bool> isMobileStoreAvailable({
   Duration timeout = _storeAvailabilityTimeout,
@@ -26,18 +44,26 @@ Future<ProductDetailsResponse> queryMobileStoreProducts(
   Set<String> productIds, {
   Duration timeout = _storeQueryTimeout,
 }) async {
+  final normalizedIds = productIds
+      .map(normalizeStoreProductId)
+      .where((id) => id.isNotEmpty)
+      .toSet();
+  if (normalizedIds.isEmpty) {
+    return ProductDetailsResponse(productDetails: [], notFoundIDs: const []);
+  }
+
   final response = await InAppPurchase.instance
-      .queryProductDetails(productIds)
+      .queryProductDetails(normalizedIds)
       .timeout(
         timeout,
         onTimeout: () => ProductDetailsResponse(
           productDetails: [],
-          notFoundIDs: productIds.toList(),
+          notFoundIDs: normalizedIds.toList(),
         ),
       );
   if (kDebugMode) {
     debugPrint(
-      '[IAP] queryProductDetails requested=${productIds.join(', ')}',
+      '[IAP] queryProductDetails requested=${normalizedIds.join(', ')}',
     );
     debugPrint(
       '[IAP] found=${response.productDetails.map((p) => p.id).join(', ')}',
@@ -58,12 +84,32 @@ Future<ProductDetailsResponse> queryMobileStoreProducts(
   return response;
 }
 
-Future<ProductDetails?> findMobileStoreProduct(String productId) async {
-  final response = await queryMobileStoreProducts({productId});
-  for (final product in response.productDetails) {
-    if (product.id == productId) {
+Future<ProductDetails?> findMobileStoreProduct(
+  String productId, {
+  Iterable<ProductDetails> cachedProducts = const [],
+}) async {
+  final normalizedId = normalizeStoreProductId(productId);
+  if (normalizedId.isEmpty) {
+    return null;
+  }
+
+  final cached = pickStoreProduct(cachedProducts, normalizedId);
+  if (cached != null) {
+    return cached;
+  }
+
+  for (var attempt = 0; attempt < 2; attempt++) {
+    final response = await queryMobileStoreProducts({normalizedId});
+    final product = pickStoreProduct(response.productDetails, normalizedId);
+    if (product != null) {
       return product;
     }
+    if (attempt == 0 && response.error == null) {
+      await Future<void>.delayed(const Duration(milliseconds: 600));
+      continue;
+    }
+    break;
   }
+
   return null;
 }

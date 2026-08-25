@@ -20,6 +20,7 @@ public interface IPrepPlusAdminService
     Task DeleteCategoryAsync(Guid categoryId, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<PrepLinkableQuizDto>> ListLinkableQuizzesAsync(
+        Guid requestingUserId,
         string? search = null,
         int take = 100,
         CancellationToken cancellationToken = default);

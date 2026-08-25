@@ -139,6 +139,14 @@ class PrepAccessOfferModel {
   final bool isFree;
   final bool isActive;
   final String? storeProductId;
+
+  String? nativeStoreProductId({required bool isIos}) {
+    final id = storeProductId?.trim();
+    if (id == null || id.isEmpty) {
+      return null;
+    }
+    return id;
+  }
 }
 
 class PrepMobileStoreProductModel {

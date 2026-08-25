@@ -14,4 +14,6 @@ public static class PrepPlusConstants
     public const int LifetimeDurationDays = 0;
 
     public const int RequiredSampleQuestionCount = 3;
+
+    public const string CuratedVisibility = "curated";
 }

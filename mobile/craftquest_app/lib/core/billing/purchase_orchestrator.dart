@@ -76,6 +76,8 @@ class PurchaseOrchestrator extends ChangeNotifier {
   String billingCycleForProduct(String productId) =>
       _billingCycleForProduct(productId);
 
+  Future<void> refreshStoreCatalog() => _refreshProductCatalog();
+
   Future<void> start() async {
     if (!supportsStore || _started) {
       return;
@@ -137,7 +139,8 @@ class PurchaseOrchestrator extends ChangeNotifier {
       }
 
       ProductDetails? product = request.product;
-      product ??= await findMobileStoreProduct(request.productId);
+      final normalizedProductId = normalizeStoreProductId(request.productId);
+      product ??= await findMobileStoreProduct(normalizedProductId);
       if (product == null) {
         _fail(PurchaseFailureReason.productNotFound);
         return null;
@@ -146,7 +149,7 @@ class PurchaseOrchestrator extends ChangeNotifier {
       await _pendingStore.save(
         PendingStorePurchase(
           kind: request.kind,
-          productId: request.productId,
+          productId: product.id,
           createdAt: DateTime.now().toUtc(),
           billingCycle: request.billingCycle,
           catalogItemId: request.catalogItemId,
@@ -156,7 +159,7 @@ class PurchaseOrchestrator extends ChangeNotifier {
       );
 
       await _reconcileUnfinishedStoreTransactions(
-        productId: request.productId,
+        productId: product.id,
       );
       if (_state is PurchaseSucceeded) {
         return (_state as PurchaseSucceeded).result;
@@ -416,7 +419,8 @@ class PurchaseOrchestrator extends ChangeNotifier {
     }
 
     if (_isPrepProduct(productId)) {
-      final prepProduct = _prepProducts[productId];
+      final prepProduct =
+          _prepProducts[normalizeStoreProductId(productId).toLowerCase()];
       await _prepPlusRepository.verifyMobilePurchase(
         catalogItemId:
             _activeRequest?.catalogItemId ??
@@ -642,7 +646,8 @@ class PurchaseOrchestrator extends ChangeNotifier {
     try {
       final prepProducts = await _prepPlusRepository.getMobileStoreProducts();
       _prepProducts = {
-        for (final product in prepProducts) product.storeProductId: product,
+        for (final product in prepProducts)
+          normalizeStoreProductId(product.storeProductId).toLowerCase(): product,
       };
     } catch (_) {}
   }
@@ -663,11 +668,12 @@ class PurchaseOrchestrator extends ChangeNotifier {
   }
 
   bool _isPrepProduct(String productId) {
-    if (_prepProducts.containsKey(productId)) {
+    final normalized = normalizeStoreProductId(productId).toLowerCase();
+    if (_prepProducts.containsKey(normalized)) {
       return true;
     }
-    final lower = productId.toLowerCase();
-    return lower.startsWith('craftquest_prep_') || lower.contains('_prep_');
+    return normalized.startsWith('craftquest_prep_') ||
+        normalized.contains('_prep_');
   }
 
   String _billingCycleForProduct(String productId) {

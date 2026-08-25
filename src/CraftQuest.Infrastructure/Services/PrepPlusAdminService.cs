@@ -169,6 +169,7 @@ public class PrepPlusAdminService(
     }
 
     public async Task<IReadOnlyList<PrepLinkableQuizDto>> ListLinkableQuizzesAsync(
+        Guid requestingUserId,
         string? search = null,
         int take = 100,
         CancellationToken cancellationToken = default)
@@ -184,11 +185,6 @@ public class PrepPlusAdminService(
             .Distinct()
             .ToListAsync(cancellationToken);
 
-        if (adminUserIds.Count == 0)
-        {
-            return [];
-        }
-
         var catalogQuizIds = await dbContext.PrepCatalogItems
             .AsNoTracking()
             .Where(i => !i.IsDeleted)
@@ -198,8 +194,11 @@ public class PrepPlusAdminService(
         var query = dbContext.Quizzes
             .AsNoTracking()
             .Where(q =>
-                adminUserIds.Contains(q.CreatedByUserId)
-                && !catalogQuizIds.Contains(q.QuizId));
+                !catalogQuizIds.Contains(q.QuizId)
+                && (adminUserIds.Contains(q.CreatedByUserId)
+                    || q.CreatedByUserId == requestingUserId
+                    || q.IsCurated
+                    || q.Visibility == PrepPlusConstants.CuratedVisibility));
 
         if (!string.IsNullOrWhiteSpace(search))
         {
@@ -329,7 +328,7 @@ public class PrepPlusAdminService(
             .FirstOrDefaultAsync(q => q.QuizId == request.QuizId, cancellationToken)
             ?? throw new AppException("Quiz not found.", 404, PrepPlusErrorCodes.QuizNotFound);
 
-        await EnsureQuizLinkableAsync(quiz, cancellationToken);
+        await EnsureQuizLinkableAsync(quiz, adminUserId, cancellationToken);
 
         if (await dbContext.PrepCatalogItems.AnyAsync(i => i.QuizId == request.QuizId && !i.IsDeleted, cancellationToken))
         {
@@ -423,7 +422,7 @@ public class PrepPlusAdminService(
                 offer.PriceAmount = input.IsFree ? 0 : input.PriceAmount;
                 offer.CurrencyCode = input.CurrencyCode.Trim().ToUpperInvariant();
                 offer.IsFree = input.IsFree;
-                offer.StoreProductId = input.StoreProductId?.Trim();
+                offer.StoreProductId = NormalizeStoreProductId(input.StoreProductId);
                 offer.IsActive = input.IsActive;
             }
             else
@@ -437,7 +436,7 @@ public class PrepPlusAdminService(
                     PriceAmount = input.IsFree ? 0 : input.PriceAmount,
                     CurrencyCode = input.CurrencyCode.Trim().ToUpperInvariant(),
                     IsFree = input.IsFree,
-                    StoreProductId = input.StoreProductId?.Trim(),
+                    StoreProductId = NormalizeStoreProductId(input.StoreProductId),
                     IsActive = input.IsActive,
                 });
             }
@@ -527,7 +526,7 @@ public class PrepPlusAdminService(
         entity.PublishedAt = DateTime.UtcNow;
         entity.UpdatedAt = DateTime.UtcNow;
 
-        entity.Quiz.Visibility = "curated";
+        entity.Quiz.Visibility = PrepPlusConstants.CuratedVisibility;
         entity.Quiz.IsCurated = true;
         entity.Quiz.PublicationStatus = "published";
         entity.Quiz.UpdatedAt = DateTime.UtcNow;
@@ -766,8 +765,16 @@ public class PrepPlusAdminService(
         return current.CategoryType;
     }
 
-    private async Task EnsureQuizLinkableAsync(Quiz quiz, CancellationToken cancellationToken)
+    private async Task EnsureQuizLinkableAsync(
+        Quiz quiz,
+        Guid requestingUserId,
+        CancellationToken cancellationToken)
     {
+        if (IsQuizEligibleForPrepLink(quiz, requestingUserId))
+        {
+            return;
+        }
+
         var isAdminAuthor = await dbContext.UserRoles
             .AsNoTracking()
             .AnyAsync(
@@ -783,6 +790,14 @@ public class PrepPlusAdminService(
                 PrepPlusErrorCodes.QuizNotEligible);
         }
     }
+
+    private static bool IsQuizEligibleForPrepLink(Quiz quiz, Guid requestingUserId) =>
+        quiz.CreatedByUserId == requestingUserId
+        || quiz.IsCurated
+        || string.Equals(
+            quiz.Visibility,
+            PrepPlusConstants.CuratedVisibility,
+            StringComparison.OrdinalIgnoreCase);
 
     private static (bool IsLifetime, int DurationDays) OfferKey(bool isLifetimeAccess, int durationDays) =>
         (isLifetimeAccess, isLifetimeAccess ? PrepPlusConstants.LifetimeDurationDays : durationDays);
@@ -1088,4 +1103,14 @@ public class PrepPlusAdminService(
 
     private static string Truncate(string value, int maxLength) =>
         value.Length <= maxLength ? value : value[..maxLength] + "…";
+
+    private static string? NormalizeStoreProductId(string? storeProductId)
+    {
+        if (string.IsNullOrWhiteSpace(storeProductId))
+        {
+            return null;
+        }
+
+        return storeProductId.Trim();
+    }
 }

@@ -51,6 +51,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -96,6 +97,8 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
   String? _error;
   String? _pendingPayPalOrderId;
   Future<PracticeActiveSessionModel?>? _activeSessionPrefetch;
+  List<ProductDetails> _storeProducts = [];
+  bool _storeAvailable = false;
 
   bool get _isCheckoutBusy => _checkingOut || _orchestrator.isBusy;
 
@@ -250,6 +253,9 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
         _selectedOfferId ??= _defaultOfferId(item.offers);
         _loading = false;
       });
+      if (_supportsStorePurchase) {
+        unawaited(_prefetchStoreProducts(item.offers));
+      }
       if (item.canPractice) {
         _warmPracticeLaunch(item.quizId);
         unawaited(_refreshOfflineDownloadState(item.quizId));
@@ -283,17 +289,66 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
 
   String? _defaultOfferId(List<PrepAccessOfferModel> offers) {
     if (offers.isEmpty) return null;
-    for (final o in offers) {
-      if (o.isLifetimeAccess) return o.offerId;
+    PrepAccessOfferModel? pickPreferred(Iterable<PrepAccessOfferModel> candidates) {
+      for (final o in candidates) {
+        if (o.isLifetimeAccess) return o;
+      }
+      for (final o in candidates) {
+        if (o.durationDays == _bestValueDurationDays) return o;
+      }
+      PrepAccessOfferModel longest = candidates.first;
+      for (final o in candidates.skip(1)) {
+        if (o.durationDays > longest.durationDays) longest = o;
+      }
+      return longest;
     }
-    for (final o in offers) {
-      if (o.durationDays == _bestValueDurationDays) return o.offerId;
+
+    if (_supportsStorePurchase) {
+      final storeOffers = offers
+          .where(
+            (o) =>
+                !o.isFree &&
+                o.nativeStoreProductId(
+                      isIos: defaultTargetPlatform == TargetPlatform.iOS,
+                    ) !=
+                    null,
+          )
+          .toList();
+      final fromStore = pickPreferred(storeOffers);
+      if (fromStore != null) {
+        return fromStore.offerId;
+      }
     }
-    PrepAccessOfferModel longest = offers.first;
-    for (final o in offers.skip(1)) {
-      if (o.durationDays > longest.durationDays) longest = o;
+
+    return pickPreferred(offers)?.offerId;
+  }
+
+  Future<void> _prefetchStoreProducts(List<PrepAccessOfferModel> offers) async {
+    if (!_supportsStorePurchase) return;
+
+    final isIos = defaultTargetPlatform == TargetPlatform.iOS;
+    final ids = <String>{};
+    for (final offer in offers) {
+      if (offer.isFree) continue;
+      final id = offer.nativeStoreProductId(isIos: isIos);
+      if (id != null && id.isNotEmpty) {
+        ids.add(id);
+      }
     }
-    return longest.offerId;
+
+    final available = ids.isNotEmpty && await isMobileStoreAvailable();
+    var products = <ProductDetails>[];
+    if (available) {
+      await _orchestrator.refreshStoreCatalog();
+      final response = await queryMobileStoreProducts(ids);
+      products = response.productDetails;
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _storeAvailable = available;
+      _storeProducts = products;
+    });
   }
 
   void _warmPracticeLaunch(String quizId) {
@@ -526,11 +581,16 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       return;
     }
     final l10n = AppLocalizations.of(context)!;
+    final storeProductId = _supportsStorePurchase
+        ? offer.nativeStoreProductId(
+            isIos: defaultTargetPlatform == TargetPlatform.iOS,
+          )
+        : null;
 
     if (_supportsStorePurchase &&
-        offer.storeProductId != null &&
-        offer.storeProductId!.isNotEmpty) {
-      await _buyWithStore(offer);
+        storeProductId != null &&
+        storeProductId.isNotEmpty) {
+      await _buyWithStore(offer, storeProductId);
       return;
     }
 
@@ -616,17 +676,29 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
     }
   }
 
-  Future<void> _buyWithStore(PrepAccessOfferModel offer) async {
+  Future<void> _buyWithStore(
+    PrepAccessOfferModel offer,
+    String productId,
+  ) async {
     final l10n = AppLocalizations.of(context)!;
-    final productId = offer.storeProductId!;
 
-    if (!await isMobileStoreAvailable()) {
-      if (!mounted) return;
-      context.showErrorSnackBar(l10n.storeProductNotConfigured);
-      return;
+    if (!_storeAvailable) {
+      final available = await isMobileStoreAvailable();
+      if (!available) {
+        if (!mounted) return;
+        context.showErrorSnackBar(l10n.storeProductNotConfigured);
+        return;
+      }
+      if (mounted) {
+        setState(() => _storeAvailable = true);
+      }
     }
 
-    final product = await findMobileStoreProduct(productId);
+    var product = pickStoreProduct(_storeProducts, productId);
+    product ??= await findMobileStoreProduct(
+      productId,
+      cachedProducts: _storeProducts,
+    );
     if (product == null) {
       if (!mounted) return;
       context.showErrorSnackBar(l10n.storeProductNotFound(productId));
@@ -637,7 +709,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
     final result = await _orchestrator.buy(
       StorePurchaseRequest(
         kind: PurchaseProductKind.prepPlus,
-        productId: productId,
+        productId: product.id,
         product: product,
         catalogItemId: widget.catalogItemId,
         offerId: offer.offerId,

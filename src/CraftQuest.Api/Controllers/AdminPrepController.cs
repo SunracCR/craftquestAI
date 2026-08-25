@@ -59,6 +59,7 @@ public class AdminPrepController(IPrepPlusAdminService prepPlusAdminService) : A
         CancellationToken cancellationToken = default)
     {
         var quizzes = await prepPlusAdminService.ListLinkableQuizzesAsync(
+            GetUserId(),
             search,
             take,
             cancellationToken);

@@ -432,7 +432,8 @@ public class PrepPlusPaymentService(
         string productId,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(productId))
+        var normalizedProductId = productId.Trim();
+        if (string.IsNullOrWhiteSpace(normalizedProductId))
         {
             throw new AppException(
                 "Store product id is required.",
@@ -441,16 +442,21 @@ public class PrepPlusPaymentService(
         }
 
         var now = DateTime.UtcNow;
-        var offer = await dbContext.PrepAccessOffers
+        var offers = await dbContext.PrepAccessOffers
             .Include(o => o.CatalogItem)
             .ThenInclude(i => i.Quiz)
-            .FirstOrDefaultAsync(
+            .Where(
                 o => o.IsActive
                     && o.StoreProductId != null
-                    && o.StoreProductId == productId
                     && o.CatalogItem.IsPublished
-                    && !o.CatalogItem.IsDeleted,
-                cancellationToken)
+                    && !o.CatalogItem.IsDeleted)
+            .ToListAsync(cancellationToken);
+
+        var offer = offers.FirstOrDefault(
+                o => string.Equals(
+                    o.StoreProductId!.Trim(),
+                    normalizedProductId,
+                    StringComparison.OrdinalIgnoreCase))
             ?? throw new AppException(
                 "Store product not found.",
                 404,
