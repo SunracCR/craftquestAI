@@ -1,7 +1,7 @@
 name: craftquest_app
 description: CraftQuest mobile app
 publish_to: 'none'
-version: 1.0.4+34
+version: 1.0.4+35
 
 environment:
   sdk: ^3.7.0
@@ -20,6 +20,7 @@ dependencies:
   flutter_secure_storage: ^10.2.0
   image_picker: ^1.2.3
   in_app_purchase: ^3.2.3
+  in_app_purchase_storekit: ^0.4.11
   url_launcher: ^6.3.1
   google_fonts: ^6.2.1
   shared_preferences: ^2.5.3

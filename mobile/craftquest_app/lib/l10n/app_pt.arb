@@ -1107,6 +1107,7 @@
   "purchaseVerificationFailed": "Não foi possível verificar sua compra. Tente novamente em instantes.",
   "purchaseAwaitingApproval": "Aguardando aprovação. Atualizaremos sua conta quando o pagamento for concluído.",
   "purchaseTimedOut": "A loja não respondeu a tempo. Se você foi cobrado, reabra o app para sincronizar a compra.",
+  "purchasePendingStoreTransaction": "Há uma compra pendente na App Store. Estamos sincronizando; tente novamente em alguns segundos.",
   "contactSales": "Contactar vendas",
   "aiGenerationHubTitle": "Gerar com IA",
   "aiGenerationHubSubtitle": "Envie PDF ou Word com texto selecionavel e obtenha um questionario revisavel em minutos.",

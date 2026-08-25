@@ -2366,6 +2366,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'The store did not respond in time. If you were charged, reopen the app to sync your purchase.';
 
   @override
+  String get purchasePendingStoreTransaction =>
+      'There is a pending App Store purchase. We\'re syncing it now; please try again in a few seconds.';
+
+  @override
   String get contactSales => 'Contact sales';
 
   @override

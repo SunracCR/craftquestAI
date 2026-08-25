@@ -1107,6 +1107,7 @@
   "purchaseVerificationFailed": "We couldn't verify your purchase. Please try again in a moment.",
   "purchaseAwaitingApproval": "Waiting for approval. We'll update your account when the payment completes.",
   "purchaseTimedOut": "The store did not respond in time. If you were charged, reopen the app to sync your purchase.",
+  "purchasePendingStoreTransaction": "There is a pending App Store purchase. We're syncing it now; please try again in a few seconds.",
   "contactSales": "Contact sales",
   "aiGenerationHubTitle": "Generate with AI",
   "aiGenerationHubSubtitle": "Upload PDF or Word with selectable text and get a reviewable quiz in minutes.",

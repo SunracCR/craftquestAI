@@ -2385,6 +2385,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'La tienda no respondió a tiempo. Si se te cobró, vuelve a abrir la app para sincronizar la compra.';
 
   @override
+  String get purchasePendingStoreTransaction =>
+      'Hay una compra pendiente en App Store. La estamos sincronizando; inténtalo de nuevo en unos segundos.';
+
+  @override
   String get contactSales => 'Contactar ventas';
 
   @override

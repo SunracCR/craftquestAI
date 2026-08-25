@@ -3983,6 +3983,12 @@ abstract class AppLocalizations {
   /// **'La tienda no respondió a tiempo. Si se te cobró, vuelve a abrir la app para sincronizar la compra.'**
   String get purchaseTimedOut;
 
+  /// No description provided for @purchasePendingStoreTransaction.
+  ///
+  /// In es, this message translates to:
+  /// **'Hay una compra pendiente en App Store. La estamos sincronizando; inténtalo de nuevo en unos segundos.'**
+  String get purchasePendingStoreTransaction;
+
   /// No description provided for @contactSales.
   ///
   /// In es, this message translates to:

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:craftquest_app/core/billing/ios_store_unfinished_transactions.dart';
 import 'package:craftquest_app/core/billing/mobile_store_purchase_completion.dart';
 import 'package:craftquest_app/core/billing/mobile_store_product_query.dart';
 import 'package:craftquest_app/core/billing/pending_store_purchase_store.dart';
@@ -83,6 +84,7 @@ class PurchaseOrchestrator extends ChangeNotifier {
     await _refreshProductCatalog();
     _purchaseSub =
         InAppPurchase.instance.purchaseStream.listen(_onPurchaseUpdate);
+    await _reconcileUnfinishedStoreTransactions();
     await _restorePurchases(force: true);
     await _reconcilePendingIntent();
   }
@@ -107,6 +109,7 @@ class PurchaseOrchestrator extends ChangeNotifier {
     }
     _expireStaleInFlightKeys();
     await _refreshProductCatalog();
+    await _reconcileUnfinishedStoreTransactions();
     await _restorePurchases();
     await _reconcilePendingIntent();
   }
@@ -152,26 +155,26 @@ class PurchaseOrchestrator extends ChangeNotifier {
         ),
       );
 
+      await _reconcileUnfinishedStoreTransactions(
+        productId: request.productId,
+      );
+      if (_state is PurchaseSucceeded) {
+        return (_state as PurchaseSucceeded).result;
+      }
+
       _setState(const PurchaseAwaitingStore());
       _startWatchdog();
 
       final param = PurchaseParam(productDetails: product);
-      try {
-        final launched = request.kind == PurchaseProductKind.aiCredits ||
-                request.kind == PurchaseProductKind.prepPlus
-            ? await InAppPurchase.instance.buyConsumable(purchaseParam: param)
-            : await InAppPurchase.instance.buyNonConsumable(purchaseParam: param);
-
-        if (!launched) {
-          _fail(PurchaseFailureReason.storeError);
-          return null;
-        }
-      } on PlatformException catch (e) {
-        if (_shouldRestoreAfterPlatformError(e)) {
-          await _restorePurchases(force: true);
-        }
-        _fail(PurchaseFailureReason.storeError, message: e.message);
+      final launched = await _launchStorePurchase(
+        request: request,
+        param: param,
+      );
+      if (!launched) {
         return null;
+      }
+      if (_state is PurchaseSucceeded) {
+        return (_state as PurchaseSucceeded).result;
       }
 
       // El resultado llega vía purchaseStream; el caller espera el estado final.
@@ -464,6 +467,75 @@ class PurchaseOrchestrator extends ChangeNotifier {
     }
 
     await _restorePurchases(force: true);
+  }
+
+  Future<void> _reconcileUnfinishedStoreTransactions({String? productId}) async {
+    final unfinished = await listIosUnfinishedStorePurchases();
+    if (unfinished.isEmpty) {
+      return;
+    }
+
+    final toProcess = productId == null
+        ? unfinished
+        : unfinished.where((purchase) => purchase.productID == productId).toList();
+
+    if (toProcess.isEmpty) {
+      return;
+    }
+
+    if (kDebugMode) {
+      debugPrint(
+        '[IAP] reconciling ${toProcess.length} unfinished StoreKit transaction(s)',
+      );
+    }
+
+    for (final purchase in toProcess) {
+      await _onPurchaseUpdate([purchase]);
+    }
+  }
+
+  Future<bool> _launchStorePurchase({
+    required StorePurchaseRequest request,
+    required PurchaseParam param,
+    bool allowDuplicateRetry = true,
+  }) async {
+    try {
+      final launched = request.kind == PurchaseProductKind.aiCredits ||
+              request.kind == PurchaseProductKind.prepPlus
+          ? await InAppPurchase.instance.buyConsumable(purchaseParam: param)
+          : await InAppPurchase.instance
+              .buyNonConsumable(purchaseParam: param);
+
+      if (!launched) {
+        _fail(PurchaseFailureReason.storeError);
+        return false;
+      }
+      return true;
+    } on PlatformException catch (e) {
+      if (allowDuplicateRetry && isIosDuplicateUnfinishedStoreError(e)) {
+        if (kDebugMode) {
+          debugPrint(
+            '[IAP] duplicate unfinished transaction for ${request.productId}, reconciling',
+          );
+        }
+        await _reconcileUnfinishedStoreTransactions(
+          productId: request.productId,
+        );
+        if (_state is PurchaseSucceeded) {
+          return true;
+        }
+        return _launchStorePurchase(
+          request: request,
+          param: param,
+          allowDuplicateRetry: false,
+        );
+      }
+      if (_shouldRestoreAfterPlatformError(e)) {
+        await _restorePurchases(force: true);
+      }
+      _fail(PurchaseFailureReason.storeError, message: e.message);
+      return false;
+    }
   }
 
   void _startWatchdog() {
