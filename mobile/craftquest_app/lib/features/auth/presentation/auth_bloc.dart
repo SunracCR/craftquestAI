@@ -87,6 +87,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final response = await _repository.login(
         email: event.email,
         password: event.password,
+        captchaToken: event.captchaToken,
       );
       emit(AuthAuthenticated(response.user));
       _resetSessionExpiredFlag();
@@ -203,6 +204,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         displayName: event.displayName,
         dateOfBirth: event.dateOfBirth,
         guardianEmail: event.guardianEmail,
+        captchaToken: event.captchaToken,
       );
       emit(AuthEmailVerificationPending(
         result.email,

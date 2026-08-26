@@ -26,6 +26,7 @@ public class AuthService(
     IOptions<PasswordResetOptions> passwordResetOptions,
     IOptions<JoinLinkOptions> joinLinkOptions,
     IOptions<ExternalAuthOptions> externalAuthOptions,
+    IOptions<TurnstileOptions> turnstileOptions,
     ILogger<AuthService> logger) : IAuthService
 {
     private const int MinimumAgeWithoutParentalConsent = 13;
@@ -33,6 +34,7 @@ public class AuthService(
     private readonly PasswordResetOptions _resetOptions = passwordResetOptions.Value;
     private readonly JoinLinkOptions _joinLinkOptions = joinLinkOptions.Value;
     private readonly ExternalAuthOptions _externalAuth = externalAuthOptions.Value;
+    private readonly TurnstileOptions _turnstileOptions = turnstileOptions.Value;
 
     public OAuthPublicConfigDto GetOAuthPublicConfig()
     {
@@ -40,6 +42,7 @@ public class AuthService(
         var appleBundle = _externalAuth.Apple.BundleId?.Trim();
         var appleServicesId = _externalAuth.Apple.ServicesId?.Trim();
         var appleWebRedirect = _externalAuth.Apple.WebRedirectUri?.Trim();
+        var turnstileSiteKey = _turnstileOptions.SiteKey?.Trim();
 
         return new OAuthPublicConfigDto
         {
@@ -51,6 +54,8 @@ public class AuthService(
             AppleWebRedirectUri = string.IsNullOrEmpty(appleWebRedirect) ? null : appleWebRedirect,
             IsAppleWebConfigured = !string.IsNullOrEmpty(appleServicesId)
                 && !string.IsNullOrEmpty(appleWebRedirect),
+            TurnstileSiteKey = string.IsNullOrEmpty(turnstileSiteKey) ? null : turnstileSiteKey,
+            IsTurnstileConfigured = !string.IsNullOrEmpty(turnstileSiteKey),
         };
     }
 

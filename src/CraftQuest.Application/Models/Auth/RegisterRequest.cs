@@ -17,4 +17,6 @@ public class RegisterRequest
 
     [EmailAddress, MaxLength(320)]
     public string? GuardianEmail { get; set; }
+
+    public string? CaptchaToken { get; set; }
 }

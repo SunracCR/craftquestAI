@@ -14,4 +14,8 @@ public sealed class OAuthPublicConfigDto
     public string? AppleWebRedirectUri { get; init; }
 
     public bool IsAppleWebConfigured { get; init; }
+
+    public string? TurnstileSiteKey { get; init; }
+
+    public bool IsTurnstileConfigured { get; init; }
 }

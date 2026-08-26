@@ -717,6 +717,12 @@ abstract class AppLocalizations {
   /// **'Tu correo aún no está verificado. Revisa tu bandeja o reenvía el enlace.'**
   String get errorEmailNotVerified;
 
+  /// No description provided for @errorCaptchaVerificationFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo verificar la protección anti-bots. Inténtalo de nuevo.'**
+  String get errorCaptchaVerificationFailed;
+
   /// No description provided for @confirmPasswordChangeTitle.
   ///
   /// In es, this message translates to:

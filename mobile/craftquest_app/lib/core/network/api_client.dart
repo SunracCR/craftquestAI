@@ -22,7 +22,10 @@ class ApiClient {
             baseUrl: baseUrl ?? _defaultBaseUrl(),
             connectTimeout: const Duration(seconds: 30),
             receiveTimeout: const Duration(seconds: 45),
-            headers: {'Content-Type': 'application/json'},
+            headers: {
+              'Content-Type': 'application/json',
+              if (kIsWeb) 'X-Client-Platform': 'web',
+            },
           ),
         ) {
     _refreshDio = Dio(
@@ -30,7 +33,10 @@ class ApiClient {
         baseUrl: _dio.options.baseUrl,
         connectTimeout: _dio.options.connectTimeout,
         receiveTimeout: _dio.options.receiveTimeout,
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          if (kIsWeb) 'X-Client-Platform': 'web',
+        },
       ),
     );
     _configureDevHttpsCertificate(_dio);

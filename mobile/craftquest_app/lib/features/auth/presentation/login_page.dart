@@ -1,3 +1,4 @@
+import 'package:craftquest_app/core/security/web_auth_captcha.dart';
 import 'package:craftquest_app/core/compliance/birth_date_correction.dart';
 import 'package:craftquest_app/core/compliance/legal_links.dart';
 import 'package:craftquest_app/core/auth/saved_login_credentials_storage.dart';
@@ -72,6 +73,9 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     setState(() => _isSubmitting = true);
+    final captchaToken = await requestWebAuthCaptchaToken();
+    if (!mounted) return;
+
     final bloc = context.read<AuthBloc>();
     final loginAttemptId = DateTime.now().millisecondsSinceEpoch;
     final resultFuture = bloc.stream.firstWhere(
@@ -85,6 +89,7 @@ class _LoginPageState extends State<LoginPage> {
         password: _passwordController.text,
         rememberCredentials: _rememberLogin,
         attemptId: loginAttemptId,
+        captchaToken: captchaToken,
       ),
     );
 

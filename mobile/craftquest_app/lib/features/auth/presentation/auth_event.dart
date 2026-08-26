@@ -17,15 +17,18 @@ class AuthLoginRequested extends AuthEvent {
     required this.password,
     this.rememberCredentials = false,
     this.attemptId,
+    this.captchaToken,
   });
 
   final String email;
   final String password;
   final bool rememberCredentials;
   final int? attemptId;
+  final String? captchaToken;
 
   @override
-  List<Object?> get props => [email, password, rememberCredentials, attemptId];
+  List<Object?> get props =>
+      [email, password, rememberCredentials, attemptId, captchaToken];
 }
 
 class AuthOAuthSignInRequested extends AuthEvent {
@@ -52,6 +55,7 @@ class AuthRegisterRequested extends AuthEvent {
     this.displayName,
     this.dateOfBirth,
     this.guardianEmail,
+    this.captchaToken,
   });
 
   final String email;
@@ -59,10 +63,11 @@ class AuthRegisterRequested extends AuthEvent {
   final String? displayName;
   final DateTime? dateOfBirth;
   final String? guardianEmail;
+  final String? captchaToken;
 
   @override
   List<Object?> get props =>
-      [email, password, displayName, dateOfBirth, guardianEmail];
+      [email, password, displayName, dateOfBirth, guardianEmail, captchaToken];
 }
 
 class AuthLogoutRequested extends AuthEvent {

@@ -4,7 +4,7 @@ import 'package:craftquest_app/core/billing/mobile_store_product_query.dart';
 import 'package:craftquest_app/core/billing/purchase_flow_state.dart';
 import 'package:craftquest_app/core/billing/purchase_orchestrator.dart';
 import 'package:craftquest_app/core/billing/store_purchase_feedback.dart';
-import 'package:craftquest_app/core/billing/paypal_web_launcher.dart';
+import 'package:craftquest_app/core/billing/paypal_checkout_launch.dart';
 import 'package:craftquest_app/core/billing/payment_platform.dart';
 import 'package:craftquest_app/core/compliance/parental_gate_dialog.dart';
 import 'package:craftquest_app/core/di/injection.dart';
@@ -53,7 +53,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class PrepPlusItemDetailPage extends StatefulWidget {
   const PrepPlusItemDetailPage({
@@ -233,11 +232,16 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
     } else if (state is PurchaseFailed) {
       showStorePurchaseFailure(context, state);
       _orchestrator.resetToIdle();
+    } else if (state is PurchaseSucceeded && state.result is PrepPlusPurchaseResult) {
+      unawaited(_load(forceRefresh: true));
     }
     setState(() {});
   }
 
-  Future<void> _load({bool fullScreenLoading = false}) async {
+  Future<void> _load({
+    bool fullScreenLoading = false,
+    bool forceRefresh = false,
+  }) async {
     final hadItem = _item != null;
     if (fullScreenLoading || !hadItem) {
       setState(() {
@@ -246,7 +250,10 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       });
     }
     try {
-      final item = await _repository.getItem(widget.catalogItemId);
+      final item = await _repository.getItem(
+        widget.catalogItemId,
+        forceRefresh: forceRefresh,
+      );
       if (!mounted) return;
       setState(() {
         _item = item;
@@ -563,7 +570,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
           AppLocalizations.of(context)!.prepPlusAccessGranted,
         );
         setState(() => _pendingPayPalOrderId = null);
-        await _load();
+        await _load(forceRefresh: true);
       }
     } on DioException catch (e) {
       if (!mounted) return;
@@ -622,28 +629,28 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
         context.showSuccessSnackBar(l10n.prepPlusAccessGranted);
         setState(() => _pendingPayPalOrderId = null);
         await _clearReferralIfMatched();
-        await _load();
+        await _load(forceRefresh: true);
         return;
       }
 
       if (order.approvalUrl != null && order.approvalUrl!.isNotEmpty) {
         final uri = Uri.parse(order.approvalUrl!);
-        if (await canLaunchUrl(uri)) {
-          await getIt<PendingPayPalPaymentStore>().save(
-            PendingPayPalPayment(
-              flow: PendingPayPalPaymentFlow.prep,
-              id: order.orderId,
-              createdAt: DateTime.now().toUtc(),
-              catalogItemId: widget.catalogItemId,
-              offerId: offer.offerId,
-            ),
-          );
-          await launchPayPalApproval(uri);
-          if (!mounted) return;
-          if (!kIsWeb) {
-            context.showInfoSnackBar(l10n.paypalAwaitingCapture);
-          }
+        await getIt<PendingPayPalPaymentStore>().save(
+          PendingPayPalPayment(
+            flow: PendingPayPalPaymentFlow.prep,
+            id: order.orderId,
+            createdAt: DateTime.now().toUtc(),
+            catalogItemId: widget.catalogItemId,
+            offerId: offer.offerId,
+          ),
+        );
+        final launched = await openPayPalApprovalUrl(context, uri, l10n: l10n);
+        if (!mounted) return;
+        if (launched && !kIsWeb) {
+          context.showInfoSnackBar(l10n.paypalAwaitingCapture);
         }
+      } else if (!order.mockMode) {
+        context.showErrorSnackBar(l10n.paypalReturnError);
       }
     } on DioException catch (e) {
       if (!mounted) return;
@@ -666,7 +673,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
         context.showSuccessSnackBar(l10n.prepPlusAccessGranted);
         setState(() => _pendingPayPalOrderId = null);
         await _clearReferralIfMatched();
-        await _load();
+        await _load(forceRefresh: true);
       }
     } on DioException catch (e) {
       if (!mounted) return;
@@ -722,7 +729,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
 
     if (result is PrepPlusPurchaseResult) {
       await _clearReferralIfMatched();
-      await _load();
+      await _load(forceRefresh: true);
       if (!mounted) return;
       context.showSuccessSnackBar(l10n.prepPlusAccessGranted);
     }

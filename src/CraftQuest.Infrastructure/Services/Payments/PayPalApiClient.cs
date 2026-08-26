@@ -57,24 +57,31 @@ public class PayPalApiClient(
                 return request;
             },
             cancellationToken);
-        using var doc = JsonDocument.Parse(body);
-        var orderId = doc.RootElement.GetProperty("id").GetString()
-            ?? throw new AppException("PayPal order id missing.", 502);
-
-        string? approvalUrl = null;
-        if (doc.RootElement.TryGetProperty("links", out var links))
+        try
         {
-            foreach (var link in links.EnumerateArray())
+            using var doc = JsonDocument.Parse(body);
+            var orderId = doc.RootElement.GetProperty("id").GetString()
+                ?? throw new AppException("PayPal order id missing.", 502);
+
+            string? approvalUrl = null;
+            if (doc.RootElement.TryGetProperty("links", out var links))
             {
-                if (link.GetProperty("rel").GetString() == "approve")
+                foreach (var link in links.EnumerateArray())
                 {
-                    approvalUrl = link.GetProperty("href").GetString();
-                    break;
+                    if (link.GetProperty("rel").GetString() == "approve")
+                    {
+                        approvalUrl = link.GetProperty("href").GetString();
+                        break;
+                    }
                 }
             }
-        }
 
-        return (orderId, approvalUrl);
+            return (orderId, approvalUrl);
+        }
+        catch (JsonException ex)
+        {
+            throw WrapPayPalResponseParseFailure(ex);
+        }
     }
 
     public async Task<(string SubscriptionId, string? ApprovalUrl)> CreateSubscriptionAsync(
@@ -104,24 +111,31 @@ public class PayPalApiClient(
                 return request;
             },
             cancellationToken);
-        using var doc = JsonDocument.Parse(body);
-        var subscriptionId = doc.RootElement.GetProperty("id").GetString()
-            ?? throw new AppException("PayPal subscription id missing.", 502);
-
-        string? approvalUrl = null;
-        if (doc.RootElement.TryGetProperty("links", out var links))
+        try
         {
-            foreach (var link in links.EnumerateArray())
+            using var doc = JsonDocument.Parse(body);
+            var subscriptionId = doc.RootElement.GetProperty("id").GetString()
+                ?? throw new AppException("PayPal subscription id missing.", 502);
+
+            string? approvalUrl = null;
+            if (doc.RootElement.TryGetProperty("links", out var links))
             {
-                if (link.GetProperty("rel").GetString() == "approve")
+                foreach (var link in links.EnumerateArray())
                 {
-                    approvalUrl = link.GetProperty("href").GetString();
-                    break;
+                    if (link.GetProperty("rel").GetString() == "approve")
+                    {
+                        approvalUrl = link.GetProperty("href").GetString();
+                        break;
+                    }
                 }
             }
-        }
 
-        return (subscriptionId, approvalUrl);
+            return (subscriptionId, approvalUrl);
+        }
+        catch (JsonException ex)
+        {
+            throw WrapPayPalResponseParseFailure(ex);
+        }
     }
 
     public async Task<PayPalSubscriptionDetails> GetSubscriptionAsync(
@@ -284,8 +298,18 @@ public class PayPalApiClient(
             using var request = requestFactory();
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
 
-            var response = await httpClient.SendAsync(request, cancellationToken);
-            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            string body;
+            HttpResponseMessage response;
+            try
+            {
+                response = await httpClient.SendAsync(request, cancellationToken);
+                body = await response.Content.ReadAsStringAsync(cancellationToken);
+            }
+            catch (Exception ex) when (IsPayPalTransportFailure(ex))
+            {
+                throw WrapPayPalTransportFailure(ex);
+            }
+
             if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized && attempt == 0)
             {
                 InvalidateAccessToken();
@@ -338,20 +362,53 @@ public class PayPalApiClient(
         request.Content = new FormUrlEncodedContent(
             new Dictionary<string, string> { ["grant_type"] = "client_credentials" });
 
-        var response = await httpClient.SendAsync(request, cancellationToken);
-        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+        string body;
+        HttpResponseMessage response;
+        try
+        {
+            response = await httpClient.SendAsync(request, cancellationToken);
+            body = await response.Content.ReadAsStringAsync(cancellationToken);
+        }
+        catch (Exception ex) when (IsPayPalTransportFailure(ex))
+        {
+            throw WrapPayPalTransportFailure(ex);
+        }
+
         if (!response.IsSuccessStatusCode)
         {
             throw new AppException($"PayPal auth failed: {body}", 502);
         }
 
-        using var doc = JsonDocument.Parse(body);
-        _accessToken = doc.RootElement.GetProperty("access_token").GetString();
-        var expiresIn = doc.RootElement.TryGetProperty("expires_in", out var expiresEl)
-            ? expiresEl.GetInt32()
-            : 3600;
-        _accessTokenExpiresAt = DateTime.UtcNow.AddSeconds(Math.Max(60, expiresIn));
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            _accessToken = doc.RootElement.GetProperty("access_token").GetString();
+            var expiresIn = doc.RootElement.TryGetProperty("expires_in", out var expiresEl)
+                ? expiresEl.GetInt32()
+                : 3600;
+            _accessTokenExpiresAt = DateTime.UtcNow.AddSeconds(Math.Max(60, expiresIn));
+        }
+        catch (JsonException ex)
+        {
+            throw WrapPayPalResponseParseFailure(ex);
+        }
     }
+
+    private static bool IsPayPalTransportFailure(Exception ex) =>
+        ex is HttpRequestException or TaskCanceledException or JsonException;
+
+    private AppException WrapPayPalTransportFailure(Exception ex)
+    {
+        logger.LogWarning(ex, "PayPal transport failure.");
+        return new AppException(
+            "Unable to connect to PayPal. Please try again later.",
+            503);
+    }
+
+    private static AppException WrapPayPalResponseParseFailure(JsonException ex) =>
+        new(
+            "PayPal returned an unexpected response. Please try again later.",
+            502);
 }
 
 public sealed record PayPalSubscriptionDetails(

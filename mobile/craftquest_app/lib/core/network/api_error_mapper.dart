@@ -397,6 +397,8 @@ abstract final class ApiErrorMapper {
         return l10n.currentPasswordIncorrectError;
       case 'EMAIL_NOT_VERIFIED':
         return l10n.errorEmailNotVerified;
+      case 'CAPTCHA_INVALID':
+        return l10n.errorCaptchaVerificationFailed;
       case 'INVALID_VERIFICATION_TOKEN':
         return l10n.errorInvalidVerificationToken;
       case 'INVALID_PASSWORD_CHANGE_TOKEN':
@@ -578,6 +580,14 @@ abstract final class ApiErrorMapper {
         return l10n.errorPrepOfferIsFree;
       case 'An unexpected error occurred.':
         return l10n.genericRequestErrorMessage;
+      case 'Captcha verification failed.':
+        return l10n.errorCaptchaVerificationFailed;
+      case 'Unable to connect to PayPal. Please try again later.':
+        return l10n.paypalReturnError;
+      case 'PayPal credentials are not configured.':
+        return l10n.paypalReturnError;
+      case 'PayPal returned an unexpected response. Please try again later.':
+        return l10n.paypalReturnError;
       case 'Image file is required.':
         return l10n.imageUploadFileRequired;
       case 'Unsupported image file type.':

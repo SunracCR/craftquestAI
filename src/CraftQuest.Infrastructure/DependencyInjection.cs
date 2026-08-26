@@ -81,6 +81,7 @@ public static class DependencyInjection
         services.Configure<OfflineOptions>(configuration.GetSection(OfflineOptions.SectionName));
         services.Configure<MediaOptions>(configuration.GetSection(MediaOptions.SectionName));
         services.Configure<PaymentOptions>(configuration.GetSection(PaymentOptions.SectionName));
+        services.Configure<TurnstileOptions>(configuration.GetSection(TurnstileOptions.SectionName));
         services.AddHttpClient("Gemini", client =>
         {
             client.Timeout = TimeSpan.FromMinutes(8);
@@ -133,9 +134,23 @@ public static class DependencyInjection
         services.AddHttpClient<PayPalApiClient>((sp, client) =>
         {
             var paymentOptions = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<PaymentOptions>>().Value;
-            client.BaseAddress = new Uri(paymentOptions.PayPal.ApiBaseUrl.TrimEnd('/') + "/");
+            var apiBaseUrl = paymentOptions.PayPal.ApiBaseUrl?.Trim();
+            if (string.IsNullOrWhiteSpace(apiBaseUrl)
+                || !Uri.TryCreate(apiBaseUrl.TrimEnd('/') + "/", UriKind.Absolute, out var baseUri))
+            {
+                throw new InvalidOperationException(
+                    "Payments:PayPal:ApiBaseUrl must be a valid absolute URL.");
+            }
+
+            client.BaseAddress = baseUri;
             client.Timeout = TimeSpan.FromSeconds(30);
         });
+
+        services.AddHttpClient<ICaptchaValidator, TurnstileCaptchaValidator>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(15);
+        });
+        services.AddScoped<IWebAuthCaptchaGuard, WebAuthCaptchaGuard>();
 
         services.AddHttpClient(nameof(AppleAppStoreSubscriptionVerifier), client =>
         {

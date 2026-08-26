@@ -363,6 +363,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your email is not verified yet. Check your inbox or resend the link.';
 
   @override
+  String get errorCaptchaVerificationFailed =>
+      'Bot protection verification failed. Please try again.';
+
+  @override
   String get confirmPasswordChangeTitle => 'Confirm password change';
 
   @override

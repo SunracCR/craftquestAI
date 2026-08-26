@@ -159,6 +159,7 @@
   "errorEmailNotVerifiedTitle": "E-mail nao verificado",
   "errorEmailNotVerifiedMessage": "Ative sua conta pelo link enviado por e-mail antes de entrar.",
   "errorEmailNotVerified": "Seu e-mail ainda nao foi verificado. Verifique a caixa de entrada ou reenvie o link.",
+  "errorCaptchaVerificationFailed": "Nao foi possivel verificar a protecao anti-bots. Tente novamente.",
   "confirmPasswordChangeTitle": "Confirmar alteracao de senha",
   "confirmPasswordChangeInProgress": "Confirmando sua nova senha…",
   "confirmPasswordChangeSuccess": "Senha atualizada com sucesso.",

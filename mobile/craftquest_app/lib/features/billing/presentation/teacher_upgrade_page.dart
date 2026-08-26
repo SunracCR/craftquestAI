@@ -3,7 +3,7 @@ import 'package:craftquest_app/core/billing/post_checkout_session_refresh.dart';
 import 'package:craftquest_app/core/billing/purchase_flow_state.dart';
 import 'package:craftquest_app/core/billing/purchase_orchestrator.dart';
 import 'package:craftquest_app/core/billing/store_purchase_feedback.dart';
-import 'package:craftquest_app/core/billing/paypal_web_launcher.dart';
+import 'package:craftquest_app/core/billing/paypal_checkout_launch.dart';
 import 'package:craftquest_app/core/billing/payment_platform.dart';
 import 'package:craftquest_app/core/compliance/parental_gate_dialog.dart';
 import 'package:craftquest_app/core/di/injection.dart';
@@ -26,7 +26,6 @@ import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 /// Página de pitch premium para el plan Profesor.
 /// Muestra el valor específico del plan teacher, permite adquirirlo
@@ -217,26 +216,27 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
         Navigator.of(context).pop(true);
         return;
       }
-      if (subscription.approvalUrl != null) {
+      if (subscription.approvalUrl != null &&
+          subscription.approvalUrl!.isNotEmpty) {
         final uri = Uri.parse(subscription.approvalUrl!);
-        if (await canLaunchUrl(uri)) {
-          await getIt<PendingPayPalPaymentStore>().save(
-            PendingPayPalPayment(
-              flow: PendingPayPalPaymentFlow.subscription,
-              id: subscription.subscriptionId,
-              createdAt: DateTime.now().toUtc(),
-              billingCycle: _billingCycle.apiValue,
-              planCode: plan.code,
-            ),
+        await getIt<PendingPayPalPaymentStore>().save(
+          PendingPayPalPayment(
+            flow: PendingPayPalPaymentFlow.subscription,
+            id: subscription.subscriptionId,
+            createdAt: DateTime.now().toUtc(),
+            billingCycle: _billingCycle.apiValue,
+            planCode: plan.code,
+          ),
+        );
+        final launched = await openPayPalApprovalUrl(context, uri, l10n: l10n);
+        if (!mounted) return;
+        if (launched && !kIsWeb) {
+          context.showSuccessSnackBar(
+            l10n.paypalAwaitingSubscriptionActivation,
           );
-          await launchPayPalApproval(uri);
-          if (!mounted) return;
-          if (!kIsWeb) {
-            context.showSuccessSnackBar(
-              l10n.paypalAwaitingSubscriptionActivation,
-            );
-          }
         }
+      } else if (!subscription.mockMode) {
+        context.showErrorSnackBar(l10n.paypalReturnError);
       }
     } on DioException catch (e) {
       if (!mounted) return;

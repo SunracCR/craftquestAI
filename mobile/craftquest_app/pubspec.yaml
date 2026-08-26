@@ -22,6 +22,7 @@ dependencies:
   in_app_purchase: ^3.2.3
   in_app_purchase_storekit: ^0.4.11
   url_launcher: ^6.3.1
+  web: ^1.1.1
   google_fonts: ^6.2.1
   shared_preferences: ^2.5.3
   connectivity_plus: ^6.1.4

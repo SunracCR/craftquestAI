@@ -20,6 +20,7 @@ class AuthRepository {
     String? displayName,
     DateTime? dateOfBirth,
     String? guardianEmail,
+    String? captchaToken,
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/api/auth/register',
@@ -32,6 +33,8 @@ class AuthRepository {
           'dateOfBirth': dateOfBirth.toIso8601String().split('T').first,
         if (guardianEmail != null && guardianEmail.isNotEmpty)
           'guardianEmail': guardianEmail,
+        if (captchaToken != null && captchaToken.isNotEmpty)
+          'captchaToken': captchaToken,
       },
     );
     return RegisterResultModel.fromJson(response.data!);
@@ -109,12 +112,15 @@ class AuthRepository {
   Future<AuthResponseModel> login({
     required String email,
     required String password,
+    String? captchaToken,
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/api/auth/login',
       data: {
         'email': email,
         'password': password,
+        if (captchaToken != null && captchaToken.isNotEmpty)
+          'captchaToken': captchaToken,
       },
     );
     return _persistAndMap(response.data!);

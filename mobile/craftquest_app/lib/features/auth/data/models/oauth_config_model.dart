@@ -6,6 +6,8 @@ class OAuthConfigModel {
     this.appleServicesId,
     this.appleWebRedirectUri,
     this.isAppleWebConfigured = false,
+    this.turnstileSiteKey,
+    this.isTurnstileConfigured = false,
   });
 
   factory OAuthConfigModel.fromJson(Map<String, dynamic> json) {
@@ -16,6 +18,8 @@ class OAuthConfigModel {
       appleServicesId: json['appleServicesId'] as String?,
       appleWebRedirectUri: json['appleWebRedirectUri'] as String?,
       isAppleWebConfigured: json['isAppleWebConfigured'] as bool? ?? false,
+      turnstileSiteKey: json['turnstileSiteKey'] as String?,
+      isTurnstileConfigured: json['isTurnstileConfigured'] as bool? ?? false,
     );
   }
 
@@ -25,4 +29,6 @@ class OAuthConfigModel {
   final String? appleServicesId;
   final String? appleWebRedirectUri;
   final bool isAppleWebConfigured;
+  final String? turnstileSiteKey;
+  final bool isTurnstileConfigured;
 }

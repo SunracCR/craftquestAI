@@ -1,3 +1,4 @@
+import 'package:craftquest_app/core/security/web_auth_captcha.dart';
 import 'package:craftquest_app/core/compliance/age_collection_storage.dart';
 import 'package:craftquest_app/core/compliance/birth_date_correction.dart';
 import 'package:craftquest_app/core/compliance/legal_links.dart';
@@ -92,6 +93,8 @@ class _RegisterPageState extends State<RegisterPage> {
 
     final bloc = context.read<AuthBloc>();
     setState(() => _isSubmitting = true);
+    final captchaToken = await requestWebAuthCaptchaToken();
+    if (!context.mounted) return;
 
     final resultFuture = bloc.stream.firstWhere(
       (state) =>
@@ -105,6 +108,7 @@ class _RegisterPageState extends State<RegisterPage> {
         displayName: _displayNameController.text.trim(),
         dateOfBirth: _birthDate,
         guardianEmail: _isMinor ? _guardianEmailController.text.trim() : null,
+        captchaToken: captchaToken,
       ),
     );
 

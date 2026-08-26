@@ -159,6 +159,7 @@
   "errorEmailNotVerifiedTitle": "Email not verified",
   "errorEmailNotVerifiedMessage": "Activate your account using the link we emailed you before signing in.",
   "errorEmailNotVerified": "Your email is not verified yet. Check your inbox or resend the link.",
+  "errorCaptchaVerificationFailed": "Bot protection verification failed. Please try again.",
   "confirmPasswordChangeTitle": "Confirm password change",
   "confirmPasswordChangeInProgress": "Confirming your new password…",
   "confirmPasswordChangeSuccess": "Password updated successfully.",

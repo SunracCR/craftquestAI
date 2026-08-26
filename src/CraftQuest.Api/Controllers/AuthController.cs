@@ -1,5 +1,6 @@
 using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Models.Auth;
+using CraftQuest.Infrastructure.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,7 +8,9 @@ namespace CraftQuest.Api.Controllers;
 
 [ApiController]
 [Route("api/auth")]
-public class AuthController(IAuthService authService) : ApiControllerBase
+public class AuthController(
+    IAuthService authService,
+    IWebAuthCaptchaGuard webAuthCaptchaGuard) : ApiControllerBase
 {
     [HttpGet("oauth-config")]
     [AllowAnonymous]
@@ -21,6 +24,11 @@ public class AuthController(IAuthService authService) : ApiControllerBase
         [FromBody] RegisterRequest request,
         CancellationToken cancellationToken)
     {
+        await webAuthCaptchaGuard.EnsureValidAsync(
+            Request.Headers[WebAuthCaptchaGuard.ClientPlatformHeaderName].FirstOrDefault(),
+            HttpContext.Connection.RemoteIpAddress?.ToString(),
+            request.CaptchaToken,
+            cancellationToken);
         var result = await authService.RegisterAsync(request, cancellationToken);
         return Created(string.Empty, result);
     }
@@ -32,6 +40,11 @@ public class AuthController(IAuthService authService) : ApiControllerBase
         [FromBody] LoginRequest request,
         CancellationToken cancellationToken)
     {
+        await webAuthCaptchaGuard.EnsureValidAsync(
+            Request.Headers[WebAuthCaptchaGuard.ClientPlatformHeaderName].FirstOrDefault(),
+            HttpContext.Connection.RemoteIpAddress?.ToString(),
+            request.CaptchaToken,
+            cancellationToken);
         var result = await authService.LoginAsync(request, cancellationToken);
         return Ok(result);
     }

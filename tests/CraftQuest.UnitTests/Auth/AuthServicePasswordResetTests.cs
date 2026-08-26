@@ -117,6 +117,7 @@ public class AuthServicePasswordResetTests
             resetOptions,
             joinLinkOptions,
             externalAuthOptions,
+            Options.Create(new TurnstileOptions()),
             NullLogger<AuthService>.Instance);
     }
 

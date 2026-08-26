@@ -1,4 +1,5 @@
 import 'package:craftquest_app/core/billing/mobile_store_product_query.dart';
+import 'package:craftquest_app/core/billing/paypal_checkout_launch.dart';
 import 'package:craftquest_app/core/billing/paypal_payment_reconciler.dart';
 import 'package:craftquest_app/core/billing/post_checkout_session_refresh.dart';
 import 'package:craftquest_app/core/billing/purchase_flow_state.dart';
@@ -27,7 +28,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class AiCreditPacksPage extends StatefulWidget {
   const AiCreditPacksPage({super.key});
@@ -169,22 +169,24 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
 
       if (order.approvalUrl != null && order.approvalUrl!.isNotEmpty) {
         final uri = Uri.parse(order.approvalUrl!);
-        if (await canLaunchUrl(uri)) {
-          await getIt<PendingPayPalPaymentStore>().save(
-            PendingPayPalPayment(
-              flow: PendingPayPalPaymentFlow.aiCredit,
-              id: order.orderId,
-              createdAt: DateTime.now().toUtc(),
-              packCode: pack.code,
-            ),
-          );
-          await launchPayPalApproval(uri);
-          if (!mounted) return;
+        await getIt<PendingPayPalPaymentStore>().save(
+          PendingPayPalPayment(
+            flow: PendingPayPalPaymentFlow.aiCredit,
+            id: order.orderId,
+            createdAt: DateTime.now().toUtc(),
+            packCode: pack.code,
+          ),
+        );
+        final launched = await openPayPalApprovalUrl(context, uri, l10n: l10n);
+        if (!mounted) return;
+        if (launched) {
           setState(() => _pendingPayPalOrderId = order.orderId);
           if (!kIsWeb) {
             context.showInfoSnackBar(l10n.paypalAwaitingCapture);
           }
         }
+      } else if (!order.mockMode) {
+        context.showErrorSnackBar(l10n.paypalReturnError);
       }
     } on DioException catch (e) {
       if (!mounted) return;

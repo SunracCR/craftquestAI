@@ -364,6 +364,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Tu correo aún no está verificado. Revisa tu bandeja o reenvía el enlace.';
 
   @override
+  String get errorCaptchaVerificationFailed =>
+      'No se pudo verificar la protección anti-bots. Inténtalo de nuevo.';
+
+  @override
   String get confirmPasswordChangeTitle => 'Confirmar cambio de contraseña';
 
   @override

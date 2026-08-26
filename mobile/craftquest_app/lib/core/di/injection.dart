@@ -17,6 +17,8 @@ import 'package:craftquest_app/core/network/api_client.dart';
 import 'package:craftquest_app/core/network/network_connectivity_service.dart';
 import 'package:craftquest_app/core/update/app_version_repository.dart';
 import 'package:craftquest_app/core/update/app_version_service.dart';
+import 'package:craftquest_app/core/security/turnstile_platform.dart';
+import 'package:craftquest_app/core/security/turnstile_service.dart';
 import 'package:craftquest_app/core/services/app_warmup_service.dart';
 import 'package:craftquest_app/core/services/deep_link_service.dart';
 import 'package:craftquest_app/core/services/sound_service.dart';
@@ -92,6 +94,7 @@ void configureDependencies() {
   );
   getIt.registerLazySingleton(NetworkConnectivityService.new);
   getIt.registerLazySingleton(SessionExpiredNotifier.new);
+  getIt.registerLazySingleton<TurnstileService>(createPlatformTurnstileService);
   getIt.registerLazySingleton(WebAuthEntryNotifier.new);
   getIt.registerLazySingleton(
     () => ApiClient(

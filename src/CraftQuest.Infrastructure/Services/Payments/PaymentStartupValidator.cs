@@ -45,6 +45,15 @@ public sealed class PaymentStartupValidator(
             logger.LogCritical("Payments:PayPal ClientId or ClientSecret is missing in Production.");
         }
 
+        var apiBaseUrl = payments.PayPal.ApiBaseUrl?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(apiBaseUrl)
+            || !Uri.TryCreate(apiBaseUrl, UriKind.Absolute, out _))
+        {
+            logger.LogCritical(
+                "Payments:PayPal:ApiBaseUrl is missing or invalid in Production: {ApiBaseUrl}",
+                string.IsNullOrWhiteSpace(apiBaseUrl) ? "(empty)" : apiBaseUrl);
+        }
+
         ValidateMobileStoreCredentials(payments.Mobile);
 
         return Task.CompletedTask;

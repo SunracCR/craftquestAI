@@ -1,10 +1,10 @@
 import 'package:craftquest_app/core/billing/mobile_store_product_query.dart';
+import 'package:craftquest_app/core/billing/paypal_checkout_launch.dart';
 import 'package:craftquest_app/core/billing/paypal_payment_reconciler.dart';
 import 'package:craftquest_app/core/billing/post_checkout_session_refresh.dart';
 import 'package:craftquest_app/core/billing/purchase_flow_state.dart';
 import 'package:craftquest_app/core/billing/purchase_orchestrator.dart';
 import 'package:craftquest_app/core/billing/store_purchase_feedback.dart';
-import 'package:craftquest_app/core/billing/paypal_web_launcher.dart';
 import 'package:craftquest_app/core/billing/payment_platform.dart';
 import 'package:craftquest_app/core/compliance/parental_gate_dialog.dart';
 import 'package:craftquest_app/core/di/injection.dart';
@@ -30,7 +30,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class UpgradePlanPage extends StatefulWidget {
   const UpgradePlanPage({super.key});
@@ -227,23 +226,25 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
       if (subscription.approvalUrl != null &&
           subscription.approvalUrl!.isNotEmpty) {
         final uri = Uri.parse(subscription.approvalUrl!);
-        if (await canLaunchUrl(uri)) {
-          await getIt<PendingPayPalPaymentStore>().save(
-            PendingPayPalPayment(
-              flow: PendingPayPalPaymentFlow.subscription,
-              id: subscription.subscriptionId,
-              createdAt: DateTime.now().toUtc(),
-              billingCycle: _billingCycle.apiValue,
-              planCode: plan.code,
-            ),
-          );
-          await launchPayPalApproval(uri);
-          if (!mounted) return;
+        await getIt<PendingPayPalPaymentStore>().save(
+          PendingPayPalPayment(
+            flow: PendingPayPalPaymentFlow.subscription,
+            id: subscription.subscriptionId,
+            createdAt: DateTime.now().toUtc(),
+            billingCycle: _billingCycle.apiValue,
+            planCode: plan.code,
+          ),
+        );
+        final launched = await openPayPalApprovalUrl(context, uri, l10n: l10n);
+        if (!mounted) return;
+        if (launched) {
           setState(() => _pendingPayPalSubscriptionId = subscription.subscriptionId);
           if (!kIsWeb) {
             context.showSuccessSnackBar(l10n.paypalAwaitingSubscriptionActivation);
           }
         }
+      } else if (!subscription.mockMode) {
+        context.showErrorSnackBar(l10n.paypalReturnError);
       }
     } on DioException catch (e) {
       if (!mounted) return;

@@ -193,6 +193,7 @@ public class AuthServiceEmailVerificationTests
                 WebAppUrl = "https://app.craftquestai.com",
             }),
             Options.Create(new ExternalAuthOptions()),
+            Options.Create(new TurnstileOptions()),
             NullLogger<AuthService>.Instance);
     }
 

@@ -92,6 +92,16 @@ class PrepPlusRepository {
     _inFlightMyAccesses = null;
   }
 
+  void invalidateItemDetailCache([String? catalogItemId]) {
+    if (catalogItemId == null) {
+      _itemDetailCache.clear();
+      _inFlightItems.clear();
+      return;
+    }
+    _itemDetailCache.remove(catalogItemId);
+    _inFlightItems.remove(catalogItemId);
+  }
+
   Future<List<PrepBrowseItemModel>> browseCategoryItems({
     required String categoryId,
     String? search,
@@ -315,6 +325,7 @@ class PrepPlusRepository {
     );
     invalidateBrowseCache();
     invalidateMyAccessesCache();
+    invalidateItemDetailCache(catalogItemId);
     return PrepCheckoutResultModel.fromJson(response.data!);
   }
 
@@ -387,6 +398,7 @@ class PrepPlusRepository {
     );
     invalidateBrowseCache();
     invalidateMyAccessesCache();
+    invalidateItemDetailCache();
     return PrepCheckoutResultModel.fromJson(response.data!);
   }
 
@@ -423,6 +435,7 @@ class PrepPlusRepository {
     );
     invalidateBrowseCache();
     invalidateMyAccessesCache();
+    invalidateItemDetailCache(catalogItemId);
     return PrepCheckoutResultModel.fromJson(response.data!);
   }
 
