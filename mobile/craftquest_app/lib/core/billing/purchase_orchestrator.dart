@@ -103,7 +103,7 @@ class PurchaseOrchestrator extends ChangeNotifier {
         ),
       );
     });
-    await _reconcileUnfinishedStoreTransactions(background: true);
+    await _drainUnfinishedStoreTransactions(background: true);
     await _restorePurchases(force: true);
     await _reconcilePendingIntent();
   }
@@ -128,7 +128,7 @@ class PurchaseOrchestrator extends ChangeNotifier {
     }
     _expireStaleInFlightKeys();
     await _refreshProductCatalog();
-    await _reconcileUnfinishedStoreTransactions(background: true);
+    await _drainUnfinishedStoreTransactions(background: true);
     await _restorePurchases();
     await _reconcilePendingIntent();
   }
@@ -174,6 +174,14 @@ class PurchaseOrchestrator extends ChangeNotifier {
           referralCode: request.referralCode,
         ),
       );
+
+      await _drainUnfinishedStoreTransactions(
+        preferredProductId: product.id,
+        background: false,
+      );
+      if (_state is PurchaseSucceeded) {
+        return (_state as PurchaseSucceeded).result;
+      }
 
       await _reconcileUnfinishedStoreTransactions(
         productId: product.id,
@@ -581,6 +589,83 @@ class PurchaseOrchestrator extends ChangeNotifier {
     await _restorePurchases(force: true);
   }
 
+  Future<void> _drainUnfinishedStoreTransactions({
+    String? preferredProductId,
+    bool background = true,
+  }) async {
+    var unfinished = await listIosUnfinishedStorePurchases();
+    if (unfinished.isEmpty) {
+      return;
+    }
+
+    if (preferredProductId != null) {
+      unfinished = [
+        ...unfinished.where(
+          (purchase) => storeProductIdsMatch(purchase.productID, preferredProductId),
+        ),
+        ...unfinished.where(
+          (purchase) => !storeProductIdsMatch(purchase.productID, preferredProductId),
+        ),
+      ];
+    }
+
+    for (final purchase in unfinished) {
+      await _onPurchaseUpdate([purchase], background: background);
+    }
+
+    if (preferredProductId == null) {
+      return;
+    }
+
+    final remaining = await listIosUnfinishedStorePurchases();
+    for (final purchase in remaining) {
+      if (!storeProductIdsMatch(purchase.productID, preferredProductId)) {
+        continue;
+      }
+      await _tryFinishIfServerAlreadyValidated(purchase);
+    }
+  }
+
+  Future<bool> _tryFinishIfServerAlreadyValidated(PurchaseDetails purchase) async {
+    if (!purchase.pendingCompletePurchase) {
+      return false;
+    }
+
+    try {
+      final result = await _verifyAndFulfill(purchase);
+      if (result == null) {
+        return false;
+      }
+
+      await completeMobileStorePurchaseIfNeeded(purchase);
+      if (await _shouldClearPendingStoreForProduct(purchase.productID)) {
+        await _pendingStore.clear();
+      }
+      return true;
+    } on DioException catch (e) {
+      if (!_isAlreadyFulfilledError(e)) {
+        return false;
+      }
+      await completeMobileStorePurchaseIfNeeded(purchase);
+      if (await _shouldClearPendingStoreForProduct(purchase.productID)) {
+        await _pendingStore.clear();
+      }
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  bool _isAlreadyFulfilledError(DioException error) {
+    final code = _readApiErrorCode(error)?.toLowerCase() ?? '';
+    if (code.contains('already') || code.contains('validated')) {
+      return true;
+    }
+
+    final status = error.response?.statusCode;
+    return status == 200;
+  }
+
   Future<void> _reconcileUnfinishedStoreTransactions({
     String? productId,
     bool background = false,
@@ -633,6 +718,10 @@ class PurchaseOrchestrator extends ChangeNotifier {
             '[IAP] duplicate unfinished transaction for ${request.productId}, reconciling',
           );
         }
+        await _drainUnfinishedStoreTransactions(
+          preferredProductId: request.productId,
+          background: true,
+        );
         await _reconcileUnfinishedStoreTransactions(
           productId: request.productId,
           background: true,

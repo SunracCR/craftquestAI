@@ -257,6 +257,67 @@ public class PaymentServiceMockTests
     }
 
     [Fact]
+    public async Task VerifyMobilePurchase_AppStorePlanUpgrade_UsesActivatePlanInsteadOfRenewal()
+    {
+        await using var db = CreateDb();
+        await SeedPlansAndUserAsync(db);
+        db.Plans.Add(new Plan
+        {
+            PlanId = 3,
+            Code = "teacher",
+            Name = "Teacher",
+            MonthlyPrice = 9.99m,
+            IsActive = true,
+            IsTeacherPlan = true,
+            MonthlyAiCredits = 360,
+            MonthlyShareCodes = 50,
+        });
+        await db.SaveChangesAsync();
+
+        var userId = await db.Users.Select(u => u.UserId).FirstAsync();
+        var freeSub = await db.UserSubscriptions.SingleAsync(s => s.UserId == userId);
+        freeSub.Status = "cancelled";
+        db.UserSubscriptions.Add(new UserSubscription
+        {
+            UserSubscriptionId = Guid.NewGuid(),
+            UserId = userId,
+            PlanId = 2,
+            Status = "active",
+            StartedAt = DateTime.UtcNow.AddDays(-10),
+            CreatedAt = DateTime.UtcNow.AddDays(-10),
+            ProviderCode = "app_store",
+            ProviderSubscriptionId = "orig-transaction-1",
+            BillingCycle = "monthly",
+            AutoRenewEnabled = true,
+        });
+        await db.SaveChangesAsync();
+
+        var service = CreatePaymentService(db);
+
+        var result = await service.VerifyMobilePurchaseAsync(
+            userId,
+            new VerifyMobilePurchaseRequest
+            {
+                Platform = "app_store",
+                ProductId = "craftquest_teacher_monthly",
+                PurchaseToken = "orig-transaction-1",
+                TransactionId = "orig-transaction-1",
+            });
+
+        Assert.Equal("teacher", result.PlanCode);
+        Assert.Equal("validated", result.Status);
+
+        var sub = await db.UserSubscriptions
+            .Include(s => s.Plan)
+            .Where(s => s.UserId == userId && s.Status == "active")
+            .OrderByDescending(s => s.StartedAt)
+            .FirstAsync();
+        Assert.Equal("teacher", sub.Plan.Code);
+        Assert.Equal("app_store", sub.ProviderCode);
+        Assert.Equal("orig-transaction-1", sub.ProviderSubscriptionId);
+    }
+
+    [Fact]
     public async Task CapturePayPalOrder_WhenAlreadyValidated_IsIdempotent()
     {
         await using var db = CreateDb();

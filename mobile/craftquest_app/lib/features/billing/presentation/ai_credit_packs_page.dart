@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:craftquest_app/core/billing/mobile_store_product_query.dart';
 import 'package:craftquest_app/core/billing/paypal_checkout_launch.dart';
 import 'package:craftquest_app/core/billing/paypal_payment_reconciler.dart';
@@ -113,16 +115,20 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
 
       if (!mounted) return;
       final pendingPayPal = await getIt<PendingPayPalPaymentStore>().read();
+      final pendingPayPalOrderId =
+          pendingPayPal?.flow == PendingPayPalPaymentFlow.aiCredit
+              ? pendingPayPal!.id
+              : null;
       setState(() {
         _packs = packs;
         _billing = billing;
         _storeProducts = storeProducts;
         _loading = false;
-        _pendingPayPalOrderId =
-            pendingPayPal?.flow == PendingPayPalPaymentFlow.aiCredit
-                ? pendingPayPal!.id
-                : null;
+        _pendingPayPalOrderId = kIsWeb ? null : pendingPayPalOrderId;
       });
+      if (kIsWeb && pendingPayPalOrderId != null) {
+        unawaited(_autoFulfillPendingPayPalOnWeb());
+      }
     } on DioException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -179,11 +185,9 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
         );
         final launched = await openPayPalApprovalUrl(context, uri, l10n: l10n);
         if (!mounted) return;
-        if (launched) {
+        if (launched && !kIsWeb) {
           setState(() => _pendingPayPalOrderId = order.orderId);
-          if (!kIsWeb) {
-            context.showInfoSnackBar(l10n.paypalAwaitingCapture);
-          }
+          context.showInfoSnackBar(l10n.paypalAwaitingCapture);
         }
       } else if (!order.mockMode) {
         context.showErrorSnackBar(l10n.paypalReturnError);
@@ -193,6 +197,32 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
       context.showDioErrorSnackBar(e);
     } finally {
       if (mounted) setState(() => _paypalPurchasing = false);
+    }
+  }
+
+  Future<void> _autoFulfillPendingPayPalOnWeb() async {
+    if (!kIsWeb || _paypalPurchasing) {
+      return;
+    }
+
+    final l10n = AppLocalizations.of(context)!;
+    setState(() => _paypalPurchasing = true);
+    try {
+      final fulfilled =
+          await getIt<PayPalPaymentReconciler>().tryFulfillStoredPending();
+      if (!mounted || !fulfilled) {
+        return;
+      }
+      await refreshAppSessionAfterCheckout(context);
+      if (!mounted) {
+        return;
+      }
+      context.showSuccessSnackBar(l10n.paypalReturnSuccessCredits);
+      Navigator.of(context).pop(true);
+    } finally {
+      if (mounted) {
+        setState(() => _paypalPurchasing = false);
+      }
     }
   }
 
@@ -321,7 +351,7 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
                         ),
                       ),
                     ],
-                    if (_pendingPayPalOrderId != null) ...[
+                    if (_pendingPayPalOrderId != null && !kIsWeb) ...[
                       const SizedBox(height: AppSpacing.md),
                       AppSectionCard(
                         variant: AppCardVariant.highlight,

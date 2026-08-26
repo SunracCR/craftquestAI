@@ -645,7 +645,8 @@ public class PaymentService(
                 .OrderByDescending(s => s.StartedAt)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            if (active is not null)
+            if (active is not null
+                && string.Equals(active.Plan.Code, plan.Code, StringComparison.OrdinalIgnoreCase))
             {
                 return new VerifyMobilePurchaseResponse
                 {
@@ -658,11 +659,23 @@ public class PaymentService(
                 };
             }
 
-            logger.LogWarning(
-                "Purchase {PurchaseId} is validated but user {UserId} has no active subscription. Re-activating from store transaction {TransactionId}.",
-                existingPurchase.PurchaseId,
-                userId,
-                paymentTransactionId);
+            if (active is not null)
+            {
+                logger.LogInformation(
+                    "Validated purchase {PurchaseId} exists for user {UserId} but active plan {ActivePlan} differs from requested {RequestedPlan}. Processing plan change.",
+                    existingPurchase.PurchaseId,
+                    userId,
+                    active.Plan.Code,
+                    plan.Code);
+            }
+            else
+            {
+                logger.LogWarning(
+                    "Purchase {PurchaseId} is validated but user {UserId} has no active subscription. Re-activating from store transaction {TransactionId}.",
+                    existingPurchase.PurchaseId,
+                    userId,
+                    paymentTransactionId);
+            }
         }
 
         var amount = billingCycle == BillingCycles.Annual
@@ -692,14 +705,47 @@ public class PaymentService(
 
         await ExecuteInTransactionAsync(async () =>
         {
-            var hasActiveSameProvider = await dbContext.UserSubscriptions.AnyAsync(
-                s => s.UserId == userId
-                     && s.Status == SubscriptionStatuses.Active
-                     && s.ProviderCode == providerCode
-                     && s.ProviderSubscriptionId == providerSubscriptionId,
-                cancellationToken);
+            var activeSubscription = await dbContext.UserSubscriptions
+                .Include(s => s.Plan)
+                .Where(s => s.UserId == userId
+                            && s.Status == SubscriptionStatuses.Active
+                            && s.ProviderCode == providerCode
+                            && s.ProviderSubscriptionId == providerSubscriptionId)
+                .OrderByDescending(s => s.StartedAt)
+                .FirstOrDefaultAsync(cancellationToken);
 
-            if (hasActiveSameProvider)
+            var hasActiveSameProvider = activeSubscription is not null;
+            var isPlanChange = activeSubscription is not null
+                && !string.Equals(
+                    activeSubscription.Plan.Code,
+                    plan.Code,
+                    StringComparison.OrdinalIgnoreCase);
+
+            if (hasActiveSameProvider && isPlanChange)
+            {
+                if (existingPurchase is null)
+                {
+                    dbContext.Purchases.Add(purchase);
+                }
+
+                await billingService.ActivatePlanAsync(
+                    userId,
+                    plan.Code,
+                    providerCode,
+                    providerSubscriptionId,
+                    new SubscriptionActivationOptions
+                    {
+                        BillingCycle = storeDetails.BillingCycle,
+                        AutoRenewEnabled = storeDetails.AutoRenewEnabled,
+                        PeriodStart = periodStart,
+                        PeriodEnd = periodEnd,
+                        LastPaymentAt = periodStart,
+                    },
+                    cancellationToken);
+
+                await CompletePurchaseAsync(purchase, cancellationToken);
+            }
+            else if (hasActiveSameProvider)
             {
                 // RenewSubscriptionPeriodAsync ya crea/valida su propio registro
                 // de Purchase para paymentTransactionId (consultando la base de

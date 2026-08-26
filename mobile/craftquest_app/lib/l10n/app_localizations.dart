@@ -1533,6 +1533,12 @@ abstract class AppLocalizations {
   /// **'Acceso concedido. ¡Ya puedes practicar!'**
   String get prepPlusAccessGranted;
 
+  /// No description provided for @prepPlusConfirmingAccess.
+  ///
+  /// In es, this message translates to:
+  /// **'Confirmando tu acceso a Preparación+…'**
+  String get prepPlusConfirmingAccess;
+
   /// No description provided for @prepPlusConfirmPayPalPayment.
   ///
   /// In es, this message translates to:

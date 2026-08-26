@@ -237,7 +237,11 @@ class _PayPalReturnPageState extends State<PayPalReturnPage> {
   Widget _buildBody(AppLocalizations l10n) {
     switch (_status) {
       case _PayPalReturnStatus.processing:
-        return AppLoadingView(message: l10n.paypalReturnProcessing);
+        return AppLoadingView(
+          message: _pending?.flow == PendingPayPalPaymentFlow.prep
+              ? l10n.prepPlusConfirmingAccess
+              : l10n.paypalReturnProcessing,
+        );
       case _PayPalReturnStatus.cancelled:
         return _ResultView(
           icon: Icons.cancel_outlined,

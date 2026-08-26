@@ -135,7 +135,7 @@ CREATE TABLE billing.Purchases (
     CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_Purchases_CreatedAt DEFAULT SYSUTCDATETIME(),
     CONSTRAINT FK_Purchases_Users FOREIGN KEY (UserId) REFERENCES core.Users(UserId),
     CONSTRAINT CK_Purchases_ProductType CHECK (ProductType IN ('subscription','ai_credits','share_codes','curated_package','teacher_seats')),
-    CONSTRAINT CK_Purchases_Status CHECK (Status IN ('pending','validated','rejected','refunded','cancelled'))
+    CONSTRAINT CK_Purchases_Status CHECK (Status IN ('pending','awaiting_payment','validated','rejected','refunded','cancelled'))
 );
 GO
 

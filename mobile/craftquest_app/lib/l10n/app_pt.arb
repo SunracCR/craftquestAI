@@ -364,6 +364,7 @@
   "prepPlusViewHistory": "Ver meu histórico",
   "prepPlusProgressSectionTitle": "Meu progresso",
   "prepPlusAccessGranted": "Acesso concedido. Já pode praticar!",
+  "prepPlusConfirmingAccess": "Confirmando seu acesso ao Preparación+…",
   "prepPlusConfirmPayPalPayment": "Confirmar pagamento PayPal",
   "prepPlusStoreProductMissing": "Pagamento na loja não configurado para esta oferta. Use a versão web com PayPal.",
   "profileTitle": "Perfil",

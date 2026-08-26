@@ -364,6 +364,7 @@
   "prepPlusViewHistory": "View my history",
   "prepPlusProgressSectionTitle": "My progress",
   "prepPlusAccessGranted": "Access granted. You can practice now!",
+  "prepPlusConfirmingAccess": "Confirming your Prep+ access…",
   "prepPlusConfirmPayPalPayment": "Confirm PayPal payment",
   "prepPlusStoreProductMissing": "Store billing is not configured for this offer. Use the web app with PayPal.",
   "profileTitle": "Profile",

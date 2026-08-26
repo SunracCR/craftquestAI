@@ -879,6 +879,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get prepPlusAccessGranted => 'Acesso concedido. Já pode praticar!';
 
   @override
+  String get prepPlusConfirmingAccess =>
+      'Confirmando seu acesso ao Preparación+…';
+
+  @override
   String get prepPlusConfirmPayPalPayment => 'Confirmar pagamento PayPal';
 
   @override

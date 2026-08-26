@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:craftquest_app/core/billing/mobile_store_product_query.dart';
 import 'package:craftquest_app/core/billing/paypal_checkout_launch.dart';
 import 'package:craftquest_app/core/billing/paypal_payment_reconciler.dart';
@@ -118,16 +120,21 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
 
       if (!mounted) return;
       final pendingPayPal = await getIt<PendingPayPalPaymentStore>().read();
+      final pendingPayPalSubscriptionId =
+          pendingPayPal?.flow == PendingPayPalPaymentFlow.subscription
+              ? pendingPayPal!.id
+              : null;
       setState(() {
         _plans = plans;
         _storeProducts = storeProducts;
         _billing = billing;
         _loading = false;
         _pendingPayPalSubscriptionId =
-            pendingPayPal?.flow == PendingPayPalPaymentFlow.subscription
-                ? pendingPayPal!.id
-                : null;
+            kIsWeb ? null : pendingPayPalSubscriptionId;
       });
+      if (kIsWeb && pendingPayPalSubscriptionId != null) {
+        unawaited(_autoFulfillPendingPayPalOnWeb());
+      }
     } on DioException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -237,11 +244,11 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
         );
         final launched = await openPayPalApprovalUrl(context, uri, l10n: l10n);
         if (!mounted) return;
-        if (launched) {
-          setState(() => _pendingPayPalSubscriptionId = subscription.subscriptionId);
-          if (!kIsWeb) {
-            context.showSuccessSnackBar(l10n.paypalAwaitingSubscriptionActivation);
-          }
+        if (launched && !kIsWeb) {
+          setState(
+            () => _pendingPayPalSubscriptionId = subscription.subscriptionId,
+          );
+          context.showSuccessSnackBar(l10n.paypalAwaitingSubscriptionActivation);
         }
       } else if (!subscription.mockMode) {
         context.showErrorSnackBar(l10n.paypalReturnError);
@@ -251,6 +258,32 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
       context.showDioErrorSnackBar(e);
     } finally {
       if (mounted) setState(() => _paypalPurchasing = false);
+    }
+  }
+
+  Future<void> _autoFulfillPendingPayPalOnWeb() async {
+    if (!kIsWeb || _paypalPurchasing) {
+      return;
+    }
+
+    final l10n = AppLocalizations.of(context)!;
+    setState(() => _paypalPurchasing = true);
+    try {
+      final fulfilled =
+          await getIt<PayPalPaymentReconciler>().tryFulfillStoredPending();
+      if (!mounted || !fulfilled) {
+        return;
+      }
+      await refreshAppSessionAfterCheckout(context);
+      if (!mounted) {
+        return;
+      }
+      context.showSuccessSnackBar(l10n.paypalReturnSuccessSubscription);
+      Navigator.of(context).pop(true);
+    } finally {
+      if (mounted) {
+        setState(() => _paypalPurchasing = false);
+      }
     }
   }
 
@@ -414,7 +447,7 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
                             ),
                             const SizedBox(height: 16),
                           ],
-                          if (_pendingPayPalSubscriptionId != null)
+                          if (_pendingPayPalSubscriptionId != null && !kIsWeb)
                             Padding(
                               padding: const EdgeInsets.only(bottom: 16),
                               child: AppSectionCard(
