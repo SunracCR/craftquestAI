@@ -84,9 +84,15 @@ class PurchaseOrchestrator extends ChangeNotifier {
     }
     _started = true;
     await _refreshProductCatalog();
-    _purchaseSub =
-        InAppPurchase.instance.purchaseStream.listen(_onPurchaseUpdate);
-    await _reconcileUnfinishedStoreTransactions();
+    _purchaseSub = InAppPurchase.instance.purchaseStream.listen((purchases) {
+      unawaited(
+        _onPurchaseUpdate(
+          purchases,
+          background: !_inFlight || _activeRequest == null,
+        ),
+      );
+    });
+    await _reconcileUnfinishedStoreTransactions(background: true);
     await _restorePurchases(force: true);
     await _reconcilePendingIntent();
   }
@@ -111,7 +117,7 @@ class PurchaseOrchestrator extends ChangeNotifier {
     }
     _expireStaleInFlightKeys();
     await _refreshProductCatalog();
-    await _reconcileUnfinishedStoreTransactions();
+    await _reconcileUnfinishedStoreTransactions(background: true);
     await _restorePurchases();
     await _reconcilePendingIntent();
   }
@@ -160,6 +166,7 @@ class PurchaseOrchestrator extends ChangeNotifier {
 
       await _reconcileUnfinishedStoreTransactions(
         productId: product.id,
+        background: true,
       );
       if (_state is PurchaseSucceeded) {
         return (_state as PurchaseSucceeded).result;
@@ -222,16 +229,36 @@ class PurchaseOrchestrator extends ChangeNotifier {
     _setState(const PurchaseIdle());
   }
 
-  Future<void> _onPurchaseUpdate(List<PurchaseDetails> purchases) async {
+  Future<void> _onPurchaseUpdate(
+    List<PurchaseDetails> purchases, {
+    bool background = false,
+  }) async {
     for (final purchase in purchases) {
       if (purchase.status == PurchaseStatus.pending) {
-        _handlePending(purchase);
+        if (background) {
+          if (kDebugMode) {
+            debugPrint(
+              '[IAP] background pending product=${purchase.productID}',
+            );
+          }
+        } else {
+          _handlePending(purchase);
+        }
         continue;
       }
 
       if (purchase.status == PurchaseStatus.error ||
           purchase.status == PurchaseStatus.canceled) {
-        _handleTerminalFailure(purchase);
+        if (background) {
+          if (kDebugMode) {
+            debugPrint(
+              '[IAP] background terminal failure product=${purchase.productID} '
+              'status=${purchase.status}',
+            );
+          }
+        } else {
+          _handleTerminalFailure(purchase);
+        }
         continue;
       }
 
@@ -245,75 +272,146 @@ class PurchaseOrchestrator extends ChangeNotifier {
         continue;
       }
 
-      _cancelWatchdog();
-      _setState(const PurchaseVerifying());
+      if (!background) {
+        _cancelWatchdog();
+        _setState(const PurchaseVerifying());
+      }
 
       try {
         final result = await _verifyAndFulfillWithRetry(purchase);
         if (result == null) {
           _releasePurchase(purchaseKey);
-          _fail(PurchaseFailureReason.verificationFailed);
+          if (background) {
+            if (kDebugMode) {
+              debugPrint(
+                '[IAP] background verify returned null '
+                'product=${purchase.productID}',
+              );
+            }
+          } else {
+            _fail(PurchaseFailureReason.verificationFailed);
+          }
           continue;
         }
 
-        if (purchase.pendingCompletePurchase) {
-          await completeMobileStorePurchaseIfNeeded(purchase);
-        }
-
-        await _pendingStore.clear();
-        _markPurchaseCompleted(purchaseKey);
-        await _reconcileServerPurchases();
-        await _refreshAfterPurchase(userInitiated: _activeRequest?.userInitiated ?? false);
-
-        _inFlight = false;
-        _activeRequest = null;
-        _setState(PurchaseSucceeded(result));
+        await _completeVerifiedPurchase(
+          purchase: purchase,
+          purchaseKey: purchaseKey,
+          result: result,
+          background: background,
+        );
       } on DioException catch (e) {
         if (kDebugMode) {
           debugPrint(
             '[IAP] verify failed product=${purchase.productID} '
+            'background=$background '
             'status=${e.response?.statusCode} code=${_readApiErrorCode(e)}',
           );
         }
         _releasePurchase(purchaseKey);
         final recovered = await _tryRecoverViaServerReconcile(purchase);
         if (recovered != null) {
-          if (purchase.pendingCompletePurchase) {
-            await completeMobileStorePurchaseIfNeeded(purchase);
-          }
-          await _pendingStore.clear();
-          _markPurchaseCompleted(purchaseKey);
-          await _refreshAfterPurchase(userInitiated: _activeRequest?.userInitiated ?? false);
-          _inFlight = false;
-          _activeRequest = null;
-          _setState(PurchaseSucceeded(recovered));
+          await _completeVerifiedPurchase(
+            purchase: purchase,
+            purchaseKey: purchaseKey,
+            result: recovered,
+            background: background,
+          );
           continue;
         }
-        _fail(
-          PurchaseFailureReason.verificationFailed,
-          message: DioErrorMapper.map(e),
-        );
+        if (background) {
+          if (kDebugMode) {
+            debugPrint(
+              '[IAP] background verify failed silently '
+              'product=${purchase.productID}',
+            );
+          }
+        } else {
+          _fail(
+            PurchaseFailureReason.verificationFailed,
+            message: DioErrorMapper.map(e),
+          );
+        }
       } catch (e) {
         if (kDebugMode) {
-          debugPrint('[IAP] verify failed product=${purchase.productID} error=$e');
+          debugPrint(
+            '[IAP] verify failed product=${purchase.productID} '
+            'background=$background error=$e',
+          );
         }
         _releasePurchase(purchaseKey);
         final recovered = await _tryRecoverViaServerReconcile(purchase);
         if (recovered != null) {
-          if (purchase.pendingCompletePurchase) {
-            await completeMobileStorePurchaseIfNeeded(purchase);
-          }
-          await _pendingStore.clear();
-          _markPurchaseCompleted(purchaseKey);
-          await _refreshAfterPurchase(userInitiated: _activeRequest?.userInitiated ?? false);
-          _inFlight = false;
-          _activeRequest = null;
-          _setState(PurchaseSucceeded(recovered));
+          await _completeVerifiedPurchase(
+            purchase: purchase,
+            purchaseKey: purchaseKey,
+            result: recovered,
+            background: background,
+          );
           continue;
         }
-        _fail(PurchaseFailureReason.verificationFailed);
+        if (background) {
+          if (kDebugMode) {
+            debugPrint(
+              '[IAP] background verify failed silently '
+              'product=${purchase.productID}',
+            );
+          }
+        } else {
+          _fail(PurchaseFailureReason.verificationFailed);
+        }
       }
     }
+  }
+
+  Future<void> _completeVerifiedPurchase({
+    required PurchaseDetails purchase,
+    required String purchaseKey,
+    required PurchaseFlowResult result,
+    required bool background,
+  }) async {
+    if (purchase.pendingCompletePurchase) {
+      await completeMobileStorePurchaseIfNeeded(purchase);
+    }
+
+    if (await _shouldClearPendingStoreForProduct(purchase.productID)) {
+      await _pendingStore.clear();
+    }
+    _markPurchaseCompleted(purchaseKey);
+    await _reconcileServerPurchases();
+
+    final matchesActive = _productMatchesActiveRequest(purchase.productID);
+    final userInitiated = matchesActive && (_activeRequest?.userInitiated ?? false);
+    await _refreshAfterPurchase(userInitiated: userInitiated);
+
+    if (!background || matchesActive) {
+      _inFlight = false;
+      _activeRequest = null;
+      _setState(PurchaseSucceeded(result));
+      return;
+    }
+
+    if (kDebugMode) {
+      debugPrint(
+        '[IAP] background fulfilled silently product=${purchase.productID}',
+      );
+    }
+  }
+
+  bool _productMatchesActiveRequest(String productId) {
+    final activeRequest = _activeRequest;
+    if (activeRequest == null) {
+      return false;
+    }
+    return storeProductIdsMatch(activeRequest.productId, productId);
+  }
+
+  Future<bool> _shouldClearPendingStoreForProduct(String productId) async {
+    final pending = await _pendingStore.read();
+    if (pending == null) {
+      return false;
+    }
+    return storeProductIdsMatch(pending.productId, productId);
   }
 
   void _handlePending(PurchaseDetails purchase) {
@@ -473,7 +571,10 @@ class PurchaseOrchestrator extends ChangeNotifier {
     await _restorePurchases(force: true);
   }
 
-  Future<void> _reconcileUnfinishedStoreTransactions({String? productId}) async {
+  Future<void> _reconcileUnfinishedStoreTransactions({
+    String? productId,
+    bool background = false,
+  }) async {
     final unfinished = await listIosUnfinishedStorePurchases();
     if (unfinished.isEmpty) {
       return;
@@ -494,7 +595,7 @@ class PurchaseOrchestrator extends ChangeNotifier {
     }
 
     for (final purchase in toProcess) {
-      await _onPurchaseUpdate([purchase]);
+      await _onPurchaseUpdate([purchase], background: background);
     }
   }
 
@@ -524,6 +625,7 @@ class PurchaseOrchestrator extends ChangeNotifier {
         }
         await _reconcileUnfinishedStoreTransactions(
           productId: request.productId,
+          background: true,
         );
         if (_state is PurchaseSucceeded) {
           return true;
