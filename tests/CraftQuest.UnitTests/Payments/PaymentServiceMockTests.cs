@@ -201,6 +201,62 @@ public class PaymentServiceMockTests
     }
 
     [Fact]
+    public async Task VerifyMobilePurchase_RenewalWithNewTransactionId_DoesNotDuplicatePurchaseRecord()
+    {
+        // Regresion: cuando el usuario ya tiene una suscripcion activa con el
+        // mismo ProviderSubscriptionId (renovacion de sandbox/App Store) y
+        // llega un ProviderTransactionId que aun no existe en Purchases,
+        // VerifyMobilePurchaseAsync y BillingService.RenewSubscriptionPeriodAsync
+        // no deben crear dos filas de Purchase para el mismo transactionId
+        // (violaria el indice unico UX_Purchases_ProviderTransaction en SQL real).
+        await using var db = CreateDb();
+        await SeedPlansAndUserAsync(db);
+        var userId = await db.Users.Select(u => u.UserId).FirstAsync();
+
+        var freeSub = await db.UserSubscriptions.SingleAsync(s => s.UserId == userId);
+        freeSub.Status = "cancelled";
+        db.UserSubscriptions.Add(new UserSubscription
+        {
+            UserSubscriptionId = Guid.NewGuid(),
+            UserId = userId,
+            PlanId = 2,
+            Status = "active",
+            StartedAt = DateTime.UtcNow.AddDays(-30),
+            CreatedAt = DateTime.UtcNow.AddDays(-30),
+            ProviderCode = "app_store",
+            ProviderSubscriptionId = "orig-transaction-1",
+            BillingCycle = "monthly",
+            AutoRenewEnabled = true,
+        });
+        await db.SaveChangesAsync();
+
+        var service = CreatePaymentService(db);
+
+        var result = await service.VerifyMobilePurchaseAsync(
+            userId,
+            new VerifyMobilePurchaseRequest
+            {
+                Platform = "app_store",
+                ProductId = "craftquest_pro_monthly",
+                PurchaseToken = "orig-transaction-1",
+            });
+
+        Assert.Equal("pro", result.PlanCode);
+        Assert.Equal("validated", result.Status);
+
+        var purchaseCount = await db.Purchases.CountAsync(
+            p => p.ProviderCode == "app_store" && p.ProviderTransactionId == "orig-transaction-1");
+        Assert.Equal(1, purchaseCount);
+
+        var sub = await db.UserSubscriptions
+            .Where(s => s.UserId == userId && s.Status == "active")
+            .OrderByDescending(s => s.StartedAt)
+            .FirstAsync();
+        Assert.Equal("app_store", sub.ProviderCode);
+        Assert.True(sub.EndsAt > DateTime.UtcNow);
+    }
+
+    [Fact]
     public async Task CapturePayPalOrder_WhenAlreadyValidated_IsIdempotent()
     {
         await using var db = CreateDb();

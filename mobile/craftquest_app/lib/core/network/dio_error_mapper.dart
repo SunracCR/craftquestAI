@@ -14,12 +14,22 @@ abstract final class DioErrorMapper {
 
   static bool isTransientFailure(Object error) {
     if (error is DioException) {
-      return isTimeoutFailure(error) || isConnectivityFailure(error);
+      return isTimeoutFailure(error) ||
+          isConnectivityFailure(error) ||
+          isTransientServerFailure(error);
     }
     if (error is SocketException) {
       return true;
     }
     return false;
+  }
+
+  /// 502/503/504 suelen indicar un fallo intermedio (p. ej. Apple/Google no
+  /// disponible momentáneamente al validar una compra), no un rechazo de
+  /// negocio permanente. Vale la pena reintentar antes de mostrar un error.
+  static bool isTransientServerFailure(DioException error) {
+    final status = error.response?.statusCode;
+    return status == 502 || status == 503 || status == 504;
   }
 
   static bool isAuthFailure(DioException error) {

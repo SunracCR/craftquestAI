@@ -692,11 +692,6 @@ public class PaymentService(
 
         await ExecuteInTransactionAsync(async () =>
         {
-            if (existingPurchase is null)
-            {
-                dbContext.Purchases.Add(purchase);
-            }
-
             var hasActiveSameProvider = await dbContext.UserSubscriptions.AnyAsync(
                 s => s.UserId == userId
                      && s.Status == SubscriptionStatuses.Active
@@ -706,15 +701,33 @@ public class PaymentService(
 
             if (hasActiveSameProvider)
             {
+                // RenewSubscriptionPeriodAsync ya crea/valida su propio registro
+                // de Purchase para paymentTransactionId (consultando la base de
+                // datos, no el ChangeTracker). Si aqui tambien hicieramos
+                // dbContext.Purchases.Add(purchase) cuando existingPurchase es
+                // null, terminariamos con dos entidades "Added" con el mismo
+                // ProviderTransactionId y el SaveChanges fallaria por violar el
+                // indice unico UX_Purchases_ProviderTransaction (esto es lo que
+                // ocurria antes en cada renovacion de sandbox).
                 await billingService.RenewSubscriptionPeriodAsync(
                     providerSubscriptionId,
                     providerCode,
                     periodEnd,
                     paymentTransactionId,
                     cancellationToken);
+
+                if (existingPurchase is not null)
+                {
+                    await CompletePurchaseAsync(purchase, cancellationToken);
+                }
             }
             else
             {
+                if (existingPurchase is null)
+                {
+                    dbContext.Purchases.Add(purchase);
+                }
+
                 await billingService.ActivatePlanAsync(
                     userId,
                     plan.Code,
@@ -729,9 +742,10 @@ public class PaymentService(
                         LastPaymentAt = periodStart,
                     },
                     cancellationToken);
+
+                await CompletePurchaseAsync(purchase, cancellationToken);
             }
 
-            await CompletePurchaseAsync(purchase, cancellationToken);
             await dbContext.SaveChangesAsync(cancellationToken);
         }, cancellationToken);
 

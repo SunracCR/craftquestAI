@@ -53,6 +53,17 @@ class PurchaseOrchestrator extends ChangeNotifier {
       _state is PurchaseAwaitingStore ||
       _state is PurchaseVerifying;
 
+  /// True solo cuando ya se lanzó la compra real del usuario (tras la
+  /// reconciliación previa) y estamos esperando el evento genuino del
+  /// purchaseStream para esa compra. Antes de este punto (p. ej. durante la
+  /// reconciliación de transacciones atascadas previa al lanzamiento), los
+  /// eventos entrantes del stream deben tratarse como background aunque
+  /// `_inFlight`/`_activeRequest` ya estén asignados.
+  bool get _isAwaitingActivePurchaseResponse =>
+      _inFlight &&
+      _activeRequest != null &&
+      (_state is PurchaseAwaitingStore || _state is PurchaseVerifying);
+
   final Set<String> _completedPurchaseKeys = {};
   final Map<String, DateTime> _inFlightPurchaseKeys = {};
 
@@ -88,7 +99,7 @@ class PurchaseOrchestrator extends ChangeNotifier {
       unawaited(
         _onPurchaseUpdate(
           purchases,
-          background: !_inFlight || _activeRequest == null,
+          background: !_isAwaitingActivePurchaseResponse,
         ),
       );
     });
@@ -277,19 +288,22 @@ class PurchaseOrchestrator extends ChangeNotifier {
         _setState(const PurchaseVerifying());
       }
 
+      // Un evento solo puede mostrar un error visible al usuario si NO es de
+      // reconciliación en segundo plano Y corresponde exactamente al producto
+      // que el usuario está comprando activamente ahora mismo.
+      final canShowFailure = !background && _productMatchesActiveRequest(purchase.productID);
+
       try {
         final result = await _verifyAndFulfillWithRetry(purchase);
         if (result == null) {
           _releasePurchase(purchaseKey);
-          if (background) {
-            if (kDebugMode) {
-              debugPrint(
-                '[IAP] background verify returned null '
-                'product=${purchase.productID}',
-              );
-            }
-          } else {
+          if (canShowFailure) {
             _fail(PurchaseFailureReason.verificationFailed);
+          } else if (kDebugMode) {
+            debugPrint(
+              '[IAP] verify returned null silently '
+              'product=${purchase.productID} background=$background',
+            );
           }
           continue;
         }
@@ -319,17 +333,15 @@ class PurchaseOrchestrator extends ChangeNotifier {
           );
           continue;
         }
-        if (background) {
-          if (kDebugMode) {
-            debugPrint(
-              '[IAP] background verify failed silently '
-              'product=${purchase.productID}',
-            );
-          }
-        } else {
+        if (canShowFailure) {
           _fail(
             PurchaseFailureReason.verificationFailed,
             message: DioErrorMapper.map(e),
+          );
+        } else if (kDebugMode) {
+          debugPrint(
+            '[IAP] verify failed silently product=${purchase.productID} '
+            'background=$background',
           );
         }
       } catch (e) {
@@ -350,15 +362,13 @@ class PurchaseOrchestrator extends ChangeNotifier {
           );
           continue;
         }
-        if (background) {
-          if (kDebugMode) {
-            debugPrint(
-              '[IAP] background verify failed silently '
-              'product=${purchase.productID}',
-            );
-          }
-        } else {
+        if (canShowFailure) {
           _fail(PurchaseFailureReason.verificationFailed);
+        } else if (kDebugMode) {
+          debugPrint(
+            '[IAP] verify failed silently product=${purchase.productID} '
+            'background=$background',
+          );
         }
       }
     }
