@@ -67,10 +67,11 @@ class OfflinePracticeSessionPage extends StatelessWidget {
               case OfflinePracticeSessionStatus.loading:
                 return const Center(child: CircularProgressIndicator());
               case OfflinePracticeSessionStatus.error:
-                final message =
-                    state.errorMessage == 'offline_download_needs_update'
-                        ? l10n.offlineDownloadNeedsUpdate
-                        : (state.errorMessage ?? l10n.genericRequestErrorMessage);
+                final message = switch (state.errorMessage) {
+                  'offline_download_needs_update' => l10n.offlineDownloadNeedsUpdate,
+                  'offline_package_expired' => l10n.offlinePackageExpiredMessage,
+                  _ => state.errorMessage ?? l10n.genericRequestErrorMessage,
+                };
                 return AppErrorView(
                   message: message,
                   retryLabel: l10n.retry,

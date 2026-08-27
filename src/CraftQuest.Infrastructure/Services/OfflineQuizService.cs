@@ -43,7 +43,7 @@ public class OfflineQuizService(
             throw new AppException("Quiz is not published.", 403);
         }
 
-        await EnsureStandaloneQuizAccessAsync(userId, quiz, cancellationToken);
+        var access = await EnsureStandaloneQuizAccessAsync(userId, quiz, cancellationToken);
 
         var questions = await PracticeQuestionLoader.LoadForQuizAsync(
             dbContext,
@@ -65,7 +65,7 @@ public class OfflineQuizService(
             maxQuestionUpdated);
 
         var now = DateTime.UtcNow;
-        var expiresAt = now.AddDays(Math.Max(1, offlineOptions.Value.PackageTtlDays));
+        var expiresAt = ComputePackageExpiresAt(now, access);
         var watermark = cryptoService.BuildWatermarkToken(userId, quizId);
 
         var mediaAssets = new Dictionary<Guid, OfflinePackageMediaAssetDto>();
@@ -356,19 +356,20 @@ public class OfflineQuizService(
         };
     }
 
-    private async Task EnsureStandaloneQuizAccessAsync(
+    private async Task<QuizAccess?> EnsureStandaloneQuizAccessAsync(
         Guid userId,
         Quiz quiz,
         CancellationToken cancellationToken)
     {
         if (quiz.CreatedByUserId == userId || quiz.Visibility == "public")
         {
-            return;
+            return null;
         }
 
         var now = DateTime.UtcNow;
-        var hasAccess = await dbContext.QuizAccesses.AnyAsync(
-            a => a.UserId == userId
+        var access = await dbContext.QuizAccesses
+            .AsNoTracking()
+            .Where(a => a.UserId == userId
                 && a.QuizId == quiz.QuizId
                 && (
                     (a.AccessType == "redeemed"
@@ -376,16 +377,33 @@ public class OfflineQuizService(
                         && a.ClassId == null)
                     || (a.AccessType == "purchase"
                         && (a.IsLifetimeAccess
-                            || (a.ExpiresAt != null && a.ExpiresAt > now)))),
-            cancellationToken);
+                            || (a.ExpiresAt != null && a.ExpiresAt > now)))))
+            .OrderByDescending(a => a.IsLifetimeAccess)
+            .ThenByDescending(a => a.ExpiresAt)
+            .FirstOrDefaultAsync(cancellationToken);
 
-        if (!hasAccess)
+        if (access is null)
         {
             throw new AppException(
                 "You do not have access to download this quiz for offline use.",
                 403,
                 "OFFLINE_QUIZ_ACCESS_DENIED");
         }
+
+        return access;
+    }
+
+    private DateTime ComputePackageExpiresAt(DateTime now, QuizAccess? access)
+    {
+        var expiresAt = now.AddDays(Math.Max(1, offlineOptions.Value.PackageTtlDays));
+
+        if (access is { AccessType: "purchase", IsLifetimeAccess: false, ExpiresAt: DateTime purchaseExpiry }
+            && purchaseExpiry < expiresAt)
+        {
+            expiresAt = purchaseExpiry;
+        }
+
+        return expiresAt;
     }
 
     private async Task AddMediaAssetAsync(

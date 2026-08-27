@@ -4848,6 +4848,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'This download needs to be updated to include review with justification. Use Update on the quiz detail screen.';
 
   @override
+  String get offlinePackageExpiredMessage =>
+      'This offline download has expired. Renew your Prep+ access and download it again to keep practicing.';
+
+  @override
+  String get offlineDownloadsExpiredDialogMessage =>
+      'This offline download has expired. Remove it from your device or renew your Prep+ access to download it again.';
+
+  @override
   String get offlineViewDetailedReview => 'View detailed review';
 
   @override

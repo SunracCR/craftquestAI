@@ -4880,6 +4880,14 @@ class AppLocalizationsPt extends AppLocalizations {
       'Este download precisa ser atualizado para incluir a revisao com justificacao. Use Atualizar no detalhe do questionario.';
 
   @override
+  String get offlinePackageExpiredMessage =>
+      'Este download offline expirou. Renove seu acesso Prep+ e baixe novamente para continuar praticando.';
+
+  @override
+  String get offlineDownloadsExpiredDialogMessage =>
+      'Este download offline expirou. Remova-o do dispositivo ou renove seu acesso Prep+ para baixa-lo novamente.';
+
+  @override
   String get offlineViewDetailedReview => 'Ver revisao detalhada';
 
   @override

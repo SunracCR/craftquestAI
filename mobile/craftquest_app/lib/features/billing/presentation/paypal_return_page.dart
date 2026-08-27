@@ -179,30 +179,40 @@ class _PayPalReturnPageState extends State<PayPalReturnPage> {
   }) {
     if (isPrepReturn && catalogItemId != null && catalogItemId.isNotEmpty) {
       getIt<MainShellTabSignal>().requestTab(kPrepPlusTabIndex);
-    }
 
-    final navigator = rootNavigatorKey.currentState;
-    if (navigator != null) {
-      navigator.popUntil((route) => route.isFirst);
-      if (isPrepReturn && catalogItemId != null && catalogItemId.isNotEmpty) {
+      final navigator = rootNavigatorKey.currentState;
+      if (navigator != null) {
+        if (navigator.canPop()) {
+          navigator.pop();
+        }
         navigator.push(
           MaterialPageRoute<void>(
             builder: (_) => PrepPlusItemDetailPage(catalogItemId: catalogItemId),
           ),
         );
+        return;
       }
-      return;
-    }
 
-    if (!mounted) return;
-    Navigator.of(context).popUntil((route) => route.isFirst);
-    if (isPrepReturn && catalogItemId != null && catalogItemId.isNotEmpty) {
+      if (!mounted) return;
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
       Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (_) => PrepPlusItemDetailPage(catalogItemId: catalogItemId),
         ),
       );
+      return;
     }
+
+    final navigator = rootNavigatorKey.currentState;
+    if (navigator != null) {
+      navigator.popUntil((route) => route.isFirst);
+      return;
+    }
+
+    if (!mounted) return;
+    Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
   Future<void> _continue() async {

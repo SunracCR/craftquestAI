@@ -70,6 +70,42 @@ class _OfflineDownloadsPageState extends State<OfflineDownloadsPage> {
     await _load();
   }
 
+  Future<void> _handleItemTap(OfflineDownloadedQuizSummaryModel item) async {
+    if (_isExpired(item)) {
+      await _showExpiredDialog(item);
+      return;
+    }
+    await _openOfflineQuiz(item);
+  }
+
+  bool _isExpired(OfflineDownloadedQuizSummaryModel item) =>
+      item.expiresAt.isBefore(DateTime.now().toUtc());
+
+  Future<void> _showExpiredDialog(OfflineDownloadedQuizSummaryModel item) async {
+    final l10n = AppLocalizations.of(context)!;
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(item.title),
+        content: Text(l10n.offlineDownloadsExpiredDialogMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.offlineDownloadsDeleteAction),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete == true) {
+      await _deleteQuiz(item.quizId);
+    }
+  }
+
   Future<void> _openOfflineQuiz(OfflineDownloadedQuizSummaryModel item) async {
     bool? randomizeQuestions;
     try {
@@ -145,8 +181,7 @@ class _OfflineDownloadsPageState extends State<OfflineDownloadsPage> {
                             const SizedBox(height: AppSpacing.md),
                         itemBuilder: (context, index) {
                           final item = _items[index];
-                          final expired =
-                              item.expiresAt.isBefore(DateTime.now().toUtc());
+                          final expired = _isExpired(item);
                           return Card(
                             child: ListTile(
                               title: Text(item.title),
@@ -167,17 +202,18 @@ class _OfflineDownloadsPageState extends State<OfflineDownloadsPage> {
                                   }
                                 },
                                 itemBuilder: (_) => [
-                                  PopupMenuItem(
-                                    value: 'play',
-                                    child: Text(l10n.offlineDownloadsPlayAction),
-                                  ),
+                                  if (!expired)
+                                    PopupMenuItem(
+                                      value: 'play',
+                                      child: Text(l10n.offlineDownloadsPlayAction),
+                                    ),
                                   PopupMenuItem(
                                     value: 'delete',
                                     child: Text(l10n.offlineDownloadsDeleteAction),
                                   ),
                                 ],
                               ),
-                              onTap: () => _openOfflineQuiz(item),
+                              onTap: () => _handleItemTap(item),
                               leading: Icon(
                                 expired
                                     ? Icons.warning_amber_rounded

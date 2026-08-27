@@ -63,6 +63,16 @@ class OfflinePracticeSessionCubit extends Cubit<OfflinePracticeSessionState> {
         return;
       }
 
+      if (quiz.expiresAt.isBefore(DateTime.now().toUtc())) {
+        emit(
+          state.copyWith(
+            status: OfflinePracticeSessionStatus.error,
+            errorMessage: 'offline_package_expired',
+          ),
+        );
+        return;
+      }
+
       final missingAnswerKey = quiz.questions.any((q) => !q.hasAnswerKeyBlob);
       if (missingAnswerKey) {
         emit(

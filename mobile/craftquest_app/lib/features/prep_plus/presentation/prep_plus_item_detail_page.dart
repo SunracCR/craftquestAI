@@ -105,7 +105,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
   bool get _isCheckoutBusy => _checkingOut || _orchestrator.isBusy;
 
   bool get _showPrepAccessProcessingOverlay =>
-      _isCheckoutBusy || _refreshingAccessAfterCheckout;
+      !kIsWeb && (_isCheckoutBusy || _refreshingAccessAfterCheckout);
 
   static bool get _supportsStorePurchase =>
       !kIsWeb &&
@@ -240,8 +240,11 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       showStorePurchaseFailure(context, state);
       _orchestrator.resetToIdle();
     } else if (state is PurchaseSucceeded && state.result is PrepPlusPurchaseResult) {
-      final l10n = AppLocalizations.of(context)!;
-      unawaited(_refreshAfterPrepCheckout(showSuccessMessage: true, l10n: l10n));
+      // Compras en segundo plano (p. ej. al reanudar la app). Las iniciadas
+      // desde esta pantalla las cierra _buyWithStore / _confirmPayPalCapture.
+      if (!_isCheckoutBusy && !_checkingOut) {
+        unawaited(_load(forceRefresh: true));
+      }
     }
     setState(() {});
   }
@@ -250,7 +253,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
     bool showSuccessMessage = false,
     AppLocalizations? l10n,
   }) async {
-    if (!mounted || _refreshingAccessAfterCheckout) {
+    if (kIsWeb || !mounted || _refreshingAccessAfterCheckout) {
       return;
     }
 
@@ -657,8 +660,10 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       if (order.mockMode) {
         await _repository.capturePayPalOrder(order.orderId);
         if (!mounted) return;
+        context.showSuccessSnackBar(l10n.prepPlusAccessGranted);
         setState(() => _pendingPayPalOrderId = null);
-        await _refreshAfterPrepCheckout(showSuccessMessage: true, l10n: l10n);
+        await _clearReferralIfMatched();
+        await _load(forceRefresh: true);
         return;
       }
 
@@ -712,7 +717,9 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       if (!mounted || !fulfilled) {
         return;
       }
-      await _refreshAfterPrepCheckout(showSuccessMessage: true, l10n: l10n);
+      context.showSuccessSnackBar(l10n.prepPlusAccessGranted);
+      await _clearReferralIfMatched();
+      await _load(forceRefresh: true);
     } finally {
       if (mounted) {
         setState(() => _checkingOut = false);
@@ -731,7 +738,13 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       if (!mounted) return;
       if (result.status == 'granted') {
         setState(() => _pendingPayPalOrderId = null);
-        await _refreshAfterPrepCheckout(showSuccessMessage: true, l10n: l10n);
+        if (kIsWeb) {
+          context.showSuccessSnackBar(l10n.prepPlusAccessGranted);
+          await _clearReferralIfMatched();
+          await _load(forceRefresh: true);
+        } else {
+          await _refreshAfterPrepCheckout(showSuccessMessage: true, l10n: l10n);
+        }
       }
     } on DioException catch (e) {
       if (!mounted) return;
@@ -786,7 +799,14 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
     _orchestrator.resetToIdle();
 
     if (result is PrepPlusPurchaseResult) {
-      await _refreshAfterPrepCheckout(showSuccessMessage: true, l10n: l10n);
+      if (kIsWeb) {
+        await _clearReferralIfMatched();
+        await _load(forceRefresh: true);
+        if (!mounted) return;
+        context.showSuccessSnackBar(l10n.prepPlusAccessGranted);
+      } else {
+        await _refreshAfterPrepCheckout(showSuccessMessage: true, l10n: l10n);
+      }
     }
   }
 

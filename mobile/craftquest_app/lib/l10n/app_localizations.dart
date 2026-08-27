@@ -8218,6 +8218,18 @@ abstract class AppLocalizations {
   /// **'Esta descarga necesita actualizarse para incluir la revisión con justificación. Usa «Actualizar» en el detalle del cuestionario.'**
   String get offlineDownloadNeedsUpdate;
 
+  /// No description provided for @offlinePackageExpiredMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta descarga offline ha expirado. Renueva tu acceso Prep+ y descárgala de nuevo para seguir practicando.'**
+  String get offlinePackageExpiredMessage;
+
+  /// No description provided for @offlineDownloadsExpiredDialogMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta descarga offline ha expirado. Elimínala de tu dispositivo o renueva tu acceso Prep+ para descargarla de nuevo.'**
+  String get offlineDownloadsExpiredDialogMessage;
+
   /// No description provided for @offlineViewDetailedReview.
   ///
   /// In es, this message translates to:

@@ -400,7 +400,10 @@ class PurchaseOrchestrator extends ChangeNotifier {
 
     final matchesActive = _productMatchesActiveRequest(purchase.productID);
     final userInitiated = matchesActive && (_activeRequest?.userInitiated ?? false);
-    await _refreshAfterPurchase(userInitiated: userInitiated);
+    await _refreshAfterPurchase(
+      userInitiated: userInitiated,
+      affectsHomeTab: _activeRequest?.kind != PurchaseProductKind.prepPlus,
+    );
 
     if (!background || matchesActive) {
       _inFlight = false;
@@ -559,13 +562,19 @@ class PurchaseOrchestrator extends ChangeNotifier {
     return null;
   }
 
-  Future<void> _refreshAfterPurchase({required bool userInitiated}) async {
+  Future<void> _refreshAfterPurchase({
+    required bool userInitiated,
+    bool affectsHomeTab = true,
+  }) async {
     final context = rootNavigatorKey.currentContext;
     if (context != null && context.mounted && userInitiated) {
-      await refreshAppSessionAfterCheckout(context);
+      await refreshAppSessionAfterCheckout(
+        context,
+        affectsHomeTab: affectsHomeTab,
+      );
       return;
     }
-    await refreshBillingAfterStorePurchase();
+    await refreshBillingAfterStorePurchase(affectsHomeTab: affectsHomeTab);
   }
 
   Future<void> _reconcilePendingIntent() async {

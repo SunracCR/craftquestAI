@@ -2127,6 +2127,8 @@
   "correctBirthDateSuccess": "Data de nascimento atualizada",
   "correctBirthDateLoginHint": "Errou a data de nascimento?",
   "offlineDownloadNeedsUpdate": "Este download precisa ser atualizado para incluir a revisao com justificacao. Use Atualizar no detalhe do questionario.",
+  "offlinePackageExpiredMessage": "Este download offline expirou. Renove seu acesso Prep+ e baixe novamente para continuar praticando.",
+  "offlineDownloadsExpiredDialogMessage": "Este download offline expirou. Remova-o do dispositivo ou renove seu acesso Prep+ para baixa-lo novamente.",
   "offlineViewDetailedReview": "Ver revisao detalhada",
   "offlineLocalReviewTitle": "Revisao local",
   "offlineNextAction": "Proximo",
