@@ -1,4 +1,5 @@
 import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/network/network_connectivity_service.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
@@ -7,6 +8,7 @@ import 'package:craftquest_app/features/offline_practice/data/models/offline_mod
 import 'package:craftquest_app/features/offline_practice/data/offline_package_repository.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_session_checkpoint_repository.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_sync_repository.dart';
+import 'package:craftquest_app/features/offline_practice/domain/offline_prep_access_reconciler.dart';
 import 'package:craftquest_app/features/offline_practice/domain/offline_sync_manager.dart';
 import 'package:craftquest_app/features/offline_practice/presentation/cubit/offline_practice_session_cubit.dart';
 import 'package:craftquest_app/features/offline_practice/presentation/offline_practice_session_page.dart';
@@ -43,6 +45,10 @@ class _OfflineDownloadsPageState extends State<OfflineDownloadsPage> {
       _error = null;
     });
     try {
+      if (getIt<NetworkConnectivityService>().isOnline) {
+        await getIt<OfflinePrepAccessReconciler>()
+            .reconcileAllDownloadedQuizzes();
+      }
       final items = await _repository.listDownloadedQuizzes();
       final pending = await _syncRepository.countPendingSessions();
       if (!mounted) return;
@@ -128,6 +134,7 @@ class _OfflineDownloadsPageState extends State<OfflineDownloadsPage> {
             packageRepository: _repository,
             syncRepository: _syncRepository,
             checkpointRepository: getIt<OfflineSessionCheckpointRepository>(),
+            accessReconciler: getIt<OfflinePrepAccessReconciler>(),
             quizId: item.quizId,
             randomizeQuestions: randomizeQuestions,
           )..load(),

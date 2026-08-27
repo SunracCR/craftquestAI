@@ -54,6 +54,7 @@ import 'package:craftquest_app/features/offline_practice/data/offline_media_down
 import 'package:craftquest_app/features/offline_practice/data/offline_package_repository.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_session_checkpoint_repository.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_sync_repository.dart';
+import 'package:craftquest_app/features/offline_practice/domain/offline_prep_access_reconciler.dart';
 import 'package:craftquest_app/features/offline_practice/domain/offline_sync_manager.dart';
 import 'package:craftquest_app/features/shell/presentation/main_shell_tab_signal.dart';
 import 'package:craftquest_app/core/services/push_notification_service.dart';
@@ -185,6 +186,13 @@ void configureDependencies() {
       getIt<OfflineLocalDatabase>(),
       getIt<OfflineKeyStorage>(),
       getIt<OfflineMediaDownloader>(),
+    ),
+  );
+  getIt.registerLazySingleton(
+    () => OfflinePrepAccessReconciler(
+      getIt<PrepPlusRepository>(),
+      getIt<NetworkConnectivityService>(),
+      getIt<OfflinePackageRepository>(),
     ),
   );
   getIt.registerLazySingleton(

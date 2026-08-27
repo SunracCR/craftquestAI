@@ -42,6 +42,7 @@ import 'package:craftquest_app/features/offline_practice/data/offline_package_re
 import 'package:craftquest_app/features/offline_practice/data/offline_session_checkpoint_repository.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_storage_bootstrap.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_sync_repository.dart';
+import 'package:craftquest_app/features/offline_practice/domain/offline_prep_access_reconciler.dart';
 import 'package:craftquest_app/features/offline_practice/presentation/cubit/offline_practice_session_cubit.dart';
 import 'package:craftquest_app/features/offline_practice/presentation/offline_practice_session_page.dart';
 import 'package:craftquest_app/features/offline_practice/presentation/widgets/offline_quiz_actions_panel.dart';
@@ -186,6 +187,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
             packageRepository: getIt<OfflinePackageRepository>(),
             syncRepository: getIt<OfflineSyncRepository>(),
             checkpointRepository: getIt<OfflineSessionCheckpointRepository>(),
+            accessReconciler: getIt<OfflinePrepAccessReconciler>(),
             quizId: quizId,
             showElapsedTimer: _showTimer,
             randomizeQuestions: _randomizeQuestions,

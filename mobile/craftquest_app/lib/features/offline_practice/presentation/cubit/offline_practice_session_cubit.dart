@@ -7,6 +7,7 @@ import 'package:craftquest_app/features/offline_practice/data/offline_order_gene
 import 'package:craftquest_app/features/offline_practice/data/offline_package_repository.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_session_checkpoint_repository.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_sync_repository.dart';
+import 'package:craftquest_app/features/offline_practice/domain/offline_prep_access_reconciler.dart';
 import 'package:craftquest_app/features/offline_practice/presentation/cubit/offline_practice_session_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
@@ -16,18 +17,21 @@ class OfflinePracticeSessionCubit extends Cubit<OfflinePracticeSessionState> {
     required OfflinePackageRepository packageRepository,
     required OfflineSyncRepository syncRepository,
     required OfflineSessionCheckpointRepository checkpointRepository,
+    required OfflinePrepAccessReconciler accessReconciler,
     required String quizId,
     this.showElapsedTimer = false,
     this.randomizeQuestions,
   })  : _packageRepository = packageRepository,
         _syncRepository = syncRepository,
         _checkpointRepository = checkpointRepository,
+        _accessReconciler = accessReconciler,
         _quizId = quizId,
         super(const OfflinePracticeSessionState());
 
   final OfflinePackageRepository _packageRepository;
   final OfflineSyncRepository _syncRepository;
   final OfflineSessionCheckpointRepository _checkpointRepository;
+  final OfflinePrepAccessReconciler _accessReconciler;
   final String _quizId;
   final bool showElapsedTimer;
   final bool? randomizeQuestions;
@@ -63,7 +67,7 @@ class OfflinePracticeSessionCubit extends Cubit<OfflinePracticeSessionState> {
         return;
       }
 
-      if (quiz.expiresAt.isBefore(DateTime.now().toUtc())) {
+      if (await _accessReconciler.isOfflinePracticeBlocked(_quizId)) {
         emit(
           state.copyWith(
             status: OfflinePracticeSessionStatus.error,

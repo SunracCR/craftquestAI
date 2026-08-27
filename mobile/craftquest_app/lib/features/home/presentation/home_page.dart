@@ -33,6 +33,7 @@ import 'package:craftquest_app/features/student/presentation/student_assignments
 import 'package:craftquest_app/features/notifications/presentation/notifications_cubit.dart';
 import 'package:craftquest_app/features/notifications/presentation/notifications_page.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.user, this.onOpenPrepPlus});
@@ -145,8 +146,10 @@ class _HomePageState extends State<HomePage> {
     }
 
     try {
-      offlineCount =
-          await _offlinePackageRepository.countDownloadedQuizzes();
+      if (!kIsWeb) {
+        offlineCount =
+            await _offlinePackageRepository.countDownloadedQuizzes();
+      }
     } catch (_) {
       offlineCount = 0;
     }
@@ -185,6 +188,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _loadOfflineDownloadCount() async {
+    if (kIsWeb) {
+      return;
+    }
     try {
       final count = await _offlinePackageRepository.countDownloadedQuizzes();
       if (!mounted) return;
@@ -355,16 +361,18 @@ class _HomePageState extends State<HomePage> {
                             );
                           },
                         ),
-                        _divider(),
-                        AppActionTile(
-                          icon: Icons.download_for_offline_rounded,
-                          label: l10n.offlineDownloadsAction,
-                          badgeCount: _offlineDownloadCount,
-                          iconColor: AppColors.accentMint,
-                          iconBackgroundColor:
-                              AppColors.accentMint.withValues(alpha: 0.2),
-                          onTap: _openOfflineDownloads,
-                        ),
+                        if (!kIsWeb) ...[
+                          _divider(),
+                          AppActionTile(
+                            icon: Icons.download_for_offline_rounded,
+                            label: l10n.offlineDownloadsAction,
+                            badgeCount: _offlineDownloadCount,
+                            iconColor: AppColors.accentMint,
+                            iconBackgroundColor:
+                                AppColors.accentMint.withValues(alpha: 0.2),
+                            onTap: _openOfflineDownloads,
+                          ),
+                        ],
                         _divider(),
                         AppActionTile(
                           icon: Icons.library_books_rounded,

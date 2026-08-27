@@ -218,6 +218,16 @@ class OfflinePackageRepository {
     return rows.isNotEmpty;
   }
 
+  Future<void> patchExpiresAt(String quizId, DateTime expiresAt) async {
+    final db = await _database.database;
+    await db.update(
+      'offline_quizzes',
+      {'expires_at': expiresAt.toUtc().toIso8601String()},
+      where: 'quiz_id = ?',
+      whereArgs: [quizId],
+    );
+  }
+
   Future<OfflineQuizPackageModel?> loadStoredQuizContent(String quizId) async {
     final db = await _database.database;
     final quizRows = await db.query(
