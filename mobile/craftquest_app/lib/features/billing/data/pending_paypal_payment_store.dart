@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:craftquest_app/features/billing/data/pending_paypal_sync_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 enum PendingPayPalPaymentFlow {
@@ -71,11 +72,24 @@ class PendingPayPalPaymentStore {
   final Future<SharedPreferences> _preferencesFuture;
 
   Future<void> save(PendingPayPalPayment payment) async {
+    writePendingPayPalSyncJson(payment.toJson());
     final prefs = await _preferencesFuture;
     await prefs.setString(_storageKey, jsonEncode(payment.toJson()));
   }
 
   Future<PendingPayPalPayment?> read() async {
+    final syncedJson = readPendingPayPalSyncJson();
+    if (syncedJson != null) {
+      try {
+        final synced = PendingPayPalPayment.fromJson(syncedJson);
+        if (synced.id.isNotEmpty &&
+            DateTime.now().toUtc().difference(synced.createdAt.toUtc()) <=
+                _maxAge) {
+          return synced;
+        }
+      } catch (_) {}
+    }
+
     final prefs = await _preferencesFuture;
     final raw = prefs.getString(_storageKey);
     if (raw == null || raw.isEmpty) {
@@ -103,6 +117,7 @@ class PendingPayPalPaymentStore {
   }
 
   Future<void> clear() async {
+    clearPendingPayPalSync();
     final prefs = await _preferencesFuture;
     await prefs.remove(_storageKey);
   }

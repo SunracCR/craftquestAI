@@ -57,6 +57,19 @@ class _PayPalReturnPageState extends State<PayPalReturnPage> {
       setState(() => _pending = pending);
     }
 
+    final catalogItemId = pending?.catalogItemId;
+    if (pending?.flow == PendingPayPalPaymentFlow.prep &&
+        catalogItemId != null &&
+        catalogItemId.isNotEmpty) {
+      if (!mounted) return;
+      _openPrepItemAndStay(
+        catalogItemId: catalogItemId,
+        cancelled: widget.returnInfo.isCancel,
+        orderId: widget.returnInfo.token ?? pending?.id,
+      );
+      return;
+    }
+
     if (widget.returnInfo.isCancel) {
       await _paymentStore.clear();
       if (!mounted) return;
@@ -163,7 +176,10 @@ class _PayPalReturnPageState extends State<PayPalReturnPage> {
       return;
     }
 
-    clearWebEntryDeepLinkUrl();
+    if (!isPrep) {
+      consumeWebPayPalReturn();
+      clearWebEntryDeepLinkUrl();
+    }
     AppSnackBars.showSuccess(message);
     _returnToOrigin(
       isPrepReturn: isPrep &&
@@ -173,34 +189,43 @@ class _PayPalReturnPageState extends State<PayPalReturnPage> {
     );
   }
 
+  void _openPrepItemAndStay({
+    required String catalogItemId,
+    required bool cancelled,
+    String? orderId,
+  }) {
+    getIt<MainShellTabSignal>().requestTab(kPrepPlusTabIndex);
+
+    final page = PrepPlusItemDetailPage(
+      catalogItemId: catalogItemId,
+      resumePendingWebCheckout: true,
+      pendingWebPayPalCancelled: cancelled,
+      pendingWebPayPalOrderId: orderId,
+    );
+
+    final navigator = rootNavigatorKey.currentState;
+    if (navigator != null) {
+      navigator.pushReplacement(
+        MaterialPageRoute<void>(builder: (_) => page),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(builder: (_) => page),
+    );
+  }
+
   void _returnToOrigin({
     bool isPrepReturn = false,
     String? catalogItemId,
   }) {
     if (isPrepReturn && catalogItemId != null && catalogItemId.isNotEmpty) {
-      getIt<MainShellTabSignal>().requestTab(kPrepPlusTabIndex);
-
-      final navigator = rootNavigatorKey.currentState;
-      if (navigator != null) {
-        if (navigator.canPop()) {
-          navigator.pop();
-        }
-        navigator.push(
-          MaterialPageRoute<void>(
-            builder: (_) => PrepPlusItemDetailPage(catalogItemId: catalogItemId),
-          ),
-        );
-        return;
-      }
-
-      if (!mounted) return;
-      if (Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
-      }
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => PrepPlusItemDetailPage(catalogItemId: catalogItemId),
-        ),
+      _openPrepItemAndStay(
+        catalogItemId: catalogItemId,
+        cancelled: widget.returnInfo.isCancel,
+        orderId: widget.returnInfo.token ?? _pending?.id,
       );
       return;
     }
@@ -221,14 +246,25 @@ class _PayPalReturnPageState extends State<PayPalReturnPage> {
     }
     setState(() => _continuing = true);
 
+    final isPrep = _pending?.flow == PendingPayPalPaymentFlow.prep;
+    final catalogItemId = _pending?.catalogItemId;
+
     await _paymentStore.clear();
-    clearWebEntryDeepLinkUrl();
+    if (!isPrep) {
+      consumeWebPayPalReturn();
+      clearWebEntryDeepLinkUrl();
+    }
 
     if (!mounted) {
       return;
     }
 
-    _returnToOrigin();
+    _returnToOrigin(
+      isPrepReturn: isPrep &&
+          catalogItemId != null &&
+          catalogItemId.isNotEmpty,
+      catalogItemId: catalogItemId,
+    );
   }
 
   @override

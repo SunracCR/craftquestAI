@@ -46,6 +46,11 @@ class _MainShellPageState extends State<MainShellPage> {
     _checkoutRefresh = getIt<CheckoutRefreshNotifier>()
       ..addListener(_onCheckoutCompleted);
     _tabSignal = getIt<MainShellTabSignal>()..addListener(_onTabRequested);
+    final pendingTab = _tabSignal.consume();
+    if (pendingTab != null && pendingTab >= 0) {
+      _index = pendingTab;
+      _visitedTabs.add(pendingTab);
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) {
         return;

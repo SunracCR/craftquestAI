@@ -7,6 +7,7 @@ import 'package:craftquest_app/core/billing/purchase_orchestrator.dart';
 import 'package:craftquest_app/core/billing/store_purchase_feedback.dart';
 import 'package:craftquest_app/core/billing/paypal_checkout_launch.dart';
 import 'package:craftquest_app/core/billing/payment_platform.dart';
+import 'package:craftquest_app/core/navigation/web_entry_url_cleanup.dart';
 import 'package:craftquest_app/core/compliance/parental_gate_dialog.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
@@ -21,6 +22,7 @@ import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/core/services/sound_service.dart';
 import 'package:craftquest_app/features/analytics/presentation/quiz_analytics_page.dart';
 import 'package:craftquest_app/features/billing/data/pending_paypal_payment_store.dart';
+import 'package:craftquest_app/features/billing/presentation/paypal_return_launch.dart';
 import 'package:craftquest_app/features/prep_plus/data/pending_prep_referral_store.dart';
 import 'package:craftquest_app/features/prep_plus/data/models/prep_plus_models.dart';
 import 'package:craftquest_app/features/prep_plus/data/prep_plus_repository.dart';
@@ -298,6 +300,8 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       getIt<CheckoutRefreshNotifier>().notifyCheckoutCompleted(
         affectsHomeTab: false,
       );
+      consumeWebPayPalReturn();
+      clearWebEntryDeepLinkUrl();
       if (!mounted || !showSuccessMessage) {
         return;
       }
@@ -774,6 +778,8 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
     final l10n = AppLocalizations.of(context)!;
     if (widget.pendingWebPayPalCancelled) {
       await getIt<PendingPayPalPaymentStore>().clear();
+      consumeWebPayPalReturn();
+      clearWebEntryDeepLinkUrl();
       if (!mounted) return;
       context.showInfoSnackBar(l10n.paypalReturnCancelled);
       await _load(fullScreenLoading: _item == null);

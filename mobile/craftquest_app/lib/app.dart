@@ -184,10 +184,12 @@ class _AuthGateState extends State<_AuthGate> {
   final _handledAccountLinks = <String>{};
   final _handledPayPalReturns = <String>{};
   final _handledPrepReferrals = <String>{};
+  PendingPayPalReturn? _capturedPayPalReturn;
 
   @override
   void initState() {
     super.initState();
+    _capturedPayPalReturn = readWebPayPalReturn();
     unawaited(
       getIt<DeepLinkService>().initialize(
         onJoinCode: (code) {
@@ -201,11 +203,16 @@ class _AuthGateState extends State<_AuthGate> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _scheduleDeepLinkRoute());
   }
 
+  PendingPayPalReturn? get _pendingPayPalReturn =>
+      _capturedPayPalReturn ?? readWebPayPalReturn();
+
   void _resetEntryDeepLinkState() {
     _handledJoinCodes.clear();
     _handledAccountLinks.clear();
     _handledPayPalReturns.clear();
     _handledPrepReferrals.clear();
+    _capturedPayPalReturn = null;
+    consumeWebPayPalReturn();
     getIt<DeepLinkService>().clearPendingLinks();
     clearWebEntryDeepLinkUrl();
   }
@@ -228,7 +235,7 @@ class _AuthGateState extends State<_AuthGate> {
       return;
     }
 
-    final paypalReturn = readWebPayPalReturn();
+    final paypalReturn = _pendingPayPalReturn;
     if (paypalReturn != null) {
       final returnKey = paypalReturn.dedupeKey;
       if (!_handledPayPalReturns.contains(returnKey)) {
@@ -379,6 +386,12 @@ class _AuthGateState extends State<_AuthGate> {
   }
 
   Future<void> _openPayPalReturn(PendingPayPalReturn paypalReturn) async {
+    // Esperar a que MainShell esté montado tras restaurar la sesión.
+    await Future<void>.delayed(Duration.zero);
+    if (!mounted) {
+      return;
+    }
+
     final pending = await getIt<PendingPayPalPaymentStore>().read();
     if (!mounted) {
       return;
@@ -389,7 +402,10 @@ class _AuthGateState extends State<_AuthGate> {
         catalogItemId != null &&
         catalogItemId.isNotEmpty) {
       getIt<MainShellTabSignal>().requestTab(kPrepPlusTabIndex);
-      clearWebEntryDeepLinkUrl();
+      final navigator = rootNavigatorKey.currentState;
+      if (navigator == null) {
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      }
       rootNavigatorKey.currentState?.push(
         MaterialPageRoute<void>(
           builder: (_) => PrepPlusItemDetailPage(
@@ -510,11 +526,16 @@ class _AuthGateState extends State<_AuthGate> {
               return;
             }
             final user = state.user;
-            clearWebEntryDeepLinkUrl();
+            final pendingPayPalReturn = _pendingPayPalReturn;
+            if (pendingPayPalReturn == null) {
+              clearWebEntryDeepLinkUrl();
+            }
             WidgetsBinding.instance.addPostFrameCallback((_) async {
               // Register/login guest hacen push sobre el navigator raíz; hay que
               // sacarlos aunque el home ya sea MainShellPage.
-              rootNavigatorKey.currentState?.popUntil((route) => route.isFirst);
+              if (pendingPayPalReturn == null) {
+                rootNavigatorKey.currentState?.popUntil((route) => route.isFirst);
+              }
               rootScaffoldMessengerKey.currentState?.hideCurrentSnackBar();
               if (!context.mounted) {
                 return;
@@ -538,6 +559,10 @@ class _AuthGateState extends State<_AuthGate> {
                 );
               }
               // Notificaciones y push: solo en _AuthenticatedShell.initState.
+              if (pendingPayPalReturn != null) {
+                _scheduleDeepLinkRoute();
+                return;
+              }
               final pendingPrep =
                   await getIt<PendingPrepReferralStore>().read();
               if (pendingPrep != null && pendingPrep.slug.isNotEmpty) {
