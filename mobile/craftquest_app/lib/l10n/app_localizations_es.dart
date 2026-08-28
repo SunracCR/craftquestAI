@@ -28,7 +28,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get roleUnknown => 'sin rol';
 
   @override
-  String get roleTeacherLabel => 'Profesor';
+  String get roleTeacherLabel => 'Tutor';
 
   @override
   String get roleStudentLabel => 'Estudiante';
@@ -233,7 +233,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get billingPlanPremiumName => 'Premium';
 
   @override
-  String get billingPlanTeacherName => 'Profesor';
+  String get billingPlanTeacherName => 'Tutor';
 
   @override
   String get loginTitle => 'Iniciar sesión';
@@ -457,7 +457,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get upgradeInstitutionHighlight =>
-      'Licencias para centros educativos, sedes y docentes';
+      'Licencias para centros educativos, sedes y tutores';
 
   @override
   String get institutionPlanContactHint =>
@@ -1532,7 +1532,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get practiceReviewHiddenByAssignment =>
-      'Tu profesor configuró esta asignación para no mostrar las respuestas correctas. Solo puedes ver tu puntuación general.';
+      'Tu tutor configuró esta asignación para no mostrar las respuestas correctas. Solo puedes ver tu puntuación general.';
 
   @override
   String practiceReviewHiddenUntilDue(String date) {
@@ -1545,7 +1545,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get practiceReviewHiddenTeacherOnly =>
-      'Solo tu profesor puede ver las respuestas correctas. Puedes consultar tu puntuación general.';
+      'Solo tu tutor puede ver las respuestas correctas. Puedes consultar tu puntuación general.';
 
   @override
   String get practiceBackHomeAction => 'Volver al inicio';
@@ -1895,7 +1895,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get redeemCodeSubtitle =>
-      'Introduce el código compartido por tu profesor o compañero';
+      'Introduce el código compartido por tu tutor o compañero';
 
   @override
   String get redeemCodeOpeningQuiz => 'Abriendo cuestionario…';
@@ -2154,7 +2154,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get errorDirectInviteNotAllowed =>
-      'Las invitaciones directas requieren plan Pro o Profesor.';
+      'Las invitaciones directas requieren plan Pro o Tutor.';
 
   @override
   String get errorActivePracticeSession =>
@@ -2735,7 +2735,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get errorGroupAccessDeniedGeneric =>
-      'Este código es solo para miembros de la clase del profesor.';
+      'Este código es solo para miembros de la clase del tutor.';
 
   @override
   String get errorAiGenerationInvalidOutput =>
@@ -2753,7 +2753,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get errorAiCreditPacksNotAvailable =>
-      'Los paquetes de créditos IA están disponibles en los planes Pro y Teacher.';
+      'Los paquetes de créditos IA están disponibles en los planes Pro y Tutor.';
 
   @override
   String get aiCreditPacksTitle => 'Comprar créditos IA';
@@ -2795,7 +2795,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get aiCreditsInsufficientFreePlanMessage =>
-      'Mejora a Pro o Teacher para comprar paquetes de créditos IA.';
+      'Mejora a Pro o Tutor para comprar paquetes de créditos IA.';
 
   @override
   String get homeBuyAiCreditsAction => 'Comprar créditos IA';
@@ -2978,7 +2978,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get guestCodeSubtitle =>
-      'Introduce el código que te compartió tu profesor para practicar sin crear cuenta.';
+      'Introduce el código que te compartió tu tutor para practicar sin crear cuenta.';
 
   @override
   String get guestCodeAction => 'Empezar';
@@ -3115,7 +3115,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get guestExitPracticeConfirm => 'Salir';
 
   @override
-  String get teacherTabLabel => 'Profesor';
+  String get teacherTabLabel => 'Tutor';
 
   @override
   String get teacherDashboardTitle => 'Panel';
@@ -3489,7 +3489,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get teacherAssignmentShowAnswersAfterDue => 'Tras la fecha límite';
 
   @override
-  String get teacherAssignmentShowAnswersTeacherOnly => 'Solo el profesor';
+  String get teacherAssignmentShowAnswersTeacherOnly => 'Solo el tutor';
 
   @override
   String get teacherAssignmentRandomizeQuestionsLabel =>
@@ -3537,11 +3537,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get studentAssignmentRandomizeLockedShuffled =>
-      'Orden aleatorio fijado por el profesor';
+      'Orden aleatorio fijado por el tutor';
 
   @override
   String get studentAssignmentRandomizeLockedOrdered =>
-      'Orden del cuestionario fijado por el profesor';
+      'Orden del cuestionario fijado por el tutor';
 
   @override
   String get studentAssignmentPracticeOptionsTitle => 'Opciones de práctica';
@@ -3688,7 +3688,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get teacherUpgradePriceLabel => '/ mes';
 
   @override
-  String get teacherUpgradePopularBadge => 'El más elegido por educadores';
+  String get teacherUpgradePopularBadge => 'El más elegido por tutores';
 
   @override
   String get teacherUpgradePillar1Title => 'Clases organizadas';
@@ -3712,7 +3712,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Feed en vivo de actividad estudiantil, insights automáticos y analítica por clase.';
 
   @override
-  String get teacherUpgradeCta => 'Hazte Profesor';
+  String get teacherUpgradeCta => 'Hazte Tutor';
 
   @override
   String get teacherUpgradeCancelHint =>
@@ -3723,7 +3723,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get teacherUpgradeAlreadyActive =>
-      'Ya tienes un plan Profesor activo.';
+      'Ya tienes un plan Tutor activo.';
 
   @override
   String teacherUpgradeNextRenewal(String date) {
@@ -3740,7 +3740,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get teacherUpgradeCancelMessage =>
-      'Se desactivará la renovación automática. Mantendrás el plan Profesor hasta el final del periodo pagado; después pasarás a Free.';
+      'Se desactivará la renovación automática. Mantendrás el plan Tutor hasta el final del periodo pagado; después pasarás a Free.';
 
   @override
   String get teacherUpgradeCancelConfirm => 'Desactivar renovación';
@@ -3751,7 +3751,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String teacherUpgradeCancelSuccessUntil(String date) {
-    return 'Renovación automática desactivada. Acceso al plan Profesor hasta el $date.';
+    return 'Renovación automática desactivada. Acceso al plan Tutor hasta el $date.';
   }
 
   @override
@@ -3834,17 +3834,17 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get teacherUpgradeExpiryWarning =>
-      'Tu plan Profesor vence en menos de 7 días. Renuévalo para mantener el acceso.';
+      'Tu plan Tutor vence en menos de 7 días. Renuévalo para mantener el acceso.';
 
   @override
-  String get homeTeacherBannerTitle => '¿Eres docente?';
+  String get homeTeacherBannerTitle => '¿Eres tutor?';
 
   @override
   String get homeTeacherBannerBody =>
       'Clases, asignaciones y analítica en tiempo real.';
 
   @override
-  String get homeTeacherBannerAction => 'Ver plan Profesor';
+  String get homeTeacherBannerAction => 'Ver plan Tutor';
 
   @override
   String get homeTeacherBannerDismissTooltipWeekly => 'Ocultar esta semana';
@@ -3860,7 +3860,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get studentAssignmentsEmpty =>
-      'No tienes asignaciones de tus profesores aún.';
+      'No tienes asignaciones de tus tutores aún.';
 
   @override
   String get studentAssignmentStartAction => 'Empezar';
@@ -3904,7 +3904,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get studentAssignmentAttemptScoreOnlyHint =>
-      'Solo puntuación — las respuestas correctas no están disponibles según la configuración del profesor.';
+      'Solo puntuación — las respuestas correctas no están disponibles según la configuración del tutor.';
 
   @override
   String studentAssignmentAttemptsHeaderSummary(int count) {
@@ -4059,10 +4059,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Quizzes ilimitados y más · Suscripción mensual o anual';
 
   @override
-  String get profileTeacherPlanSectionTitle => 'Plan Profesor';
+  String get profileTeacherPlanSectionTitle => 'Plan Tutor';
 
   @override
-  String get profileTeacherPlanManageTitle => 'Gestionar plan Profesor';
+  String get profileTeacherPlanManageTitle => 'Gestionar plan Tutor';
 
   @override
   String get profileTeacherPlanActiveSubtitle =>
@@ -4137,7 +4137,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get paymentProductTypeCuratedPackage => 'Paquete';
 
   @override
-  String get paymentProductTypeTeacherSeats => 'Plazas profesor';
+  String get paymentProductTypeTeacherSeats => 'Plazas tutor';
 
   @override
   String get paymentProductTypeOther => 'Otro';
@@ -4146,7 +4146,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get teacherUpgradeKeepPlan => 'No, mantener';
 
   @override
-  String get teacherOnboardingWelcomeTitle => '¡Bienvenido, Profesor!';
+  String get teacherOnboardingWelcomeTitle => '¡Bienvenido, Tutor!';
 
   @override
   String teacherOnboardingStepProgress(int current, int total) {
@@ -4196,7 +4196,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Tu aula está configurada. Ahora puedes crear asignaciones, ver el progreso de tus estudiantes y analizar resultados en el Activity Pulse.';
 
   @override
-  String get teacherOnboardingGoToDashboardAction => 'Ir al Panel de Profesor';
+  String get teacherOnboardingGoToDashboardAction => 'Ir al Panel de Tutor';
 
   @override
   String get prepAdminProfileSectionTitle => 'Administración';

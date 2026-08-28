@@ -19,7 +19,7 @@
     }
   },
   "roleUnknown": "sem papel",
-  "roleTeacherLabel": "Professor",
+  "roleTeacherLabel": "Tutor",
   "roleStudentLabel": "Estudante",
   "roleInstitutionAdminLabel": "Admin instituição",
   "roleContentAdminLabel": "Admin conteúdo",
@@ -115,7 +115,7 @@
   "billingPlanFreeName": "Gratuito",
   "billingPlanProName": "Pro",
   "billingPlanPremiumName": "Premium",
-  "billingPlanTeacherName": "Professor",
+  "billingPlanTeacherName": "Tutor",
   "loginTitle": "Entrar",
   "loginSubtitle": "Acesse gratuitamente sua conta CraftQuestAI — entre ou cadastre-se em segundos",
   "parentalConsentTitle": "Aprovação dos pais necessária",
@@ -185,7 +185,7 @@
   "billingCycleAnnualPriceSuffix": "/ ano",
   "billingAnnualNotAvailable": "Plano anual nao disponivel",
   "billingPlanInstitutionName": "Instituicao",
-  "upgradeInstitutionHighlight": "Licencas para centros, campi e docentes",
+  "upgradeInstitutionHighlight": "Licencas para centros, campi e tutores",
   "institutionPlanContactHint": "Contacte vendas para um orcamento personalizado.",
   "emailLabel": "E-mail",
   "passwordLabel": "Senha",
@@ -654,13 +654,13 @@
     "placeholders": { "count": { "type": "int" } }
   },
   "practiceViewResultsAction": "Ver resultados",
-  "practiceReviewHiddenByAssignment": "Seu professor configurou esta tarefa para não mostrar as respostas corretas. Você só pode ver sua pontuação geral.",
+  "practiceReviewHiddenByAssignment": "Seu tutor configurou esta tarefa para não mostrar as respostas corretas. Você só pode ver sua pontuação geral.",
   "practiceReviewHiddenUntilDue": "As respostas corretas estarão disponíveis após a data limite ({date}). Por enquanto você só pode ver sua pontuação geral.",
   "@practiceReviewHiddenUntilDue": {
     "placeholders": { "date": { "type": "String" } }
   },
   "practiceReviewHiddenUntilDueNoDate": "As respostas corretas estarão disponíveis após a data limite. Por enquanto você só pode ver sua pontuação geral.",
-  "practiceReviewHiddenTeacherOnly": "Somente seu professor pode ver as respostas corretas. Você pode consultar sua pontuação geral.",
+  "practiceReviewHiddenTeacherOnly": "Somente seu tutor pode ver as respostas corretas. Você pode consultar sua pontuação geral.",
   "practiceBackHomeAction": "Voltar ao inicio",
   "importQuestionsAction": "Importar perguntas",
   "importQuestionsTitle": "Importar perguntas",
@@ -880,7 +880,7 @@
   },
   "redeemCodeAction": "Resgatar codigo",
   "redeemCodeTitle": "Resgatar codigo de acesso",
-  "redeemCodeSubtitle": "Digite o codigo compartilhado pelo professor ou colega",
+  "redeemCodeSubtitle": "Digite o codigo compartilhado pelo tutor ou colega",
   "redeemCodeOpeningQuiz": "Abrindo questionario…",
   "redeemCodeLabel": "Codigo",
   "redeemCodeRequired": "Digite um codigo",
@@ -1006,7 +1006,7 @@
     "placeholders": { "name": { "type": "String" } }
   },
   "quizInviteOutcomeSelf": "Voce nao pode convidar a si mesmo/a",
-  "errorDirectInviteNotAllowed": "Convites diretos exigem plano Pro ou Professor.",
+  "errorDirectInviteNotAllowed": "Convites diretos exigem plano Pro ou Tutor.",
   "errorActivePracticeSession": "Voce tem uma pratica em andamento. Continue ou comece de novo.",
   "aiNormalizeAction": "Normalizar com IA",
   "aiImproveImportAction": "Melhorar com IA",
@@ -1270,12 +1270,12 @@
   "@errorGroupAccessDenied": {
     "placeholders": { "className": { "type": "String" } }
   },
-  "errorGroupAccessDeniedGeneric": "Este codigo e apenas para membros da turma do professor.",
+  "errorGroupAccessDeniedGeneric": "Este codigo e apenas para membros da turma do tutor.",
   "errorAiGenerationInvalidOutput": "A IA devolveu um formato invalido. Toque em Tentar gerar novamente; nenhum credito foi descontado.",
   "aiGenerationFromQuizAction": "Gerar com IA a partir de material",
   "importAiGeneratedBadge": "Gerada por IA",
   "errorAiCreditsInsufficient": "Creditos IA insuficientes para esta geracao.",
-  "errorAiCreditPacksNotAvailable": "Pacotes de creditos IA estao disponiveis nos planos Pro e Teacher.",
+  "errorAiCreditPacksNotAvailable": "Pacotes de creditos IA estao disponiveis nos planos Pro e Tutor.",
   "aiCreditPacksTitle": "Comprar creditos IA",
   "aiCreditPacksSubtitle": "Recarregue para continuar gerando com IA (~40 perguntas por geracao). Pacotes nao expiram; a cota mensal do plano reinicia a cada mes.",
   "aiCreditPacksCurrentBalance": "Saldo: ~{generations} geracoes ({credits} cr.)",
@@ -1303,7 +1303,7 @@
     "placeholders": { "credits": { "type": "int" } }
   },
   "aiCreditsInsufficientDialogMessage": "Voce pode comprar um pacote de creditos para continuar gerando com IA.",
-  "aiCreditsInsufficientFreePlanMessage": "Faca upgrade para Pro ou Teacher para comprar pacotes de creditos IA.",
+  "aiCreditsInsufficientFreePlanMessage": "Faca upgrade para Pro ou Tutor para comprar pacotes de creditos IA.",
   "homeBuyAiCreditsAction": "Comprar creditos IA",
   "errorMaterialNeedsOcr": "Pouco texto extraivel. Use PDF ou Word com texto selecionavel, ou revise e cole o conteudo.",
   "errorMaterialNotSelectableText": "Este ficheiro parece digitalizado ou sem texto selecionavel.",
@@ -1374,7 +1374,7 @@
   "practiceStatusInProgress": "Em andamento",
 
   "guestCodeTitle": "Praticar com codigo",
-  "guestCodeSubtitle": "Insira o codigo compartilhado pelo seu professor para praticar sem criar conta.",
+  "guestCodeSubtitle": "Insira o codigo compartilhado pelo seu tutor para praticar sem criar conta.",
   "guestCodeAction": "Comecar",
   "guestCodeLabel": "Codigo",
   "guestCodeRequired": "Insira um codigo",
@@ -1421,7 +1421,7 @@
   "guestExitPracticeMessage": "Seu progresso foi salvo e voce pode retomar quando voltar.",
   "guestExitPracticeConfirm": "Sair",
 
-  "teacherTabLabel": "Professor",
+  "teacherTabLabel": "Tutor",
   "teacherDashboardTitle": "Painel",
   "teacherDashboardTotalStudents": "Alunos",
   "teacherDashboardActiveClasses": "Turmas",
@@ -1550,7 +1550,7 @@
   "teacherAssignmentShowAnswersNever": "Nunca",
   "teacherAssignmentShowAnswersAfterAttempt": "Após cada tentativa",
   "teacherAssignmentShowAnswersAfterDue": "Após a data limite",
-  "teacherAssignmentShowAnswersTeacherOnly": "Somente o professor",
+  "teacherAssignmentShowAnswersTeacherOnly": "Somente o tutor",
   "teacherAssignmentRandomizeQuestionsLabel": "Ordem aleatoria das perguntas",
   "teacherAssignmentRandomizeQuestionsHint": "Como as perguntas aparecem nesta tarefa da turma.",
   "teacherAssignmentAllowStudentRandomizeLabel": "O aluno pode alterar a ordem",
@@ -1563,8 +1563,8 @@
   "practiceForfeitExitConfirm": "Sair e usar tentativa",
   "practiceForfeitExitCancel": "Continuar praticando",
   "studentAssignmentAttemptStatusForfeited": "Saida antecipada",
-  "studentAssignmentRandomizeLockedShuffled": "Ordem aleatoria definida pelo professor",
-  "studentAssignmentRandomizeLockedOrdered": "Ordem do questionario definida pelo professor",
+  "studentAssignmentRandomizeLockedShuffled": "Ordem aleatoria definida pelo tutor",
+  "studentAssignmentRandomizeLockedOrdered": "Ordem do questionario definida pelo tutor",
   "studentAssignmentPracticeOptionsTitle": "Opcoes de pratica",
   "teacherAssignmentCreateAction": "Criar tarefa",
   "teacherAssignmentEditTitle": "Editar tarefa",
@@ -1611,17 +1611,17 @@
   "teacherUpgradeHeroTitle": "Transforme seus quizzes em sala de aula",
   "teacherUpgradeHeroSubtitle": "Tudo o que você precisa para ensinar, atribuir e acompanhar — em um só lugar.",
   "teacherUpgradePriceLabel": "/ mês",
-  "teacherUpgradePopularBadge": "O mais escolhido por educadores",
+  "teacherUpgradePopularBadge": "O mais escolhido por tutores",
   "teacherUpgradePillar1Title": "Turmas organizadas",
   "teacherUpgradePillar1Body": "Crie grupos, convide alunos por e-mail e gerencie o acesso.",
   "teacherUpgradePillar2Title": "Tarefas inteligentes",
   "teacherUpgradePillar2Body": "Defina prazos, limite tentativas e controle quando as respostas são reveladas.",
   "teacherUpgradePillar3Title": "Activity Pulse",
   "teacherUpgradePillar3Body": "Feed ao vivo de atividade dos alunos, insights automáticos e análises por turma.",
-  "teacherUpgradeCta": "Torne-se Professor",
+  "teacherUpgradeCta": "Torne-se Tutor",
   "teacherUpgradeCancelHint": "Cancele quando quiser · Acesso imediato após o pagamento",
   "teacherUpgradeSeeAllPlans": "Ver todos os planos",
-  "teacherUpgradeAlreadyActive": "Você já tem um plano Professor ativo.",
+  "teacherUpgradeAlreadyActive": "Você já tem um plano Tutor ativo.",
   "teacherUpgradeNextRenewal": "Próxima renovação: {date}",
   "@teacherUpgradeNextRenewal": {
     "placeholders": {
@@ -1639,10 +1639,10 @@
     }
   },
   "teacherUpgradeCancelTitle": "Cancelar assinatura?",
-  "teacherUpgradeCancelMessage": "A renovação automática será desativada. Você mantém o plano Professor até o fim do período pago; depois passa para Free.",
+  "teacherUpgradeCancelMessage": "A renovação automática será desativada. Você mantém o plano Tutor até o fim do período pago; depois passa para Free.",
   "teacherUpgradeCancelConfirm": "Desativar renovação",
   "teacherUpgradeCancelSuccess": "Assinatura cancelada. Até logo!",
-  "teacherUpgradeCancelSuccessUntil": "Renovação automática desativada. Acesso ao plano Professor até {date}.",
+  "teacherUpgradeCancelSuccessUntil": "Renovação automática desativada. Acesso ao plano Tutor até {date}.",
   "billingCancelStoreTitle": "Gerir assinatura na loja",
   "billingCancelStoreMessageGoogle": "As cobranças recorrentes do CraftQuest são geridas no Google Play. Abra as suas assinaturas na Play Store, cancele o CraftQuest e manterá o acesso até ao fim do período pago.",
   "billingCancelStoreMessageApple": "As cobranças recorrentes do CraftQuest são geridas na App Store. Abra as suas assinaturas nos Ajustes da Apple, cancele o CraftQuest e manterá o acesso até ao fim do período pago.",
@@ -1675,17 +1675,17 @@
       "date": { "type": "String" }
     }
   },
-  "teacherUpgradeExpiryWarning": "Seu plano Professor vence em menos de 7 dias. Renove para manter o acesso.",
+  "teacherUpgradeExpiryWarning": "Seu plano Tutor vence em menos de 7 dias. Renove para manter o acesso.",
 
-  "homeTeacherBannerTitle": "Você é professor?",
+  "homeTeacherBannerTitle": "Você é tutor?",
   "homeTeacherBannerBody": "Turmas, tarefas e análises em tempo real.",
-  "homeTeacherBannerAction": "Ver plano Professor",
+  "homeTeacherBannerAction": "Ver plano Tutor",
   "homeTeacherBannerDismissTooltipWeekly": "Ocultar nesta semana",
   "homeTeacherBannerDismissTooltipMonthly": "Ocultar neste mês",
 
   "studentAssignmentsTitle": "Minhas atribuições",
   "studentAssignmentsAction": "Atribuições da turma",
-  "studentAssignmentsEmpty": "Você ainda não tem atribuições dos seus professores.",
+  "studentAssignmentsEmpty": "Você ainda não tem atribuições dos seus tutores.",
   "studentAssignmentStartAction": "Começar",
   "studentAssignmentClosedLabel": "Encerrada",
   "studentAssignmentUnavailableLabel": "Indisponível",
@@ -1704,7 +1704,7 @@
   "studentAssignmentMyAttemptsAction": "Minhas tentativas",
   "studentAssignmentMyAttemptsTitle": "Minhas tentativas",
   "studentAssignmentMyAttemptsEmpty": "Você ainda não completou nenhuma tentativa nesta tarefa.",
-  "studentAssignmentAttemptScoreOnlyHint": "Somente pontuação — as respostas corretas não estão disponíveis conforme a configuração do professor.",
+  "studentAssignmentAttemptScoreOnlyHint": "Somente pontuação — as respostas corretas não estão disponíveis conforme a configuração do tutor.",
   "studentAssignmentAttemptsHeaderSummary": "{count, plural, =1{1 tentativa registrada} other{{count} tentativas registradas}}",
   "@studentAssignmentAttemptsHeaderSummary": {
     "placeholders": {
@@ -1818,8 +1818,8 @@
   "profileProPlanManageTitle": "Gerenciar plano Pro",
   "profileProPlanActiveSubtitle": "Plano ativo · toque para gerenciar",
   "profileProPlanInactiveSubtitle": "Quizzes ilimitados e mais · Assinatura mensal ou anual",
-  "profileTeacherPlanSectionTitle": "Plano Professor",
-  "profileTeacherPlanManageTitle": "Gerenciar plano Professor",
+  "profileTeacherPlanSectionTitle": "Plano Tutor",
+  "profileTeacherPlanManageTitle": "Gerenciar plano Tutor",
   "profileTeacherPlanActiveSubtitle": "Plano ativo · toque para gerenciar",
   "profileTeacherPlanInactiveSubtitle": "Turmas, tarefas e análises · Assinatura mensal",
 
@@ -1849,12 +1849,12 @@
   "paymentProductTypeAiCredits": "Creditos IA",
   "paymentProductTypeShareCodes": "Codigos partilhados",
   "paymentProductTypeCuratedPackage": "Pacote",
-  "paymentProductTypeTeacherSeats": "Lugares professor",
+  "paymentProductTypeTeacherSeats": "Lugares tutor",
   "paymentProductTypeOther": "Outro",
 
   "teacherUpgradeKeepPlan": "Não, manter",
 
-  "teacherOnboardingWelcomeTitle": "Bem-vindo, Professor!",
+  "teacherOnboardingWelcomeTitle": "Bem-vindo, Tutor!",
   "teacherOnboardingStepProgress": "Passo {current} de {total}",
   "@teacherOnboardingStepProgress": {
     "placeholders": {
@@ -1875,7 +1875,7 @@
   "teacherOnboardingSkipAction": "Pular por agora",
   "teacherOnboardingStep3Title": "Tudo pronto!",
   "teacherOnboardingStep3Body": "Sua sala de aula está configurada. Agora você pode criar tarefas, acompanhar o progresso dos alunos e analisar resultados no Activity Pulse.",
-  "teacherOnboardingGoToDashboardAction": "Ir ao Painel do Professor",
+  "teacherOnboardingGoToDashboardAction": "Ir ao Painel do Tutor",
 
   "prepAdminProfileSectionTitle": "Administração",
   "prepAdminProfileAction": "Preparação+ (catálogo)",

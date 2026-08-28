@@ -19,7 +19,7 @@
     }
   },
   "roleUnknown": "no role",
-  "roleTeacherLabel": "Teacher",
+  "roleTeacherLabel": "Tutor",
   "roleStudentLabel": "Student",
   "roleInstitutionAdminLabel": "Institution admin",
   "roleContentAdminLabel": "Content admin",
@@ -115,7 +115,7 @@
   "billingPlanFreeName": "Free",
   "billingPlanProName": "Pro",
   "billingPlanPremiumName": "Premium",
-  "billingPlanTeacherName": "Teacher",
+  "billingPlanTeacherName": "Tutor",
   "loginTitle": "Sign in",
   "loginSubtitle": "Access your CraftQuestAI account for free — sign in or create one in seconds",
   "parentalConsentTitle": "Parental approval required",
@@ -185,7 +185,7 @@
   "billingCycleAnnualPriceSuffix": "/ year",
   "billingAnnualNotAvailable": "Annual billing is not available for this plan",
   "billingPlanInstitutionName": "Institution",
-  "upgradeInstitutionHighlight": "Licenses for schools, campuses, and teachers",
+  "upgradeInstitutionHighlight": "Licenses for schools, campuses, and tutors",
   "institutionPlanContactHint": "Contact sales for a custom quote.",
   "emailLabel": "Email",
   "passwordLabel": "Password",
@@ -654,13 +654,13 @@
     "placeholders": { "count": { "type": "int" } }
   },
   "practiceViewResultsAction": "View results",
-  "practiceReviewHiddenByAssignment": "Your teacher configured this assignment to hide correct answers. You can only see your overall score.",
+  "practiceReviewHiddenByAssignment": "Your tutor configured this assignment to hide correct answers. You can only see your overall score.",
   "practiceReviewHiddenUntilDue": "Correct answers will be available after the due date ({date}). For now you can only see your overall score.",
   "@practiceReviewHiddenUntilDue": {
     "placeholders": { "date": { "type": "String" } }
   },
   "practiceReviewHiddenUntilDueNoDate": "Correct answers will be available after the due date. For now you can only see your overall score.",
-  "practiceReviewHiddenTeacherOnly": "Only your teacher can see the correct answers. You can check your overall score.",
+  "practiceReviewHiddenTeacherOnly": "Only your tutor can see the correct answers. You can check your overall score.",
   "practiceBackHomeAction": "Back to home",
   "importQuestionsAction": "Import questions",
   "importQuestionsTitle": "Import questions",
@@ -880,7 +880,7 @@
   },
   "redeemCodeAction": "Redeem code",
   "redeemCodeTitle": "Redeem access code",
-  "redeemCodeSubtitle": "Enter the code shared by your teacher or classmate",
+  "redeemCodeSubtitle": "Enter the code shared by your tutor or classmate",
   "redeemCodeOpeningQuiz": "Opening quiz…",
   "redeemCodeLabel": "Code",
   "redeemCodeRequired": "Enter a code",
@@ -1006,7 +1006,7 @@
     "placeholders": { "name": { "type": "String" } }
   },
   "quizInviteOutcomeSelf": "You cannot invite yourself",
-  "errorDirectInviteNotAllowed": "Direct invitations require a Pro or Teacher plan.",
+  "errorDirectInviteNotAllowed": "Direct invitations require a Pro or Tutor plan.",
   "errorActivePracticeSession": "You have a practice in progress. Continue or start over.",
   "aiNormalizeAction": "Normalize with AI",
   "aiImproveImportAction": "Improve with AI",
@@ -1270,12 +1270,12 @@
   "@errorGroupAccessDenied": {
     "placeholders": { "className": { "type": "String" } }
   },
-  "errorGroupAccessDeniedGeneric": "This code is only for members of the teacher's class.",
+  "errorGroupAccessDeniedGeneric": "This code is only for members of the tutor's class.",
   "errorAiGenerationInvalidOutput": "The AI returned an invalid quiz format. Tap Retry generation; no credits were deducted.",
   "aiGenerationFromQuizAction": "Generate with AI from material",
   "importAiGeneratedBadge": "AI generated",
   "errorAiCreditsInsufficient": "Not enough AI credits for this generation.",
-  "errorAiCreditPacksNotAvailable": "AI credit packs are available on Pro and Teacher plans.",
+  "errorAiCreditPacksNotAvailable": "AI credit packs are available on Pro and Tutor plans.",
   "aiCreditPacksTitle": "Buy AI credits",
   "aiCreditPacksSubtitle": "Top up to keep generating with AI (~40 questions per generation). Packs never expire; your plan quota resets each month.",
   "aiCreditPacksCurrentBalance": "Balance: ~{generations} generations ({credits} cr.)",
@@ -1303,7 +1303,7 @@
     "placeholders": { "credits": { "type": "int" } }
   },
   "aiCreditsInsufficientDialogMessage": "You can buy a credit pack to keep generating with AI.",
-  "aiCreditsInsufficientFreePlanMessage": "Upgrade to Pro or Teacher to buy AI credit packs.",
+  "aiCreditsInsufficientFreePlanMessage": "Upgrade to Pro or Tutor to buy AI credit packs.",
   "homeBuyAiCreditsAction": "Buy AI credits",
   "errorMaterialNeedsOcr": "Not enough extractable text. Use PDF or Word with selectable text, or review and paste the content.",
   "errorMaterialNotSelectableText": "This file looks scanned or has no selectable text.",
@@ -1374,7 +1374,7 @@
   "practiceStatusInProgress": "In progress",
 
   "guestCodeTitle": "Practice with code",
-  "guestCodeSubtitle": "Enter the code shared by your teacher to practice without creating an account.",
+  "guestCodeSubtitle": "Enter the code shared by your tutor to practice without creating an account.",
   "guestCodeAction": "Start",
   "guestCodeLabel": "Code",
   "guestCodeRequired": "Enter a code",
@@ -1421,7 +1421,7 @@
   "guestExitPracticeMessage": "Your progress is saved and you can resume it when you come back.",
   "guestExitPracticeConfirm": "Exit",
 
-  "teacherTabLabel": "Teacher",
+  "teacherTabLabel": "Tutor",
   "teacherDashboardTitle": "Dashboard",
   "teacherDashboardTotalStudents": "Students",
   "teacherDashboardActiveClasses": "Classes",
@@ -1550,7 +1550,7 @@
   "teacherAssignmentShowAnswersNever": "Never",
   "teacherAssignmentShowAnswersAfterAttempt": "After each attempt",
   "teacherAssignmentShowAnswersAfterDue": "After due date",
-  "teacherAssignmentShowAnswersTeacherOnly": "Teacher only",
+  "teacherAssignmentShowAnswersTeacherOnly": "Tutor only",
   "teacherAssignmentRandomizeQuestionsLabel": "Shuffle question order",
   "teacherAssignmentRandomizeQuestionsHint": "How questions are ordered for this class assignment.",
   "teacherAssignmentAllowStudentRandomizeLabel": "Students can change question order",
@@ -1563,8 +1563,8 @@
   "practiceForfeitExitConfirm": "Leave and use attempt",
   "practiceForfeitExitCancel": "Keep practicing",
   "studentAssignmentAttemptStatusForfeited": "Left early",
-  "studentAssignmentRandomizeLockedShuffled": "Shuffled order set by teacher",
-  "studentAssignmentRandomizeLockedOrdered": "Quiz order set by teacher",
+  "studentAssignmentRandomizeLockedShuffled": "Shuffled order set by tutor",
+  "studentAssignmentRandomizeLockedOrdered": "Quiz order set by tutor",
   "studentAssignmentPracticeOptionsTitle": "Practice options",
   "teacherAssignmentCreateAction": "Create assignment",
   "teacherAssignmentEditTitle": "Edit assignment",
@@ -1611,17 +1611,17 @@
   "teacherUpgradeHeroTitle": "Turn your quizzes into a classroom",
   "teacherUpgradeHeroSubtitle": "Everything you need to teach, assign, and track — all in one place.",
   "teacherUpgradePriceLabel": "/ month",
-  "teacherUpgradePopularBadge": "Most popular for educators",
+  "teacherUpgradePopularBadge": "Most popular for tutors",
   "teacherUpgradePillar1Title": "Organized classes",
   "teacherUpgradePillar1Body": "Create groups, invite students by email and manage who has access.",
   "teacherUpgradePillar2Title": "Smart assignments",
   "teacherUpgradePillar2Body": "Set deadlines, limit attempts and control when answers are revealed.",
   "teacherUpgradePillar3Title": "Activity Pulse",
   "teacherUpgradePillar3Body": "Live feed of student activity, auto-insights and per-class analytics.",
-  "teacherUpgradeCta": "Become a Teacher",
+  "teacherUpgradeCta": "Become a Tutor",
   "teacherUpgradeCancelHint": "Cancel anytime · Instant access after payment",
   "teacherUpgradeSeeAllPlans": "See all plans",
-  "teacherUpgradeAlreadyActive": "You already have an active Teacher plan.",
+  "teacherUpgradeAlreadyActive": "You already have an active Tutor plan.",
   "teacherUpgradeNextRenewal": "Next renewal: {date}",
   "@teacherUpgradeNextRenewal": {
     "placeholders": {
@@ -1639,10 +1639,10 @@
     }
   },
   "teacherUpgradeCancelTitle": "Cancel subscription?",
-  "teacherUpgradeCancelMessage": "Auto-renew will be turned off. You keep Teacher access until the end of your paid period, then you move to Free.",
+  "teacherUpgradeCancelMessage": "Auto-renew will be turned off. You keep Tutor access until the end of your paid period, then you move to Free.",
   "teacherUpgradeCancelConfirm": "Turn off auto-renew",
   "teacherUpgradeCancelSuccess": "Subscription cancelled. See you soon!",
-  "teacherUpgradeCancelSuccessUntil": "Auto-renew is off. Teacher access until {date}.",
+  "teacherUpgradeCancelSuccessUntil": "Auto-renew is off. Tutor access until {date}.",
   "billingCancelStoreTitle": "Manage subscription in the store",
   "billingCancelStoreMessageGoogle": "CraftQuest recurring charges are managed in Google Play. Open your subscriptions in the Play Store, cancel CraftQuest, and you will keep access until the end of the paid period.",
   "billingCancelStoreMessageApple": "CraftQuest recurring charges are managed in the App Store. Open your subscriptions in Apple Settings, cancel CraftQuest, and you will keep access until the end of the paid period.",
@@ -1675,17 +1675,17 @@
       "date": { "type": "String" }
     }
   },
-  "teacherUpgradeExpiryWarning": "Your Teacher plan expires in less than 7 days. Renew to keep access.",
+  "teacherUpgradeExpiryWarning": "Your Tutor plan expires in less than 7 days. Renew to keep access.",
 
-  "homeTeacherBannerTitle": "Are you a teacher?",
+  "homeTeacherBannerTitle": "Are you a tutor?",
   "homeTeacherBannerBody": "Classes, assignments and real-time analytics.",
-  "homeTeacherBannerAction": "View Teacher plan",
+  "homeTeacherBannerAction": "View Tutor plan",
   "homeTeacherBannerDismissTooltipWeekly": "Hide for this week",
   "homeTeacherBannerDismissTooltipMonthly": "Hide for this month",
 
   "studentAssignmentsTitle": "My assignments",
   "studentAssignmentsAction": "Class assignments",
-  "studentAssignmentsEmpty": "You don't have any assignments from your teachers yet.",
+  "studentAssignmentsEmpty": "You don't have any assignments from your tutors yet.",
   "studentAssignmentStartAction": "Start",
   "studentAssignmentClosedLabel": "Closed",
   "studentAssignmentUnavailableLabel": "Unavailable",
@@ -1704,7 +1704,7 @@
   "studentAssignmentMyAttemptsAction": "My attempts",
   "studentAssignmentMyAttemptsTitle": "My attempts",
   "studentAssignmentMyAttemptsEmpty": "You have not completed any attempts for this assignment yet.",
-  "studentAssignmentAttemptScoreOnlyHint": "Score only — correct answers are not available per your teacher's settings.",
+  "studentAssignmentAttemptScoreOnlyHint": "Score only — correct answers are not available per your tutor's settings.",
   "studentAssignmentAttemptsHeaderSummary": "{count, plural, =1{1 attempt recorded} other{{count} attempts recorded}}",
   "@studentAssignmentAttemptsHeaderSummary": {
     "placeholders": {
@@ -1818,8 +1818,8 @@
   "profileProPlanManageTitle": "Manage Pro plan",
   "profileProPlanActiveSubtitle": "Active plan · tap to manage",
   "profileProPlanInactiveSubtitle": "Unlimited quizzes and more · Monthly or annual subscription",
-  "profileTeacherPlanSectionTitle": "Teacher plan",
-  "profileTeacherPlanManageTitle": "Manage Teacher plan",
+  "profileTeacherPlanSectionTitle": "Tutor plan",
+  "profileTeacherPlanManageTitle": "Manage Tutor plan",
   "profileTeacherPlanActiveSubtitle": "Active plan · tap to manage",
   "profileTeacherPlanInactiveSubtitle": "Classes, assignments and analytics · Monthly subscription",
 
@@ -1849,12 +1849,12 @@
   "paymentProductTypeAiCredits": "AI credits",
   "paymentProductTypeShareCodes": "Share codes",
   "paymentProductTypeCuratedPackage": "Package",
-  "paymentProductTypeTeacherSeats": "Teacher seats",
+  "paymentProductTypeTeacherSeats": "Tutor seats",
   "paymentProductTypeOther": "Other",
 
   "teacherUpgradeKeepPlan": "No, keep it",
 
-  "teacherOnboardingWelcomeTitle": "Welcome, Teacher!",
+  "teacherOnboardingWelcomeTitle": "Welcome, Tutor!",
   "teacherOnboardingStepProgress": "Step {current} of {total}",
   "@teacherOnboardingStepProgress": {
     "placeholders": {
@@ -1875,7 +1875,7 @@
   "teacherOnboardingSkipAction": "Skip for now",
   "teacherOnboardingStep3Title": "All set!",
   "teacherOnboardingStep3Body": "Your classroom is ready. You can now create assignments, track student progress, and analyze results in Activity Pulse.",
-  "teacherOnboardingGoToDashboardAction": "Go to Teacher Dashboard",
+  "teacherOnboardingGoToDashboardAction": "Go to Tutor Dashboard",
 
   "prepAdminProfileSectionTitle": "Administration",
   "prepAdminProfileAction": "Prep+ (catalog)",

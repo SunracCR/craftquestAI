@@ -426,7 +426,7 @@ public static class EmailTemplateBuilder
                     $"Your {plan} plan expires in {days} day(s).",
                     "Manage subscription",
                     "https://app.craftquestai.com/",
-                    "Renew to keep teacher features and AI credits.")),
+                    "Renew to keep tutor features and AI credits.")),
             "pt" => (
                 "Sua assinatura esta expirando",
                 $"Seu plano {plan} expira em {days} dia(s). Renove para manter seus beneficios.",
@@ -436,7 +436,7 @@ public static class EmailTemplateBuilder
                     $"Seu plano {plan} expira em {days} dia(s).",
                     "Gerenciar assinatura",
                     "https://app.craftquestai.com/",
-                    "Renove para manter recursos de professor e creditos IA.")),
+                    "Renove para manter recursos de tutor e creditos IA.")),
             _ => (
                 "Tu membresía vence pronto",
                 $"Tu plan {plan} vence en {days} día(s). Renueva para mantener tus beneficios.",
@@ -446,7 +446,7 @@ public static class EmailTemplateBuilder
                     $"Tu plan {plan} vence en {days} día(s).",
                     "Gestionar suscripción",
                     "https://app.craftquestai.com/",
-                    "Renueva para mantener funciones de profesor y créditos IA.")),
+                    "Renueva para mantener funciones de tutor y créditos IA.")),
         };
     }
 

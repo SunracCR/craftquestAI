@@ -133,7 +133,7 @@ abstract class AppLocalizations {
   /// No description provided for @roleTeacherLabel.
   ///
   /// In es, this message translates to:
-  /// **'Profesor'**
+  /// **'Tutor'**
   String get roleTeacherLabel;
 
   /// No description provided for @roleStudentLabel.
@@ -486,7 +486,7 @@ abstract class AppLocalizations {
   /// No description provided for @billingPlanTeacherName.
   ///
   /// In es, this message translates to:
-  /// **'Profesor'**
+  /// **'Tutor'**
   String get billingPlanTeacherName;
 
   /// No description provided for @loginTitle.
@@ -876,7 +876,7 @@ abstract class AppLocalizations {
   /// No description provided for @upgradeInstitutionHighlight.
   ///
   /// In es, this message translates to:
-  /// **'Licencias para centros educativos, sedes y docentes'**
+  /// **'Licencias para centros educativos, sedes y tutores'**
   String get upgradeInstitutionHighlight;
 
   /// No description provided for @institutionPlanContactHint.
@@ -2670,7 +2670,7 @@ abstract class AppLocalizations {
   /// No description provided for @practiceReviewHiddenByAssignment.
   ///
   /// In es, this message translates to:
-  /// **'Tu profesor configuró esta asignación para no mostrar las respuestas correctas. Solo puedes ver tu puntuación general.'**
+  /// **'Tu tutor configuró esta asignación para no mostrar las respuestas correctas. Solo puedes ver tu puntuación general.'**
   String get practiceReviewHiddenByAssignment;
 
   /// No description provided for @practiceReviewHiddenUntilDue.
@@ -2688,7 +2688,7 @@ abstract class AppLocalizations {
   /// No description provided for @practiceReviewHiddenTeacherOnly.
   ///
   /// In es, this message translates to:
-  /// **'Solo tu profesor puede ver las respuestas correctas. Puedes consultar tu puntuación general.'**
+  /// **'Solo tu tutor puede ver las respuestas correctas. Puedes consultar tu puntuación general.'**
   String get practiceReviewHiddenTeacherOnly;
 
   /// No description provided for @practiceBackHomeAction.
@@ -3230,7 +3230,7 @@ abstract class AppLocalizations {
   /// No description provided for @redeemCodeSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Introduce el código compartido por tu profesor o compañero'**
+  /// **'Introduce el código compartido por tu tutor o compañero'**
   String get redeemCodeSubtitle;
 
   /// No description provided for @redeemCodeOpeningQuiz.
@@ -3620,7 +3620,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorDirectInviteNotAllowed.
   ///
   /// In es, this message translates to:
-  /// **'Las invitaciones directas requieren plan Pro o Profesor.'**
+  /// **'Las invitaciones directas requieren plan Pro o Tutor.'**
   String get errorDirectInviteNotAllowed;
 
   /// No description provided for @errorActivePracticeSession.
@@ -4550,7 +4550,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorGroupAccessDeniedGeneric.
   ///
   /// In es, this message translates to:
-  /// **'Este código es solo para miembros de la clase del profesor.'**
+  /// **'Este código es solo para miembros de la clase del tutor.'**
   String get errorGroupAccessDeniedGeneric;
 
   /// No description provided for @errorAiGenerationInvalidOutput.
@@ -4580,7 +4580,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorAiCreditPacksNotAvailable.
   ///
   /// In es, this message translates to:
-  /// **'Los paquetes de créditos IA están disponibles en los planes Pro y Teacher.'**
+  /// **'Los paquetes de créditos IA están disponibles en los planes Pro y Tutor.'**
   String get errorAiCreditPacksNotAvailable;
 
   /// No description provided for @aiCreditPacksTitle.
@@ -4640,7 +4640,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiCreditsInsufficientFreePlanMessage.
   ///
   /// In es, this message translates to:
-  /// **'Mejora a Pro o Teacher para comprar paquetes de créditos IA.'**
+  /// **'Mejora a Pro o Tutor para comprar paquetes de créditos IA.'**
   String get aiCreditsInsufficientFreePlanMessage;
 
   /// No description provided for @homeBuyAiCreditsAction.
@@ -4946,7 +4946,7 @@ abstract class AppLocalizations {
   /// No description provided for @guestCodeSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Introduce el código que te compartió tu profesor para practicar sin crear cuenta.'**
+  /// **'Introduce el código que te compartió tu tutor para practicar sin crear cuenta.'**
   String get guestCodeSubtitle;
 
   /// No description provided for @guestCodeAction.
@@ -5192,7 +5192,7 @@ abstract class AppLocalizations {
   /// No description provided for @teacherTabLabel.
   ///
   /// In es, this message translates to:
-  /// **'Profesor'**
+  /// **'Tutor'**
   String get teacherTabLabel;
 
   /// No description provided for @teacherDashboardTitle.
@@ -5838,7 +5838,7 @@ abstract class AppLocalizations {
   /// No description provided for @teacherAssignmentShowAnswersTeacherOnly.
   ///
   /// In es, this message translates to:
-  /// **'Solo el profesor'**
+  /// **'Solo el tutor'**
   String get teacherAssignmentShowAnswersTeacherOnly;
 
   /// No description provided for @teacherAssignmentRandomizeQuestionsLabel.
@@ -5916,13 +5916,13 @@ abstract class AppLocalizations {
   /// No description provided for @studentAssignmentRandomizeLockedShuffled.
   ///
   /// In es, this message translates to:
-  /// **'Orden aleatorio fijado por el profesor'**
+  /// **'Orden aleatorio fijado por el tutor'**
   String get studentAssignmentRandomizeLockedShuffled;
 
   /// No description provided for @studentAssignmentRandomizeLockedOrdered.
   ///
   /// In es, this message translates to:
-  /// **'Orden del cuestionario fijado por el profesor'**
+  /// **'Orden del cuestionario fijado por el tutor'**
   String get studentAssignmentRandomizeLockedOrdered;
 
   /// No description provided for @studentAssignmentPracticeOptionsTitle.
@@ -6192,7 +6192,7 @@ abstract class AppLocalizations {
   /// No description provided for @teacherUpgradePopularBadge.
   ///
   /// In es, this message translates to:
-  /// **'El más elegido por educadores'**
+  /// **'El más elegido por tutores'**
   String get teacherUpgradePopularBadge;
 
   /// No description provided for @teacherUpgradePillar1Title.
@@ -6234,7 +6234,7 @@ abstract class AppLocalizations {
   /// No description provided for @teacherUpgradeCta.
   ///
   /// In es, this message translates to:
-  /// **'Hazte Profesor'**
+  /// **'Hazte Tutor'**
   String get teacherUpgradeCta;
 
   /// No description provided for @teacherUpgradeCancelHint.
@@ -6252,7 +6252,7 @@ abstract class AppLocalizations {
   /// No description provided for @teacherUpgradeAlreadyActive.
   ///
   /// In es, this message translates to:
-  /// **'Ya tienes un plan Profesor activo.'**
+  /// **'Ya tienes un plan Tutor activo.'**
   String get teacherUpgradeAlreadyActive;
 
   /// No description provided for @teacherUpgradeNextRenewal.
@@ -6276,7 +6276,7 @@ abstract class AppLocalizations {
   /// No description provided for @teacherUpgradeCancelMessage.
   ///
   /// In es, this message translates to:
-  /// **'Se desactivará la renovación automática. Mantendrás el plan Profesor hasta el final del periodo pagado; después pasarás a Free.'**
+  /// **'Se desactivará la renovación automática. Mantendrás el plan Tutor hasta el final del periodo pagado; después pasarás a Free.'**
   String get teacherUpgradeCancelMessage;
 
   /// No description provided for @teacherUpgradeCancelConfirm.
@@ -6294,7 +6294,7 @@ abstract class AppLocalizations {
   /// No description provided for @teacherUpgradeCancelSuccessUntil.
   ///
   /// In es, this message translates to:
-  /// **'Renovación automática desactivada. Acceso al plan Profesor hasta el {date}.'**
+  /// **'Renovación automática desactivada. Acceso al plan Tutor hasta el {date}.'**
   String teacherUpgradeCancelSuccessUntil(String date);
 
   /// No description provided for @billingCancelStoreTitle.
@@ -6432,13 +6432,13 @@ abstract class AppLocalizations {
   /// No description provided for @teacherUpgradeExpiryWarning.
   ///
   /// In es, this message translates to:
-  /// **'Tu plan Profesor vence en menos de 7 días. Renuévalo para mantener el acceso.'**
+  /// **'Tu plan Tutor vence en menos de 7 días. Renuévalo para mantener el acceso.'**
   String get teacherUpgradeExpiryWarning;
 
   /// No description provided for @homeTeacherBannerTitle.
   ///
   /// In es, this message translates to:
-  /// **'¿Eres docente?'**
+  /// **'¿Eres tutor?'**
   String get homeTeacherBannerTitle;
 
   /// No description provided for @homeTeacherBannerBody.
@@ -6450,7 +6450,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeTeacherBannerAction.
   ///
   /// In es, this message translates to:
-  /// **'Ver plan Profesor'**
+  /// **'Ver plan Tutor'**
   String get homeTeacherBannerAction;
 
   /// No description provided for @homeTeacherBannerDismissTooltipWeekly.
@@ -6480,7 +6480,7 @@ abstract class AppLocalizations {
   /// No description provided for @studentAssignmentsEmpty.
   ///
   /// In es, this message translates to:
-  /// **'No tienes asignaciones de tus profesores aún.'**
+  /// **'No tienes asignaciones de tus tutores aún.'**
   String get studentAssignmentsEmpty;
 
   /// No description provided for @studentAssignmentStartAction.
@@ -6558,7 +6558,7 @@ abstract class AppLocalizations {
   /// No description provided for @studentAssignmentAttemptScoreOnlyHint.
   ///
   /// In es, this message translates to:
-  /// **'Solo puntuación — las respuestas correctas no están disponibles según la configuración del profesor.'**
+  /// **'Solo puntuación — las respuestas correctas no están disponibles según la configuración del tutor.'**
   String get studentAssignmentAttemptScoreOnlyHint;
 
   /// No description provided for @studentAssignmentAttemptsHeaderSummary.
@@ -6745,13 +6745,13 @@ abstract class AppLocalizations {
   /// No description provided for @profileTeacherPlanSectionTitle.
   ///
   /// In es, this message translates to:
-  /// **'Plan Profesor'**
+  /// **'Plan Tutor'**
   String get profileTeacherPlanSectionTitle;
 
   /// No description provided for @profileTeacherPlanManageTitle.
   ///
   /// In es, this message translates to:
-  /// **'Gestionar plan Profesor'**
+  /// **'Gestionar plan Tutor'**
   String get profileTeacherPlanManageTitle;
 
   /// No description provided for @profileTeacherPlanActiveSubtitle.
@@ -6889,7 +6889,7 @@ abstract class AppLocalizations {
   /// No description provided for @paymentProductTypeTeacherSeats.
   ///
   /// In es, this message translates to:
-  /// **'Plazas profesor'**
+  /// **'Plazas tutor'**
   String get paymentProductTypeTeacherSeats;
 
   /// No description provided for @paymentProductTypeOther.
@@ -6907,7 +6907,7 @@ abstract class AppLocalizations {
   /// No description provided for @teacherOnboardingWelcomeTitle.
   ///
   /// In es, this message translates to:
-  /// **'¡Bienvenido, Profesor!'**
+  /// **'¡Bienvenido, Tutor!'**
   String get teacherOnboardingWelcomeTitle;
 
   /// No description provided for @teacherOnboardingStepProgress.
@@ -6997,7 +6997,7 @@ abstract class AppLocalizations {
   /// No description provided for @teacherOnboardingGoToDashboardAction.
   ///
   /// In es, this message translates to:
-  /// **'Ir al Panel de Profesor'**
+  /// **'Ir al Panel de Tutor'**
   String get teacherOnboardingGoToDashboardAction;
 
   /// No description provided for @prepAdminProfileSectionTitle.
