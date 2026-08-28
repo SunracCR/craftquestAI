@@ -50,7 +50,9 @@ class PayPalPaymentReconciler {
       }
 
       if (fulfilled) {
-        await refreshBillingAfterStorePurchase();
+        await refreshBillingAfterStorePurchase(
+          affectsHomeTab: pending?.flow != PendingPayPalPaymentFlow.prep,
+        );
         _showSuccessMessage(pending?.flow);
       }
 
@@ -60,7 +62,7 @@ class PayPalPaymentReconciler {
     }
   }
 
-  Future<bool> tryFulfillStoredPending() async {
+  Future<bool> tryFulfillStoredPending({bool showMessage = true}) async {
     final pending = await _paymentStore.read();
     if (pending == null) {
       return false;
@@ -68,8 +70,12 @@ class PayPalPaymentReconciler {
 
     final fulfilled = await _tryFulfillLocalPending(pending);
     if (fulfilled) {
-      await refreshBillingAfterStorePurchase();
-      _showSuccessMessage(pending.flow);
+      await refreshBillingAfterStorePurchase(
+        affectsHomeTab: pending.flow != PendingPayPalPaymentFlow.prep,
+      );
+      if (showMessage) {
+        _showSuccessMessage(pending.flow);
+      }
     }
     return fulfilled;
   }
@@ -90,6 +96,7 @@ class PayPalPaymentReconciler {
       }
 
       try {
+        var retryPrepCapture = false;
         switch (pending.flow) {
           case PendingPayPalPaymentFlow.subscription:
             await _billingRepository.activatePayPalSubscription(
@@ -101,10 +108,21 @@ class PayPalPaymentReconciler {
           case PendingPayPalPaymentFlow.prep:
             final result = await _prepPlusRepository.capturePayPalOrder(pending.id);
             if (result.status != 'granted') {
-              return false;
+              retryPrepCapture = _shouldRetryPayPalFulfillment(
+                null,
+                pending.flow,
+                attempt,
+              );
+              if (!retryPrepCapture) {
+                return false;
+              }
             }
           case PendingPayPalPaymentFlow.billingOrder:
             await _billingRepository.capturePayPalOrder(pending.id);
+        }
+
+        if (retryPrepCapture) {
+          continue;
         }
 
         await _paymentStore.clear();
@@ -114,7 +132,7 @@ class PayPalPaymentReconciler {
           await _paymentStore.clear();
           return true;
         }
-        if (_shouldRetryPayPalActivation(e, pending.flow, attempt)) {
+        if (_shouldRetryPayPalFulfillment(e, pending.flow, attempt)) {
           continue;
         }
         if (kDebugMode) {
@@ -135,20 +153,38 @@ class PayPalPaymentReconciler {
     return false;
   }
 
-  bool _shouldRetryPayPalActivation(
-    DioException error,
+  bool _shouldRetryPayPalFulfillment(
+    DioException? error,
     PendingPayPalPaymentFlow flow,
     int attempt,
   ) {
-    if (flow != PendingPayPalPaymentFlow.subscription) {
-      return false;
-    }
     if (attempt >= _subscriptionRetryDelays.length - 1) {
       return false;
     }
 
-    final code = _readErrorCode(error);
-    return code == 'PAYPAL_SUBSCRIPTION_NOT_ACTIVE';
+    if (flow == PendingPayPalPaymentFlow.subscription) {
+      if (error == null) {
+        return false;
+      }
+      final code = _readErrorCode(error);
+      return code == 'PAYPAL_SUBSCRIPTION_NOT_ACTIVE';
+    }
+
+    if (flow != PendingPayPalPaymentFlow.prep) {
+      return false;
+    }
+
+    if (error == null) {
+      return true;
+    }
+
+    final status = error.response?.statusCode;
+    if (status == null || status >= 500 || status == 409) {
+      return true;
+    }
+
+    final code = _readErrorCode(error)?.toUpperCase() ?? '';
+    return code.contains('NOT_APPROVED') || code.contains('NOT_CAPTUREABLE');
   }
 
   String? _readErrorCode(DioException error) {

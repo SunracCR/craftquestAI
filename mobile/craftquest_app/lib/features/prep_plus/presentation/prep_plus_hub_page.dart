@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:craftquest_app/core/billing/checkout_refresh_notifier.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
@@ -25,6 +26,7 @@ class PrepPlusHubPage extends StatefulWidget {
 
 class _PrepPlusHubPageState extends State<PrepPlusHubPage> {
   final _repository = getIt<PrepPlusRepository>();
+  late final CheckoutRefreshNotifier _checkoutRefresh;
   List<PrepCategoryModel> _roots = [];
   PrepMyAccessesModel? _accesses;
   bool _loadingCategories = true;
@@ -34,8 +36,23 @@ class _PrepPlusHubPageState extends State<PrepPlusHubPage> {
   @override
   void initState() {
     super.initState();
+    _checkoutRefresh = getIt<CheckoutRefreshNotifier>()
+      ..addListener(_onCheckoutCompleted);
     unawaited(_loadCategories());
     unawaited(_loadAccesses());
+  }
+
+  @override
+  void dispose() {
+    _checkoutRefresh.removeListener(_onCheckoutCompleted);
+    super.dispose();
+  }
+
+  void _onCheckoutCompleted() {
+    if (!mounted) {
+      return;
+    }
+    unawaited(_loadAccesses(forceRefresh: true));
   }
 
   Future<void> _loadCategories({bool forceRefresh = false}) async {

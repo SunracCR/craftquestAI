@@ -2,8 +2,8 @@ import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 
-/// Bloquea la pantalla de detalle Prep+ en iOS/Android mientras se verifica el
-/// pago en tienda y se actualiza el acceso.
+/// Bloquea la pantalla de detalle Prep+ mientras se verifica el pago
+/// (tienda en iOS/Android, PayPal en web) y se actualiza el acceso.
 class PrepPlusCheckoutProcessingOverlay extends StatelessWidget {
   const PrepPlusCheckoutProcessingOverlay({
     super.key,

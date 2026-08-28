@@ -26,6 +26,7 @@ import 'package:craftquest_app/features/auth/presentation/account_link_launch.da
 import 'package:craftquest_app/features/auth/presentation/login_page.dart';
 import 'package:craftquest_app/features/auth/presentation/reset_password_page.dart';
 import 'package:craftquest_app/features/auth/presentation/verify_email_page.dart';
+import 'package:craftquest_app/features/billing/data/pending_paypal_payment_store.dart';
 import 'package:craftquest_app/features/billing/presentation/paypal_return_launch.dart';
 import 'package:craftquest_app/features/billing/presentation/paypal_return_page.dart';
 import 'package:craftquest_app/features/profile/presentation/confirm_password_change_page.dart';
@@ -233,11 +234,7 @@ class _AuthGateState extends State<_AuthGate> {
       if (!_handledPayPalReturns.contains(returnKey)) {
         _handledPayPalReturns.add(returnKey);
         if (paypalReturn.isCancel || authState is AuthAuthenticated) {
-          rootNavigatorKey.currentState?.push(
-            MaterialPageRoute<void>(
-              builder: (_) => PayPalReturnPage(returnInfo: paypalReturn),
-            ),
-          );
+          unawaited(_openPayPalReturn(paypalReturn));
         }
       }
       return;
@@ -379,6 +376,38 @@ class _AuthGateState extends State<_AuthGate> {
     } catch (_) {
       // La preview page puede reintentar; no bloquear navegación.
     }
+  }
+
+  Future<void> _openPayPalReturn(PendingPayPalReturn paypalReturn) async {
+    final pending = await getIt<PendingPayPalPaymentStore>().read();
+    if (!mounted) {
+      return;
+    }
+
+    final catalogItemId = pending?.catalogItemId;
+    if (pending?.flow == PendingPayPalPaymentFlow.prep &&
+        catalogItemId != null &&
+        catalogItemId.isNotEmpty) {
+      getIt<MainShellTabSignal>().requestTab(kPrepPlusTabIndex);
+      clearWebEntryDeepLinkUrl();
+      rootNavigatorKey.currentState?.push(
+        MaterialPageRoute<void>(
+          builder: (_) => PrepPlusItemDetailPage(
+            catalogItemId: catalogItemId,
+            resumePendingWebCheckout: true,
+            pendingWebPayPalCancelled: paypalReturn.isCancel,
+            pendingWebPayPalOrderId: paypalReturn.token ?? pending?.id,
+          ),
+        ),
+      );
+      return;
+    }
+
+    rootNavigatorKey.currentState?.push(
+      MaterialPageRoute<void>(
+        builder: (_) => PayPalReturnPage(returnInfo: paypalReturn),
+      ),
+    );
   }
 
   Future<void> _resumePendingPrepReferralAfterAuth() async {
