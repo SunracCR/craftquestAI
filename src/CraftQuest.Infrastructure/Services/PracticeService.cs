@@ -151,6 +151,15 @@ public class PracticeService(
             throw new AppException("Quiz has no questions.", 400);
         }
 
+        if (!request.AssignmentId.HasValue
+            && request.QuestionCount is int requestedSampleCount
+            && requestedSampleCount > 0
+            && requestedSampleCount < questions.Count
+            && !isCustomPrepPractice)
+        {
+            questions = PracticeSessionOrdering.SampleQuestions(questions, requestedSampleCount);
+        }
+
         var randomizeQuestions = isCustomPrepPractice
             || PracticeSessionOrdering.ResolveRandomizeQuestions(
                 request.AssignmentId.HasValue,

@@ -8,6 +8,7 @@ import 'package:craftquest_app/features/offline_practice/data/offline_key_storag
 import 'package:craftquest_app/features/offline_practice/data/offline_media_downloader.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_paths.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_storage_bootstrap.dart';
+import 'package:craftquest_app/features/practice/presentation/widgets/practice_chapter_selection_grid.dart';
 import 'package:sqflite/sqflite.dart';
 
 class OfflinePackageRepository {
@@ -370,6 +371,38 @@ class OfflinePackageRepository {
     }
 
     return questions.length;
+  }
+
+  static List<PracticeChapterOption> chapterOptionsFromPackage(
+    OfflineQuizPackageModel package,
+  ) {
+    final counts = <String, ({String name, int count})>{};
+    for (final question in package.questions) {
+      final sectionId = question.quizSectionId;
+      if (sectionId == null) continue;
+      final existing = counts[sectionId];
+      if (existing == null) {
+        counts[sectionId] = (
+          name: question.quizSectionName?.trim().isNotEmpty == true
+              ? question.quizSectionName!.trim()
+              : sectionId,
+          count: 1,
+        );
+      } else {
+        counts[sectionId] = (name: existing.name, count: existing.count + 1);
+      }
+    }
+
+    return counts.entries
+        .map(
+          (entry) => PracticeChapterOption(
+            sectionId: entry.key,
+            name: entry.value.name,
+            questionCount: entry.value.count,
+          ),
+        )
+        .toList()
+      ..sort((a, b) => a.name.compareTo(b.name));
   }
 
   Future<void> deleteDownloadedQuiz(String quizId) async {

@@ -36,6 +36,7 @@ import 'package:craftquest_app/core/services/sound_service.dart';
 import 'package:craftquest_app/features/practice/presentation/practice_navigation.dart';
 import 'package:craftquest_app/features/practice/presentation/practice_session_feedback.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_launch_options_card.dart';
+import 'package:craftquest_app/features/practice/presentation/widgets/practice_question_count_slider.dart';
 import 'package:craftquest_app/features/auth/presentation/auth_bloc.dart';
 import 'package:craftquest_app/features/sharing/data/sharing_repository.dart';
 import 'package:craftquest_app/features/sharing/data/models/sharing_models.dart';
@@ -88,6 +89,8 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
   final _preferencesRepository = getIt<PracticePreferencesRepository>();
   final _soundPreferenceStore = getIt<PracticeSoundPreferenceStore>();
   int _questionCount = 0;
+  int _selectedQuestionCount = 1;
+  bool _questionCountInitialized = false;
   String? _pendingReviewImportId;
   int? _pendingReviewValidQuestions;
   bool _loading = true;
@@ -303,10 +306,26 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
     }
   }
 
+  void _syncSelectedQuestionCountForPool(int pool) {
+    if (pool <= 0) {
+      _selectedQuestionCount = 1;
+      _questionCountInitialized = false;
+      return;
+    }
+    if (!_questionCountInitialized) {
+      _selectedQuestionCount =
+          PracticeQuestionCountSlider.defaultCountForPool(pool);
+      _questionCountInitialized = true;
+    } else if (_selectedQuestionCount > pool) {
+      _selectedQuestionCount = pool;
+    }
+  }
+
   PracticeLaunchOptions get _currentLaunchOptions => PracticeLaunchOptions(
         randomizeQuestions: _randomizeQuestions,
         showTimer: _showTimer,
         enableSoundEffects: _enableSoundEffects,
+        questionCount: _questionCount > 0 ? _selectedQuestionCount : 1,
       );
 
   Future<void> _loadPracticePreferences(int loadId) async {
@@ -423,6 +442,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
         if (!mounted || isStaleScreenLoad(loadId)) return;
         setState(() {
           _questionCount = quiz.questionCount;
+          _syncSelectedQuestionCountForPool(quiz.questionCount);
           _publicationStatus = quiz.publicationStatus;
           _randomizeQuestions = quiz.randomizeQuestions;
           _pendingReviewImportId = quiz.pendingReviewImportId;
@@ -438,6 +458,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
         if (!mounted || isStaleScreenLoad(loadId)) return;
         setState(() {
           _questionCount = quiz.questionCount;
+          _syncSelectedQuestionCountForPool(quiz.questionCount);
           _publicationStatus = quiz.publicationStatus;
           _pendingReviewImportId = null;
           _pendingReviewValidQuestions = null;
@@ -574,7 +595,10 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
       ),
     );
     if (!mounted || newCount == null) return;
-    setState(() => _questionCount = newCount);
+    setState(() {
+      _questionCount = newCount;
+      _syncSelectedQuestionCountForPool(newCount);
+    });
   }
 
   String _pdfFileName() {
@@ -662,6 +686,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
             quizId: widget.quizId,
             showElapsedTimer: _showTimer,
             randomizeQuestions: _randomizeQuestions,
+            questionCount: _questionCount > 0 ? _selectedQuestionCount : 1,
           )..load(),
           child: OfflinePracticeSessionPage(quizTitle: _quizTitle),
         ),
@@ -1580,21 +1605,50 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
                                         ),
                                       ),
                                     )
-                                  : PracticeLaunchOptionsCard(
-                                      randomizeQuestions: _randomizeQuestions,
-                                      randomizeQuestionsHint: widget.isOwner
-                                          ? AppLocalizations.of(context)!
-                                              .quizRandomizeQuestionsHint
-                                          : null,
-                                      showRandomizeOption: !widget.isOwner ||
-                                          !_quizModificationLocked,
-                                      showTimer: _showTimer,
-                                      enableSoundEffects: _enableSoundEffects,
-                                      onRandomizeQuestionsChanged:
-                                          _updateRandomizeQuestions,
-                                      onShowTimerChanged: _updateShowTimer,
-                                      onSoundEffectsChanged:
-                                          _updateSoundEffects,
+                                  : Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        if (_questionCount >= 1)
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              bottom: AppSpacing.sm,
+                                            ),
+                                            child: AppSectionCard(
+                                              child: PracticeQuestionCountSlider(
+                                                poolCount: _questionCount,
+                                                selectedCount:
+                                                    _selectedQuestionCount,
+                                                onChanged: (value) {
+                                                  setState(() {
+                                                    _selectedQuestionCount =
+                                                        value;
+                                                    _questionCountInitialized =
+                                                        true;
+                                                  });
+                                                },
+                                              ),
+                                            ),
+                                          ),
+                                        PracticeLaunchOptionsCard(
+                                          randomizeQuestions:
+                                              _randomizeQuestions,
+                                          randomizeQuestionsHint: widget.isOwner
+                                              ? AppLocalizations.of(context)!
+                                                  .quizRandomizeQuestionsHint
+                                              : null,
+                                          showRandomizeOption: !widget.isOwner ||
+                                              !_quizModificationLocked,
+                                          showTimer: _showTimer,
+                                          enableSoundEffects:
+                                              _enableSoundEffects,
+                                          onRandomizeQuestionsChanged:
+                                              _updateRandomizeQuestions,
+                                          onShowTimerChanged: _updateShowTimer,
+                                          onSoundEffectsChanged:
+                                              _updateSoundEffects,
+                                        ),
+                                      ],
                                     ),
                               const SizedBox(height: AppSpacing.md),
                               OfflineQuizActionsPanel(

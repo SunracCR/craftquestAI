@@ -1,5 +1,6 @@
 import 'package:craftquest_app/core/l10n/localized_message_holder.dart';
 import 'package:craftquest_app/core/network/api_client.dart';
+import 'package:dio/dio.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:flutter/foundation.dart';
 import 'package:craftquest_app/features/billing/data/models/billing_models.dart';
@@ -278,6 +279,9 @@ class PrepPlusRepository {
         if (sectionIds != null && sectionIds.isNotEmpty) 'sectionIds': sectionIds,
         if (difficulty != null && difficulty.isNotEmpty) 'difficulty': difficulty,
       },
+      options: Options(
+        listFormat: ListFormat.multi,
+      ),
     );
     return PrepPracticePoolModel.fromJson(response.data!);
   }

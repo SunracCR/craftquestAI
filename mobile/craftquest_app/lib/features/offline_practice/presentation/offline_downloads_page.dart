@@ -12,7 +12,7 @@ import 'package:craftquest_app/features/offline_practice/domain/offline_prep_acc
 import 'package:craftquest_app/features/offline_practice/domain/offline_sync_manager.dart';
 import 'package:craftquest_app/features/offline_practice/presentation/cubit/offline_practice_session_cubit.dart';
 import 'package:craftquest_app/features/offline_practice/presentation/offline_practice_session_page.dart';
-import 'package:craftquest_app/features/practice/data/practice_preferences_repository.dart';
+import 'package:craftquest_app/features/offline_practice/presentation/widgets/offline_practice_launch_sheet.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -113,19 +113,12 @@ class _OfflineDownloadsPageState extends State<OfflineDownloadsPage> {
   }
 
   Future<void> _openOfflineQuiz(OfflineDownloadedQuizSummaryModel item) async {
-    bool? randomizeQuestions;
-    try {
-      final prefs =
-          await getIt<PracticePreferencesRepository>().loadLaunchOptions(
-        item.quizId,
-      );
-      randomizeQuestions = prefs.randomizeQuestions;
-    } catch (_) {
-      try {
-        final package = await _repository.loadStoredQuizContent(item.quizId);
-        randomizeQuestions = package?.randomizeQuestions;
-      } catch (_) {}
-    }
+    final config = await OfflinePracticeLaunchSheet.show(
+      context,
+      quizId: item.quizId,
+      quizTitle: item.title,
+    );
+    if (!mounted || config == null) return;
 
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
@@ -136,7 +129,10 @@ class _OfflineDownloadsPageState extends State<OfflineDownloadsPage> {
             checkpointRepository: getIt<OfflineSessionCheckpointRepository>(),
             accessReconciler: getIt<OfflinePrepAccessReconciler>(),
             quizId: item.quizId,
-            randomizeQuestions: randomizeQuestions,
+            sectionIds: config.sectionIds,
+            questionCount: config.questionCount,
+            randomizeQuestions: config.randomizeQuestions,
+            showElapsedTimer: config.showElapsedTimer,
           )..load(),
           child: OfflinePracticeSessionPage(
             quizTitle: item.title,

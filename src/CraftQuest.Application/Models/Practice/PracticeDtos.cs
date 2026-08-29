@@ -32,7 +32,7 @@ public class StartPracticeSessionRequest
     /// <summary>Filtrar por dificultad (easy, medium, hard).</summary>
     public string? Difficulty { get; set; }
 
-    /// <summary>Número de preguntas a muestrear; null = todas las del filtro.</summary>
+    /// <summary>Número de preguntas a muestrear; null o mayor que el pool = todas.</summary>
     public int? QuestionCount { get; set; }
 }
 

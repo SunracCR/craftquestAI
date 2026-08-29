@@ -6,9 +6,10 @@ import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_section_card.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_package_repository.dart';
 import 'package:craftquest_app/features/prep_plus/data/models/prep_plus_models.dart';
-import 'package:craftquest_app/features/prep_plus/data/models/prep_plus_question_bank_models.dart';
 import 'package:craftquest_app/features/prep_plus/data/prep_plus_repository.dart';
+import 'package:craftquest_app/features/practice/presentation/widgets/practice_chapter_selection_grid.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_launch_options_card.dart';
+import 'package:craftquest_app/features/practice/presentation/widgets/practice_question_count_slider.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
@@ -71,12 +72,25 @@ class _PrepPlusCustomPracticePanelState extends State<PrepPlusCustomPracticePane
   bool _expanded = true;
   bool _questionCountInitialized = false;
   Timer? _poolDebounce;
+  int _poolRefreshGeneration = 0;
+
+  List<PracticeChapterOption> get _chapterOptions =>
+      widget.item.practiceSections
+          .map(
+            (s) => PracticeChapterOption(
+              sectionId: s.sectionId,
+              name: s.name,
+              questionCount: s.questionCount,
+            ),
+          )
+          .toList();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      unawaited(_refreshPool());
+      _applyLocalPool(emit: false);
+      unawaited(_confirmPoolFromNetwork());
     });
   }
 
@@ -86,16 +100,39 @@ class _PrepPlusCustomPracticePanelState extends State<PrepPlusCustomPracticePane
     super.dispose();
   }
 
-  void _schedulePoolRefresh() {
-    _poolDebounce?.cancel();
-    _poolDebounce = Timer(const Duration(milliseconds: 250), () {
-      unawaited(_refreshPool());
-    });
+  int _localPoolCount() {
+    return PracticeChapterSelectionGrid.poolCountFromSections(
+      totalQuestionCount: widget.item.questionCount,
+      chapters: _chapterOptions,
+      selectedSectionIds: _selectedSectionIds,
+    );
   }
 
-  int _defaultQuestionCount(int pool) {
-    if (pool <= 0) return 1;
-    return pool < 15 ? pool : 15;
+  void _applyLocalPool({required bool emit}) {
+    final localPool = _localPoolCount();
+    setState(() {
+      _poolCount = localPool;
+      if (localPool <= 0) {
+        _selectedQuestionCount = 1;
+      } else if (!_questionCountInitialized) {
+        _selectedQuestionCount =
+            PracticeQuestionCountSlider.defaultCountForPool(localPool);
+        _questionCountInitialized = true;
+      } else if (_selectedQuestionCount > localPool) {
+        _selectedQuestionCount = localPool;
+      }
+    });
+    if (emit) {
+      _emitSelection();
+    }
+  }
+
+  void _schedulePoolConfirm() {
+    _applyLocalPool(emit: true);
+    _poolDebounce?.cancel();
+    _poolDebounce = Timer(const Duration(milliseconds: 250), () {
+      unawaited(_confirmPoolFromNetwork());
+    });
   }
 
   void _emitSelection() {
@@ -109,55 +146,51 @@ class _PrepPlusCustomPracticePanelState extends State<PrepPlusCustomPracticePane
     );
   }
 
-  Future<void> _refreshPool() async {
+  Future<void> _confirmPoolFromNetwork() async {
     if (!mounted) return;
+    final generation = ++_poolRefreshGeneration;
     setState(() => _loadingPool = true);
+
     try {
       final sectionIds = _selectedSectionIds.isEmpty
           ? null
           : _selectedSectionIds.toList();
-      final pool = widget.isOfflineDownloaded
-          ? PrepPracticePoolModel(
-              availableQuestionCount: await _offlineRepo.countPracticePool(
-                quizId: widget.item.quizId,
-                sectionIds: sectionIds,
-                difficulty: _selectedDifficulty,
-              ),
-              maxQuestionCount: await _offlineRepo.countPracticePool(
-                quizId: widget.item.quizId,
-                sectionIds: sectionIds,
-                difficulty: _selectedDifficulty,
-              ),
+
+      final remoteCount = widget.isOfflineDownloaded
+          ? await _offlineRepo.countPracticePool(
+              quizId: widget.item.quizId,
+              sectionIds: sectionIds,
+              difficulty: _selectedDifficulty,
             )
-          : await _repo.getPracticePool(
+          : (await _repo.getPracticePool(
               catalogItemId: widget.item.catalogItemId,
               sectionIds: sectionIds,
               difficulty: _selectedDifficulty,
-            );
-      if (!mounted) return;
+            ))
+              .availableQuestionCount;
+
+      if (!mounted || generation != _poolRefreshGeneration) return;
+
       setState(() {
-        _poolCount = pool.availableQuestionCount;
-        if (_poolCount <= 0) {
-          _selectedQuestionCount = 1;
-        } else {
+        if (remoteCount > 0) {
+          _poolCount = remoteCount;
           if (!_questionCountInitialized) {
-            _selectedQuestionCount = _defaultQuestionCount(_poolCount);
+            _selectedQuestionCount =
+                PracticeQuestionCountSlider.defaultCountForPool(remoteCount);
             _questionCountInitialized = true;
-          } else if (_selectedQuestionCount > _poolCount) {
-            _selectedQuestionCount = _poolCount;
+          } else if (_selectedQuestionCount > remoteCount) {
+            _selectedQuestionCount = remoteCount;
           }
         }
       });
       _emitSelection();
     } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _poolCount = 0;
-        _selectedQuestionCount = 1;
-      });
-      _emitSelection();
+      // Keep last good local pool; do not zero out on transient errors.
+      if (mounted && generation == _poolRefreshGeneration) {
+        _emitSelection();
+      }
     } finally {
-      if (mounted) {
+      if (mounted && generation == _poolRefreshGeneration) {
         setState(() => _loadingPool = false);
       }
     }
@@ -171,21 +204,21 @@ class _PrepPlusCustomPracticePanelState extends State<PrepPlusCustomPracticePane
         _selectedSectionIds.remove(sectionId);
       }
     });
-    _schedulePoolRefresh();
+    _schedulePoolConfirm();
   }
 
   void _selectAllSections() {
     setState(() {
       _selectedSectionIds
         ..clear()
-        ..addAll(widget.item.practiceSections.map((s) => s.sectionId));
+        ..addAll(_chapterOptions.map((s) => s.sectionId));
     });
-    _schedulePoolRefresh();
+    _schedulePoolConfirm();
   }
 
   void _clearSections() {
     setState(() => _selectedSectionIds.clear());
-    _schedulePoolRefresh();
+    _schedulePoolConfirm();
   }
 
   void _setDifficulty(String? difficulty) {
@@ -193,12 +226,12 @@ class _PrepPlusCustomPracticePanelState extends State<PrepPlusCustomPracticePane
       _selectedDifficulty =
           _selectedDifficulty == difficulty ? null : difficulty;
     });
-    _schedulePoolRefresh();
+    _schedulePoolConfirm();
   }
 
-  void _setQuestionCount(double value) {
+  void _setQuestionCount(int value) {
     setState(() {
-      _selectedQuestionCount = value.round();
+      _selectedQuestionCount = value;
       _questionCountInitialized = true;
     });
     _emitSelection();
@@ -214,14 +247,14 @@ class _PrepPlusCustomPracticePanelState extends State<PrepPlusCustomPracticePane
   }
 
   String _summary(AppLocalizations l10n) {
-    if (_loadingPool) {
+    if (_loadingPool && _poolCount == 0) {
       return l10n.prepPlusCustomPracticeLoadingPool;
     }
     if (_poolCount == 0) {
       return l10n.prepPlusCustomPracticeSelectFilters;
     }
 
-    final chapterSummary = widget.item.practiceSections.isEmpty
+    final chapterSummary = _chapterOptions.isEmpty
         ? null
         : _selectedSectionIds.isEmpty
             ? l10n.prepPlusCustomPracticeAllChapters
@@ -239,69 +272,6 @@ class _PrepPlusCustomPracticePanelState extends State<PrepPlusCustomPracticePane
       return countLabel;
     }
     return '$chapterSummary · $countLabel';
-  }
-
-  int _gridCrossAxisCount(double width) {
-    if (width >= 900) return 4;
-    if (width >= 600) return 3;
-    return 2;
-  }
-
-  Widget _buildSectionGrid(AppLocalizations l10n) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final crossAxisCount = _gridCrossAxisCount(constraints.maxWidth);
-        const spacing = AppSpacing.xs;
-        final cellWidth =
-            (constraints.maxWidth - spacing * (crossAxisCount - 1)) /
-                crossAxisCount;
-
-        return ConstrainedBox(
-          constraints: const BoxConstraints(maxHeight: 220),
-          child: SingleChildScrollView(
-            child: Wrap(
-              spacing: spacing,
-              runSpacing: spacing,
-              children: widget.item.practiceSections.map((section) {
-                final selected =
-                    _selectedSectionIds.contains(section.sectionId);
-                final label =
-                    '${section.name} · ${section.questionCount}';
-                return SizedBox(
-                  width: cellWidth,
-                  child: InkWell(
-                    onTap: () => _toggleSection(section.sectionId, !selected),
-                    borderRadius: BorderRadius.circular(AppColors.radiusSm),
-                    child: Row(
-                      children: [
-                        Checkbox(
-                          value: selected,
-                          onChanged: (value) => _toggleSection(
-                            section.sectionId,
-                            value ?? false,
-                          ),
-                          visualDensity: VisualDensity.compact,
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        Expanded(
-                          child: Text(
-                            label,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-        );
-      },
-    );
   }
 
   @override
@@ -361,12 +331,19 @@ class _PrepPlusCustomPracticePanelState extends State<PrepPlusCustomPracticePane
                       ],
                     ),
                   ),
-                  Icon(
-                    _expanded
-                        ? Icons.expand_less_rounded
-                        : Icons.expand_more_rounded,
-                    color: AppColors.textSecondary,
-                  ),
+                  if (_loadingPool)
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  else
+                    Icon(
+                      _expanded
+                          ? Icons.expand_less_rounded
+                          : Icons.expand_more_rounded,
+                      color: AppColors.textSecondary,
+                    ),
                 ],
               ),
             ),
@@ -376,50 +353,27 @@ class _PrepPlusCustomPracticePanelState extends State<PrepPlusCustomPracticePane
               height: 1,
               color: AppColors.textSecondary.withValues(alpha: 0.12),
             ),
-            if (widget.item.practiceSections.isNotEmpty) ...[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  AppSpacing.sm,
-                  AppSpacing.md,
-                  AppSpacing.xs,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        l10n.prepPlusCustomPracticeSectionsTitle,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: _loadingPool ? null : _selectAllSections,
-                      style: TextButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                      ),
-                      child: Text(l10n.prepPlusCustomPracticeSelectAll),
-                    ),
-                    TextButton(
-                      onPressed: _loadingPool ? null : _clearSections,
-                      style: TextButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                      ),
-                      child: Text(l10n.prepPlusCustomPracticeSelectNone),
-                    ),
-                  ],
-                ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.sm,
+                AppSpacing.md,
+                0,
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                child: _buildSectionGrid(l10n),
+              child: PracticeQuestionCountSlider(
+                poolCount: _poolCount,
+                selectedCount: _selectedQuestionCount,
+                onChanged: _setQuestionCount,
               ),
-            ],
+            ),
+            PracticeChapterSelectionGrid(
+              chapters: _chapterOptions,
+              selectedSectionIds: _selectedSectionIds,
+              onSectionToggled: _toggleSection,
+              loading: _loadingPool,
+              onSelectAll: _selectAllSections,
+              onClearAll: _clearSections,
+            ),
             if (widget.item.availableDifficulties.isNotEmpty) ...[
               Padding(
                 padding: const EdgeInsets.fromLTRB(
@@ -453,50 +407,6 @@ class _PrepPlusCustomPracticePanelState extends State<PrepPlusCustomPracticePane
                 ),
               ),
             ],
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.md,
-                AppSpacing.md,
-                AppSpacing.xs,
-              ),
-              child: Text(
-                l10n.prepPlusCustomPracticeCountTitle,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    l10n.prepPlusCustomPracticeSliderLabel(
-                      _selectedQuestionCount,
-                      _poolCount > 0 ? _poolCount : 1,
-                    ),
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
-                    ),
-                  ),
-                  Slider(
-                    value: _poolCount > 0
-                        ? _selectedQuestionCount.clamp(1, _poolCount).toDouble()
-                        : 1,
-                    min: 1,
-                    max: (_poolCount > 0 ? _poolCount : 1).toDouble(),
-                    divisions: _poolCount > 1 ? _poolCount - 1 : null,
-                    label: '$_selectedQuestionCount',
-                    onChanged: _poolCount > 0 ? _setQuestionCount : null,
-                  ),
-                ],
-              ),
-            ),
             Divider(
               height: AppSpacing.lg,
               color: AppColors.textSecondary.withValues(alpha: 0.12),
