@@ -11,6 +11,7 @@ import 'package:craftquest_app/features/auth/data/auth_repository.dart';
 import 'package:craftquest_app/features/auth/presentation/auth_bloc.dart';
 import 'package:craftquest_app/features/auth/presentation/verify_email_pending_page.dart';
 import 'package:craftquest_app/features/auth/presentation/forgot_password_page.dart';
+import 'package:craftquest_app/features/auth/presentation/reset_password_page.dart';
 import 'package:craftquest_app/features/auth/presentation/widgets/oauth_sign_in_buttons.dart';
 import 'package:craftquest_app/features/auth/presentation/register_page.dart';
 import 'package:craftquest_app/features/auth/presentation/widgets/auth_language_selector.dart';
@@ -356,6 +357,33 @@ class _LoginPageState extends State<LoginPage> {
                                     .textTheme
                                     .labelMedium
                                     ?.copyWith(color: AppColors.accent),
+                              ),
+                            ),
+                          ),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              onPressed: isLoading
+                                  ? null
+                                  : () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute<void>(
+                                          builder: (_) =>
+                                              const ResetPasswordPage(),
+                                        ),
+                                      );
+                                    },
+                              child: Text(
+                                l10n.resetPasswordHaveCode,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelMedium
+                                    ?.copyWith(color: AppColors.textSecondary),
                               ),
                             ),
                           ),

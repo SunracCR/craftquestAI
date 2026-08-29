@@ -397,10 +397,16 @@ abstract final class ApiErrorMapper {
         return l10n.currentPasswordIncorrectError;
       case 'EMAIL_NOT_VERIFIED':
         return l10n.errorEmailNotVerified;
+      case 'EMAIL_ALREADY_REGISTERED':
+        return l10n.registerEmailAlreadyInUseError;
+      case 'GUARDIAN_EMAIL_REQUIRED':
+        return l10n.registerGuardianEmailRequiredError;
       case 'CAPTCHA_INVALID':
         return l10n.errorCaptchaVerificationFailed;
       case 'INVALID_VERIFICATION_TOKEN':
         return l10n.errorInvalidVerificationToken;
+      case 'INVALID_RESET_TOKEN':
+        return l10n.errorInvalidResetToken;
       case 'INVALID_PASSWORD_CHANGE_TOKEN':
         return l10n.errorInvalidPasswordChangeToken;
       case 'PASSWORD_CHANGE_UNAVAILABLE':
@@ -538,6 +544,16 @@ abstract final class ApiErrorMapper {
         return l10n.passwordChangeUnavailableError;
       case 'Invalid email or password.':
         return l10n.loginInvalidCredentials;
+      case 'Invalid or expired reset token.':
+        return l10n.errorInvalidResetToken;
+      case 'New password must be at least 8 characters.':
+        return l10n.passwordMinLength;
+      case 'Email is already registered.':
+        return l10n.registerEmailAlreadyInUseError;
+      case 'Guardian email is required for users under 13.':
+        return l10n.registerGuardianEmailRequiredError;
+      case 'One or more validation errors occurred.':
+        return l10n.registerValidationError;
       case 'Invalid email address.':
         return l10n.teacherClassInvalidEmailError;
       case 'Invalid display name.':
@@ -679,6 +695,45 @@ abstract final class ApiErrorMapper {
       final max = int.tryParse(rangeLimit.group(1)!);
       if (max != null) {
         return l10n.errorGenerationPageRangeExceeded(max);
+      }
+    }
+
+    return null;
+  }
+
+  /// Maps ASP.NET model validation [errors] for auth/register payloads.
+  static String? mapValidationErrors(
+    Map<String, dynamic> data,
+    AppLocalizations l10n,
+  ) {
+    final rawErrors = data['errors'];
+    if (rawErrors is! Map) {
+      return null;
+    }
+
+    for (final entry in rawErrors.entries) {
+      final field = entry.key.toString();
+      final messages = entry.value;
+      if (messages is! List || messages.isEmpty) {
+        continue;
+      }
+      final message = messages.first?.toString() ?? '';
+      if (message.isEmpty) {
+        continue;
+      }
+
+      switch (field) {
+        case 'Email':
+          return l10n.teacherClassInvalidEmailError;
+        case 'Password':
+          if (message.toLowerCase().contains('minimum length')) {
+            return l10n.passwordMinLength;
+          }
+          return l10n.registerValidationError;
+        case 'GuardianEmail':
+          return l10n.registerGuardianEmailRequiredError;
+        default:
+          return l10n.registerValidationError;
       }
     }
 

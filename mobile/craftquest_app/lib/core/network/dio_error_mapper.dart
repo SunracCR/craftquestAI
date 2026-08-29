@@ -93,6 +93,12 @@ abstract final class DioErrorMapper {
         return localized;
       }
 
+      final validationMessage =
+          ApiErrorMapper.mapValidationErrors(data, strings);
+      if (validationMessage != null && validationMessage.isNotEmpty) {
+        return validationMessage;
+      }
+
       final title = data['title'];
       if (title is String && title.isNotEmpty) {
         final mappedTitle = ApiErrorMapper.mapApiTitle(title, strings);

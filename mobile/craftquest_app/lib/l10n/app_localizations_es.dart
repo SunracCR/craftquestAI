@@ -284,6 +284,18 @@ class AppLocalizationsEs extends AppLocalizations {
   String get registerAction => 'Registrarse';
 
   @override
+  String get registerEmailAlreadyInUseError =>
+      'Este correo ya está registrado. Inicia sesión o usa otro correo.';
+
+  @override
+  String get registerGuardianEmailRequiredError =>
+      'Si tienes menos de 13 años, necesitas el correo de un padre, madre o tutor.';
+
+  @override
+  String get registerValidationError =>
+      'Revisa los datos del formulario e inténtalo de nuevo.';
+
+  @override
   String get goToRegister => '¿No tienes cuenta? Regístrate';
 
   @override
@@ -388,6 +400,10 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get errorInvalidVerificationToken =>
       'El enlace de activación no es válido o ha caducado.';
+
+  @override
+  String get errorInvalidResetToken =>
+      'El código de recuperación no es válido o ha caducado. Solicita uno nuevo.';
 
   @override
   String get errorInvalidPasswordChangeToken =>

@@ -5,6 +5,7 @@ import 'package:craftquest_app/core/widgets/app_buttons.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/features/auth/data/auth_repository.dart';
 import 'package:craftquest_app/features/auth/presentation/auth_entry_navigation.dart';
+import 'package:craftquest_app/features/auth/presentation/reset_password_page.dart';
 import 'package:craftquest_app/features/auth/presentation/widgets/auth_premium_background.dart';
 import 'package:craftquest_app/features/auth/presentation/widgets/auth_premium_header.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
@@ -51,11 +52,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         return;
       }
       context.showErrorSnackBar(_repository.mapError(e));
-    } catch (_) {
+    } catch (e) {
       if (!mounted) {
         return;
       }
-      context.showErrorSnackBar(DioErrorMapper.genericMessage());
+      context.showErrorSnackBar(DioErrorMapper.mapAny(e));
     } finally {
       if (mounted) {
         setState(() => _isSubmitting = false);
@@ -115,6 +116,19 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                         icon: Icons.mail_outline_rounded,
                         isLoading: _isSubmitting,
                         onPressed: _submit,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      TextButton(
+                        onPressed: _isSubmitting
+                            ? null
+                            : () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) => const ResetPasswordPage(),
+                                  ),
+                                );
+                              },
+                        child: Text(l10n.resetPasswordHaveCode),
                       ),
                           ],
                         ),

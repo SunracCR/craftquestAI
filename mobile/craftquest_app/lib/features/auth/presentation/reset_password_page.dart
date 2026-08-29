@@ -68,11 +68,11 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         return;
       }
       context.showErrorSnackBar(_repository.mapError(e));
-    } catch (_) {
+    } catch (e) {
       if (!mounted) {
         return;
       }
-      context.showErrorSnackBar(DioErrorMapper.genericMessage());
+      context.showErrorSnackBar(DioErrorMapper.mapAny(e));
     } finally {
       if (mounted) {
         setState(() => _isSubmitting = false);

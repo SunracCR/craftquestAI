@@ -37,7 +37,16 @@ class AuthRepository {
           'captchaToken': captchaToken,
       },
     );
-    return RegisterResultModel.fromJson(response.data!);
+    final data = response.data;
+    if (data == null) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        response: response,
+        type: DioExceptionType.badResponse,
+        message: 'Register response body was empty.',
+      );
+    }
+    return RegisterResultModel.fromJson(data);
   }
 
   Future<AuthResponseModel> verifyEmail({required String token}) async {

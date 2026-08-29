@@ -72,7 +72,10 @@ public class AuthService(
 
         if (emailExists)
         {
-            throw new AuthException("Email is already registered.", 409);
+            throw new AuthException(
+                "Email is already registered.",
+                409,
+                "EMAIL_ALREADY_REGISTERED");
         }
 
         var studentRole = await dbContext.Roles
@@ -687,7 +690,7 @@ public class AuthService(
             .AsNoTracking()
             .FirstOrDefaultAsync(
                 u => u.EmailNormalized == normalizedEmail
-                    && u.Status == "active"
+                    && (u.Status == UserStatuses.Active || u.Status == UserStatuses.Pending)
                     && u.PasswordHash != null,
                 cancellationToken);
 
@@ -741,7 +744,10 @@ public class AuthService(
 
         if (request.NewPassword.Length < 8)
         {
-            throw new AuthException("New password must be at least 8 characters.", 400);
+            throw new AuthException(
+                "New password must be at least 8 characters.",
+                400,
+                "PASSWORD_TOO_SHORT");
         }
 
         var tokenHash = PasswordResetTokenHasher.Hash(request.Token.Trim(), _resetOptions.Pepper);
@@ -753,7 +759,9 @@ public class AuthService(
                 t => t.TokenHash == tokenHash && t.UsedAt == null && t.ExpiresAt > now,
                 cancellationToken);
 
-        if (resetToken is null || resetToken.User is null || resetToken.User.Status != "active")
+        if (resetToken?.User is null
+            || (resetToken.User.Status != UserStatuses.Active
+                && resetToken.User.Status != UserStatuses.Pending))
         {
             throw new AuthException("Invalid or expired reset token.", 400, "INVALID_RESET_TOKEN");
         }

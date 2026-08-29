@@ -56,6 +56,7 @@ class AuthRegisterRequested extends AuthEvent {
     this.dateOfBirth,
     this.guardianEmail,
     this.captchaToken,
+    this.attemptId,
   });
 
   final String email;
@@ -64,10 +65,18 @@ class AuthRegisterRequested extends AuthEvent {
   final DateTime? dateOfBirth;
   final String? guardianEmail;
   final String? captchaToken;
+  final int? attemptId;
 
   @override
-  List<Object?> get props =>
-      [email, password, displayName, dateOfBirth, guardianEmail, captchaToken];
+  List<Object?> get props => [
+        email,
+        password,
+        displayName,
+        dateOfBirth,
+        guardianEmail,
+        captchaToken,
+        attemptId,
+      ];
 }
 
 class AuthLogoutRequested extends AuthEvent {

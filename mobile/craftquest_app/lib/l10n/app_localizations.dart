@@ -573,6 +573,24 @@ abstract class AppLocalizations {
   /// **'Registrarse'**
   String get registerAction;
 
+  /// No description provided for @registerEmailAlreadyInUseError.
+  ///
+  /// In es, this message translates to:
+  /// **'Este correo ya está registrado. Inicia sesión o usa otro correo.'**
+  String get registerEmailAlreadyInUseError;
+
+  /// No description provided for @registerGuardianEmailRequiredError.
+  ///
+  /// In es, this message translates to:
+  /// **'Si tienes menos de 13 años, necesitas el correo de un padre, madre o tutor.'**
+  String get registerGuardianEmailRequiredError;
+
+  /// No description provided for @registerValidationError.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisa los datos del formulario e inténtalo de nuevo.'**
+  String get registerValidationError;
+
   /// No description provided for @goToRegister.
   ///
   /// In es, this message translates to:
@@ -758,6 +776,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'El enlace de activación no es válido o ha caducado.'**
   String get errorInvalidVerificationToken;
+
+  /// No description provided for @errorInvalidResetToken.
+  ///
+  /// In es, this message translates to:
+  /// **'El código de recuperación no es válido o ha caducado. Solicita uno nuevo.'**
+  String get errorInvalidResetToken;
 
   /// No description provided for @errorInvalidPasswordChangeToken.
   ///

@@ -284,6 +284,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registerAction => 'Sign up';
 
   @override
+  String get registerEmailAlreadyInUseError =>
+      'This email is already registered. Sign in or use a different email.';
+
+  @override
+  String get registerGuardianEmailRequiredError =>
+      'If you are under 13, a parent or guardian email is required.';
+
+  @override
+  String get registerValidationError => 'Check the form details and try again.';
+
+  @override
   String get goToRegister => 'Don\'t have an account? Sign up';
 
   @override
@@ -385,6 +396,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorInvalidVerificationToken =>
       'The activation link is invalid or has expired.';
+
+  @override
+  String get errorInvalidResetToken =>
+      'The recovery code is invalid or has expired. Request a new one.';
 
   @override
   String get errorInvalidPasswordChangeToken =>

@@ -1,6 +1,7 @@
 using CraftQuest.Application.Contracts;
 using CraftQuest.Application.Models.Auth;
 using CraftQuest.Application.Options;
+using CraftQuest.Domain.Constants;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
 using CraftQuest.Infrastructure.Security;
@@ -24,6 +25,33 @@ public class AuthServicePasswordResetTests
             new ForgotPasswordRequest { Email = "missing@test.com" });
 
         Assert.Empty(await db.PasswordResetTokens.ToListAsync());
+    }
+
+    [Fact]
+    public async Task RequestPasswordReset_PendingUser_CreatesToken()
+    {
+        await using var db = CreateDb();
+        const string pepper = "test-pepper";
+        var userId = Guid.NewGuid();
+        db.Users.Add(new User
+        {
+            UserId = userId,
+            Email = "pending@test.com",
+            PasswordHash = PasswordHasher.HashPassword("OldPass123!"),
+            DisplayName = "Pending Test",
+            Status = UserStatuses.Pending,
+            CreatedAt = DateTime.UtcNow,
+        });
+        await db.SaveChangesAsync();
+
+        var email = new CapturingEmailSender();
+        var service = CreateService(db, pepper, email);
+
+        await service.RequestPasswordResetAsync(
+            new ForgotPasswordRequest { Email = "pending@test.com" });
+
+        Assert.Single(await db.PasswordResetTokens.Where(t => t.UserId == userId).ToListAsync());
+        Assert.Equal("pending@test.com", email.LastToEmail);
     }
 
     [Fact]
@@ -84,7 +112,10 @@ public class AuthServicePasswordResetTests
             }));
     }
 
-    private static AuthService CreateService(CraftQuestDbContext db, string pepper = "test-pepper")
+    private static AuthService CreateService(
+        CraftQuestDbContext db,
+        string pepper = "test-pepper",
+        CapturingEmailSender? emailSender = null)
     {
         var billing = BillingTestHelpers.CreateService(db);
         var jwt = new JwtTokenService(Options.Create(new JwtOptions
@@ -93,7 +124,7 @@ public class AuthServicePasswordResetTests
             Issuer = "test",
             Audience = "test",
         }));
-        var email = new CapturingEmailSender();
+        var email = emailSender ?? new CapturingEmailSender();
         var resetOptions = Options.Create(new PasswordResetOptions
         {
             Pepper = pepper,

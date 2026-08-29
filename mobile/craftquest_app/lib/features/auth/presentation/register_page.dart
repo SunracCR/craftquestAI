@@ -96,9 +96,11 @@ class _RegisterPageState extends State<RegisterPage> {
     final captchaToken = await requestWebAuthCaptchaToken();
     if (!context.mounted) return;
 
+    final registerAttemptId = DateTime.now().millisecondsSinceEpoch;
     final resultFuture = bloc.stream.firstWhere(
       (state) =>
-          state is AuthEmailVerificationPending || state is AuthFailure,
+          state is AuthEmailVerificationPending ||
+          (state is AuthFailure && state.attemptId == registerAttemptId),
     );
 
     bloc.add(
@@ -109,6 +111,7 @@ class _RegisterPageState extends State<RegisterPage> {
         dateOfBirth: _birthDate,
         guardianEmail: _isMinor ? _guardianEmailController.text.trim() : null,
         captchaToken: captchaToken,
+        attemptId: registerAttemptId,
       ),
     );
 

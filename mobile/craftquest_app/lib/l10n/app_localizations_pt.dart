@@ -284,6 +284,18 @@ class AppLocalizationsPt extends AppLocalizations {
   String get registerAction => 'Registrar';
 
   @override
+  String get registerEmailAlreadyInUseError =>
+      'Este e-mail ja esta registrado. Entre ou use outro e-mail.';
+
+  @override
+  String get registerGuardianEmailRequiredError =>
+      'Se voce tem menos de 13 anos, e necessario o e-mail de um responsavel.';
+
+  @override
+  String get registerValidationError =>
+      'Revise os dados do formulario e tente novamente.';
+
+  @override
   String get goToRegister => 'Nao tem conta? Registre-se';
 
   @override
@@ -385,6 +397,10 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get errorInvalidVerificationToken =>
       'O link de ativacao e invalido ou expirou.';
+
+  @override
+  String get errorInvalidResetToken =>
+      'O codigo de recuperacao e invalido ou expirou. Solicite um novo.';
 
   @override
   String get errorInvalidPasswordChangeToken =>

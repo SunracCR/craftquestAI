@@ -217,9 +217,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         requiresParentalConsent: result.requiresParentalConsent,
       ));
     } on DioException catch (e) {
-      emit(_loginFailure(_repository.mapError(e)));
-    } catch (_) {
-      emit(_loginFailure(DioErrorMapper.genericMessage()));
+      emit(
+        _loginFailure(
+          _repository.mapError(e),
+          attemptId: event.attemptId,
+          errorCode: _errorCodeFrom(e),
+        ),
+      );
+    } catch (e) {
+      emit(
+        _loginFailure(
+          DioErrorMapper.mapAny(e),
+          attemptId: event.attemptId,
+        ),
+      );
     }
   }
 
