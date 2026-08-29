@@ -192,35 +192,6 @@ class PrepPlusAdminRepository {
     );
   }
 
-  Future<PrepAdminQuizTopicModel> createTopic(
-    String catalogItemId,
-    Map<String, dynamic> body,
-  ) async {
-    final response = await _apiClient.dio.post<Map<String, dynamic>>(
-      '/api/admin/prep/items/$catalogItemId/topics',
-      data: body,
-    );
-    return PrepAdminQuizTopicModel.fromJson(response.data!);
-  }
-
-  Future<PrepAdminQuizTopicModel> updateTopic(
-    String catalogItemId,
-    String topicId,
-    Map<String, dynamic> body,
-  ) async {
-    final response = await _apiClient.dio.put<Map<String, dynamic>>(
-      '/api/admin/prep/items/$catalogItemId/topics/$topicId',
-      data: body,
-    );
-    return PrepAdminQuizTopicModel.fromJson(response.data!);
-  }
-
-  Future<void> deleteTopic(String catalogItemId, String topicId) async {
-    await _apiClient.dio.delete<void>(
-      '/api/admin/prep/items/$catalogItemId/topics/$topicId',
-    );
-  }
-
   Future<void> bulkTagQuestions(
     String catalogItemId,
     List<Map<String, dynamic>> questions,

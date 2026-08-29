@@ -1476,6 +1476,36 @@ abstract class AppLocalizations {
   /// **'Solo hay {count} preguntas con este filtro'**
   String prepPlusCustomPracticePoolLimited(int count);
 
+  /// No description provided for @prepPlusCustomPracticeSelectAll.
+  ///
+  /// In es, this message translates to:
+  /// **'Todos'**
+  String get prepPlusCustomPracticeSelectAll;
+
+  /// No description provided for @prepPlusCustomPracticeSelectNone.
+  ///
+  /// In es, this message translates to:
+  /// **'Ninguno'**
+  String get prepPlusCustomPracticeSelectNone;
+
+  /// No description provided for @prepPlusCustomPracticeAllChapters.
+  ///
+  /// In es, this message translates to:
+  /// **'Todos los capítulos'**
+  String get prepPlusCustomPracticeAllChapters;
+
+  /// No description provided for @prepPlusCustomPracticeChaptersSummary.
+  ///
+  /// In es, this message translates to:
+  /// **'{chapters} capítulos · {questions} preguntas'**
+  String prepPlusCustomPracticeChaptersSummary(int chapters, int questions);
+
+  /// No description provided for @prepPlusCustomPracticeSliderLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'{selected} de {total} preguntas'**
+  String prepPlusCustomPracticeSliderLabel(int selected, int total);
+
   /// No description provided for @prepPlusExpandDescription.
   ///
   /// In es, this message translates to:

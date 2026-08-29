@@ -348,6 +348,10 @@ public class QuestionImportService(
             .Where(t => t.IsActive)
             .ToDictionaryAsync(t => t.Code, StringComparer.OrdinalIgnoreCase, cancellationToken);
 
+        var sectionNameMap = await dbContext.QuizSections
+            .Where(s => s.QuizId == quizId)
+            .ToDictionaryAsync(s => s.Name, s => s.QuizSectionId, StringComparer.OrdinalIgnoreCase, cancellationToken);
+
         foreach (var row in batch.Rows.OrderBy(r => r.RowNumber))
         {
             if (row.Status is not ("valid" or "warning"))
@@ -365,6 +369,11 @@ public class QuestionImportService(
 
             var question = JsonSerializer.Deserialize<CqifQuestion>(row.CqifQuestionJson!, JsonOptions)!;
             var createRequest = CqifImportMapper.ToCreateQuestionRequest(question, quizDefaultPoints);
+            createRequest.SectionId = await ResolveImportChapterSectionIdAsync(
+                quizId,
+                question.Chapter,
+                sectionNameMap,
+                cancellationToken);
             if (string.Equals(batch.SourceType, "ai", StringComparison.OrdinalIgnoreCase))
             {
                 createRequest.IsGeneratedByAi = true;
@@ -622,4 +631,39 @@ public class QuestionImportService(
             QuestionsWithWarnings = warningCount,
             QuestionsWithErrors = batch.ErrorRows,
         };
+
+    private async Task<Guid?> ResolveImportChapterSectionIdAsync(
+        Guid quizId,
+        string? chapterName,
+        Dictionary<string, Guid> sectionNameMap,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(chapterName))
+        {
+            return null;
+        }
+
+        var normalizedName = chapterName.Trim();
+        if (sectionNameMap.TryGetValue(normalizedName, out var existingId))
+        {
+            return existingId;
+        }
+
+        var maxSortOrder = await dbContext.QuizSections
+            .Where(s => s.QuizId == quizId)
+            .MaxAsync(s => (int?)s.SortOrder, cancellationToken) ?? 0;
+
+        var section = new QuizSection
+        {
+            QuizSectionId = Guid.NewGuid(),
+            QuizId = quizId,
+            Name = normalizedName,
+            SortOrder = maxSortOrder + 1,
+            CreatedAt = DateTime.UtcNow,
+        };
+
+        dbContext.QuizSections.Add(section);
+        sectionNameMap[normalizedName] = section.QuizSectionId;
+        return section.QuizSectionId;
+    }
 }

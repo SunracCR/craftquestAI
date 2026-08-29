@@ -26,11 +26,8 @@ public class StartPracticeSessionRequest
     /// <summary>Prep+ catalog item when starting a custom practice session.</summary>
     public Guid? CatalogItemId { get; set; }
 
-    /// <summary>Capítulos elegidos; vacío = todos los capítulos del ítem.</summary>
+    /// <summary>Capítulos elegidos; vacío = pool completo del cuestionario.</summary>
     public List<Guid>? SectionIds { get; set; }
-
-    /// <summary>Temas elegidos; vacío = todas las preguntas de los capítulos marcados.</summary>
-    public List<Guid>? TopicIds { get; set; }
 
     /// <summary>Filtrar por dificultad (easy, medium, hard).</summary>
     public string? Difficulty { get; set; }

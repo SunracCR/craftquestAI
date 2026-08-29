@@ -350,6 +350,23 @@
       "count": {"type": "int"}
     }
   },
+  "prepPlusCustomPracticeSelectAll": "Todos",
+  "prepPlusCustomPracticeSelectNone": "Ninguno",
+  "prepPlusCustomPracticeAllChapters": "Todos los capítulos",
+  "prepPlusCustomPracticeChaptersSummary": "{chapters} capítulos · {questions} preguntas",
+  "@prepPlusCustomPracticeChaptersSummary": {
+    "placeholders": {
+      "chapters": {"type": "int"},
+      "questions": {"type": "int"}
+    }
+  },
+  "prepPlusCustomPracticeSliderLabel": "{selected} de {total} preguntas",
+  "@prepPlusCustomPracticeSliderLabel": {
+    "placeholders": {
+      "selected": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
   "prepPlusExpandDescription": "Ver más",
   "prepPlusTrySimulationShort": "3 preguntas de muestra · sin guardar resultados",
   "prepPlusProgressAnalyticsShort": "Analítica",

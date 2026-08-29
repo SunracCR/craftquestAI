@@ -37,6 +37,9 @@ public sealed class CqifQuestion
     [JsonPropertyName("section")]
     public string? Section { get; set; }
 
+    [JsonPropertyName("chapter")]
+    public string? Chapter { get; set; }
+
     [JsonPropertyName("order")]
     public int? Order { get; set; }
 

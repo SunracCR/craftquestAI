@@ -6,16 +6,6 @@ public sealed class PrepQuizSectionDto
     public required string Name { get; init; }
     public required int SortOrder { get; init; }
     public required int QuestionCount { get; init; }
-    public IReadOnlyList<PrepQuizTopicDto> Topics { get; init; } = [];
-}
-
-public sealed class PrepQuizTopicDto
-{
-    public required Guid TopicId { get; init; }
-    public required Guid SectionId { get; init; }
-    public required string Name { get; init; }
-    public required int SortOrder { get; init; }
-    public required int QuestionCount { get; init; }
 }
 
 public sealed class PrepQuestionBankQuestionDto
@@ -24,7 +14,6 @@ public sealed class PrepQuestionBankQuestionDto
     public required int SortOrder { get; init; }
     public required string PromptPreview { get; init; }
     public Guid? SectionId { get; init; }
-    public Guid? TopicId { get; init; }
     public string? Difficulty { get; init; }
 }
 
@@ -44,18 +33,10 @@ public class UpsertPrepQuizSectionRequest
     public int SortOrder { get; set; }
 }
 
-public class UpsertPrepQuizTopicRequest
-{
-    public Guid SectionId { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public int SortOrder { get; set; }
-}
-
 public class TagPrepQuestionRequest
 {
     public Guid QuestionId { get; set; }
     public Guid? SectionId { get; set; }
-    public Guid? TopicId { get; set; }
     public string? Difficulty { get; set; }
 }
 
@@ -72,14 +53,6 @@ public class SetPrepCustomPracticeRequest
 public sealed class PrepPracticeSectionPublicDto
 {
     public required Guid SectionId { get; init; }
-    public required string Name { get; init; }
-    public required int QuestionCount { get; init; }
-    public IReadOnlyList<PrepPracticeTopicPublicDto> Topics { get; init; } = [];
-}
-
-public sealed class PrepPracticeTopicPublicDto
-{
-    public required Guid TopicId { get; init; }
     public required string Name { get; init; }
     public required int QuestionCount { get; init; }
 }

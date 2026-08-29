@@ -138,6 +138,8 @@ class OfflinePackageRepository {
           'supports_multiple_correct_answers':
               question.supportsMultipleCorrectAnswers ? 1 : 0,
           'question_media_asset_id': question.questionMediaAssetId,
+          'quiz_section_id': question.quizSectionId,
+          'quiz_section_name': question.quizSectionName,
           'correct_answer_blob': question.correctAnswerBlob,
           'answer_key_blob': question.answerKeyBlob,
         });
@@ -298,6 +300,8 @@ class OfflinePackageRepository {
               supportsMultipleCorrectAnswers:
                   (q['supports_multiple_correct_answers'] as int? ?? 0) == 1,
               questionMediaAssetId: q['question_media_asset_id'] as String?,
+              quizSectionId: q['quiz_section_id'] as String?,
+              quizSectionName: q['quiz_section_name'] as String?,
               correctAnswerBlob: q['correct_answer_blob'] as String,
               answerKeyBlob: q['answer_key_blob'] as String?,
               answerOptions:
@@ -338,6 +342,34 @@ class OfflinePackageRepository {
       return null;
     }
     return File(path).existsSync() ? path : null;
+  }
+
+  Future<int> countPracticePool({
+    required String quizId,
+    List<String>? sectionIds,
+    String? difficulty,
+  }) async {
+    final quiz = await loadStoredQuizContent(quizId);
+    if (quiz == null) {
+      return 0;
+    }
+
+    var questions = quiz.questions;
+    if (sectionIds != null && sectionIds.isNotEmpty) {
+      final sectionSet = sectionIds.toSet();
+      questions = questions
+          .where(
+            (q) =>
+                q.quizSectionId != null && sectionSet.contains(q.quizSectionId),
+          )
+          .toList();
+    }
+
+    if (difficulty != null && difficulty.isNotEmpty) {
+      // Offline package does not store difficulty yet; fall back to full filtered set.
+    }
+
+    return questions.length;
   }
 
   Future<void> deleteDownloadedQuiz(String quizId) async {

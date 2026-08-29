@@ -31,7 +31,6 @@ import 'package:craftquest_app/features/prep_plus/presentation/widgets/prep_plus
 import 'package:craftquest_app/features/prep_plus/presentation/widgets/prep_plus_access_combo_card.dart';
 import 'package:craftquest_app/features/prep_plus/presentation/widgets/prep_plus_item_hero.dart';
 import 'package:craftquest_app/features/prep_plus/presentation/widgets/prep_plus_custom_practice_panel.dart';
-import 'package:craftquest_app/features/prep_plus/presentation/widgets/prep_plus_practice_options_panel.dart';
 import 'package:craftquest_app/features/prep_plus/presentation/widgets/prep_plus_simulation_tile.dart';
 import 'package:craftquest_app/features/practice/data/models/practice_models.dart';
 import 'package:craftquest_app/features/practice/data/practice_sound_preference_store.dart';
@@ -215,6 +214,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
   }
 
   Future<void> _practiceOffline(String quizId, String title) async {
+    final selection = _customPracticeSelection;
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         builder: (_) => BlocProvider(
@@ -226,6 +226,8 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
             quizId: quizId,
             showElapsedTimer: _showTimer,
             randomizeQuestions: _randomizeQuestions,
+            sectionIds: selection?.sectionIds ?? const [],
+            questionCount: selection?.questionCount,
           )..load(),
           child: OfflinePracticeSessionPage(quizTitle: title),
         ),
@@ -449,13 +451,11 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       showTimer: _showTimer,
       enableSoundEffects: _enableSoundEffects,
     );
-    if (item?.supportsCustomPractice == true &&
-        _customPracticeSelection != null) {
+    if (item?.canPractice == true && _customPracticeSelection != null) {
       final selection = _customPracticeSelection!;
       return base.copyWith(
         catalogItemId: item!.catalogItemId,
         sectionIds: selection.sectionIds,
-        topicIds: selection.topicIds,
         difficulty: selection.difficulty,
         questionCount: selection.questionCount,
       );
@@ -1224,10 +1224,10 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
                             padding: const EdgeInsets.symmetric(
                               horizontal: AppSpacing.md,
                             ),
-                            child: _item!.supportsCustomPractice
-                                ? PrepPlusCustomPracticePanel(
+                            child: PrepPlusCustomPracticePanel(
                                     item: _item!,
                                     isLoading: _loadingPreferences,
+                                    isOfflineDownloaded: _isOfflineDownloaded,
                                     randomizeQuestions: _randomizeQuestions,
                                     showTimer: _showTimer,
                                     enableSoundEffects: _enableSoundEffects,
@@ -1237,21 +1237,6 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
                                             selection,
                                       );
                                     },
-                                    onRandomizeQuestionsChanged: (value) =>
-                                        _updateRandomizeQuestions(
-                                      _item!.quizId,
-                                      value,
-                                    ),
-                                    onShowTimerChanged: (value) =>
-                                        _updateShowTimer(_item!.quizId, value),
-                                    onSoundEffectsChanged:
-                                        _updateSoundEffects,
-                                  )
-                                : PrepPlusPracticeOptionsPanel(
-                                    isLoading: _loadingPreferences,
-                                    randomizeQuestions: _randomizeQuestions,
-                                    showTimer: _showTimer,
-                                    enableSoundEffects: _enableSoundEffects,
                                     onRandomizeQuestionsChanged: (value) =>
                                         _updateRandomizeQuestions(
                                       _item!.quizId,
@@ -1385,9 +1370,8 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
     if (item == null) return null;
 
     if (item.canPractice) {
-      final customBlocked = item.supportsCustomPractice &&
-          (_customPracticeSelection == null ||
-              !_customPracticeSelection!.isValid);
+      final customBlocked = _customPracticeSelection == null ||
+          !_customPracticeSelection!.isValid;
       return AppBottomActionBar(
         children: [
           AppPrimaryButton(

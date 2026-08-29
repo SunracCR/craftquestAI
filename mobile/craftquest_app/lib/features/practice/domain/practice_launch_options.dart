@@ -6,7 +6,6 @@ class PracticeLaunchOptions {
     this.enableSoundEffects = true,
     this.catalogItemId,
     this.sectionIds = const [],
-    this.topicIds = const [],
     this.difficulty,
     this.questionCount,
   });
@@ -16,16 +15,10 @@ class PracticeLaunchOptions {
   final bool enableSoundEffects;
   final String? catalogItemId;
   final List<String> sectionIds;
-  final List<String> topicIds;
   final String? difficulty;
   final int? questionCount;
 
-  bool get isCustomPrepPractice =>
-      catalogItemId != null &&
-      (sectionIds.isNotEmpty ||
-          topicIds.isNotEmpty ||
-          difficulty != null ||
-          questionCount != null);
+  bool get isCustomPrepPractice => catalogItemId != null;
 
   static const PracticeLaunchOptions defaults = PracticeLaunchOptions();
 
@@ -35,7 +28,6 @@ class PracticeLaunchOptions {
     bool? enableSoundEffects,
     String? catalogItemId,
     List<String>? sectionIds,
-    List<String>? topicIds,
     String? difficulty,
     int? questionCount,
     bool clearDifficulty = false,
@@ -47,7 +39,6 @@ class PracticeLaunchOptions {
       enableSoundEffects: enableSoundEffects ?? this.enableSoundEffects,
       catalogItemId: catalogItemId ?? this.catalogItemId,
       sectionIds: sectionIds ?? this.sectionIds,
-      topicIds: topicIds ?? this.topicIds,
       difficulty: clearDifficulty ? null : (difficulty ?? this.difficulty),
       questionCount:
           clearQuestionCount ? null : (questionCount ?? this.questionCount),

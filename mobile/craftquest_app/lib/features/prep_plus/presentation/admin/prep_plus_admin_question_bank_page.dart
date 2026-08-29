@@ -75,32 +75,12 @@ class _PrepPlusAdminQuestionBankPageState
     });
   }
 
-  Future<void> _createTopic(PrepAdminQuizSectionModel section) async {
-    final l10n = AppLocalizations.of(context)!;
-    final name = await _promptText(l10n.prepAdminQuestionBankTopicName);
-    if (name == null || name.trim().isEmpty) return;
-    await _runSaving(() async {
-      await _repo.createTopic(widget.catalogItemId, {
-        'sectionId': section.sectionId,
-        'name': name.trim(),
-        'sortOrder': section.topics.length + 1,
-      });
-    });
-  }
-
-  Future<void> _toggleCustomPractice(bool value) async {
-    await _runSaving(() async {
-      await _repo.setCustomPractice(widget.catalogItemId, value);
-    });
-  }
-
   Future<void> _assignQuestion(PrepAdminQuestionBankQuestionModel question) async {
     final bank = _bank;
     if (bank == null) return;
     final l10n = AppLocalizations.of(context)!;
 
     String? sectionId = question.sectionId;
-    String? topicId = question.topicId;
     String? difficulty = question.difficulty;
 
     final saved = await showModalBottomSheet<bool>(
@@ -109,12 +89,6 @@ class _PrepPlusAdminQuestionBankPageState
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            final selectedSection = bank.sections
-                .where((s) => s.sectionId == sectionId)
-                .cast<PrepAdminQuizSectionModel?>()
-                .firstOrNull;
-            final topics = selectedSection?.topics ?? const [];
-
             return Padding(
               padding: EdgeInsets.only(
                 left: AppSpacing.md,
@@ -152,36 +126,9 @@ class _PrepPlusAdminQuestionBankPageState
                       ),
                     ],
                     onChanged: (value) {
-                      setModalState(() {
-                        sectionId = value;
-                        topicId = null;
-                      });
+                      setModalState(() => sectionId = value);
                     },
                   ),
-                  if (topics.isNotEmpty) ...[
-                    const SizedBox(height: AppSpacing.sm),
-                    DropdownButtonFormField<String?>(
-                      value: topicId,
-                      decoration: InputDecoration(
-                        labelText: l10n.prepAdminQuestionBankTopicLabel,
-                      ),
-                      items: [
-                        DropdownMenuItem<String?>(
-                          value: null,
-                          child: Text(l10n.prepAdminQuestionBankNoTopic),
-                        ),
-                        ...topics.map(
-                          (t) => DropdownMenuItem(
-                            value: t.topicId,
-                            child: Text(t.name),
-                          ),
-                        ),
-                      ],
-                      onChanged: sectionId == null
-                          ? null
-                          : (value) => setModalState(() => topicId = value),
-                    ),
-                  ],
                   const SizedBox(height: AppSpacing.sm),
                   DropdownButtonFormField<String?>(
                     value: difficulty,
@@ -229,7 +176,6 @@ class _PrepPlusAdminQuestionBankPageState
         {
           'questionId': question.questionId,
           'sectionId': sectionId,
-          'topicId': topicId,
           'difficulty': difficulty,
         },
       ]);
@@ -315,14 +261,6 @@ class _PrepPlusAdminQuestionBankPageState
                               ),
                             ),
                             const SizedBox(height: AppSpacing.sm),
-                            SwitchListTile(
-                              title: Text(l10n.prepAdminQuestionBankEnableCustom),
-                              subtitle: Text(
-                                l10n.prepAdminQuestionBankEnableCustomHint,
-                              ),
-                              value: bank.supportsCustomPractice,
-                              onChanged: _saving ? null : _toggleCustomPractice,
-                            ),
                             if (bank.untaggedQuestionCount > 0)
                               Padding(
                                 padding: const EdgeInsets.only(
@@ -359,69 +297,28 @@ class _PrepPlusAdminQuestionBankPageState
                               return Padding(
                                 padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                                 child: AppSectionCard(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                                  children: [
-                                    ListTile(
-                                      title: Text(section.name),
-                                      subtitle: Text(
-                                        l10n.prepPlusCustomPracticeSectionCount(
-                                          section.questionCount,
-                                        ),
-                                      ),
-                                      trailing: IconButton(
-                                        icon: const Icon(Icons.delete_outline),
-                                        onPressed: _saving
-                                            ? null
-                                            : () async {
-                                                await _runSaving(() async {
-                                                  await _repo.deleteSection(
-                                                    widget.catalogItemId,
-                                                    section.sectionId,
-                                                  );
-                                                });
-                                              },
+                                  child: ListTile(
+                                    title: Text(section.name),
+                                    subtitle: Text(
+                                      l10n.prepPlusCustomPracticeSectionCount(
+                                        section.questionCount,
                                       ),
                                     ),
-                                    Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: TextButton.icon(
-                                        onPressed: _saving
-                                            ? null
-                                            : () => _createTopic(section),
-                                        icon: const Icon(Icons.add),
-                                        label: Text(
-                                          l10n.prepAdminQuestionBankAddTopic,
-                                        ),
-                                      ),
+                                    trailing: IconButton(
+                                      icon: const Icon(Icons.delete_outline),
+                                      onPressed: _saving
+                                          ? null
+                                          : () async {
+                                              await _runSaving(() async {
+                                                await _repo.deleteSection(
+                                                  widget.catalogItemId,
+                                                  section.sectionId,
+                                                );
+                                              });
+                                            },
                                     ),
-                                    ...section.topics.map(
-                                      (topic) => ListTile(
-                                        dense: true,
-                                        title: Text('  ${topic.name}'),
-                                        subtitle: Text(
-                                          l10n.prepPlusCustomPracticeTopicCount(
-                                            topic.questionCount,
-                                          ),
-                                        ),
-                                        trailing: IconButton(
-                                          icon: const Icon(Icons.delete_outline),
-                                          onPressed: _saving
-                                              ? null
-                                              : () async {
-                                                  await _runSaving(() async {
-                                                    await _repo.deleteTopic(
-                                                      widget.catalogItemId,
-                                                      topic.topicId,
-                                                    );
-                                                  });
-                                                },
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                  ),
                                 ),
-                              ),
                               );
                             }),
                             const SizedBox(height: AppSpacing.md),

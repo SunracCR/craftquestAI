@@ -70,6 +70,17 @@ public class OfflineQuizService(
 
         var mediaAssets = new Dictionary<Guid, OfflinePackageMediaAssetDto>();
         var packageQuestions = new List<OfflinePackageQuestionDto>();
+        var sectionIds = questions
+            .Where(q => q.QuizSectionId != null)
+            .Select(q => q.QuizSectionId!.Value)
+            .Distinct()
+            .ToList();
+        var sectionNames = sectionIds.Count == 0
+            ? new Dictionary<Guid, string>()
+            : await dbContext.QuizSections
+                .AsNoTracking()
+                .Where(s => sectionIds.Contains(s.QuizSectionId))
+                .ToDictionaryAsync(s => s.QuizSectionId, s => s.Name, cancellationToken);
 
         foreach (var question in questions.OrderBy(q => q.SortOrder))
         {
@@ -122,6 +133,10 @@ public class OfflineQuizService(
             packageQuestions.Add(new OfflinePackageQuestionDto
             {
                 QuestionId = question.QuestionId,
+                QuizSectionId = question.QuizSectionId,
+                QuizSectionName = question.QuizSectionId is Guid sectionId
+                    ? sectionNames.GetValueOrDefault(sectionId)
+                    : null,
                 SortOrder = question.SortOrder,
                 QuestionText = question.QuestionText,
                 QuestionType = question.QuestionType.Code,
@@ -201,22 +216,42 @@ public class OfflineQuizService(
 
         await EnsureStandaloneQuizAccessAsync(userId, quiz, cancellationToken);
 
-        var questions = await PracticeQuestionLoader.LoadForQuizAsync(
+        var allQuestions = await PracticeQuestionLoader.LoadForQuizAsync(
             dbContext,
             request.QuizId,
             cancellationToken);
 
-        var maxQuestionUpdated = questions.Count > 0 ? questions.Max(q => q.UpdatedAt) : null;
+        var practicedQuestionIds = request.Answers
+            .Select(a => a.QuestionId)
+            .Distinct()
+            .ToHashSet();
+
+        var questions = practicedQuestionIds.Count == 0
+            ? allQuestions
+            : allQuestions
+                .Where(q => practicedQuestionIds.Contains(q.QuestionId))
+                .ToList();
+
+        if (questions.Count == 0)
+        {
+            throw new AppException("No practiced questions to sync.", 400);
+        }
+
+        var maxQuestionUpdated = questions.Max(q => q.UpdatedAt);
         var currentContentVersion = OfflinePackageCryptoService.ComputeContentVersion(
             quiz.QuizId,
             quiz.UpdatedAt,
-            questions.Count,
-            maxQuestionUpdated);
+            allQuestions.Count,
+            allQuestions.Count > 0 ? allQuestions.Max(q => q.UpdatedAt) : null);
 
         var contentChanged = !string.Equals(
             request.ContentVersion,
             currentContentVersion,
             StringComparison.OrdinalIgnoreCase);
+
+        var sectionNamesByQuestionId = await BuildOfflineSectionNameSnapshotsAsync(
+            questions,
+            cancellationToken);
 
         var session = new PracticeSession
         {
@@ -237,7 +272,10 @@ public class OfflineQuizService(
             ScorePossible = questions.Sum(q => q.Points),
         };
 
-        PracticeSessionSnapshotBuilder.PopulateQuestionSnapshots(session, questions);
+        PracticeSessionSnapshotBuilder.PopulateQuestionSnapshots(
+            session,
+            questions,
+            sectionNamesByQuestionId);
         await PracticeSnapshotBulkInserter.InsertAsync(dbContext, session, cancellationToken: cancellationToken);
 
         var answersByQuestion = request.Answers
@@ -535,5 +573,38 @@ public class OfflineQuizService(
         session.CorrectAnswers = correct;
         session.IncorrectAnswers = incorrect;
         session.OmittedAnswers = omitted;
+    }
+
+    private async Task<Dictionary<Guid, string>> BuildOfflineSectionNameSnapshotsAsync(
+        IReadOnlyList<Question> questions,
+        CancellationToken cancellationToken)
+    {
+        var sectionIds = questions
+            .Where(q => q.QuizSectionId != null)
+            .Select(q => q.QuizSectionId!.Value)
+            .Distinct()
+            .ToList();
+
+        if (sectionIds.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        var sectionNames = await dbContext.QuizSections
+            .AsNoTracking()
+            .Where(s => sectionIds.Contains(s.QuizSectionId))
+            .ToDictionaryAsync(s => s.QuizSectionId, s => s.Name, cancellationToken);
+
+        var result = new Dictionary<Guid, string>();
+        foreach (var question in questions)
+        {
+            if (question.QuizSectionId is not null
+                && sectionNames.TryGetValue(question.QuizSectionId.Value, out var sectionName))
+            {
+                result[question.QuestionId] = sectionName;
+            }
+        }
+
+        return result;
     }
 }

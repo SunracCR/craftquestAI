@@ -4,7 +4,9 @@ import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_section_card.dart';
+import 'package:craftquest_app/features/offline_practice/data/offline_package_repository.dart';
 import 'package:craftquest_app/features/prep_plus/data/models/prep_plus_models.dart';
+import 'package:craftquest_app/features/prep_plus/data/models/prep_plus_question_bank_models.dart';
 import 'package:craftquest_app/features/prep_plus/data/prep_plus_repository.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_launch_options_card.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
@@ -13,22 +15,20 @@ import 'package:flutter/material.dart';
 class PrepCustomPracticeSelection {
   const PrepCustomPracticeSelection({
     this.sectionIds = const [],
-    this.topicIds = const [],
     this.difficulty,
-    this.questionCount,
+    this.questionCount = 1,
     this.poolCount = 0,
   });
 
   final List<String> sectionIds;
-  final List<String> topicIds;
   final String? difficulty;
-  final int? questionCount;
+  final int questionCount;
   final int poolCount;
 
-  bool get isValid => poolCount > 0;
+  bool get isValid => poolCount >= 1;
 }
 
-/// Configurador de práctica a medida para ítems Prep+ con banco etiquetado.
+/// Configurador de práctica a medida para ítems Prep+ con acceso activo.
 class PrepPlusCustomPracticePanel extends StatefulWidget {
   const PrepPlusCustomPracticePanel({
     super.key,
@@ -41,6 +41,7 @@ class PrepPlusCustomPracticePanel extends StatefulWidget {
     required this.onShowTimerChanged,
     required this.onSoundEffectsChanged,
     this.isLoading = false,
+    this.isOfflineDownloaded = false,
   });
 
   final PrepItemDetailModel item;
@@ -52,6 +53,7 @@ class PrepPlusCustomPracticePanel extends StatefulWidget {
   final ValueChanged<bool> onShowTimerChanged;
   final ValueChanged<bool> onSoundEffectsChanged;
   final bool isLoading;
+  final bool isOfflineDownloaded;
 
   @override
   State<PrepPlusCustomPracticePanel> createState() =>
@@ -60,22 +62,20 @@ class PrepPlusCustomPracticePanel extends StatefulWidget {
 
 class _PrepPlusCustomPracticePanelState extends State<PrepPlusCustomPracticePanel> {
   final _repo = getIt<PrepPlusRepository>();
+  final _offlineRepo = getIt<OfflinePackageRepository>();
   final _selectedSectionIds = <String>{};
-  final _selectedTopicIds = <String>{};
   String? _selectedDifficulty;
-  int? _selectedQuestionCount;
+  int _selectedQuestionCount = 1;
   int _poolCount = 0;
   bool _loadingPool = false;
   bool _expanded = true;
+  bool _questionCountInitialized = false;
   Timer? _poolDebounce;
-
-  static const _questionCountPresets = [10, 15, 20, 30];
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _emitSelection();
       unawaited(_refreshPool());
     });
   }
@@ -93,31 +93,68 @@ class _PrepPlusCustomPracticePanelState extends State<PrepPlusCustomPracticePane
     });
   }
 
+  int _defaultQuestionCount(int pool) {
+    if (pool <= 0) return 1;
+    return pool < 15 ? pool : 15;
+  }
+
+  void _emitSelection() {
+    widget.onSelectionChanged(
+      PrepCustomPracticeSelection(
+        sectionIds: _selectedSectionIds.toList(),
+        difficulty: _selectedDifficulty,
+        questionCount: _poolCount > 0 ? _selectedQuestionCount : 1,
+        poolCount: _poolCount,
+      ),
+    );
+  }
+
   Future<void> _refreshPool() async {
     if (!mounted) return;
     setState(() => _loadingPool = true);
     try {
-      final pool = await _repo.getPracticePool(
-        catalogItemId: widget.item.catalogItemId,
-        sectionIds: _selectedSectionIds.isEmpty
-            ? null
-            : _selectedSectionIds.toList(),
-        topicIds:
-            _selectedTopicIds.isEmpty ? null : _selectedTopicIds.toList(),
-        difficulty: _selectedDifficulty,
-      );
+      final sectionIds = _selectedSectionIds.isEmpty
+          ? null
+          : _selectedSectionIds.toList();
+      final pool = widget.isOfflineDownloaded
+          ? PrepPracticePoolModel(
+              availableQuestionCount: await _offlineRepo.countPracticePool(
+                quizId: widget.item.quizId,
+                sectionIds: sectionIds,
+                difficulty: _selectedDifficulty,
+              ),
+              maxQuestionCount: await _offlineRepo.countPracticePool(
+                quizId: widget.item.quizId,
+                sectionIds: sectionIds,
+                difficulty: _selectedDifficulty,
+              ),
+            )
+          : await _repo.getPracticePool(
+              catalogItemId: widget.item.catalogItemId,
+              sectionIds: sectionIds,
+              difficulty: _selectedDifficulty,
+            );
       if (!mounted) return;
       setState(() {
         _poolCount = pool.availableQuestionCount;
-        if (_selectedQuestionCount != null &&
-            _selectedQuestionCount! > _poolCount) {
-          _selectedQuestionCount = _poolCount > 0 ? _poolCount : null;
+        if (_poolCount <= 0) {
+          _selectedQuestionCount = 1;
+        } else {
+          if (!_questionCountInitialized) {
+            _selectedQuestionCount = _defaultQuestionCount(_poolCount);
+            _questionCountInitialized = true;
+          } else if (_selectedQuestionCount > _poolCount) {
+            _selectedQuestionCount = _poolCount;
+          }
         }
       });
       _emitSelection();
     } catch (_) {
       if (!mounted) return;
-      setState(() => _poolCount = 0);
+      setState(() {
+        _poolCount = 0;
+        _selectedQuestionCount = 1;
+      });
       _emitSelection();
     } finally {
       if (mounted) {
@@ -126,42 +163,28 @@ class _PrepPlusCustomPracticePanelState extends State<PrepPlusCustomPracticePane
     }
   }
 
-  void _emitSelection() {
-    widget.onSelectionChanged(
-      PrepCustomPracticeSelection(
-        sectionIds: _selectedSectionIds.toList(),
-        topicIds: _selectedTopicIds.toList(),
-        difficulty: _selectedDifficulty,
-        questionCount: _selectedQuestionCount,
-        poolCount: _poolCount,
-      ),
-    );
-  }
-
   void _toggleSection(String sectionId, bool selected) {
     setState(() {
       if (selected) {
         _selectedSectionIds.add(sectionId);
       } else {
         _selectedSectionIds.remove(sectionId);
-        final section = widget.item.practiceSections
-            .firstWhere((s) => s.sectionId == sectionId);
-        for (final topic in section.topics) {
-          _selectedTopicIds.remove(topic.topicId);
-        }
       }
     });
     _schedulePoolRefresh();
   }
 
-  void _toggleTopic(String topicId, bool selected) {
+  void _selectAllSections() {
     setState(() {
-      if (selected) {
-        _selectedTopicIds.add(topicId);
-      } else {
-        _selectedTopicIds.remove(topicId);
-      }
+      _selectedSectionIds
+        ..clear()
+        ..addAll(widget.item.practiceSections.map((s) => s.sectionId));
     });
+    _schedulePoolRefresh();
+  }
+
+  void _clearSections() {
+    setState(() => _selectedSectionIds.clear());
     _schedulePoolRefresh();
   }
 
@@ -173,8 +196,11 @@ class _PrepPlusCustomPracticePanelState extends State<PrepPlusCustomPracticePane
     _schedulePoolRefresh();
   }
 
-  void _setQuestionCount(int? count) {
-    setState(() => _selectedQuestionCount = count);
+  void _setQuestionCount(double value) {
+    setState(() {
+      _selectedQuestionCount = value.round();
+      _questionCountInitialized = true;
+    });
     _emitSelection();
   }
 
@@ -194,13 +220,88 @@ class _PrepPlusCustomPracticePanelState extends State<PrepPlusCustomPracticePane
     if (_poolCount == 0) {
       return l10n.prepPlusCustomPracticeSelectFilters;
     }
-    final countLabel = _selectedQuestionCount == null
-        ? l10n.prepPlusCustomPracticeAllQuestions(_poolCount)
-        : l10n.prepPlusCustomPracticeQuestionCountSummary(
-            _selectedQuestionCount!,
-            _poolCount,
-          );
-    return countLabel;
+
+    final chapterSummary = widget.item.practiceSections.isEmpty
+        ? null
+        : _selectedSectionIds.isEmpty
+            ? l10n.prepPlusCustomPracticeAllChapters
+            : l10n.prepPlusCustomPracticeChaptersSummary(
+                _selectedSectionIds.length,
+                _poolCount,
+              );
+
+    final countLabel = l10n.prepPlusCustomPracticeSliderLabel(
+      _selectedQuestionCount,
+      _poolCount,
+    );
+
+    if (chapterSummary == null) {
+      return countLabel;
+    }
+    return '$chapterSummary · $countLabel';
+  }
+
+  int _gridCrossAxisCount(double width) {
+    if (width >= 900) return 4;
+    if (width >= 600) return 3;
+    return 2;
+  }
+
+  Widget _buildSectionGrid(AppLocalizations l10n) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final crossAxisCount = _gridCrossAxisCount(constraints.maxWidth);
+        const spacing = AppSpacing.xs;
+        final cellWidth =
+            (constraints.maxWidth - spacing * (crossAxisCount - 1)) /
+                crossAxisCount;
+
+        return ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 220),
+          child: SingleChildScrollView(
+            child: Wrap(
+              spacing: spacing,
+              runSpacing: spacing,
+              children: widget.item.practiceSections.map((section) {
+                final selected =
+                    _selectedSectionIds.contains(section.sectionId);
+                final label =
+                    '${section.name} · ${section.questionCount}';
+                return SizedBox(
+                  width: cellWidth,
+                  child: InkWell(
+                    onTap: () => _toggleSection(section.sectionId, !selected),
+                    borderRadius: BorderRadius.circular(AppColors.radiusSm),
+                    child: Row(
+                      children: [
+                        Checkbox(
+                          value: selected,
+                          onChanged: (value) => _toggleSection(
+                            section.sectionId,
+                            value ?? false,
+                          ),
+                          visualDensity: VisualDensity.compact,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        Expanded(
+                          child: Text(
+                            label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -275,67 +376,50 @@ class _PrepPlusCustomPracticePanelState extends State<PrepPlusCustomPracticePane
               height: 1,
               color: AppColors.textSecondary.withValues(alpha: 0.12),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.sm,
-                AppSpacing.md,
-                0,
-              ),
-              child: Text(
-                l10n.prepPlusCustomPracticeSectionsTitle,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                  color: AppColors.textPrimary,
+            if (widget.item.practiceSections.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.sm,
+                  AppSpacing.md,
+                  AppSpacing.xs,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l10n.prepPlusCustomPracticeSectionsTitle,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: _loadingPool ? null : _selectAllSections,
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                      ),
+                      child: Text(l10n.prepPlusCustomPracticeSelectAll),
+                    ),
+                    TextButton(
+                      onPressed: _loadingPool ? null : _clearSections,
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                      ),
+                      child: Text(l10n.prepPlusCustomPracticeSelectNone),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            ...widget.item.practiceSections.map((section) {
-              final sectionSelected =
-                  _selectedSectionIds.contains(section.sectionId);
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  CheckboxListTile(
-                    value: sectionSelected,
-                    onChanged: (value) =>
-                        _toggleSection(section.sectionId, value ?? false),
-                    title: Text(section.name),
-                    subtitle: Text(
-                      l10n.prepPlusCustomPracticeSectionCount(
-                        section.questionCount,
-                      ),
-                    ),
-                    dense: true,
-                    controlAffinity: ListTileControlAffinity.leading,
-                  ),
-                  if (sectionSelected && section.topics.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(left: AppSpacing.lg),
-                      child: Column(
-                        children: section.topics.map((topic) {
-                          return CheckboxListTile(
-                            value: _selectedTopicIds.contains(topic.topicId),
-                            onChanged: (value) => _toggleTopic(
-                              topic.topicId,
-                              value ?? false,
-                            ),
-                            title: Text(topic.name),
-                            subtitle: Text(
-                              l10n.prepPlusCustomPracticeTopicCount(
-                                topic.questionCount,
-                              ),
-                            ),
-                            dense: true,
-                            controlAffinity: ListTileControlAffinity.leading,
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                ],
-              );
-            }),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                child: _buildSectionGrid(l10n),
+              ),
+            ],
             if (widget.item.availableDifficulties.isNotEmpty) ...[
               Padding(
                 padding: const EdgeInsets.fromLTRB(
@@ -387,48 +471,32 @@ class _PrepPlusCustomPracticePanelState extends State<PrepPlusCustomPracticePane
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Wrap(
-                spacing: AppSpacing.xs,
-                runSpacing: AppSpacing.xs,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  ..._questionCountPresets.map((count) {
-                    final enabled = _poolCount >= count;
-                    return ChoiceChip(
-                      label: Text('$count'),
-                      selected: _selectedQuestionCount == count,
-                      onSelected: enabled
-                          ? (_) => _setQuestionCount(count)
-                          : null,
-                    );
-                  }),
-                  ChoiceChip(
-                    label: Text(l10n.prepPlusCustomPracticeAllChip),
-                    selected: _selectedQuestionCount == null,
-                    onSelected: _poolCount > 0
-                        ? (_) => _setQuestionCount(null)
-                        : null,
+                  Text(
+                    l10n.prepPlusCustomPracticeSliderLabel(
+                      _selectedQuestionCount,
+                      _poolCount > 0 ? _poolCount : 1,
+                    ),
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                  Slider(
+                    value: _poolCount > 0
+                        ? _selectedQuestionCount.clamp(1, _poolCount).toDouble()
+                        : 1,
+                    min: 1,
+                    max: (_poolCount > 0 ? _poolCount : 1).toDouble(),
+                    divisions: _poolCount > 1 ? _poolCount - 1 : null,
+                    label: '$_selectedQuestionCount',
+                    onChanged: _poolCount > 0 ? _setQuestionCount : null,
                   ),
                 ],
               ),
             ),
-            if (_poolCount > 0 &&
-                _selectedQuestionCount != null &&
-                _selectedQuestionCount! > _poolCount)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  AppSpacing.xs,
-                  AppSpacing.md,
-                  0,
-                ),
-                child: Text(
-                  l10n.prepPlusCustomPracticePoolLimited(_poolCount),
-                  style: const TextStyle(
-                    color: AppColors.warning,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
             Divider(
               height: AppSpacing.lg,
               color: AppColors.textSecondary.withValues(alpha: 0.12),

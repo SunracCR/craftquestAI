@@ -19,7 +19,6 @@ class PracticeRepository {
     String? assignmentId,
     String? catalogItemId,
     List<String>? sectionIds,
-    List<String>? topicIds,
     String? difficulty,
     int? questionCount,
   }) async {
@@ -36,7 +35,6 @@ class PracticeRepository {
         if (assignmentId != null) 'assignmentId': assignmentId,
         if (catalogItemId != null) 'catalogItemId': catalogItemId,
         if (sectionIds != null && sectionIds.isNotEmpty) 'sectionIds': sectionIds,
-        if (topicIds != null && topicIds.isNotEmpty) 'topicIds': topicIds,
         if (difficulty != null && difficulty.isNotEmpty) 'difficulty': difficulty,
         if (questionCount != null) 'questionCount': questionCount,
       },

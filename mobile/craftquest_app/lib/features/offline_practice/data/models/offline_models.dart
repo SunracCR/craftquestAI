@@ -201,6 +201,8 @@ class OfflinePackageQuestionModel {
     required this.scoringPolicy,
     required this.supportsMultipleCorrectAnswers,
     this.questionMediaAssetId,
+    this.quizSectionId,
+    this.quizSectionName,
     required this.correctAnswerBlob,
     this.answerKeyBlob,
     required this.answerOptions,
@@ -218,6 +220,8 @@ class OfflinePackageQuestionModel {
       supportsMultipleCorrectAnswers:
           json['supportsMultipleCorrectAnswers'] as bool? ?? false,
       questionMediaAssetId: json['questionMediaAssetId'] as String?,
+      quizSectionId: json['quizSectionId'] as String?,
+      quizSectionName: json['quizSectionName'] as String?,
       correctAnswerBlob: json['correctAnswerBlob'] as String,
       answerKeyBlob: json['answerKeyBlob'] as String?,
       answerOptions: (json['answerOptions'] as List<dynamic>)
@@ -239,6 +243,8 @@ class OfflinePackageQuestionModel {
   final String scoringPolicy;
   final bool supportsMultipleCorrectAnswers;
   final String? questionMediaAssetId;
+  final String? quizSectionId;
+  final String? quizSectionName;
   final String correctAnswerBlob;
   final String? answerKeyBlob;
   final List<OfflinePackageAnswerOptionModel> answerOptions;

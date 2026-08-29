@@ -18,9 +18,9 @@ public class QuizSectionConfiguration : IEntityTypeConfiguration<QuizSection>
             .HasForeignKey(x => x.QuizId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(x => x.Topics)
-            .WithOne(x => x.Section)
+        builder.HasMany(x => x.Questions)
+            .WithOne(x => x.QuizSection)
             .HasForeignKey(x => x.QuizSectionId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

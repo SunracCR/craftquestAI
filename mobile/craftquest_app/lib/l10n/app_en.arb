@@ -350,6 +350,23 @@
       "count": {"type": "int"}
     }
   },
+  "prepPlusCustomPracticeSelectAll": "All",
+  "prepPlusCustomPracticeSelectNone": "None",
+  "prepPlusCustomPracticeAllChapters": "All chapters",
+  "prepPlusCustomPracticeChaptersSummary": "{chapters} chapters · {questions} questions",
+  "@prepPlusCustomPracticeChaptersSummary": {
+    "placeholders": {
+      "chapters": {"type": "int"},
+      "questions": {"type": "int"}
+    }
+  },
+  "prepPlusCustomPracticeSliderLabel": "{selected} of {total} questions",
+  "@prepPlusCustomPracticeSliderLabel": {
+    "placeholders": {
+      "selected": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
   "prepPlusExpandDescription": "Show more",
   "prepPlusTrySimulationShort": "3 sample questions · results not saved",
   "prepPlusProgressAnalyticsShort": "Analytics",

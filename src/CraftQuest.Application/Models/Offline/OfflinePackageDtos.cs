@@ -46,6 +46,8 @@ public sealed class OfflineJustificationSourceDto
 public sealed class OfflinePackageQuestionDto
 {
     public required Guid QuestionId { get; init; }
+    public Guid? QuizSectionId { get; init; }
+    public string? QuizSectionName { get; init; }
     public required int SortOrder { get; init; }
     public required string QuestionText { get; init; }
     public required string QuestionType { get; init; }

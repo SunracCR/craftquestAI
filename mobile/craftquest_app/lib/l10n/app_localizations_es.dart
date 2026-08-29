@@ -826,6 +826,25 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get prepPlusCustomPracticeSelectAll => 'Todos';
+
+  @override
+  String get prepPlusCustomPracticeSelectNone => 'Ninguno';
+
+  @override
+  String get prepPlusCustomPracticeAllChapters => 'Todos los capítulos';
+
+  @override
+  String prepPlusCustomPracticeChaptersSummary(int chapters, int questions) {
+    return '$chapters capítulos · $questions preguntas';
+  }
+
+  @override
+  String prepPlusCustomPracticeSliderLabel(int selected, int total) {
+    return '$selected de $total preguntas';
+  }
+
+  @override
   String get prepPlusExpandDescription => 'Ver más';
 
   @override

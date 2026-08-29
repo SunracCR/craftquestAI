@@ -3,43 +3,17 @@ class PrepPracticeSectionModel {
     required this.sectionId,
     required this.name,
     required this.questionCount,
-    this.topics = const [],
   });
 
   factory PrepPracticeSectionModel.fromJson(Map<String, dynamic> json) {
-    final topicsJson = json['topics'] as List<dynamic>? ?? [];
     return PrepPracticeSectionModel(
       sectionId: json['sectionId'] as String,
       name: json['name'] as String,
       questionCount: json['questionCount'] as int? ?? 0,
-      topics: topicsJson
-          .map((e) => PrepPracticeTopicModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
     );
   }
 
   final String sectionId;
-  final String name;
-  final int questionCount;
-  final List<PrepPracticeTopicModel> topics;
-}
-
-class PrepPracticeTopicModel {
-  const PrepPracticeTopicModel({
-    required this.topicId,
-    required this.name,
-    required this.questionCount,
-  });
-
-  factory PrepPracticeTopicModel.fromJson(Map<String, dynamic> json) {
-    return PrepPracticeTopicModel(
-      topicId: json['topicId'] as String,
-      name: json['name'] as String,
-      questionCount: json['questionCount'] as int? ?? 0,
-    );
-  }
-
-  final String topicId;
   final String name;
   final int questionCount;
 }
@@ -67,49 +41,17 @@ class PrepAdminQuizSectionModel {
     required this.name,
     required this.sortOrder,
     required this.questionCount,
-    this.topics = const [],
   });
 
   factory PrepAdminQuizSectionModel.fromJson(Map<String, dynamic> json) {
-    final topicsJson = json['topics'] as List<dynamic>? ?? [];
     return PrepAdminQuizSectionModel(
       sectionId: json['sectionId'] as String,
       name: json['name'] as String,
       sortOrder: json['sortOrder'] as int? ?? 0,
       questionCount: json['questionCount'] as int? ?? 0,
-      topics: topicsJson
-          .map((e) => PrepAdminQuizTopicModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
     );
   }
 
-  final String sectionId;
-  final String name;
-  final int sortOrder;
-  final int questionCount;
-  final List<PrepAdminQuizTopicModel> topics;
-}
-
-class PrepAdminQuizTopicModel {
-  const PrepAdminQuizTopicModel({
-    required this.topicId,
-    required this.sectionId,
-    required this.name,
-    required this.sortOrder,
-    required this.questionCount,
-  });
-
-  factory PrepAdminQuizTopicModel.fromJson(Map<String, dynamic> json) {
-    return PrepAdminQuizTopicModel(
-      topicId: json['topicId'] as String,
-      sectionId: json['sectionId'] as String,
-      name: json['name'] as String,
-      sortOrder: json['sortOrder'] as int? ?? 0,
-      questionCount: json['questionCount'] as int? ?? 0,
-    );
-  }
-
-  final String topicId;
   final String sectionId;
   final String name;
   final int sortOrder;
@@ -122,7 +64,6 @@ class PrepAdminQuestionBankQuestionModel {
     required this.sortOrder,
     required this.promptPreview,
     this.sectionId,
-    this.topicId,
     this.difficulty,
   });
 
@@ -132,7 +73,6 @@ class PrepAdminQuestionBankQuestionModel {
       sortOrder: json['sortOrder'] as int? ?? 0,
       promptPreview: json['promptPreview'] as String? ?? '',
       sectionId: json['sectionId'] as String?,
-      topicId: json['topicId'] as String?,
       difficulty: json['difficulty'] as String?,
     );
   }
@@ -141,7 +81,6 @@ class PrepAdminQuestionBankQuestionModel {
   final int sortOrder;
   final String promptPreview;
   final String? sectionId;
-  final String? topicId;
   final String? difficulty;
 }
 

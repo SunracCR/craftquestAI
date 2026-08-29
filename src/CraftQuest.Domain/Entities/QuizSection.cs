@@ -9,6 +9,5 @@ public class QuizSection
     public DateTime CreatedAt { get; set; }
 
     public Quiz Quiz { get; set; } = null!;
-    public ICollection<QuizTopic> Topics { get; set; } = [];
     public ICollection<Question> Questions { get; set; } = [];
 }

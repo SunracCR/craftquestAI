@@ -270,14 +270,12 @@ class PrepPlusRepository {
   Future<PrepPracticePoolModel> getPracticePool({
     required String catalogItemId,
     List<String>? sectionIds,
-    List<String>? topicIds,
     String? difficulty,
   }) async {
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
       '/api/prep/items/$catalogItemId/practice-pool',
       queryParameters: {
         if (sectionIds != null && sectionIds.isNotEmpty) 'sectionIds': sectionIds,
-        if (topicIds != null && topicIds.isNotEmpty) 'topicIds': topicIds,
         if (difficulty != null && difficulty.isNotEmpty) 'difficulty': difficulty,
       },
     );

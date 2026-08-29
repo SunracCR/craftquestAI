@@ -21,6 +21,8 @@ class OfflinePracticeSessionCubit extends Cubit<OfflinePracticeSessionState> {
     required String quizId,
     this.showElapsedTimer = false,
     this.randomizeQuestions,
+    this.sectionIds = const [],
+    this.questionCount,
   })  : _packageRepository = packageRepository,
         _syncRepository = syncRepository,
         _checkpointRepository = checkpointRepository,
@@ -35,12 +37,16 @@ class OfflinePracticeSessionCubit extends Cubit<OfflinePracticeSessionState> {
   final String _quizId;
   final bool showElapsedTimer;
   final bool? randomizeQuestions;
+  final List<String> sectionIds;
+  final int? questionCount;
   final _uuid = const Uuid();
 
   OfflineSessionOrder _generateSessionOrder(OfflineQuizPackageModel quiz) =>
       generateFreshOrder(
         quiz,
         randomizeQuestionsOverride: randomizeQuestions,
+        sectionIds: sectionIds.isEmpty ? null : sectionIds,
+        questionCount: questionCount,
       );
 
   Future<void> load() async {

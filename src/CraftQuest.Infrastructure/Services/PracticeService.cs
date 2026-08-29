@@ -94,22 +94,17 @@ public class PracticeService(
                             && !i.IsDeleted,
                         cancellationToken);
 
-                if (catalogItem?.SupportsCustomPractice == true)
+                if (catalogItem is not null)
                 {
-                    isCustomPrepPractice = true;
-                    await prepPlusQuestionBankService.ValidateCustomPracticeStartAsync(
+                    await prepPlusQuestionBankService.ValidatePrepPlusPracticeAccessAsync(
                         studentUserId,
                         catalogItem.CatalogItemId,
-                        catalogItem,
                         cancellationToken);
 
-                    var filter = new PracticeQuestionLoader.FilterOptions
-                    {
-                        SectionIds = request.SectionIds,
-                        TopicIds = request.TopicIds,
-                        Difficulty = request.Difficulty,
-                        RequireTaggedSection = true,
-                    };
+                    isCustomPrepPractice = true;
+                    var filter = PrepPlusQuestionBankService.BuildFilter(
+                        request.SectionIds,
+                        request.Difficulty);
 
                     questions = await PracticeQuestionLoader.LoadForQuizAsync(
                         dbContext,
@@ -993,12 +988,6 @@ public class PracticeService(
             .Distinct()
             .ToList();
 
-        var topicIds = questions
-            .Where(q => q.QuizTopicId != null)
-            .Select(q => q.QuizTopicId!.Value)
-            .Distinct()
-            .ToList();
-
         var sectionNames = sectionIds.Count == 0
             ? new Dictionary<Guid, string>()
             : await dbContext.QuizSections
@@ -1006,28 +995,11 @@ public class PracticeService(
                 .Where(s => sectionIds.Contains(s.QuizSectionId))
                 .ToDictionaryAsync(s => s.QuizSectionId, s => s.Name, cancellationToken);
 
-        var topicNames = topicIds.Count == 0
-            ? new Dictionary<Guid, string>()
-            : await dbContext.QuizTopics
-                .AsNoTracking()
-                .Where(t => topicIds.Contains(t.QuizTopicId))
-                .ToDictionaryAsync(t => t.QuizTopicId, t => t.Name, cancellationToken);
-
         var result = new Dictionary<Guid, string>();
         foreach (var question in questions)
         {
-            if (question.QuizSectionId is null
-                || !sectionNames.TryGetValue(question.QuizSectionId.Value, out var sectionName))
-            {
-                continue;
-            }
-
-            if (question.QuizTopicId is not null
-                && topicNames.TryGetValue(question.QuizTopicId.Value, out var topicName))
-            {
-                result[question.QuestionId] = $"{sectionName} · {topicName}";
-            }
-            else
+            if (question.QuizSectionId is not null
+                && sectionNames.TryGetValue(question.QuizSectionId.Value, out var sectionName))
             {
                 result[question.QuestionId] = sectionName;
             }

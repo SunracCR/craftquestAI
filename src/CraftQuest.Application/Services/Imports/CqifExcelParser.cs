@@ -140,6 +140,12 @@ public static class CqifExcelParser
                 continue;
             }
 
+            if (IsChapterHeader(normalized))
+            {
+                map["chapter"] = columnIndex;
+                continue;
+            }
+
             if (IsDifficultyHeader(normalized))
             {
                 map["difficulty"] = columnIndex;
@@ -251,6 +257,7 @@ public static class CqifExcelParser
         {
             ExternalId = GetCell(row, columnMap, "external_id"),
             Section = GetCell(row, columnMap, "section"),
+            Chapter = GetCell(row, columnMap, "chapter"),
             Order = order,
             Type = type,
             Text = questionText,
@@ -335,6 +342,9 @@ public static class CqifExcelParser
 
     private static bool IsSectionHeader(string h) =>
         h is "seccion" or "section" or "secao";
+
+    private static bool IsChapterHeader(string h) =>
+        h is "capitulo" or "chapter";
 
     private static bool IsDifficultyHeader(string h) =>
         h is "dificultad" or "difficulty" or "dificuldade";

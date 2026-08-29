@@ -213,13 +213,14 @@ public class PrepPlusCatalogService(
             .CountAsync(q => q.QuizId == item.QuizId, cancellationToken);
         var rootType = await ResolveRootCategoryTypeAsync(item.Category, cancellationToken);
         var state = ResolveAccessState(access, now);
-        var practiceSections = item.SupportsCustomPractice
+        var canPractice = state is "active" or "owned";
+        var practiceSections = canPractice
             ? await prepPlusQuestionBankService.BuildPracticeStructureAsync(item.QuizId, cancellationToken)
             : [];
-        var availableDifficulties = item.SupportsCustomPractice
+        var availableDifficulties = canPractice
             ? await dbContext.Questions
                 .AsNoTracking()
-                .Where(q => q.QuizId == item.QuizId && q.QuizSectionId != null && q.Difficulty != null)
+                .Where(q => q.QuizId == item.QuizId && q.Difficulty != null)
                 .Select(q => q.Difficulty!)
                 .Distinct()
                 .OrderBy(d => d)
@@ -244,8 +245,8 @@ public class PrepPlusCatalogService(
             UserAccessState = state,
             AccessExpiresAt = access?.ExpiresAt,
             IsLifetimeAccess = access?.IsLifetimeAccess ?? false,
-            CanPractice = state is "active" or "owned",
-            SupportsCustomPractice = item.SupportsCustomPractice,
+            CanPractice = canPractice,
+            SupportsCustomPractice = canPractice,
             AvailableDifficulties = availableDifficulties,
             PracticeSections = practiceSections,
             Offers = item.AccessOffers

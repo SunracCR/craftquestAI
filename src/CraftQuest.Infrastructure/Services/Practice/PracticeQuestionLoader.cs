@@ -9,7 +9,6 @@ internal static class PracticeQuestionLoader
     public sealed class FilterOptions
     {
         public IReadOnlyList<Guid>? SectionIds { get; init; }
-        public IReadOnlyList<Guid>? TopicIds { get; init; }
         public string? Difficulty { get; init; }
         public bool RequireTaggedSection { get; init; }
     }
@@ -37,12 +36,7 @@ internal static class PracticeQuestionLoader
                 query = query.Where(q => q.QuizSectionId != null);
             }
 
-            if (filter.TopicIds is { Count: > 0 })
-            {
-                var topicSet = filter.TopicIds.ToHashSet();
-                query = query.Where(q => q.QuizTopicId != null && topicSet.Contains(q.QuizTopicId.Value));
-            }
-            else if (filter.SectionIds is { Count: > 0 })
+            if (filter.SectionIds is { Count: > 0 })
             {
                 var sectionSet = filter.SectionIds.ToHashSet();
                 query = query.Where(q => q.QuizSectionId != null && sectionSet.Contains(q.QuizSectionId.Value));
@@ -62,7 +56,6 @@ internal static class PracticeQuestionLoader
                 QuestionId = q.QuestionId,
                 QuizId = q.QuizId,
                 QuizSectionId = q.QuizSectionId,
-                QuizTopicId = q.QuizTopicId,
                 QuestionTypeId = q.QuestionTypeId,
                 QuestionText = q.QuestionText,
                 Points = q.Points,
@@ -150,7 +143,6 @@ internal static class PracticeQuestionLoader
                     QuestionId = row.QuestionId,
                     QuizId = row.QuizId,
                     QuizSectionId = row.QuizSectionId,
-                    QuizTopicId = row.QuizTopicId,
                     QuestionTypeId = row.QuestionTypeId,
                     QuestionText = row.QuestionText,
                     Points = row.Points,
@@ -184,7 +176,6 @@ internal static class PracticeQuestionLoader
         public Guid QuestionId { get; init; }
         public Guid QuizId { get; init; }
         public Guid? QuizSectionId { get; init; }
-        public Guid? QuizTopicId { get; init; }
         public int QuestionTypeId { get; init; }
         public string QuestionText { get; init; } = string.Empty;
         public decimal Points { get; init; }

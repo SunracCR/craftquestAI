@@ -228,47 +228,6 @@ public class AdminPrepController(
         return NoContent();
     }
 
-    [HttpPost("items/{catalogItemId:guid}/topics")]
-    [ProducesResponseType(typeof(PrepQuizTopicDto), StatusCodes.Status201Created)]
-    public async Task<IActionResult> CreateTopic(
-        Guid catalogItemId,
-        [FromBody] UpsertPrepQuizTopicRequest request,
-        CancellationToken cancellationToken)
-    {
-        var created = await prepPlusQuestionBankService.CreateTopicAsync(
-            catalogItemId,
-            request,
-            cancellationToken);
-        return CreatedAtAction(nameof(GetQuestionBank), new { catalogItemId }, created);
-    }
-
-    [HttpPut("items/{catalogItemId:guid}/topics/{topicId:guid}")]
-    [ProducesResponseType(typeof(PrepQuizTopicDto), StatusCodes.Status200OK)]
-    public async Task<IActionResult> UpdateTopic(
-        Guid catalogItemId,
-        Guid topicId,
-        [FromBody] UpsertPrepQuizTopicRequest request,
-        CancellationToken cancellationToken)
-    {
-        var updated = await prepPlusQuestionBankService.UpdateTopicAsync(
-            catalogItemId,
-            topicId,
-            request,
-            cancellationToken);
-        return Ok(updated);
-    }
-
-    [HttpDelete("items/{catalogItemId:guid}/topics/{topicId:guid}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> DeleteTopic(
-        Guid catalogItemId,
-        Guid topicId,
-        CancellationToken cancellationToken)
-    {
-        await prepPlusQuestionBankService.DeleteTopicAsync(catalogItemId, topicId, cancellationToken);
-        return NoContent();
-    }
-
     [HttpPut("items/{catalogItemId:guid}/questions/tagging")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> BulkTagQuestions(

@@ -3,7 +3,7 @@ using CraftQuest.Application.Exceptions;
 using CraftQuest.Application.Models.PrepPlus;
 using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Persistence;
-using CraftQuest.Infrastructure.Services.PrepPlus;
+using CraftQuest.Infrastructure.Services.Practice;
 using Microsoft.EntityFrameworkCore;
 
 namespace CraftQuest.Infrastructure.Services;
@@ -29,13 +29,6 @@ public class PrepPlusQuestionBankService(CraftQuestDbContext dbContext) : IPrepP
             .ThenBy(s => s.Name)
             .ToListAsync(cancellationToken);
 
-        var topics = await dbContext.QuizTopics
-            .AsNoTracking()
-            .Where(t => t.QuizId == quizId)
-            .OrderBy(t => t.SortOrder)
-            .ThenBy(t => t.Name)
-            .ToListAsync(cancellationToken);
-
         var questions = await dbContext.Questions
             .AsNoTracking()
             .Where(q => q.QuizId == quizId)
@@ -46,7 +39,6 @@ public class PrepPlusQuestionBankService(CraftQuestDbContext dbContext) : IPrepP
                 q.SortOrder,
                 q.QuestionText,
                 q.QuizSectionId,
-                q.QuizTopicId,
                 q.Difficulty,
             })
             .ToListAsync(cancellationToken);
@@ -56,28 +48,12 @@ public class PrepPlusQuestionBankService(CraftQuestDbContext dbContext) : IPrepP
             .GroupBy(q => q.QuizSectionId!.Value)
             .ToDictionary(g => g.Key, g => g.Count());
 
-        var topicCounts = questions
-            .Where(q => q.QuizTopicId != null)
-            .GroupBy(q => q.QuizTopicId!.Value)
-            .ToDictionary(g => g.Key, g => g.Count());
-
         var sectionDtos = sections.Select(s => new PrepQuizSectionDto
         {
             SectionId = s.QuizSectionId,
             Name = s.Name,
             SortOrder = s.SortOrder,
             QuestionCount = sectionCounts.GetValueOrDefault(s.QuizSectionId),
-            Topics = topics
-                .Where(t => t.QuizSectionId == s.QuizSectionId)
-                .Select(t => new PrepQuizTopicDto
-                {
-                    TopicId = t.QuizTopicId,
-                    SectionId = t.QuizSectionId,
-                    Name = t.Name,
-                    SortOrder = t.SortOrder,
-                    QuestionCount = topicCounts.GetValueOrDefault(t.QuizTopicId),
-                })
-                .ToList(),
         }).ToList();
 
         return new PrepQuestionBankDto
@@ -93,7 +69,6 @@ public class PrepPlusQuestionBankService(CraftQuestDbContext dbContext) : IPrepP
                 SortOrder = q.SortOrder,
                 PromptPreview = Truncate(q.QuestionText, 160),
                 SectionId = q.QuizSectionId,
-                TopicId = q.QuizTopicId,
                 Difficulty = q.Difficulty,
             }).ToList(),
         };
@@ -119,7 +94,7 @@ public class PrepPlusQuestionBankService(CraftQuestDbContext dbContext) : IPrepP
         dbContext.QuizSections.Add(entity);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return MapSection(entity, []);
+        return MapSection(entity, 0);
     }
 
     public async Task<PrepQuizSectionDto> UpdateSectionAsync(
@@ -139,15 +114,10 @@ public class PrepPlusQuestionBankService(CraftQuestDbContext dbContext) : IPrepP
         section.SortOrder = request.SortOrder;
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        var counts = await BuildSectionTopicCountsAsync(item.QuizId, cancellationToken);
-        var topics = await dbContext.QuizTopics
-            .AsNoTracking()
-            .Where(t => t.QuizSectionId == sectionId)
-            .OrderBy(t => t.SortOrder)
-            .ThenBy(t => t.Name)
-            .ToListAsync(cancellationToken);
+        var count = await dbContext.Questions
+            .CountAsync(q => q.QuizId == item.QuizId && q.QuizSectionId == sectionId, cancellationToken);
 
-        return MapSection(section, topics, counts.SectionCounts, counts.TopicCounts);
+        return MapSection(section, count);
     }
 
     public async Task DeleteSectionAsync(
@@ -168,109 +138,10 @@ public class PrepPlusQuestionBankService(CraftQuestDbContext dbContext) : IPrepP
         foreach (var question in questions)
         {
             question.QuizSectionId = null;
-            question.QuizTopicId = null;
             question.UpdatedAt = DateTime.UtcNow;
         }
 
         dbContext.QuizSections.Remove(section);
-        await dbContext.SaveChangesAsync(cancellationToken);
-    }
-
-    public async Task<PrepQuizTopicDto> CreateTopicAsync(
-        Guid catalogItemId,
-        UpsertPrepQuizTopicRequest request,
-        CancellationToken cancellationToken = default)
-    {
-        var item = await LoadCatalogItemAsync(catalogItemId, cancellationToken);
-        ValidateSectionName(request.Name);
-
-        var section = await dbContext.QuizSections
-            .AsNoTracking()
-            .FirstOrDefaultAsync(
-                s => s.QuizSectionId == request.SectionId && s.QuizId == item.QuizId,
-                cancellationToken)
-            ?? throw new AppException("Section not found.", 404);
-
-        var entity = new QuizTopic
-        {
-            QuizTopicId = Guid.NewGuid(),
-            QuizId = item.QuizId,
-            QuizSectionId = section.QuizSectionId,
-            Name = request.Name.Trim(),
-            SortOrder = request.SortOrder,
-            CreatedAt = DateTime.UtcNow,
-        };
-
-        dbContext.QuizTopics.Add(entity);
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return MapTopic(entity, 0);
-    }
-
-    public async Task<PrepQuizTopicDto> UpdateTopicAsync(
-        Guid catalogItemId,
-        Guid topicId,
-        UpsertPrepQuizTopicRequest request,
-        CancellationToken cancellationToken = default)
-    {
-        var item = await LoadCatalogItemAsync(catalogItemId, cancellationToken);
-        ValidateSectionName(request.Name);
-
-        var topic = await dbContext.QuizTopics
-            .FirstOrDefaultAsync(t => t.QuizTopicId == topicId && t.QuizId == item.QuizId, cancellationToken)
-            ?? throw new AppException("Topic not found.", 404);
-
-        var section = await dbContext.QuizSections
-            .AsNoTracking()
-            .FirstOrDefaultAsync(
-                s => s.QuizSectionId == request.SectionId && s.QuizId == item.QuizId,
-                cancellationToken)
-            ?? throw new AppException("Section not found.", 404);
-
-        topic.QuizSectionId = section.QuizSectionId;
-        topic.Name = request.Name.Trim();
-        topic.SortOrder = request.SortOrder;
-
-        var questions = await dbContext.Questions
-            .Where(q => q.QuizId == item.QuizId && q.QuizTopicId == topicId)
-            .ToListAsync(cancellationToken);
-
-        foreach (var question in questions)
-        {
-            question.QuizSectionId = section.QuizSectionId;
-            question.UpdatedAt = DateTime.UtcNow;
-        }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        var count = await dbContext.Questions
-            .CountAsync(q => q.QuizId == item.QuizId && q.QuizTopicId == topicId, cancellationToken);
-
-        return MapTopic(topic, count);
-    }
-
-    public async Task DeleteTopicAsync(
-        Guid catalogItemId,
-        Guid topicId,
-        CancellationToken cancellationToken = default)
-    {
-        var item = await LoadCatalogItemAsync(catalogItemId, cancellationToken);
-
-        var topic = await dbContext.QuizTopics
-            .FirstOrDefaultAsync(t => t.QuizTopicId == topicId && t.QuizId == item.QuizId, cancellationToken)
-            ?? throw new AppException("Topic not found.", 404);
-
-        var questions = await dbContext.Questions
-            .Where(q => q.QuizId == item.QuizId && q.QuizTopicId == topicId)
-            .ToListAsync(cancellationToken);
-
-        foreach (var question in questions)
-        {
-            question.QuizTopicId = null;
-            question.UpdatedAt = DateTime.UtcNow;
-        }
-
-        dbContext.QuizTopics.Remove(topic);
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
@@ -301,13 +172,6 @@ public class PrepPlusQuestionBankService(CraftQuestDbContext dbContext) : IPrepP
             .Select(s => s.QuizSectionId)
             .ToListAsync(cancellationToken);
 
-        var topics = await dbContext.QuizTopics
-            .AsNoTracking()
-            .Where(t => t.QuizId == item.QuizId)
-            .Select(t => new { t.QuizTopicId, t.QuizSectionId })
-            .ToListAsync(cancellationToken);
-
-        var topicMap = topics.ToDictionary(t => t.QuizTopicId, t => t.QuizSectionId);
         var sectionSet = sections.ToHashSet();
         var byId = questions.ToDictionary(q => q.QuestionId);
 
@@ -315,17 +179,7 @@ public class PrepPlusQuestionBankService(CraftQuestDbContext dbContext) : IPrepP
         {
             var question = byId[tag.QuestionId];
 
-            if (tag.TopicId.HasValue)
-            {
-                if (!topicMap.TryGetValue(tag.TopicId.Value, out var topicSectionId))
-                {
-                    throw new AppException("Topic not found.", 404);
-                }
-
-                question.QuizTopicId = tag.TopicId;
-                question.QuizSectionId = topicSectionId;
-            }
-            else if (tag.SectionId.HasValue)
+            if (tag.SectionId.HasValue)
             {
                 if (!sectionSet.Contains(tag.SectionId.Value))
                 {
@@ -333,12 +187,10 @@ public class PrepPlusQuestionBankService(CraftQuestDbContext dbContext) : IPrepP
                 }
 
                 question.QuizSectionId = tag.SectionId;
-                question.QuizTopicId = null;
             }
             else
             {
                 question.QuizSectionId = null;
-                question.QuizTopicId = null;
             }
 
             if (tag.Difficulty is not null)
@@ -378,21 +230,6 @@ public class PrepPlusQuestionBankService(CraftQuestDbContext dbContext) : IPrepP
             .FirstOrDefaultAsync(i => i.CatalogItemId == catalogItemId && !i.IsDeleted, cancellationToken)
             ?? throw new AppException("Catalog item not found.", 404);
 
-        if (request.SupportsCustomPractice)
-        {
-            var taggedCount = await dbContext.Questions
-                .CountAsync(
-                    q => q.QuizId == item.QuizId && q.QuizSectionId != null,
-                    cancellationToken);
-
-            if (taggedCount == 0)
-            {
-                throw new AppException(
-                    "Assign at least one question to a chapter before enabling custom practice.",
-                    400);
-            }
-        }
-
         item.SupportsCustomPractice = request.SupportsCustomPractice;
         item.UpdatedAt = DateTime.UtcNow;
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -411,35 +248,23 @@ public class PrepPlusQuestionBankService(CraftQuestDbContext dbContext) : IPrepP
     public async Task<PrepPracticePoolDto> GetPracticePoolAsync(
         Guid catalogItemId,
         IReadOnlyList<Guid>? sectionIds,
-        IReadOnlyList<Guid>? topicIds,
         string? difficulty,
         CancellationToken cancellationToken = default)
     {
         var item = await LoadPublishedCatalogItemAsync(catalogItemId, cancellationToken);
         ValidateDifficulty(difficulty);
 
-        var topicSectionMap = await dbContext.QuizTopics
-            .AsNoTracking()
-            .Where(t => t.QuizId == item.QuizId)
-            .ToDictionaryAsync(t => t.QuizTopicId, t => t.QuizSectionId, cancellationToken);
-
-        var filter = new PrepPlusCustomPracticeFilter
-        {
-            SectionIds = sectionIds,
-            TopicIds = topicIds,
-            Difficulty = difficulty,
-            RequireTaggedSection = true,
-        };
-
-        var count = await filter.Apply(
-                dbContext.Questions.AsNoTracking().Where(q => q.QuizId == item.QuizId),
-                topicSectionMap)
-            .CountAsync(cancellationToken);
+        var filter = BuildFilter(sectionIds, difficulty);
+        var questions = await PracticeQuestionLoader.LoadForQuizAsync(
+            dbContext,
+            item.QuizId,
+            filter,
+            cancellationToken);
 
         return new PrepPracticePoolDto
         {
-            AvailableQuestionCount = count,
-            MaxQuestionCount = count,
+            AvailableQuestionCount = questions.Count,
+            MaxQuestionCount = questions.Count,
         };
     }
 
@@ -454,25 +279,14 @@ public class PrepPlusQuestionBankService(CraftQuestDbContext dbContext) : IPrepP
             .ThenBy(s => s.Name)
             .ToListAsync(cancellationToken);
 
-        var topics = await dbContext.QuizTopics
-            .AsNoTracking()
-            .Where(t => t.QuizId == quizId)
-            .OrderBy(t => t.SortOrder)
-            .ThenBy(t => t.Name)
-            .ToListAsync(cancellationToken);
-
         var questions = await dbContext.Questions
             .AsNoTracking()
             .Where(q => q.QuizId == quizId && q.QuizSectionId != null)
-            .Select(q => new { q.QuizSectionId, q.QuizTopicId })
+            .Select(q => q.QuizSectionId!.Value)
             .ToListAsync(cancellationToken);
 
-        var sectionCounts = questions.GroupBy(q => q.QuizSectionId!.Value)
-            .ToDictionary(g => g.Key, g => g.Count());
-
-        var topicCounts = questions
-            .Where(q => q.QuizTopicId != null)
-            .GroupBy(q => q.QuizTopicId!.Value)
+        var sectionCounts = questions
+            .GroupBy(id => id)
             .ToDictionary(g => g.Key, g => g.Count());
 
         return sections
@@ -482,31 +296,15 @@ public class PrepPlusQuestionBankService(CraftQuestDbContext dbContext) : IPrepP
                 SectionId = s.QuizSectionId,
                 Name = s.Name,
                 QuestionCount = sectionCounts.GetValueOrDefault(s.QuizSectionId),
-                Topics = topics
-                    .Where(t => t.QuizSectionId == s.QuizSectionId
-                        && topicCounts.GetValueOrDefault(t.QuizTopicId) > 0)
-                    .Select(t => new PrepPracticeTopicPublicDto
-                    {
-                        TopicId = t.QuizTopicId,
-                        Name = t.Name,
-                        QuestionCount = topicCounts.GetValueOrDefault(t.QuizTopicId),
-                    })
-                    .ToList(),
             })
             .ToList();
     }
 
-    internal async Task ValidateCustomPracticeStartAsync(
+    internal async Task ValidatePrepPlusPracticeAccessAsync(
         Guid userId,
         Guid catalogItemId,
-        PrepCatalogItem item,
         CancellationToken cancellationToken)
     {
-        if (!item.SupportsCustomPractice)
-        {
-            throw new AppException("Custom practice is not enabled for this item.", 400);
-        }
-
         var now = DateTime.UtcNow;
         var hasAccess = await dbContext.QuizAccesses.AnyAsync(
             a => a.UserId == userId
@@ -520,6 +318,15 @@ public class PrepPlusQuestionBankService(CraftQuestDbContext dbContext) : IPrepP
             throw new AppException("You do not have Prep+ access for this item.", 403);
         }
     }
+
+    internal static PracticeQuestionLoader.FilterOptions BuildFilter(
+        IReadOnlyList<Guid>? sectionIds,
+        string? difficulty) => new()
+    {
+        SectionIds = sectionIds,
+        Difficulty = difficulty,
+        RequireTaggedSection = sectionIds is { Count: > 0 },
+    };
 
     private async Task<PrepCatalogItem> LoadCatalogItemAsync(
         Guid catalogItemId,
@@ -550,44 +357,11 @@ public class PrepPlusQuestionBankService(CraftQuestDbContext dbContext) : IPrepP
         return item;
     }
 
-    private async Task<(Dictionary<Guid, int> SectionCounts, Dictionary<Guid, int> TopicCounts)> BuildSectionTopicCountsAsync(
-        Guid quizId,
-        CancellationToken cancellationToken)
-    {
-        var questions = await dbContext.Questions
-            .AsNoTracking()
-            .Where(q => q.QuizId == quizId)
-            .Select(q => new { q.QuizSectionId, q.QuizTopicId })
-            .ToListAsync(cancellationToken);
-
-        return (
-            questions.Where(q => q.QuizSectionId != null)
-                .GroupBy(q => q.QuizSectionId!.Value)
-                .ToDictionary(g => g.Key, g => g.Count()),
-            questions.Where(q => q.QuizTopicId != null)
-                .GroupBy(q => q.QuizTopicId!.Value)
-                .ToDictionary(g => g.Key, g => g.Count()));
-    }
-
-    private static PrepQuizSectionDto MapSection(
-        QuizSection section,
-        IReadOnlyList<QuizTopic> topics,
-        Dictionary<Guid, int>? sectionCounts = null,
-        Dictionary<Guid, int>? topicCounts = null) => new()
+    private static PrepQuizSectionDto MapSection(QuizSection section, int questionCount) => new()
     {
         SectionId = section.QuizSectionId,
         Name = section.Name,
         SortOrder = section.SortOrder,
-        QuestionCount = sectionCounts?.GetValueOrDefault(section.QuizSectionId) ?? 0,
-        Topics = topics.Select(t => MapTopic(t, topicCounts?.GetValueOrDefault(t.QuizTopicId) ?? 0)).ToList(),
-    };
-
-    private static PrepQuizTopicDto MapTopic(QuizTopic topic, int questionCount) => new()
-    {
-        TopicId = topic.QuizTopicId,
-        SectionId = topic.QuizSectionId,
-        Name = topic.Name,
-        SortOrder = topic.SortOrder,
         QuestionCount = questionCount,
     };
 

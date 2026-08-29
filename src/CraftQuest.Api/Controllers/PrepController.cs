@@ -88,14 +88,12 @@ public class PrepController(
     public async Task<IActionResult> GetPracticePool(
         Guid catalogItemId,
         [FromQuery] List<Guid>? sectionIds,
-        [FromQuery] List<Guid>? topicIds,
         [FromQuery] string? difficulty,
         CancellationToken cancellationToken)
     {
         var pool = await prepPlusQuestionBankService.GetPracticePoolAsync(
             catalogItemId,
             sectionIds,
-            topicIds,
             difficulty,
             cancellationToken);
         return Ok(pool);

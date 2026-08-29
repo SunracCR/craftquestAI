@@ -16,21 +16,40 @@ class OfflineSessionOrder {
 OfflineSessionOrder generateFreshOrder(
   OfflineQuizPackageModel quiz, {
   bool? randomizeQuestionsOverride,
+  List<String>? sectionIds,
+  int? questionCount,
   Random? random,
 }) {
   final rng = random ?? Random();
   final shouldRandomizeQuestions =
       randomizeQuestionsOverride ?? quiz.randomizeQuestions;
-  final canonicalQuestions = List<OfflinePackageQuestionModel>.from(quiz.questions)
+
+  var candidates = List<OfflinePackageQuestionModel>.from(quiz.questions)
     ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
-  final questionOrder = canonicalQuestions.map((q) => q.questionId).toList();
+  if (sectionIds != null && sectionIds.isNotEmpty) {
+    final sectionSet = sectionIds.toSet();
+    candidates = candidates
+        .where(
+          (q) =>
+              q.quizSectionId != null && sectionSet.contains(q.quizSectionId),
+        )
+        .toList();
+  }
+
+  if (questionCount != null && questionCount > 0 && questionCount < candidates.length) {
+    candidates = List<OfflinePackageQuestionModel>.from(candidates);
+    _shuffleInPlace(candidates, rng);
+    candidates = candidates.take(questionCount).toList();
+  }
+
+  final questionOrder = candidates.map((q) => q.questionId).toList();
   if (shouldRandomizeQuestions && questionOrder.length > 1) {
     _shuffleInPlace(questionOrder, rng);
   }
 
   final answerOrderByQuestion = <String, List<String>>{};
-  for (final question in canonicalQuestions) {
+  for (final question in candidates) {
     final displayOptions = question.answerOptions
         .where((o) => !OfflineLocalGrader.isQuestionImageStem(o.stableKey))
         .toList()
@@ -53,14 +72,20 @@ bool isValidOrderForQuiz({
   required OfflineSessionOrder order,
   required OfflineQuizPackageModel quiz,
 }) {
-  final expectedQuestionIds = quiz.questions.map((q) => q.questionId).toSet();
-  if (order.questionOrder.length != expectedQuestionIds.length ||
-      order.questionOrder.toSet().length != expectedQuestionIds.length ||
-      !order.questionOrder.every(expectedQuestionIds.contains)) {
+  if (order.questionOrder.isEmpty) {
     return false;
   }
 
-  for (final question in quiz.questions) {
+  final bankQuestionIds = quiz.questions.map((q) => q.questionId).toSet();
+  if (order.questionOrder.toSet().length != order.questionOrder.length ||
+      !order.questionOrder.every(bankQuestionIds.contains)) {
+    return false;
+  }
+
+  final orderedQuestionIds = order.questionOrder.toSet();
+  for (final question in quiz.questions.where(
+    (q) => orderedQuestionIds.contains(q.questionId),
+  )) {
     final expectedOptionIds = question.answerOptions
         .where((o) => !OfflineLocalGrader.isQuestionImageStem(o.stableKey))
         .map((o) => o.answerOptionId)

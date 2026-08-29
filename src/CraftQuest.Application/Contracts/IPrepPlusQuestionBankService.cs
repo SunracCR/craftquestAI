@@ -24,22 +24,6 @@ public interface IPrepPlusQuestionBankService
         Guid sectionId,
         CancellationToken cancellationToken = default);
 
-    Task<PrepQuizTopicDto> CreateTopicAsync(
-        Guid catalogItemId,
-        UpsertPrepQuizTopicRequest request,
-        CancellationToken cancellationToken = default);
-
-    Task<PrepQuizTopicDto> UpdateTopicAsync(
-        Guid catalogItemId,
-        Guid topicId,
-        UpsertPrepQuizTopicRequest request,
-        CancellationToken cancellationToken = default);
-
-    Task DeleteTopicAsync(
-        Guid catalogItemId,
-        Guid topicId,
-        CancellationToken cancellationToken = default);
-
     Task BulkTagQuestionsAsync(
         Guid catalogItemId,
         BulkTagPrepQuestionsRequest request,
@@ -57,7 +41,6 @@ public interface IPrepPlusQuestionBankService
     Task<PrepPracticePoolDto> GetPracticePoolAsync(
         Guid catalogItemId,
         IReadOnlyList<Guid>? sectionIds,
-        IReadOnlyList<Guid>? topicIds,
         string? difficulty,
         CancellationToken cancellationToken = default);
 }

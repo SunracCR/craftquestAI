@@ -13,7 +13,7 @@ class OfflineLocalDatabase {
     final path = await offlineDatabaseFilePath();
     _db = await openDatabase(
       path,
-      version: 4,
+      version: 5,
       onCreate: (db, version) async {
         await _createSchema(db);
       },
@@ -41,6 +41,14 @@ class OfflineLocalDatabase {
           );
           await db.execute(
             "ALTER TABLE offline_session_checkpoints ADD COLUMN answer_order_json TEXT NOT NULL DEFAULT '{}'",
+          );
+        }
+        if (oldVersion < 5) {
+          await db.execute(
+            'ALTER TABLE offline_questions ADD COLUMN quiz_section_id TEXT',
+          );
+          await db.execute(
+            'ALTER TABLE offline_questions ADD COLUMN quiz_section_name TEXT',
           );
         }
       },
@@ -76,6 +84,8 @@ class OfflineLocalDatabase {
         scoring_policy TEXT NOT NULL,
         supports_multiple_correct_answers INTEGER NOT NULL,
         question_media_asset_id TEXT,
+        quiz_section_id TEXT,
+        quiz_section_name TEXT,
         correct_answer_blob TEXT NOT NULL,
         answer_key_blob TEXT
       )
@@ -176,6 +186,8 @@ class OfflineQuestionRow {
     required this.scoringPolicy,
     required this.supportsMultipleCorrectAnswers,
     this.questionMediaAssetId,
+    this.quizSectionId,
+    this.quizSectionName,
     required this.correctAnswerBlob,
     this.answerKeyBlob,
   });
@@ -190,6 +202,8 @@ class OfflineQuestionRow {
   final String scoringPolicy;
   final bool supportsMultipleCorrectAnswers;
   final String? questionMediaAssetId;
+  final String? quizSectionId;
+  final String? quizSectionName;
   final String correctAnswerBlob;
   final String? answerKeyBlob;
 }

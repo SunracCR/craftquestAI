@@ -542,7 +542,6 @@ class _PracticeSessionPageState extends State<PracticeSessionPage>
         assignmentId: widget.assignmentId,
         catalogItemId: _launchOptions.catalogItemId,
         sectionIds: _launchOptions.sectionIds,
-        topicIds: _launchOptions.topicIds,
         difficulty: _launchOptions.difficulty,
         questionCount: _launchOptions.questionCount,
       );
