@@ -58,6 +58,7 @@ class _MainShellPageState extends State<MainShellPage> {
       final pendingPrep = await getIt<PendingPrepReferralStore>().read();
       getIt<AppWarmupService>().start(
         prefetchTeacherDashboard: _isTeacher,
+        userId: widget.user.userId,
         deferPrepPrefetch:
             pendingPrep != null && pendingPrep.slug.isNotEmpty,
       );
@@ -127,8 +128,6 @@ class _MainShellPageState extends State<MainShellPage> {
     }
   }
 
-  void _goToPrepTab() => _selectTab(kPrepPlusTabIndex);
-
   void _selectTab(int value) {
     if (value == 0) {
       unawaited(getIt<NotificationsCubit>().refreshUnreadCount());
@@ -146,7 +145,6 @@ class _MainShellPageState extends State<MainShellPage> {
           return HomePage(
             key: ValueKey(widget.user.userId),
             user: widget.user,
-            onOpenPrepPlus: _goToPrepTab,
           );
         case 1:
           return const PrepPlusHubPage();

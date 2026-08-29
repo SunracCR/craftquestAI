@@ -1354,6 +1354,21 @@
   "@aiCreditPacksBuyForPrice": {
     "placeholders": { "price": { "type": "String" } }
   },
+  "aiCreditPacksBalanceGenerations": "~{generations}",
+  "@aiCreditPacksBalanceGenerations": {
+    "placeholders": { "generations": { "type": "int" } }
+  },
+  "aiCreditPacksBalanceCredits": "{credits} cr.",
+  "@aiCreditPacksBalanceCredits": {
+    "placeholders": { "credits": { "type": "int" } }
+  },
+  "aiCreditPacksBalanceNote": "Os pacotes nao expiram; a cota mensal do plano reinicia a cada mes.",
+  "aiCreditPacksTierStarter": "Starter",
+  "aiCreditPacksTierPlus": "Plus",
+  "aiCreditPacksTierMax": "Max",
+  "aiCreditPacksGenerationsUnit": "geracoes",
+  "aiCreditPacksPopularBadge": "Mais popular",
+  "aiCreditPacksFootnote": "~40 perguntas por geracao · 6 cr.",
   "aiCreditPacksEmpty": "Nenhum pacote disponivel. Reinicie a API ou contacte o suporte se o problema continuar.",
   "aiCreditPacksBuyAction": "Comprar creditos",
   "aiCreditPacksPurchaseSuccess": "{credits} creditos IA adicionados a sua conta.",

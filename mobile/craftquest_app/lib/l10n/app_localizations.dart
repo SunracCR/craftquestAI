@@ -4736,6 +4736,60 @@ abstract class AppLocalizations {
   /// **'Comprar · {price}'**
   String aiCreditPacksBuyForPrice(String price);
 
+  /// No description provided for @aiCreditPacksBalanceGenerations.
+  ///
+  /// In es, this message translates to:
+  /// **'~{generations}'**
+  String aiCreditPacksBalanceGenerations(int generations);
+
+  /// No description provided for @aiCreditPacksBalanceCredits.
+  ///
+  /// In es, this message translates to:
+  /// **'{credits} cr.'**
+  String aiCreditPacksBalanceCredits(int credits);
+
+  /// No description provided for @aiCreditPacksBalanceNote.
+  ///
+  /// In es, this message translates to:
+  /// **'Los paquetes no caducan; el cupo mensual del plan se reinicia cada mes.'**
+  String get aiCreditPacksBalanceNote;
+
+  /// No description provided for @aiCreditPacksTierStarter.
+  ///
+  /// In es, this message translates to:
+  /// **'Starter'**
+  String get aiCreditPacksTierStarter;
+
+  /// No description provided for @aiCreditPacksTierPlus.
+  ///
+  /// In es, this message translates to:
+  /// **'Plus'**
+  String get aiCreditPacksTierPlus;
+
+  /// No description provided for @aiCreditPacksTierMax.
+  ///
+  /// In es, this message translates to:
+  /// **'Max'**
+  String get aiCreditPacksTierMax;
+
+  /// No description provided for @aiCreditPacksGenerationsUnit.
+  ///
+  /// In es, this message translates to:
+  /// **'generaciones'**
+  String get aiCreditPacksGenerationsUnit;
+
+  /// No description provided for @aiCreditPacksPopularBadge.
+  ///
+  /// In es, this message translates to:
+  /// **'Más popular'**
+  String get aiCreditPacksPopularBadge;
+
+  /// No description provided for @aiCreditPacksFootnote.
+  ///
+  /// In es, this message translates to:
+  /// **'~40 preguntas por generación · 6 cr.'**
+  String get aiCreditPacksFootnote;
+
   /// No description provided for @aiCreditPacksEmpty.
   ///
   /// In es, this message translates to:

@@ -8,6 +8,7 @@ import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/features/auth/data/auth_repository.dart';
 import 'package:craftquest_app/features/auth/data/models/auth_models.dart';
+import 'package:craftquest_app/features/billing/data/billing_repository.dart';
 import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -53,11 +54,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     try {
       final profile = await _repository.getProfile();
+      await _warmBillingForUser(profile);
       emit(AuthAuthenticated(profile));
       _resetSessionExpiredFlag();
     } on DioException catch (error) {
       final restored = await _repository.restoreProfileAfterSessionFailure(error);
       if (restored != null) {
+        await _warmBillingForUser(restored.profile);
         emit(
           AuthAuthenticated(
             restored.profile,
@@ -89,6 +92,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         password: event.password,
         captchaToken: event.captchaToken,
       );
+      await _warmBillingForUser(response.user);
       emit(AuthAuthenticated(response.user));
       _resetSessionExpiredFlag();
       unawaited(_persistLoginCredentials(event));
@@ -171,6 +175,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         return;
       }
 
+      await _warmBillingForUser(response.user);
       emit(AuthAuthenticated(response.user));
       _resetSessionExpiredFlag();
       await _savedLoginStorage.clear();
@@ -225,6 +230,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     if (state is! AuthAuthenticated) {
       return;
     }
+    await _clearBillingSnapshotForCurrentUser();
     await _repository.logout();
     unawaited(OAuthSignInService.clearGoogleSession());
     emit(const AuthUnauthenticated());
@@ -234,6 +240,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthLogoutRequested event,
     Emitter<AuthState> emit,
   ) async {
+    await _clearBillingSnapshotForCurrentUser();
     await _repository.logout();
     unawaited(OAuthSignInService.clearGoogleSession());
     _resetSessionExpiredFlag();
@@ -245,6 +252,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     try {
+      await _clearBillingSnapshotForCurrentUser();
       await _repository.deleteAccount();
       unawaited(OAuthSignInService.clearGoogleSession());
       _resetSessionExpiredFlag();
@@ -302,8 +310,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthEmailVerified event,
     Emitter<AuthState> emit,
   ) {
+    unawaited(_warmBillingForUser(event.user));
     emit(AuthAuthenticated(event.user));
     _resetSessionExpiredFlag();
+  }
+
+  Future<void> _warmBillingForUser(UserProfileModel user) async {
+    final billingRepo = getIt<BillingRepository>();
+    await billingRepo.preloadFromDisk(user.userId);
+    unawaited(billingRepo.getMyBilling(userId: user.userId));
+  }
+
+  Future<void> _clearBillingSnapshotForCurrentUser() async {
+    final current = state;
+    if (current is AuthAuthenticated) {
+      await getIt<BillingRepository>()
+          .clearSnapshotForUser(current.user.userId);
+    } else {
+      getIt<BillingRepository>().invalidateMyBillingCache();
+    }
   }
 
   Future<void> _onResendVerificationRequested(

@@ -22,6 +22,7 @@ class AppWarmupService {
 
   void start({
     required bool prefetchTeacherDashboard,
+    String? userId,
     bool deferPrepPrefetch = false,
   }) {
     if (_started) {
@@ -29,7 +30,12 @@ class AppWarmupService {
     }
     _started = true;
     unawaited(_soundService.warmUp());
-    unawaited(_billingRepository.getMyBilling());
+    if (userId != null) {
+      unawaited(_billingRepository.preloadFromDisk(userId));
+      unawaited(_billingRepository.getMyBilling(userId: userId));
+    } else {
+      unawaited(_billingRepository.getMyBilling());
+    }
     if (!deferPrepPrefetch) {
       unawaited(_prepPlusRepository.prefetchCategories());
       unawaited(_prepPlusRepository.prefetchMyAccesses());

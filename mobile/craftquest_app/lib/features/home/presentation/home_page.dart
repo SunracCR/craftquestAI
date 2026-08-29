@@ -36,10 +36,9 @@ import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 class HomePage extends StatefulWidget {
-  const HomePage({super.key, required this.user, this.onOpenPrepPlus});
+  const HomePage({super.key, required this.user});
 
   final UserProfileModel user;
-  final VoidCallback? onOpenPrepPlus;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -69,6 +68,7 @@ class _HomePageState extends State<HomePage> {
     _billingRepository = getIt<BillingRepository>();
     _offlinePackageRepository = getIt<OfflinePackageRepository>();
     _billing = _billingRepository.cachedBilling;
+    unawaited(_bootstrapBilling());
     _checkoutRefresh = getIt<CheckoutRefreshNotifier>()
       ..addListener(_onCheckoutCompleted);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -98,6 +98,16 @@ class _HomePageState extends State<HomePage> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         unawaited(_initHome(forceRefreshBilling: true));
       });
+    }
+  }
+
+  Future<void> _bootstrapBilling() async {
+    if (_billing == null) {
+      final snapshot =
+          await _billingRepository.preloadFromDisk(widget.user.userId);
+      if (mounted && snapshot != null) {
+        setState(() => _billing = snapshot);
+      }
     }
   }
 
@@ -137,30 +147,22 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _load({bool forceRefresh = false}) async {
     UserBillingModel? billing;
-    var offlineCount = _offlineDownloadCount;
 
     try {
-      billing = await _billingRepository.getMyBilling(forceRefresh: forceRefresh);
+      billing = await _billingRepository.getMyBilling(
+        userId: widget.user.userId,
+        forceRefresh: forceRefresh,
+      );
     } catch (_) {
-      billing = _billingRepository.cachedBilling;
-    }
-
-    try {
-      if (!kIsWeb) {
-        offlineCount =
-            await _offlinePackageRepository.countDownloadedQuizzes();
-      }
-    } catch (_) {
-      offlineCount = 0;
+      billing = _billingRepository.cachedBilling ??
+          await _billingRepository.preloadFromDisk(widget.user.userId);
     }
 
     if (!mounted) return;
 
     if (billing == null) {
-      setState(() {
-        _billing = null;
-        _offlineDownloadCount = offlineCount;
-      });
+      setState(() => _billing = null);
+      unawaited(_loadOfflineDownloadCount());
       return;
     }
 
@@ -168,14 +170,12 @@ class _HomePageState extends State<HomePage> {
         _billing != null &&
         _billing!.plan.code.toLowerCase() != 'free' &&
         billing.plan.code.toLowerCase() == 'free') {
-      setState(() => _offlineDownloadCount = offlineCount);
+      unawaited(_loadOfflineDownloadCount());
       return;
     }
 
-    setState(() {
-      _billing = billing;
-      _offlineDownloadCount = offlineCount;
-    });
+    setState(() => _billing = billing);
+    unawaited(_loadOfflineDownloadCount());
   }
 
   Future<void> _openOfflineDownloads() async {
@@ -325,23 +325,6 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  AppSectionTitle(title: l10n.homePrepPlusCardTitle),
-                  const SizedBox(height: AppSpacing.xs),
-                  AppSectionCard(
-                    variant: AppCardVariant.highlight,
-                    padding: EdgeInsets.zero,
-                    child: ListTile(
-                      leading: Icon(
-                        Icons.menu_book_rounded,
-                        color: AppColors.accentGold,
-                      ),
-                      title: Text(l10n.homePrepPlusCardTitle),
-                      subtitle: Text(l10n.homePrepPlusCardSubtitle),
-                      trailing: const Icon(Icons.chevron_right_rounded),
-                      onTap: widget.onOpenPrepPlus,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
                   AppSectionTitle(title: l10n.myQuizzesAction),
                   const SizedBox(height: AppSpacing.xs),
                   AppSectionCard(
@@ -457,7 +440,7 @@ class _HomePageState extends State<HomePage> {
                                       children: [
                                         Expanded(
                                           child: Text(
-                                            planLabel!,
+                                            planLabel,
                                             style: Theme.of(context)
                                                 .textTheme
                                                 .titleLarge
@@ -497,8 +480,6 @@ class _HomePageState extends State<HomePage> {
                                         ),
                                         _billing!.credits.aiCredits,
                                       ),
-                                      value:
-                                          '~${AiGenerationAllowance.estimateGenerations(_billing!.credits.aiCredits)}',
                                       color: AppColors.accentViolet,
                                     ),
                                     if (subscriptionRenewalLine != null) ...[

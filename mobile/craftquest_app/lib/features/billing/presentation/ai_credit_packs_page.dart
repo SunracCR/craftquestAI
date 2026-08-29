@@ -7,16 +7,13 @@ import 'package:craftquest_app/core/billing/post_checkout_session_refresh.dart';
 import 'package:craftquest_app/core/billing/purchase_flow_state.dart';
 import 'package:craftquest_app/core/billing/purchase_orchestrator.dart';
 import 'package:craftquest_app/core/billing/store_purchase_feedback.dart';
-import 'package:craftquest_app/core/billing/paypal_web_launcher.dart';
 import 'package:craftquest_app/core/billing/payment_platform.dart';
 import 'package:craftquest_app/core/compliance/parental_gate_dialog.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
-import 'package:craftquest_app/core/utils/ai_generation_allowance.dart';
 import 'package:craftquest_app/core/widgets/app_buttons.dart';
-import 'package:craftquest_app/core/widgets/app_page_header.dart';
 import 'package:craftquest_app/core/widgets/app_section_card.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
@@ -24,6 +21,7 @@ import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/features/billing/data/billing_repository.dart';
 import 'package:craftquest_app/features/billing/data/models/billing_models.dart';
 import 'package:craftquest_app/features/billing/data/pending_paypal_payment_store.dart';
+import 'package:craftquest_app/features/billing/presentation/widgets/ai_credit_pack_widgets.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -326,33 +324,13 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
                   : ListView(
                   padding: AppSpacing.pageVertical,
                   children: [
-                    AppPageHeader(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Text(
-                          l10n.aiCreditPacksSubtitle,
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
-                        ),
-                      ),
-                    ),
                     if (_billing != null) ...[
-                      const SizedBox(height: AppSpacing.md),
-                      AppSectionCard(
-                        child: Text(
-                          l10n.aiCreditPacksCurrentBalance(
-                            AiGenerationAllowance.estimateGenerations(
-                              _billing!.credits.aiCredits,
-                            ),
-                            _billing!.credits.aiCredits,
-                          ),
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
+                      AiCreditBalanceHero(
+                        credits: _billing!.credits.aiCredits,
                       ),
+                      const SizedBox(height: AppSpacing.lg),
                     ],
                     if (_pendingPayPalOrderId != null && !kIsWeb) ...[
-                      const SizedBox(height: AppSpacing.md),
                       AppSectionCard(
                         variant: AppCardVariant.highlight,
                         child: Column(
@@ -374,58 +352,36 @@ class _AiCreditPacksPageState extends State<AiCreditPacksPage> {
                           ],
                         ),
                       ),
+                      const SizedBox(height: AppSpacing.lg),
                     ],
-                    const SizedBox(height: AppSpacing.lg),
-                    ..._packs.map(
-                      (pack) => Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                        child: AppSectionCard(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Text(
-                                pack.name,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
-                                    ?.copyWith(fontWeight: FontWeight.w700),
-                              ),
-                              const SizedBox(height: AppSpacing.xs),
-                              Text(
-                                l10n.aiCreditPacksCreditsLabel(
-                                  AiGenerationAllowance.estimateGenerations(
-                                    pack.credits,
-                                  ),
-                                  pack.credits,
-                                ),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(color: AppColors.textSecondary),
-                              ),
-                              const SizedBox(height: AppSpacing.md),
-                              FilledButton(
-                                onPressed: _purchasing
-                                    ? null
-                                    : () => _buyPack(pack),
-                                child: _purchasing
-                                    ? const SizedBox(
-                                        height: 20,
-                                        width: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    : Text(
-                                        l10n.aiCreditPacksBuyForPrice(
-                                          _formatPrice(pack, l10n),
-                                        ),
-                                      ),
-                              ),
-                            ],
+                    ..._packs.asMap().entries.map(
+                      (entry) {
+                        final pack = entry.value;
+                        final display = AiCreditPackDisplay.forPack(pack, l10n);
+                        final priceLabel = resolveAiCreditPackPriceLabel(
+                          pack: pack,
+                          storeProducts: _storeProducts,
+                          formatApiPrice: (p) => _formatPrice(p, l10n),
+                        );
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                          child: AiCreditPackCard(
+                            pack: pack,
+                            display: display,
+                            priceLabel: priceLabel,
+                            purchasing: _purchasing,
+                            onBuy: _purchasing ? null : () => _buyPack(pack),
                           ),
-                        ),
-                      ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      l10n.aiCreditPacksFootnote,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
                     ),
                   ],
                 ),

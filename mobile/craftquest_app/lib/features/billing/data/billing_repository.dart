@@ -1,16 +1,21 @@
+import 'dart:async';
+
 import 'package:craftquest_app/core/network/api_client.dart';
+import 'package:craftquest_app/features/billing/data/billing_snapshot_store.dart';
 import 'package:craftquest_app/features/billing/data/models/billing_models.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:dio/dio.dart';
 
 class BillingRepository {
-  BillingRepository(this._apiClient);
+  BillingRepository(this._apiClient, this._snapshotStore);
 
   final ApiClient _apiClient;
+  final BillingSnapshotStore _snapshotStore;
 
-  static const _cacheTtl = Duration(seconds: 45);
+  static const _cacheTtl = Duration(minutes: 2);
 
   UserBillingModel? _cachedBilling;
+  String? _cachedUserId;
   DateTime? _cachedAt;
   Future<UserBillingModel>? _inFlightBilling;
   int _fetchGeneration = 0;
@@ -22,11 +27,28 @@ class BillingRepository {
 
   UserBillingModel? get cachedBilling => _cachedBilling;
 
-  Future<UserBillingModel> getMyBilling({bool forceRefresh = false}) async {
+  Future<UserBillingModel?> preloadFromDisk(String userId) async {
+    if (_cachedBilling != null && _cachedUserId == userId) {
+      return _cachedBilling;
+    }
+    final snapshot = await _snapshotStore.read(userId);
+    if (snapshot != null) {
+      _cachedBilling = snapshot;
+      _cachedUserId = userId;
+      _cachedAt = DateTime.now();
+    }
+    return snapshot;
+  }
+
+  Future<UserBillingModel> getMyBilling({
+    String? userId,
+    bool forceRefresh = false,
+  }) async {
     if (!forceRefresh &&
         _cachedBilling != null &&
         _cachedAt != null &&
-        DateTime.now().difference(_cachedAt!) < _cacheTtl) {
+        DateTime.now().difference(_cachedAt!) < _cacheTtl &&
+        (userId == null || userId == _cachedUserId)) {
       return _cachedBilling!;
     }
 
@@ -35,7 +57,8 @@ class BillingRepository {
       _inFlightBilling = null;
     }
 
-    _inFlightBilling ??= _fetchMyBilling(_fetchGeneration).whenComplete(() {
+    _inFlightBilling ??=
+        _fetchMyBilling(_fetchGeneration, userId: userId).whenComplete(() {
       _inFlightBilling = null;
     });
     return _inFlightBilling!;
@@ -43,18 +66,40 @@ class BillingRepository {
 
   void invalidateMyBillingCache() {
     _cachedBilling = null;
+    _cachedUserId = null;
     _cachedAt = null;
     _fetchGeneration++;
     _inFlightBilling = null;
   }
 
-  Future<UserBillingModel> _fetchMyBilling(int generation) async {
+  Future<void> clearSnapshotForUser(String userId) async {
+    await _snapshotStore.clear(userId);
+    if (_cachedUserId == userId) {
+      invalidateMyBillingCache();
+    }
+  }
+
+  Future<void> clearAllSnapshots() async {
+    await _snapshotStore.clearAll();
+    invalidateMyBillingCache();
+  }
+
+  Future<UserBillingModel> _fetchMyBilling(
+    int generation, {
+    String? userId,
+  }) async {
     final response =
         await _apiClient.dio.get<Map<String, dynamic>>('/api/billing/me');
-    final billing = UserBillingModel.fromJson(response.data!);
+    final raw = response.data!;
+    final billing = UserBillingModel.fromJson(raw);
     if (generation == _fetchGeneration) {
       _cachedBilling = billing;
       _cachedAt = DateTime.now();
+      final resolvedUserId = userId ?? await _resolveCurrentUserId();
+      if (resolvedUserId != null) {
+        _cachedUserId = resolvedUserId;
+        unawaited(_snapshotStore.save(resolvedUserId, raw));
+      }
       return billing;
     }
     if (_cachedBilling != null &&
@@ -62,7 +107,20 @@ class BillingRepository {
         DateTime.now().difference(_cachedAt!) < _cacheTtl) {
       return _cachedBilling!;
     }
-    return getMyBilling();
+    return getMyBilling(userId: userId);
+  }
+
+  Future<String?> _resolveCurrentUserId() async {
+    if (_cachedUserId != null) {
+      return _cachedUserId;
+    }
+    try {
+      final response =
+          await _apiClient.dio.get<Map<String, dynamic>>('/api/auth/me');
+      return response.data?['userId'] as String?;
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<List<PurchaseHistoryItemModel>> getMyPurchases() async {

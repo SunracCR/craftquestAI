@@ -32,6 +32,7 @@ import 'package:craftquest_app/features/ai_generation/data/study_material_reposi
 import 'package:craftquest_app/features/analytics/data/analytics_repository.dart';
 import 'package:craftquest_app/features/media/data/media_repository.dart';
 import 'package:craftquest_app/features/billing/data/billing_repository.dart';
+import 'package:craftquest_app/features/billing/data/billing_snapshot_store.dart';
 import 'package:craftquest_app/features/billing/data/pending_paypal_payment_store.dart';
 import 'package:craftquest_app/features/prep_plus/data/pending_prep_referral_store.dart';
 import 'package:craftquest_app/features/sharing/data/sharing_repository.dart';
@@ -142,7 +143,15 @@ void configureDependencies() {
   getIt.registerLazySingleton(() => TeacherClassRepository(getIt<ApiClient>()));
   getIt.registerLazySingleton(() => TeacherAssignmentRepository(getIt<ApiClient>()));
   getIt.registerLazySingleton(() => TeacherDashboardRepository(getIt<ApiClient>()));
-  getIt.registerLazySingleton(() => BillingRepository(getIt<ApiClient>()));
+  getIt.registerLazySingleton(
+    () => BillingSnapshotStore(SharedPreferences.getInstance()),
+  );
+  getIt.registerLazySingleton(
+    () => BillingRepository(
+      getIt<ApiClient>(),
+      getIt<BillingSnapshotStore>(),
+    ),
+  );
   getIt.registerLazySingleton(
     () => PendingPayPalPaymentStore(SharedPreferences.getInstance()),
   );

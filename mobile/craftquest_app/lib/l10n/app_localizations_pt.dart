@@ -2856,6 +2856,38 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String aiCreditPacksBalanceGenerations(int generations) {
+    return '~$generations';
+  }
+
+  @override
+  String aiCreditPacksBalanceCredits(int credits) {
+    return '$credits cr.';
+  }
+
+  @override
+  String get aiCreditPacksBalanceNote =>
+      'Os pacotes nao expiram; a cota mensal do plano reinicia a cada mes.';
+
+  @override
+  String get aiCreditPacksTierStarter => 'Starter';
+
+  @override
+  String get aiCreditPacksTierPlus => 'Plus';
+
+  @override
+  String get aiCreditPacksTierMax => 'Max';
+
+  @override
+  String get aiCreditPacksGenerationsUnit => 'geracoes';
+
+  @override
+  String get aiCreditPacksPopularBadge => 'Mais popular';
+
+  @override
+  String get aiCreditPacksFootnote => '~40 perguntas por geracao · 6 cr.';
+
+  @override
   String get aiCreditPacksEmpty =>
       'Nenhum pacote disponivel. Reinicie a API ou contacte o suporte se o problema continuar.';
 

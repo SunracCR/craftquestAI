@@ -8,13 +8,13 @@ class AppHighlightStatRow extends StatelessWidget {
     super.key,
     required this.icon,
     required this.label,
-    required this.value,
+    this.value,
     required this.color,
   });
 
   final IconData icon;
   final String label;
-  final String value;
+  final String? value;
   final Color color;
 
   @override
@@ -42,13 +42,14 @@ class AppHighlightStatRow extends StatelessWidget {
                   ),
             ),
           ),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w600,
-                ),
-          ),
+          if (value != null && value!.isNotEmpty)
+            Text(
+              value!,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
         ],
       ),
     );

@@ -22,7 +22,7 @@ public class BillingService(
     INotificationService notificationService,
     ILogger<BillingService> logger) : IBillingService
 {
-    private static readonly TimeSpan BillingCacheDuration = TimeSpan.FromSeconds(45);
+    private static readonly TimeSpan BillingCacheDuration = TimeSpan.FromMinutes(2);
 
     public async Task<UserBillingDto> GetMyBillingAsync(
         Guid userId,
@@ -37,8 +37,7 @@ public class BillingService(
         var subscription = await GetActiveSubscriptionAsync(userId, cancellationToken);
         var plan = subscription.Plan;
 
-        await EnsureMonthlyAiCreditsAsync(userId, subscription, cancellationToken);
-        await EnsureAiCreditBalanceMatchesPlanAsync(userId, subscription, cancellationToken);
+        await EnsurePlanAiCreditsForPeriodAsync(userId, subscription, cancellationToken);
 
         var monthStart = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
@@ -344,8 +343,7 @@ public class BillingService(
                 "PAYMENT_ISSUE_PENDING");
         }
 
-        await EnsureMonthlyAiCreditsAsync(userId, subscription, cancellationToken);
-        await EnsureAiCreditBalanceMatchesPlanAsync(userId, subscription, cancellationToken);
+        await EnsurePlanAiCreditsForPeriodAsync(userId, subscription, cancellationToken);
 
         var balance = await GetTotalAiCreditsBalanceAsync(userId, cancellationToken);
         if (balance < amount)
@@ -460,7 +458,7 @@ public class BillingService(
                 "AI_CREDIT_PACKS_NOT_AVAILABLE");
         }
 
-        await EnsureMonthlyAiCreditsAsync(userId, subscription, cancellationToken);
+        await EnsurePlanAiCreditsForPeriodAsync(userId, subscription, cancellationToken);
 
         var purchasedBalance = await GetCreditBalanceAsync(
             userId,
@@ -1011,10 +1009,11 @@ public class BillingService(
             .SumAsync(e => e.Delta, cancellationToken);
 
     /// <summary>
-    /// Corrige el saldo IA al cupo del plan activo si el usuario no ha consumido créditos
-    /// en el periodo actual (calendario o ciclo de suscripción).
+    /// Ensures plan AI credits for the current billing period in a single ledger pass.
+    /// Applies monthly reset when the period has not been refreshed; otherwise aligns
+    /// balance to the plan quota when the user has not consumed credits this period.
     /// </summary>
-    private async Task EnsureAiCreditBalanceMatchesPlanAsync(
+    private async Task EnsurePlanAiCreditsForPeriodAsync(
         Guid userId,
         UserSubscription subscription,
         CancellationToken cancellationToken)
@@ -1029,6 +1028,25 @@ public class BillingService(
             subscription,
             plan,
             DateTime.UtcNow);
+
+        var refreshedThisPeriod = await dbContext.CreditLedgerEntries
+            .AnyAsync(
+                e => e.UserId == userId
+                    && e.CreditType == BillingCreditTypes.AiPlan
+                    && (e.Reason == "grant_plan" || e.Reason == "monthly_reset")
+                    && e.CreatedAt >= periodStart,
+                cancellationToken);
+
+        if (!refreshedThisPeriod)
+        {
+            await SetCreditBalanceAsync(
+                userId,
+                BillingCreditTypes.AiPlan,
+                plan.MonthlyAiCredits,
+                "monthly_reset",
+                cancellationToken);
+            return;
+        }
 
         var consumedThisPeriod = await dbContext.CreditLedgerEntries
             .AnyAsync(
@@ -1057,43 +1075,6 @@ public class BillingService(
             BillingCreditTypes.AiPlan,
             plan.MonthlyAiCredits,
             "grant_plan",
-            cancellationToken);
-    }
-
-    private async Task EnsureMonthlyAiCreditsAsync(
-        Guid userId,
-        UserSubscription subscription,
-        CancellationToken cancellationToken)
-    {
-        var plan = subscription.Plan;
-        if (plan.MonthlyAiCredits <= 0)
-        {
-            return;
-        }
-
-        var periodStart = AiCreditPeriodCalculator.GetCreditPeriodStartUtc(
-            subscription,
-            plan,
-            DateTime.UtcNow);
-
-        var refreshedThisPeriod = await dbContext.CreditLedgerEntries
-            .AnyAsync(
-                e => e.UserId == userId
-                    && e.CreditType == BillingCreditTypes.AiPlan
-                    && (e.Reason == "grant_plan" || e.Reason == "monthly_reset")
-                    && e.CreatedAt >= periodStart,
-                cancellationToken);
-
-        if (refreshedThisPeriod)
-        {
-            return;
-        }
-
-        await SetCreditBalanceAsync(
-            userId,
-            BillingCreditTypes.AiPlan,
-            plan.MonthlyAiCredits,
-            "monthly_reset",
             cancellationToken);
     }
 
