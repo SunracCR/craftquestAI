@@ -21,6 +21,16 @@ public class QuestionConfiguration : IEntityTypeConfiguration<Question>
             .WithMany(x => x.Questions)
             .HasForeignKey(x => x.QuestionTypeId);
 
+        builder.HasOne(x => x.QuizSection)
+            .WithMany(x => x.Questions)
+            .HasForeignKey(x => x.QuizSectionId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(x => x.QuizTopic)
+            .WithMany(x => x.Questions)
+            .HasForeignKey(x => x.QuizTopicId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.HasMany(x => x.AnswerOptions)
             .WithOne(x => x.Question)
             .HasForeignKey(x => x.QuestionId);

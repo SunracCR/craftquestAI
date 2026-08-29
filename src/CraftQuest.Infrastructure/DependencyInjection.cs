@@ -167,6 +167,8 @@ public static class DependencyInjection
         services.AddScoped<MobileStoreWebhookProcessor>();
         services.AddScoped<IPaymentService, PaymentService>();
         services.AddScoped<IPrepPlusAdminService, PrepPlusAdminService>();
+        services.AddScoped<IPrepPlusQuestionBankService, PrepPlusQuestionBankService>();
+        services.AddScoped<PrepPlusQuestionBankService>();
         services.AddScoped<IPrepPlusAccessService, PrepPlusAccessService>();
         services.AddScoped<IPrepPlusCatalogService, PrepPlusCatalogService>();
         services.AddScoped<IPrepPlusPaymentService, PrepPlusPaymentService>();

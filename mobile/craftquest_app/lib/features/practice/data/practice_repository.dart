@@ -17,6 +17,11 @@ class PracticeRepository {
     bool showElapsedTimer = false,
     String? classId,
     String? assignmentId,
+    String? catalogItemId,
+    List<String>? sectionIds,
+    List<String>? topicIds,
+    String? difficulty,
+    int? questionCount,
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/api/practice-sessions',
@@ -29,6 +34,11 @@ class PracticeRepository {
         'clientUtcOffsetMinutes': DateTime.now().timeZoneOffset.inMinutes,
         if (classId != null) 'classId': classId,
         if (assignmentId != null) 'assignmentId': assignmentId,
+        if (catalogItemId != null) 'catalogItemId': catalogItemId,
+        if (sectionIds != null && sectionIds.isNotEmpty) 'sectionIds': sectionIds,
+        if (topicIds != null && topicIds.isNotEmpty) 'topicIds': topicIds,
+        if (difficulty != null && difficulty.isNotEmpty) 'difficulty': difficulty,
+        if (questionCount != null) 'questionCount': questionCount,
       },
       options: Options(
         receiveTimeout: Duration(seconds: 90),

@@ -6,20 +6,63 @@ namespace CraftQuest.Infrastructure.Services.Practice;
 
 internal static class PracticeQuestionLoader
 {
+    public sealed class FilterOptions
+    {
+        public IReadOnlyList<Guid>? SectionIds { get; init; }
+        public IReadOnlyList<Guid>? TopicIds { get; init; }
+        public string? Difficulty { get; init; }
+        public bool RequireTaggedSection { get; init; }
+    }
+
+    public static Task<List<Question>> LoadForQuizAsync(
+        CraftQuestDbContext dbContext,
+        Guid quizId,
+        CancellationToken cancellationToken = default) =>
+        LoadForQuizAsync(dbContext, quizId, filter: null, cancellationToken);
+
     public static async Task<List<Question>> LoadForQuizAsync(
         CraftQuestDbContext dbContext,
         Guid quizId,
+        FilterOptions? filter,
         CancellationToken cancellationToken = default)
     {
-        var questionRows = await dbContext.Questions
+        var query = dbContext.Questions
             .AsNoTracking()
-            .Where(q => q.QuizId == quizId)
+            .Where(q => q.QuizId == quizId);
+
+        if (filter is not null)
+        {
+            if (filter.RequireTaggedSection)
+            {
+                query = query.Where(q => q.QuizSectionId != null);
+            }
+
+            if (filter.TopicIds is { Count: > 0 })
+            {
+                var topicSet = filter.TopicIds.ToHashSet();
+                query = query.Where(q => q.QuizTopicId != null && topicSet.Contains(q.QuizTopicId.Value));
+            }
+            else if (filter.SectionIds is { Count: > 0 })
+            {
+                var sectionSet = filter.SectionIds.ToHashSet();
+                query = query.Where(q => q.QuizSectionId != null && sectionSet.Contains(q.QuizSectionId.Value));
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.Difficulty))
+            {
+                var difficulty = filter.Difficulty.Trim().ToLowerInvariant();
+                query = query.Where(q => q.Difficulty == difficulty);
+            }
+        }
+
+        var questionRows = await query
             .OrderBy(q => q.SortOrder)
             .Select(q => new QuestionRow
             {
                 QuestionId = q.QuestionId,
                 QuizId = q.QuizId,
                 QuizSectionId = q.QuizSectionId,
+                QuizTopicId = q.QuizTopicId,
                 QuestionTypeId = q.QuestionTypeId,
                 QuestionText = q.QuestionText,
                 Points = q.Points,
@@ -107,6 +150,7 @@ internal static class PracticeQuestionLoader
                     QuestionId = row.QuestionId,
                     QuizId = row.QuizId,
                     QuizSectionId = row.QuizSectionId,
+                    QuizTopicId = row.QuizTopicId,
                     QuestionTypeId = row.QuestionTypeId,
                     QuestionText = row.QuestionText,
                     Points = row.Points,
@@ -140,6 +184,7 @@ internal static class PracticeQuestionLoader
         public Guid QuestionId { get; init; }
         public Guid QuizId { get; init; }
         public Guid? QuizSectionId { get; init; }
+        public Guid? QuizTopicId { get; init; }
         public int QuestionTypeId { get; init; }
         public string QuestionText { get; init; } = string.Empty;
         public decimal Points { get; init; }

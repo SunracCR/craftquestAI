@@ -52,4 +52,18 @@ public static class PracticeSessionOrdering
 
         return list;
     }
+
+    public static List<T> SampleQuestions<T>(
+        IReadOnlyList<T> questions,
+        int count,
+        Random? random = null)
+    {
+        if (count <= 0 || questions.Count <= count)
+        {
+            return questions.ToList();
+        }
+
+        var rng = random ?? Random.Shared;
+        return questions.OrderBy(_ => rng.Next()).Take(count).ToList();
+    }
 }

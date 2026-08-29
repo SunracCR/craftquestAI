@@ -309,6 +309,47 @@
   "prepPlusPracticeOptionRandom": "Aleatório",
   "prepPlusPracticeOptionTimer": "Cronômetro",
   "prepPlusPracticeOptionSound": "Som",
+  "prepPlusCustomPracticeTitle": "Prática personalizada",
+  "prepPlusCustomPracticeLoadingPool": "Calculando perguntas disponíveis…",
+  "prepPlusCustomPracticeSelectFilters": "Escolha capítulos e opções",
+  "prepPlusCustomPracticeSectionsTitle": "Capítulos",
+  "prepPlusCustomPracticeSectionCount": "{count} perguntas",
+  "@prepPlusCustomPracticeSectionCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "prepPlusCustomPracticeTopicCount": "{count} perguntas",
+  "@prepPlusCustomPracticeTopicCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "prepPlusCustomPracticeDifficultyTitle": "Dificuldade",
+  "prepPlusCustomPracticeDifficultyEasy": "Fácil",
+  "prepPlusCustomPracticeDifficultyMedium": "Média",
+  "prepPlusCustomPracticeDifficultyHard": "Difícil",
+  "prepPlusCustomPracticeCountTitle": "Número de perguntas",
+  "prepPlusCustomPracticeAllChip": "Todas",
+  "prepPlusCustomPracticeAllQuestions": "Todas ({count})",
+  "@prepPlusCustomPracticeAllQuestions": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "prepPlusCustomPracticeQuestionCountSummary": "{selected} de {available} disponíveis",
+  "@prepPlusCustomPracticeQuestionCountSummary": {
+    "placeholders": {
+      "selected": {"type": "int"},
+      "available": {"type": "int"}
+    }
+  },
+  "prepPlusCustomPracticePoolLimited": "Só há {count} perguntas com este filtro",
+  "@prepPlusCustomPracticePoolLimited": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
   "prepPlusExpandDescription": "Ver mais",
   "prepPlusTrySimulationShort": "3 perguntas de amostra · sem salvar resultados",
   "prepPlusProgressAnalyticsShort": "Análise",
@@ -1987,6 +2028,33 @@
   "prepAdminPublished": "Publicado no catálogo",
   "prepAdminUnpublished": "Despublicado",
   "prepAdminItemDeleted": "Item excluído",
+  "prepAdminQuestionBankTitle": "Banco / capítulos e temas",
+  "prepAdminQuestionBankAction": "Etiquetar banco",
+  "prepAdminQuestionBankEnableCustom": "Prática personalizada",
+  "prepAdminQuestionBankEnableCustomHint": "Estudantes Prep+ poderão montar sessões curtas por capítulo/tema",
+  "prepAdminQuestionBankUntaggedCount": "{count} perguntas sem capítulo",
+  "@prepAdminQuestionBankUntaggedCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "prepAdminQuestionBankSectionsTitle": "Capítulos",
+  "prepAdminQuestionBankAddSection": "Adicionar capítulo",
+  "prepAdminQuestionBankAddTopic": "Adicionar tema",
+  "prepAdminQuestionBankQuestionsTitle": "Perguntas do banco",
+  "prepAdminQuestionBankSectionName": "Nome do capítulo",
+  "prepAdminQuestionBankTopicName": "Nome do tema",
+  "prepAdminQuestionBankNameHint": "Nome",
+  "prepAdminQuestionBankSaveAction": "Salvar",
+  "prepAdminQuestionBankSaved": "Banco atualizado",
+  "prepAdminQuestionBankAssignTitle": "Atribuir etiquetas",
+  "prepAdminQuestionBankSectionLabel": "Capítulo",
+  "prepAdminQuestionBankTopicLabel": "Tema",
+  "prepAdminQuestionBankDifficultyLabel": "Dificuldade",
+  "prepAdminQuestionBankUnassigned": "Sem capítulo",
+  "prepAdminQuestionBankNoTopic": "Sem tema",
+  "prepAdminQuestionBankNoDifficulty": "Sem dificuldade",
+  "prepAdminQuestionBankSaveAssignment": "Salvar atribuição",
   "prepAdminLinkedQuiz": "Questionário: {title}",
   "@prepAdminLinkedQuiz": {
     "placeholders": { "title": { "type": "String" } }

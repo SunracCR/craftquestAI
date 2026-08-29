@@ -11,6 +11,7 @@ internal static class PracticeSessionSnapshotBuilder
     public static void PopulateQuestionSnapshots(
         PracticeSession session,
         IReadOnlyList<Question> questionList,
+        IReadOnlyDictionary<Guid, string>? sectionNameByQuestionId = null,
         DateTime? createdAt = null)
     {
         var timestamp = createdAt ?? DateTime.UtcNow;
@@ -21,6 +22,8 @@ internal static class PracticeSessionSnapshotBuilder
             displayOrder++;
             var snapshotId = Guid.NewGuid();
             var seed = Guid.NewGuid().ToString("N");
+            string? sectionName = null;
+            sectionNameByQuestionId?.TryGetValue(question.QuestionId, out sectionName);
 
             var allOptions = question.AnswerOptions.Where(o => o.IsActive).ToList();
             var stemOption = allOptions.FirstOrDefault(o =>
@@ -87,6 +90,7 @@ internal static class PracticeSessionSnapshotBuilder
                 QuestionId = question.QuestionId,
                 QuestionTypeCodeSnapshot = question.QuestionType.Code,
                 QuestionTextSnapshot = question.QuestionText,
+                QuizSectionNameSnapshot = sectionName,
                 PointsPossible = question.Points,
                 DisplayOrder = displayOrder,
                 AnswerStatus = "unanswered",

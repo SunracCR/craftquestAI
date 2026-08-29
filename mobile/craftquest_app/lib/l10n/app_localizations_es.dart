@@ -766,6 +766,66 @@ class AppLocalizationsEs extends AppLocalizations {
   String get prepPlusPracticeOptionSound => 'Sonido';
 
   @override
+  String get prepPlusCustomPracticeTitle => 'Práctica a medida';
+
+  @override
+  String get prepPlusCustomPracticeLoadingPool =>
+      'Calculando preguntas disponibles…';
+
+  @override
+  String get prepPlusCustomPracticeSelectFilters =>
+      'Elige capítulos y opciones';
+
+  @override
+  String get prepPlusCustomPracticeSectionsTitle => 'Capítulos';
+
+  @override
+  String prepPlusCustomPracticeSectionCount(int count) {
+    return '$count preguntas';
+  }
+
+  @override
+  String prepPlusCustomPracticeTopicCount(int count) {
+    return '$count preguntas';
+  }
+
+  @override
+  String get prepPlusCustomPracticeDifficultyTitle => 'Dificultad';
+
+  @override
+  String get prepPlusCustomPracticeDifficultyEasy => 'Fácil';
+
+  @override
+  String get prepPlusCustomPracticeDifficultyMedium => 'Media';
+
+  @override
+  String get prepPlusCustomPracticeDifficultyHard => 'Difícil';
+
+  @override
+  String get prepPlusCustomPracticeCountTitle => 'Número de preguntas';
+
+  @override
+  String get prepPlusCustomPracticeAllChip => 'Todas';
+
+  @override
+  String prepPlusCustomPracticeAllQuestions(int count) {
+    return 'Todas ($count)';
+  }
+
+  @override
+  String prepPlusCustomPracticeQuestionCountSummary(
+    int selected,
+    int available,
+  ) {
+    return '$selected de $available disponibles';
+  }
+
+  @override
+  String prepPlusCustomPracticePoolLimited(int count) {
+    return 'Solo hay $count preguntas con este filtro';
+  }
+
+  @override
   String get prepPlusExpandDescription => 'Ver más';
 
   @override
@@ -3722,8 +3782,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get teacherUpgradeSeeAllPlans => 'Ver todos los planes';
 
   @override
-  String get teacherUpgradeAlreadyActive =>
-      'Ya tienes un plan Tutor activo.';
+  String get teacherUpgradeAlreadyActive => 'Ya tienes un plan Tutor activo.';
 
   @override
   String teacherUpgradeNextRenewal(String date) {
@@ -4495,6 +4554,75 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get prepAdminItemDeleted => 'Ítem eliminado';
+
+  @override
+  String get prepAdminQuestionBankTitle => 'Banco / capítulos y temas';
+
+  @override
+  String get prepAdminQuestionBankAction => 'Etiquetar banco';
+
+  @override
+  String get prepAdminQuestionBankEnableCustom => 'Práctica a medida';
+
+  @override
+  String get prepAdminQuestionBankEnableCustomHint =>
+      'Los estudiantes Prep+ podrán armar sesiones cortas por capítulo/tema';
+
+  @override
+  String prepAdminQuestionBankUntaggedCount(int count) {
+    return '$count preguntas sin capítulo';
+  }
+
+  @override
+  String get prepAdminQuestionBankSectionsTitle => 'Capítulos';
+
+  @override
+  String get prepAdminQuestionBankAddSection => 'Añadir capítulo';
+
+  @override
+  String get prepAdminQuestionBankAddTopic => 'Añadir tema';
+
+  @override
+  String get prepAdminQuestionBankQuestionsTitle => 'Preguntas del banco';
+
+  @override
+  String get prepAdminQuestionBankSectionName => 'Nombre del capítulo';
+
+  @override
+  String get prepAdminQuestionBankTopicName => 'Nombre del tema';
+
+  @override
+  String get prepAdminQuestionBankNameHint => 'Nombre';
+
+  @override
+  String get prepAdminQuestionBankSaveAction => 'Guardar';
+
+  @override
+  String get prepAdminQuestionBankSaved => 'Banco actualizado';
+
+  @override
+  String get prepAdminQuestionBankAssignTitle => 'Asignar etiquetas';
+
+  @override
+  String get prepAdminQuestionBankSectionLabel => 'Capítulo';
+
+  @override
+  String get prepAdminQuestionBankTopicLabel => 'Tema';
+
+  @override
+  String get prepAdminQuestionBankDifficultyLabel => 'Dificultad';
+
+  @override
+  String get prepAdminQuestionBankUnassigned => 'Sin capítulo';
+
+  @override
+  String get prepAdminQuestionBankNoTopic => 'Sin tema';
+
+  @override
+  String get prepAdminQuestionBankNoDifficulty => 'Sin dificultad';
+
+  @override
+  String get prepAdminQuestionBankSaveAssignment => 'Guardar asignación';
 
   @override
   String prepAdminLinkedQuiz(String title) {

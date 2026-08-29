@@ -309,6 +309,47 @@
   "prepPlusPracticeOptionRandom": "Random",
   "prepPlusPracticeOptionTimer": "Timer",
   "prepPlusPracticeOptionSound": "Sound",
+  "prepPlusCustomPracticeTitle": "Custom practice",
+  "prepPlusCustomPracticeLoadingPool": "Calculating available questions…",
+  "prepPlusCustomPracticeSelectFilters": "Choose chapters and options",
+  "prepPlusCustomPracticeSectionsTitle": "Chapters",
+  "prepPlusCustomPracticeSectionCount": "{count} questions",
+  "@prepPlusCustomPracticeSectionCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "prepPlusCustomPracticeTopicCount": "{count} questions",
+  "@prepPlusCustomPracticeTopicCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "prepPlusCustomPracticeDifficultyTitle": "Difficulty",
+  "prepPlusCustomPracticeDifficultyEasy": "Easy",
+  "prepPlusCustomPracticeDifficultyMedium": "Medium",
+  "prepPlusCustomPracticeDifficultyHard": "Hard",
+  "prepPlusCustomPracticeCountTitle": "Number of questions",
+  "prepPlusCustomPracticeAllChip": "All",
+  "prepPlusCustomPracticeAllQuestions": "All ({count})",
+  "@prepPlusCustomPracticeAllQuestions": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "prepPlusCustomPracticeQuestionCountSummary": "{selected} of {available} available",
+  "@prepPlusCustomPracticeQuestionCountSummary": {
+    "placeholders": {
+      "selected": {"type": "int"},
+      "available": {"type": "int"}
+    }
+  },
+  "prepPlusCustomPracticePoolLimited": "Only {count} questions match this filter",
+  "@prepPlusCustomPracticePoolLimited": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
   "prepPlusExpandDescription": "Show more",
   "prepPlusTrySimulationShort": "3 sample questions · results not saved",
   "prepPlusProgressAnalyticsShort": "Analytics",
@@ -1987,6 +2028,33 @@
   "prepAdminPublished": "Published to catalog",
   "prepAdminUnpublished": "Unpublished",
   "prepAdminItemDeleted": "Item deleted",
+  "prepAdminQuestionBankTitle": "Bank / chapters and topics",
+  "prepAdminQuestionBankAction": "Tag question bank",
+  "prepAdminQuestionBankEnableCustom": "Custom practice",
+  "prepAdminQuestionBankEnableCustomHint": "Prep+ students can build short sessions by chapter/topic",
+  "prepAdminQuestionBankUntaggedCount": "{count} questions without a chapter",
+  "@prepAdminQuestionBankUntaggedCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "prepAdminQuestionBankSectionsTitle": "Chapters",
+  "prepAdminQuestionBankAddSection": "Add chapter",
+  "prepAdminQuestionBankAddTopic": "Add topic",
+  "prepAdminQuestionBankQuestionsTitle": "Question bank",
+  "prepAdminQuestionBankSectionName": "Chapter name",
+  "prepAdminQuestionBankTopicName": "Topic name",
+  "prepAdminQuestionBankNameHint": "Name",
+  "prepAdminQuestionBankSaveAction": "Save",
+  "prepAdminQuestionBankSaved": "Bank updated",
+  "prepAdminQuestionBankAssignTitle": "Assign tags",
+  "prepAdminQuestionBankSectionLabel": "Chapter",
+  "prepAdminQuestionBankTopicLabel": "Topic",
+  "prepAdminQuestionBankDifficultyLabel": "Difficulty",
+  "prepAdminQuestionBankUnassigned": "No chapter",
+  "prepAdminQuestionBankNoTopic": "No topic",
+  "prepAdminQuestionBankNoDifficulty": "No difficulty",
+  "prepAdminQuestionBankSaveAssignment": "Save assignment",
   "prepAdminLinkedQuiz": "Quiz: {title}",
   "@prepAdminLinkedQuiz": {
     "placeholders": { "title": { "type": "String" } }

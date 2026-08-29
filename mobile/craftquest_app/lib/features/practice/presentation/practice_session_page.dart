@@ -540,6 +540,11 @@ class _PracticeSessionPageState extends State<PracticeSessionPage>
         showElapsedTimer: _launchOptions.showTimer,
         classId: widget.classId,
         assignmentId: widget.assignmentId,
+        catalogItemId: _launchOptions.catalogItemId,
+        sectionIds: _launchOptions.sectionIds,
+        topicIds: _launchOptions.topicIds,
+        difficulty: _launchOptions.difficulty,
+        questionCount: _launchOptions.questionCount,
       );
       if (!mounted || isStaleScreenLoad(id)) return;
       setState(() => _applySession(session));

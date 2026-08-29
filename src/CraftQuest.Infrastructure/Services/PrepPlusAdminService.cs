@@ -939,6 +939,7 @@ public class PrepPlusAdminService(
             IsPublished = item.IsPublished,
             PublishedAt = item.PublishedAt,
             IsDeleted = item.IsDeleted,
+            SupportsCustomPractice = item.SupportsCustomPractice,
             QuestionCount = questionCount,
             Offers = item.AccessOffers
                 .OrderBy(o => o.IsLifetimeAccess)

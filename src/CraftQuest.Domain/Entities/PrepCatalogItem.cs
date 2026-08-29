@@ -14,6 +14,7 @@ public class PrepCatalogItem
     public DateTime? ListingStartsAt { get; set; }
     public DateTime? ListingEndsAt { get; set; }
     public bool IsPublished { get; set; }
+    public bool SupportsCustomPractice { get; set; }
     public DateTime? PublishedAt { get; set; }
     public bool IsDeleted { get; set; }
     public Guid CreatedByUserId { get; set; }

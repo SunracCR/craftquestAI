@@ -763,6 +763,66 @@ class AppLocalizationsPt extends AppLocalizations {
   String get prepPlusPracticeOptionSound => 'Som';
 
   @override
+  String get prepPlusCustomPracticeTitle => 'Prática personalizada';
+
+  @override
+  String get prepPlusCustomPracticeLoadingPool =>
+      'Calculando perguntas disponíveis…';
+
+  @override
+  String get prepPlusCustomPracticeSelectFilters =>
+      'Escolha capítulos e opções';
+
+  @override
+  String get prepPlusCustomPracticeSectionsTitle => 'Capítulos';
+
+  @override
+  String prepPlusCustomPracticeSectionCount(int count) {
+    return '$count perguntas';
+  }
+
+  @override
+  String prepPlusCustomPracticeTopicCount(int count) {
+    return '$count perguntas';
+  }
+
+  @override
+  String get prepPlusCustomPracticeDifficultyTitle => 'Dificuldade';
+
+  @override
+  String get prepPlusCustomPracticeDifficultyEasy => 'Fácil';
+
+  @override
+  String get prepPlusCustomPracticeDifficultyMedium => 'Média';
+
+  @override
+  String get prepPlusCustomPracticeDifficultyHard => 'Difícil';
+
+  @override
+  String get prepPlusCustomPracticeCountTitle => 'Número de perguntas';
+
+  @override
+  String get prepPlusCustomPracticeAllChip => 'Todas';
+
+  @override
+  String prepPlusCustomPracticeAllQuestions(int count) {
+    return 'Todas ($count)';
+  }
+
+  @override
+  String prepPlusCustomPracticeQuestionCountSummary(
+    int selected,
+    int available,
+  ) {
+    return '$selected de $available disponíveis';
+  }
+
+  @override
+  String prepPlusCustomPracticePoolLimited(int count) {
+    return 'Só há $count perguntas com este filtro';
+  }
+
+  @override
   String get prepPlusExpandDescription => 'Ver mais';
 
   @override
@@ -3720,8 +3780,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get teacherUpgradeSeeAllPlans => 'Ver todos os planos';
 
   @override
-  String get teacherUpgradeAlreadyActive =>
-      'Você já tem um plano Tutor ativo.';
+  String get teacherUpgradeAlreadyActive => 'Você já tem um plano Tutor ativo.';
 
   @override
   String teacherUpgradeNextRenewal(String date) {
@@ -4192,8 +4251,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Sua sala de aula está configurada. Agora você pode criar tarefas, acompanhar o progresso dos alunos e analisar resultados no Activity Pulse.';
 
   @override
-  String get teacherOnboardingGoToDashboardAction =>
-      'Ir ao Painel do Tutor';
+  String get teacherOnboardingGoToDashboardAction => 'Ir ao Painel do Tutor';
 
   @override
   String get prepAdminProfileSectionTitle => 'Administração';
@@ -4492,6 +4550,75 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get prepAdminItemDeleted => 'Item excluído';
+
+  @override
+  String get prepAdminQuestionBankTitle => 'Banco / capítulos e temas';
+
+  @override
+  String get prepAdminQuestionBankAction => 'Etiquetar banco';
+
+  @override
+  String get prepAdminQuestionBankEnableCustom => 'Prática personalizada';
+
+  @override
+  String get prepAdminQuestionBankEnableCustomHint =>
+      'Estudantes Prep+ poderão montar sessões curtas por capítulo/tema';
+
+  @override
+  String prepAdminQuestionBankUntaggedCount(int count) {
+    return '$count perguntas sem capítulo';
+  }
+
+  @override
+  String get prepAdminQuestionBankSectionsTitle => 'Capítulos';
+
+  @override
+  String get prepAdminQuestionBankAddSection => 'Adicionar capítulo';
+
+  @override
+  String get prepAdminQuestionBankAddTopic => 'Adicionar tema';
+
+  @override
+  String get prepAdminQuestionBankQuestionsTitle => 'Perguntas do banco';
+
+  @override
+  String get prepAdminQuestionBankSectionName => 'Nome do capítulo';
+
+  @override
+  String get prepAdminQuestionBankTopicName => 'Nome do tema';
+
+  @override
+  String get prepAdminQuestionBankNameHint => 'Nome';
+
+  @override
+  String get prepAdminQuestionBankSaveAction => 'Salvar';
+
+  @override
+  String get prepAdminQuestionBankSaved => 'Banco atualizado';
+
+  @override
+  String get prepAdminQuestionBankAssignTitle => 'Atribuir etiquetas';
+
+  @override
+  String get prepAdminQuestionBankSectionLabel => 'Capítulo';
+
+  @override
+  String get prepAdminQuestionBankTopicLabel => 'Tema';
+
+  @override
+  String get prepAdminQuestionBankDifficultyLabel => 'Dificuldade';
+
+  @override
+  String get prepAdminQuestionBankUnassigned => 'Sem capítulo';
+
+  @override
+  String get prepAdminQuestionBankNoTopic => 'Sem tema';
+
+  @override
+  String get prepAdminQuestionBankNoDifficulty => 'Sem dificuldade';
+
+  @override
+  String get prepAdminQuestionBankSaveAssignment => 'Salvar atribuição';
 
   @override
   String prepAdminLinkedQuiz(String title) {

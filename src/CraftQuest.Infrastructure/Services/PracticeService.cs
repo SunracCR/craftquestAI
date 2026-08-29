@@ -23,6 +23,7 @@ public class PracticeService(
     IAnalyticsService analyticsService,
     IMediaService mediaService,
     IPracticeSnapshotDeferredWriter deferredSnapshotWriter,
+    PrepPlusQuestionBankService prepPlusQuestionBankService,
     IOptions<PracticeOptions> practiceOptions,
     ILogger<PracticeService> logger) : IPracticeService
 {
@@ -78,12 +79,76 @@ public class PracticeService(
         }
 
         List<Question> questions;
+        Dictionary<Guid, string>? sectionNamesByQuestionId = null;
+        var isCustomPrepPractice = false;
+
         using (timing.Phase("loadQuestions"))
         {
-            questions = await PracticeQuestionLoader.LoadForQuizAsync(
-                dbContext,
-                request.QuizId,
-                cancellationToken);
+            if (request.CatalogItemId.HasValue && !request.AssignmentId.HasValue)
+            {
+                var catalogItem = await dbContext.PrepCatalogItems
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(
+                        i => i.CatalogItemId == request.CatalogItemId.Value
+                            && i.QuizId == request.QuizId
+                            && !i.IsDeleted,
+                        cancellationToken);
+
+                if (catalogItem?.SupportsCustomPractice == true)
+                {
+                    isCustomPrepPractice = true;
+                    await prepPlusQuestionBankService.ValidateCustomPracticeStartAsync(
+                        studentUserId,
+                        catalogItem.CatalogItemId,
+                        catalogItem,
+                        cancellationToken);
+
+                    var filter = new PracticeQuestionLoader.FilterOptions
+                    {
+                        SectionIds = request.SectionIds,
+                        TopicIds = request.TopicIds,
+                        Difficulty = request.Difficulty,
+                        RequireTaggedSection = true,
+                    };
+
+                    questions = await PracticeQuestionLoader.LoadForQuizAsync(
+                        dbContext,
+                        request.QuizId,
+                        filter,
+                        cancellationToken);
+
+                    if (questions.Count == 0)
+                    {
+                        throw new AppException(
+                            "No questions match the selected filters.",
+                            400);
+                    }
+
+                    if (request.QuestionCount is int requestedCount && requestedCount > 0
+                        && requestedCount < questions.Count)
+                    {
+                        questions = PracticeSessionOrdering.SampleQuestions(questions, requestedCount);
+                    }
+
+                    sectionNamesByQuestionId = await BuildSectionNameSnapshotsAsync(
+                        questions,
+                        cancellationToken);
+                }
+                else
+                {
+                    questions = await PracticeQuestionLoader.LoadForQuizAsync(
+                        dbContext,
+                        request.QuizId,
+                        cancellationToken);
+                }
+            }
+            else
+            {
+                questions = await PracticeQuestionLoader.LoadForQuizAsync(
+                    dbContext,
+                    request.QuizId,
+                    cancellationToken);
+            }
         }
 
         if (questions.Count == 0)
@@ -91,12 +156,13 @@ public class PracticeService(
             throw new AppException("Quiz has no questions.", 400);
         }
 
-        var randomizeQuestions = PracticeSessionOrdering.ResolveRandomizeQuestions(
-            request.AssignmentId.HasValue,
-            request.RandomizeQuestions,
-            quiz.RandomizeQuestions,
-            assignment?.RandomizeQuestions ?? false,
-            assignment?.AllowStudentRandomizeQuestions ?? false);
+        var randomizeQuestions = isCustomPrepPractice
+            || PracticeSessionOrdering.ResolveRandomizeQuestions(
+                request.AssignmentId.HasValue,
+                request.RandomizeQuestions,
+                quiz.RandomizeQuestions,
+                assignment?.RandomizeQuestions ?? false,
+                assignment?.AllowStudentRandomizeQuestions ?? false);
         var questionList = PracticeSessionOrdering.OrderQuestions(questions, randomizeQuestions);
 
         var sessionId = Guid.NewGuid();
@@ -118,7 +184,10 @@ public class PracticeService(
 
         using (timing.Phase("buildSnapshots"))
         {
-            PracticeSessionSnapshotBuilder.PopulateQuestionSnapshots(session, questionList);
+            PracticeSessionSnapshotBuilder.PopulateQuestionSnapshots(
+                session,
+                questionList,
+                sectionNamesByQuestionId);
         }
 
         var useDeferredInsert = options.EnableDeferredSnapshotInsert
@@ -912,6 +981,59 @@ public class PracticeService(
             BestPercentage = percentages.Count > 0 ? percentages.Max() : null,
             Questions = questionAnalytics,
         };
+    }
+
+    private async Task<Dictionary<Guid, string>> BuildSectionNameSnapshotsAsync(
+        IReadOnlyList<Question> questions,
+        CancellationToken cancellationToken)
+    {
+        var sectionIds = questions
+            .Where(q => q.QuizSectionId != null)
+            .Select(q => q.QuizSectionId!.Value)
+            .Distinct()
+            .ToList();
+
+        var topicIds = questions
+            .Where(q => q.QuizTopicId != null)
+            .Select(q => q.QuizTopicId!.Value)
+            .Distinct()
+            .ToList();
+
+        var sectionNames = sectionIds.Count == 0
+            ? new Dictionary<Guid, string>()
+            : await dbContext.QuizSections
+                .AsNoTracking()
+                .Where(s => sectionIds.Contains(s.QuizSectionId))
+                .ToDictionaryAsync(s => s.QuizSectionId, s => s.Name, cancellationToken);
+
+        var topicNames = topicIds.Count == 0
+            ? new Dictionary<Guid, string>()
+            : await dbContext.QuizTopics
+                .AsNoTracking()
+                .Where(t => topicIds.Contains(t.QuizTopicId))
+                .ToDictionaryAsync(t => t.QuizTopicId, t => t.Name, cancellationToken);
+
+        var result = new Dictionary<Guid, string>();
+        foreach (var question in questions)
+        {
+            if (question.QuizSectionId is null
+                || !sectionNames.TryGetValue(question.QuizSectionId.Value, out var sectionName))
+            {
+                continue;
+            }
+
+            if (question.QuizTopicId is not null
+                && topicNames.TryGetValue(question.QuizTopicId.Value, out var topicName))
+            {
+                result[question.QuestionId] = $"{sectionName} · {topicName}";
+            }
+            else
+            {
+                result[question.QuestionId] = sectionName;
+            }
+        }
+
+        return result;
     }
 
     private async Task EnsureQuizPracticeAccessAsync(

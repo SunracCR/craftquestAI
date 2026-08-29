@@ -191,6 +191,7 @@ class PrepAdminItemDetailModel {
     this.listingEndsAt,
     required this.isPublished,
     required this.isDeleted,
+    this.supportsCustomPractice = false,
     required this.questionCount,
     this.tags = const [],
     this.offers = const [],
@@ -222,6 +223,7 @@ class PrepAdminItemDetailModel {
           : null,
       isPublished: json['isPublished'] as bool? ?? false,
       isDeleted: json['isDeleted'] as bool? ?? false,
+      supportsCustomPractice: json['supportsCustomPractice'] as bool? ?? false,
       questionCount: json['questionCount'] as int? ?? 0,
       tags: tagsJson.map((e) => e as String).toList(),
       offers: offersJson
@@ -249,6 +251,7 @@ class PrepAdminItemDetailModel {
   final DateTime? listingEndsAt;
   final bool isPublished;
   final bool isDeleted;
+  final bool supportsCustomPractice;
   final int questionCount;
   final List<String> tags;
   final List<PrepAdminOfferModel> offers;

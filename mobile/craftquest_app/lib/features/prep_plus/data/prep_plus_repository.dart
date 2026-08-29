@@ -4,6 +4,7 @@ import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:flutter/foundation.dart';
 import 'package:craftquest_app/features/billing/data/models/billing_models.dart';
 import 'package:craftquest_app/features/prep_plus/data/models/prep_plus_models.dart';
+import 'package:craftquest_app/features/prep_plus/data/models/prep_plus_question_bank_models.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 
@@ -264,6 +265,23 @@ class PrepPlusRepository {
       '/api/prep/items/$catalogItemId/preview',
     );
     return PrepPreviewModel.fromJson(response.data!);
+  }
+
+  Future<PrepPracticePoolModel> getPracticePool({
+    required String catalogItemId,
+    List<String>? sectionIds,
+    List<String>? topicIds,
+    String? difficulty,
+  }) async {
+    final response = await _apiClient.dio.get<Map<String, dynamic>>(
+      '/api/prep/items/$catalogItemId/practice-pool',
+      queryParameters: {
+        if (sectionIds != null && sectionIds.isNotEmpty) 'sectionIds': sectionIds,
+        if (topicIds != null && topicIds.isNotEmpty) 'topicIds': topicIds,
+        if (difficulty != null && difficulty.isNotEmpty) 'difficulty': difficulty,
+      },
+    );
+    return PrepPracticePoolModel.fromJson(response.data!);
   }
 
   Future<PrepPreviewFinishResultModel> finishPreview({

@@ -8,7 +8,9 @@ namespace CraftQuest.Api.Controllers;
 [ApiController]
 [Route("api/admin/prep")]
 [Authorize(Policy = "ContentAdmin")]
-public class AdminPrepController(IPrepPlusAdminService prepPlusAdminService) : ApiControllerBase
+public class AdminPrepController(
+    IPrepPlusAdminService prepPlusAdminService,
+    IPrepPlusQuestionBankService prepPlusQuestionBankService) : ApiControllerBase
 {
     [HttpGet("categories")]
     [ProducesResponseType(typeof(IReadOnlyList<PrepCategoryDto>), StatusCodes.Status200OK)]
@@ -173,5 +175,122 @@ public class AdminPrepController(IPrepPlusAdminService prepPlusAdminService) : A
     {
         await prepPlusAdminService.DeleteCatalogItemAsync(catalogItemId, cancellationToken);
         return NoContent();
+    }
+
+    [HttpGet("items/{catalogItemId:guid}/question-bank")]
+    [ProducesResponseType(typeof(PrepQuestionBankDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetQuestionBank(
+        Guid catalogItemId,
+        CancellationToken cancellationToken)
+    {
+        var bank = await prepPlusQuestionBankService.GetQuestionBankAsync(catalogItemId, cancellationToken);
+        return Ok(bank);
+    }
+
+    [HttpPost("items/{catalogItemId:guid}/sections")]
+    [ProducesResponseType(typeof(PrepQuizSectionDto), StatusCodes.Status201Created)]
+    public async Task<IActionResult> CreateSection(
+        Guid catalogItemId,
+        [FromBody] UpsertPrepQuizSectionRequest request,
+        CancellationToken cancellationToken)
+    {
+        var created = await prepPlusQuestionBankService.CreateSectionAsync(
+            catalogItemId,
+            request,
+            cancellationToken);
+        return CreatedAtAction(nameof(GetQuestionBank), new { catalogItemId }, created);
+    }
+
+    [HttpPut("items/{catalogItemId:guid}/sections/{sectionId:guid}")]
+    [ProducesResponseType(typeof(PrepQuizSectionDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpdateSection(
+        Guid catalogItemId,
+        Guid sectionId,
+        [FromBody] UpsertPrepQuizSectionRequest request,
+        CancellationToken cancellationToken)
+    {
+        var updated = await prepPlusQuestionBankService.UpdateSectionAsync(
+            catalogItemId,
+            sectionId,
+            request,
+            cancellationToken);
+        return Ok(updated);
+    }
+
+    [HttpDelete("items/{catalogItemId:guid}/sections/{sectionId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> DeleteSection(
+        Guid catalogItemId,
+        Guid sectionId,
+        CancellationToken cancellationToken)
+    {
+        await prepPlusQuestionBankService.DeleteSectionAsync(catalogItemId, sectionId, cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPost("items/{catalogItemId:guid}/topics")]
+    [ProducesResponseType(typeof(PrepQuizTopicDto), StatusCodes.Status201Created)]
+    public async Task<IActionResult> CreateTopic(
+        Guid catalogItemId,
+        [FromBody] UpsertPrepQuizTopicRequest request,
+        CancellationToken cancellationToken)
+    {
+        var created = await prepPlusQuestionBankService.CreateTopicAsync(
+            catalogItemId,
+            request,
+            cancellationToken);
+        return CreatedAtAction(nameof(GetQuestionBank), new { catalogItemId }, created);
+    }
+
+    [HttpPut("items/{catalogItemId:guid}/topics/{topicId:guid}")]
+    [ProducesResponseType(typeof(PrepQuizTopicDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpdateTopic(
+        Guid catalogItemId,
+        Guid topicId,
+        [FromBody] UpsertPrepQuizTopicRequest request,
+        CancellationToken cancellationToken)
+    {
+        var updated = await prepPlusQuestionBankService.UpdateTopicAsync(
+            catalogItemId,
+            topicId,
+            request,
+            cancellationToken);
+        return Ok(updated);
+    }
+
+    [HttpDelete("items/{catalogItemId:guid}/topics/{topicId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> DeleteTopic(
+        Guid catalogItemId,
+        Guid topicId,
+        CancellationToken cancellationToken)
+    {
+        await prepPlusQuestionBankService.DeleteTopicAsync(catalogItemId, topicId, cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPut("items/{catalogItemId:guid}/questions/tagging")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> BulkTagQuestions(
+        Guid catalogItemId,
+        [FromBody] BulkTagPrepQuestionsRequest request,
+        CancellationToken cancellationToken)
+    {
+        await prepPlusQuestionBankService.BulkTagQuestionsAsync(catalogItemId, request, cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPut("items/{catalogItemId:guid}/custom-practice")]
+    [ProducesResponseType(typeof(PrepCatalogItemDetailDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> SetCustomPractice(
+        Guid catalogItemId,
+        [FromBody] SetPrepCustomPracticeRequest request,
+        CancellationToken cancellationToken)
+    {
+        var updated = await prepPlusQuestionBankService.SetCustomPracticeAsync(
+            catalogItemId,
+            request,
+            cancellationToken);
+        return Ok(updated);
     }
 }

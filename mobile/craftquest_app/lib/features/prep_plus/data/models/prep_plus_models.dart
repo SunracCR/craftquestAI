@@ -1,3 +1,4 @@
+import 'package:craftquest_app/features/prep_plus/data/models/prep_plus_question_bank_models.dart';
 import 'package:craftquest_app/features/teacher/data/models/teacher_review_models.dart';
 
 class PrepCategoryModel {
@@ -188,12 +189,17 @@ class PrepItemDetailModel {
     this.accessExpiresAt,
     this.isLifetimeAccess = false,
     required this.canPractice,
+    this.supportsCustomPractice = false,
+    this.availableDifficulties = const [],
+    this.practiceSections = const [],
     this.offers = const [],
   });
 
   factory PrepItemDetailModel.fromJson(Map<String, dynamic> json) {
     final tagsJson = json['tags'] as List<dynamic>? ?? [];
     final offersJson = json['offers'] as List<dynamic>? ?? [];
+    final sectionsJson = json['practiceSections'] as List<dynamic>? ?? [];
+    final difficultiesJson = json['availableDifficulties'] as List<dynamic>? ?? [];
     return PrepItemDetailModel(
       catalogItemId: json['catalogItemId'] as String,
       quizId: json['quizId'] as String,
@@ -216,6 +222,12 @@ class PrepItemDetailModel {
           : null,
       isLifetimeAccess: json['isLifetimeAccess'] as bool? ?? false,
       canPractice: json['canPractice'] as bool? ?? false,
+      supportsCustomPractice: json['supportsCustomPractice'] as bool? ?? false,
+      availableDifficulties:
+          difficultiesJson.map((e) => e as String).toList(),
+      practiceSections: sectionsJson
+          .map((e) => PrepPracticeSectionModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
       offers: offersJson
           .map((e) => PrepAccessOfferModel.fromJson(e as Map<String, dynamic>))
           .where((o) => o.isActive)
@@ -278,6 +290,9 @@ class PrepItemDetailModel {
   final DateTime? accessExpiresAt;
   final bool isLifetimeAccess;
   final bool canPractice;
+  final bool supportsCustomPractice;
+  final List<String> availableDifficulties;
+  final List<PrepPracticeSectionModel> practiceSections;
   final List<PrepAccessOfferModel> offers;
 }
 

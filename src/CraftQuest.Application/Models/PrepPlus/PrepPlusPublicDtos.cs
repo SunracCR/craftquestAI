@@ -54,6 +54,9 @@ public sealed class PrepCatalogItemPublicDetailDto
     public DateTime? AccessExpiresAt { get; init; }
     public bool IsLifetimeAccess { get; init; }
     public required bool CanPractice { get; init; }
+    public required bool SupportsCustomPractice { get; init; }
+    public IReadOnlyList<string> AvailableDifficulties { get; init; } = [];
+    public IReadOnlyList<PrepPracticeSectionPublicDto> PracticeSections { get; init; } = [];
     public IReadOnlyList<PrepAccessOfferDto> Offers { get; init; } = [];
 }
 

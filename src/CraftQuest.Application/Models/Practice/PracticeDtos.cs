@@ -22,6 +22,21 @@ public class StartPracticeSessionRequest
 
     /// <summary>Client timezone offset in minutes (same as Dart DateTime.timeZoneOffset).</summary>
     public int? ClientUtcOffsetMinutes { get; set; }
+
+    /// <summary>Prep+ catalog item when starting a custom practice session.</summary>
+    public Guid? CatalogItemId { get; set; }
+
+    /// <summary>Capítulos elegidos; vacío = todos los capítulos del ítem.</summary>
+    public List<Guid>? SectionIds { get; set; }
+
+    /// <summary>Temas elegidos; vacío = todas las preguntas de los capítulos marcados.</summary>
+    public List<Guid>? TopicIds { get; set; }
+
+    /// <summary>Filtrar por dificultad (easy, medium, hard).</summary>
+    public string? Difficulty { get; set; }
+
+    /// <summary>Número de preguntas a muestrear; null = todas las del filtro.</summary>
+    public int? QuestionCount { get; set; }
 }
 
 public sealed class PracticeQuestionNavItemDto

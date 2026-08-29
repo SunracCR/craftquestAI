@@ -11,6 +11,7 @@ import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/core/widgets/option_image_picker.dart';
 import 'package:craftquest_app/features/prep_plus/data/prep_plus_admin_models.dart';
 import 'package:craftquest_app/features/prep_plus/data/prep_plus_admin_repository.dart';
+import 'package:craftquest_app/features/prep_plus/presentation/admin/prep_plus_admin_question_bank_page.dart';
 import 'package:craftquest_app/features/prep_plus/presentation/admin/prep_plus_admin_sample_picker_sheet.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
@@ -1046,6 +1047,52 @@ class _PrepPlusAdminItemEditPageState extends State<PrepPlusAdminItemEditPage> {
                                   onPressed: _saving ? null : _pickSamples,
                                   icon: const Icon(Icons.checklist_rounded),
                                   label: Text(l10n.prepAdminPickSamplesAction),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          child: AppSectionTitle(
+                            title: l10n.prepAdminQuestionBankTitle,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                          ),
+                          child: AppSectionCard(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text(
+                                  l10n.prepAdminQuestionBankEnableCustomHint,
+                                  style: const TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                OutlinedButton.icon(
+                                  onPressed: _saving
+                                      ? null
+                                      : () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute<void>(
+                                              builder: (_) =>
+                                                  PrepPlusAdminQuestionBankPage(
+                                                catalogItemId:
+                                                    _item!.catalogItemId,
+                                                displayTitle:
+                                                    _item!.titleOverride ??
+                                                        _item!.quizTitle,
+                                              ),
+                                            ),
+                                          ).then((_) => _load());
+                                        },
+                                  icon: const Icon(Icons.account_tree_outlined),
+                                  label: Text(l10n.prepAdminQuestionBankAction),
                                 ),
                               ],
                             ),

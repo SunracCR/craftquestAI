@@ -2,6 +2,7 @@ import 'package:craftquest_app/core/l10n/localized_message_holder.dart';
 import 'package:craftquest_app/core/network/api_client.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/features/prep_plus/data/prep_plus_admin_models.dart';
+import 'package:craftquest_app/features/prep_plus/data/models/prep_plus_question_bank_models.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 
@@ -153,6 +154,92 @@ class PrepPlusAdminRepository {
     await _apiClient.dio.delete<void>(
       '/api/admin/prep/items/$catalogItemId',
     );
+  }
+
+  Future<PrepAdminQuestionBankModel> getQuestionBank(String catalogItemId) async {
+    final response = await _apiClient.dio.get<Map<String, dynamic>>(
+      '/api/admin/prep/items/$catalogItemId/question-bank',
+    );
+    return PrepAdminQuestionBankModel.fromJson(response.data!);
+  }
+
+  Future<PrepAdminQuizSectionModel> createSection(
+    String catalogItemId,
+    Map<String, dynamic> body,
+  ) async {
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/api/admin/prep/items/$catalogItemId/sections',
+      data: body,
+    );
+    return PrepAdminQuizSectionModel.fromJson(response.data!);
+  }
+
+  Future<PrepAdminQuizSectionModel> updateSection(
+    String catalogItemId,
+    String sectionId,
+    Map<String, dynamic> body,
+  ) async {
+    final response = await _apiClient.dio.put<Map<String, dynamic>>(
+      '/api/admin/prep/items/$catalogItemId/sections/$sectionId',
+      data: body,
+    );
+    return PrepAdminQuizSectionModel.fromJson(response.data!);
+  }
+
+  Future<void> deleteSection(String catalogItemId, String sectionId) async {
+    await _apiClient.dio.delete<void>(
+      '/api/admin/prep/items/$catalogItemId/sections/$sectionId',
+    );
+  }
+
+  Future<PrepAdminQuizTopicModel> createTopic(
+    String catalogItemId,
+    Map<String, dynamic> body,
+  ) async {
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/api/admin/prep/items/$catalogItemId/topics',
+      data: body,
+    );
+    return PrepAdminQuizTopicModel.fromJson(response.data!);
+  }
+
+  Future<PrepAdminQuizTopicModel> updateTopic(
+    String catalogItemId,
+    String topicId,
+    Map<String, dynamic> body,
+  ) async {
+    final response = await _apiClient.dio.put<Map<String, dynamic>>(
+      '/api/admin/prep/items/$catalogItemId/topics/$topicId',
+      data: body,
+    );
+    return PrepAdminQuizTopicModel.fromJson(response.data!);
+  }
+
+  Future<void> deleteTopic(String catalogItemId, String topicId) async {
+    await _apiClient.dio.delete<void>(
+      '/api/admin/prep/items/$catalogItemId/topics/$topicId',
+    );
+  }
+
+  Future<void> bulkTagQuestions(
+    String catalogItemId,
+    List<Map<String, dynamic>> questions,
+  ) async {
+    await _apiClient.dio.put<void>(
+      '/api/admin/prep/items/$catalogItemId/questions/tagging',
+      data: {'questions': questions},
+    );
+  }
+
+  Future<PrepAdminItemDetailModel> setCustomPractice(
+    String catalogItemId,
+    bool supportsCustomPractice,
+  ) async {
+    final response = await _apiClient.dio.put<Map<String, dynamic>>(
+      '/api/admin/prep/items/$catalogItemId/custom-practice',
+      data: {'supportsCustomPractice': supportsCustomPractice},
+    );
+    return PrepAdminItemDetailModel.fromJson(response.data!);
   }
 
   String mapError(DioException error, [AppLocalizations? l10n]) =>

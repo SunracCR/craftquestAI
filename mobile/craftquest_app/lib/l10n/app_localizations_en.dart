@@ -761,6 +761,66 @@ class AppLocalizationsEn extends AppLocalizations {
   String get prepPlusPracticeOptionSound => 'Sound';
 
   @override
+  String get prepPlusCustomPracticeTitle => 'Custom practice';
+
+  @override
+  String get prepPlusCustomPracticeLoadingPool =>
+      'Calculating available questions…';
+
+  @override
+  String get prepPlusCustomPracticeSelectFilters =>
+      'Choose chapters and options';
+
+  @override
+  String get prepPlusCustomPracticeSectionsTitle => 'Chapters';
+
+  @override
+  String prepPlusCustomPracticeSectionCount(int count) {
+    return '$count questions';
+  }
+
+  @override
+  String prepPlusCustomPracticeTopicCount(int count) {
+    return '$count questions';
+  }
+
+  @override
+  String get prepPlusCustomPracticeDifficultyTitle => 'Difficulty';
+
+  @override
+  String get prepPlusCustomPracticeDifficultyEasy => 'Easy';
+
+  @override
+  String get prepPlusCustomPracticeDifficultyMedium => 'Medium';
+
+  @override
+  String get prepPlusCustomPracticeDifficultyHard => 'Hard';
+
+  @override
+  String get prepPlusCustomPracticeCountTitle => 'Number of questions';
+
+  @override
+  String get prepPlusCustomPracticeAllChip => 'All';
+
+  @override
+  String prepPlusCustomPracticeAllQuestions(int count) {
+    return 'All ($count)';
+  }
+
+  @override
+  String prepPlusCustomPracticeQuestionCountSummary(
+    int selected,
+    int available,
+  ) {
+    return '$selected of $available available';
+  }
+
+  @override
+  String prepPlusCustomPracticePoolLimited(int count) {
+    return 'Only $count questions match this filter';
+  }
+
+  @override
   String get prepPlusExpandDescription => 'Show more';
 
   @override
@@ -4464,6 +4524,75 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get prepAdminItemDeleted => 'Item deleted';
+
+  @override
+  String get prepAdminQuestionBankTitle => 'Bank / chapters and topics';
+
+  @override
+  String get prepAdminQuestionBankAction => 'Tag question bank';
+
+  @override
+  String get prepAdminQuestionBankEnableCustom => 'Custom practice';
+
+  @override
+  String get prepAdminQuestionBankEnableCustomHint =>
+      'Prep+ students can build short sessions by chapter/topic';
+
+  @override
+  String prepAdminQuestionBankUntaggedCount(int count) {
+    return '$count questions without a chapter';
+  }
+
+  @override
+  String get prepAdminQuestionBankSectionsTitle => 'Chapters';
+
+  @override
+  String get prepAdminQuestionBankAddSection => 'Add chapter';
+
+  @override
+  String get prepAdminQuestionBankAddTopic => 'Add topic';
+
+  @override
+  String get prepAdminQuestionBankQuestionsTitle => 'Question bank';
+
+  @override
+  String get prepAdminQuestionBankSectionName => 'Chapter name';
+
+  @override
+  String get prepAdminQuestionBankTopicName => 'Topic name';
+
+  @override
+  String get prepAdminQuestionBankNameHint => 'Name';
+
+  @override
+  String get prepAdminQuestionBankSaveAction => 'Save';
+
+  @override
+  String get prepAdminQuestionBankSaved => 'Bank updated';
+
+  @override
+  String get prepAdminQuestionBankAssignTitle => 'Assign tags';
+
+  @override
+  String get prepAdminQuestionBankSectionLabel => 'Chapter';
+
+  @override
+  String get prepAdminQuestionBankTopicLabel => 'Topic';
+
+  @override
+  String get prepAdminQuestionBankDifficultyLabel => 'Difficulty';
+
+  @override
+  String get prepAdminQuestionBankUnassigned => 'No chapter';
+
+  @override
+  String get prepAdminQuestionBankNoTopic => 'No topic';
+
+  @override
+  String get prepAdminQuestionBankNoDifficulty => 'No difficulty';
+
+  @override
+  String get prepAdminQuestionBankSaveAssignment => 'Save assignment';
 
   @override
   String prepAdminLinkedQuiz(String title) {

@@ -12,7 +12,8 @@ namespace CraftQuest.Api.Controllers;
 public class PrepController(
     IPrepPlusCatalogService prepPlusCatalogService,
     IPrepPlusPaymentService prepPlusPaymentService,
-    IPrepReferralService prepReferralService) : ApiControllerBase
+    IPrepReferralService prepReferralService,
+    IPrepPlusQuestionBankService prepPlusQuestionBankService) : ApiControllerBase
 {
     [HttpGet("categories")]
     [ProducesResponseType(typeof(IReadOnlyList<PrepCategoryPublicDto>), StatusCodes.Status200OK)]
@@ -80,6 +81,24 @@ public class PrepController(
             catalogItemId,
             cancellationToken);
         return Ok(item);
+    }
+
+    [HttpGet("items/{catalogItemId:guid}/practice-pool")]
+    [ProducesResponseType(typeof(PrepPracticePoolDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetPracticePool(
+        Guid catalogItemId,
+        [FromQuery] List<Guid>? sectionIds,
+        [FromQuery] List<Guid>? topicIds,
+        [FromQuery] string? difficulty,
+        CancellationToken cancellationToken)
+    {
+        var pool = await prepPlusQuestionBankService.GetPracticePoolAsync(
+            catalogItemId,
+            sectionIds,
+            topicIds,
+            difficulty,
+            cancellationToken);
+        return Ok(pool);
     }
 
     [HttpGet("items/{catalogItemId:guid}/preview")]

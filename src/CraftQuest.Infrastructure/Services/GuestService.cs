@@ -214,7 +214,7 @@ public class GuestService(
 
         using (timing.Phase("buildSnapshots"))
         {
-            PracticeSessionSnapshotBuilder.PopulateQuestionSnapshots(session, questionList, now);
+            PracticeSessionSnapshotBuilder.PopulateQuestionSnapshots(session, questionList, createdAt: now);
         }
 
         var useDeferredInsert = options.EnableDeferredSnapshotInsert

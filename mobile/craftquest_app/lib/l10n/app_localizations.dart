@@ -1383,6 +1383,99 @@ abstract class AppLocalizations {
   /// **'Sonido'**
   String get prepPlusPracticeOptionSound;
 
+  /// No description provided for @prepPlusCustomPracticeTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Práctica a medida'**
+  String get prepPlusCustomPracticeTitle;
+
+  /// No description provided for @prepPlusCustomPracticeLoadingPool.
+  ///
+  /// In es, this message translates to:
+  /// **'Calculando preguntas disponibles…'**
+  String get prepPlusCustomPracticeLoadingPool;
+
+  /// No description provided for @prepPlusCustomPracticeSelectFilters.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige capítulos y opciones'**
+  String get prepPlusCustomPracticeSelectFilters;
+
+  /// No description provided for @prepPlusCustomPracticeSectionsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Capítulos'**
+  String get prepPlusCustomPracticeSectionsTitle;
+
+  /// No description provided for @prepPlusCustomPracticeSectionCount.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} preguntas'**
+  String prepPlusCustomPracticeSectionCount(int count);
+
+  /// No description provided for @prepPlusCustomPracticeTopicCount.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} preguntas'**
+  String prepPlusCustomPracticeTopicCount(int count);
+
+  /// No description provided for @prepPlusCustomPracticeDifficultyTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Dificultad'**
+  String get prepPlusCustomPracticeDifficultyTitle;
+
+  /// No description provided for @prepPlusCustomPracticeDifficultyEasy.
+  ///
+  /// In es, this message translates to:
+  /// **'Fácil'**
+  String get prepPlusCustomPracticeDifficultyEasy;
+
+  /// No description provided for @prepPlusCustomPracticeDifficultyMedium.
+  ///
+  /// In es, this message translates to:
+  /// **'Media'**
+  String get prepPlusCustomPracticeDifficultyMedium;
+
+  /// No description provided for @prepPlusCustomPracticeDifficultyHard.
+  ///
+  /// In es, this message translates to:
+  /// **'Difícil'**
+  String get prepPlusCustomPracticeDifficultyHard;
+
+  /// No description provided for @prepPlusCustomPracticeCountTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Número de preguntas'**
+  String get prepPlusCustomPracticeCountTitle;
+
+  /// No description provided for @prepPlusCustomPracticeAllChip.
+  ///
+  /// In es, this message translates to:
+  /// **'Todas'**
+  String get prepPlusCustomPracticeAllChip;
+
+  /// No description provided for @prepPlusCustomPracticeAllQuestions.
+  ///
+  /// In es, this message translates to:
+  /// **'Todas ({count})'**
+  String prepPlusCustomPracticeAllQuestions(int count);
+
+  /// No description provided for @prepPlusCustomPracticeQuestionCountSummary.
+  ///
+  /// In es, this message translates to:
+  /// **'{selected} de {available} disponibles'**
+  String prepPlusCustomPracticeQuestionCountSummary(
+    int selected,
+    int available,
+  );
+
+  /// No description provided for @prepPlusCustomPracticePoolLimited.
+  ///
+  /// In es, this message translates to:
+  /// **'Solo hay {count} preguntas con este filtro'**
+  String prepPlusCustomPracticePoolLimited(int count);
+
   /// No description provided for @prepPlusExpandDescription.
   ///
   /// In es, this message translates to:
@@ -7551,6 +7644,138 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Ítem eliminado'**
   String get prepAdminItemDeleted;
+
+  /// No description provided for @prepAdminQuestionBankTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Banco / capítulos y temas'**
+  String get prepAdminQuestionBankTitle;
+
+  /// No description provided for @prepAdminQuestionBankAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Etiquetar banco'**
+  String get prepAdminQuestionBankAction;
+
+  /// No description provided for @prepAdminQuestionBankEnableCustom.
+  ///
+  /// In es, this message translates to:
+  /// **'Práctica a medida'**
+  String get prepAdminQuestionBankEnableCustom;
+
+  /// No description provided for @prepAdminQuestionBankEnableCustomHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Los estudiantes Prep+ podrán armar sesiones cortas por capítulo/tema'**
+  String get prepAdminQuestionBankEnableCustomHint;
+
+  /// No description provided for @prepAdminQuestionBankUntaggedCount.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} preguntas sin capítulo'**
+  String prepAdminQuestionBankUntaggedCount(int count);
+
+  /// No description provided for @prepAdminQuestionBankSectionsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Capítulos'**
+  String get prepAdminQuestionBankSectionsTitle;
+
+  /// No description provided for @prepAdminQuestionBankAddSection.
+  ///
+  /// In es, this message translates to:
+  /// **'Añadir capítulo'**
+  String get prepAdminQuestionBankAddSection;
+
+  /// No description provided for @prepAdminQuestionBankAddTopic.
+  ///
+  /// In es, this message translates to:
+  /// **'Añadir tema'**
+  String get prepAdminQuestionBankAddTopic;
+
+  /// No description provided for @prepAdminQuestionBankQuestionsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Preguntas del banco'**
+  String get prepAdminQuestionBankQuestionsTitle;
+
+  /// No description provided for @prepAdminQuestionBankSectionName.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre del capítulo'**
+  String get prepAdminQuestionBankSectionName;
+
+  /// No description provided for @prepAdminQuestionBankTopicName.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre del tema'**
+  String get prepAdminQuestionBankTopicName;
+
+  /// No description provided for @prepAdminQuestionBankNameHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre'**
+  String get prepAdminQuestionBankNameHint;
+
+  /// No description provided for @prepAdminQuestionBankSaveAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar'**
+  String get prepAdminQuestionBankSaveAction;
+
+  /// No description provided for @prepAdminQuestionBankSaved.
+  ///
+  /// In es, this message translates to:
+  /// **'Banco actualizado'**
+  String get prepAdminQuestionBankSaved;
+
+  /// No description provided for @prepAdminQuestionBankAssignTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Asignar etiquetas'**
+  String get prepAdminQuestionBankAssignTitle;
+
+  /// No description provided for @prepAdminQuestionBankSectionLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Capítulo'**
+  String get prepAdminQuestionBankSectionLabel;
+
+  /// No description provided for @prepAdminQuestionBankTopicLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Tema'**
+  String get prepAdminQuestionBankTopicLabel;
+
+  /// No description provided for @prepAdminQuestionBankDifficultyLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Dificultad'**
+  String get prepAdminQuestionBankDifficultyLabel;
+
+  /// No description provided for @prepAdminQuestionBankUnassigned.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin capítulo'**
+  String get prepAdminQuestionBankUnassigned;
+
+  /// No description provided for @prepAdminQuestionBankNoTopic.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin tema'**
+  String get prepAdminQuestionBankNoTopic;
+
+  /// No description provided for @prepAdminQuestionBankNoDifficulty.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin dificultad'**
+  String get prepAdminQuestionBankNoDifficulty;
+
+  /// No description provided for @prepAdminQuestionBankSaveAssignment.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar asignación'**
+  String get prepAdminQuestionBankSaveAssignment;
 
   /// No description provided for @prepAdminLinkedQuiz.
   ///

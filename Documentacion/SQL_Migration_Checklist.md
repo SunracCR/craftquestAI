@@ -40,6 +40,7 @@ Antes de ejecutar, comprueba la columna **Verificación**. Si ya cumple la condi
 | 64 | `AlterIndexes_PrepPlus.sql` | Índices hub Prep+ (conteo por categoría y mis accesos) | `IX_PrepCatalogItems_CategoryId_IsPublished_IsDeleted`, `IX_QuizAccesses_UserId_AccessType_PrepCatalogItemId` | ☐ | ☐ | ☐ |
 | 65 | `AlterPlans_MonthlyAiCredits_Pro15_Teacher30.sql` | Pro 90 cr / Teacher 180 cr (15 y 30 gen. de 40 preg.) | `MonthlyAiCredits` en `pro`=90, `teacher`=180 | ☐ | ☐ | ☐ |
 | 66 | `AddAppVersionRequirements.sql` | Versión mínima de app forzada (Android/iOS) | Tabla `core.AppVersionRequirements`; filas `android`/`ios` seed | ☐ | ☐ | ☐ |
+| 67 | `AddPrepPlusCustomPractice.sql` | Prep+ práctica a medida: `SupportsCustomPractice`, `QuizTopics`, `Questions.QuizTopicId` | `COL_LENGTH('catalog.PrepCatalogItems','SupportsCustomPractice')`; tabla `quiz.QuizTopics` | ☐ | ☐ | ☐ |
 
 ## Estrategia (ítem 58)
 

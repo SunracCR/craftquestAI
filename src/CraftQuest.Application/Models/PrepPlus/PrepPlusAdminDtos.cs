@@ -94,6 +94,7 @@ public sealed class PrepCatalogItemDetailDto
     public required bool IsPublished { get; init; }
     public DateTime? PublishedAt { get; init; }
     public required bool IsDeleted { get; init; }
+    public required bool SupportsCustomPractice { get; init; }
     public required int QuestionCount { get; init; }
     public IReadOnlyList<PrepAccessOfferDto> Offers { get; init; } = [];
     public IReadOnlyList<PrepSampleQuestionDto> SampleQuestions { get; init; } = [];

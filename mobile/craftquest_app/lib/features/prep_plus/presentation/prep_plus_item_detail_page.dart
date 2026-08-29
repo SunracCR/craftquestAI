@@ -30,6 +30,7 @@ import 'package:craftquest_app/features/prep_plus/presentation/prep_plus_preview
 import 'package:craftquest_app/features/prep_plus/presentation/widgets/prep_plus_checkout_processing_overlay.dart';
 import 'package:craftquest_app/features/prep_plus/presentation/widgets/prep_plus_access_combo_card.dart';
 import 'package:craftquest_app/features/prep_plus/presentation/widgets/prep_plus_item_hero.dart';
+import 'package:craftquest_app/features/prep_plus/presentation/widgets/prep_plus_custom_practice_panel.dart';
 import 'package:craftquest_app/features/prep_plus/presentation/widgets/prep_plus_practice_options_panel.dart';
 import 'package:craftquest_app/features/prep_plus/presentation/widgets/prep_plus_simulation_tile.dart';
 import 'package:craftquest_app/features/practice/data/models/practice_models.dart';
@@ -117,6 +118,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
   bool _randomizeQuestions = false;
   bool _showTimer = true;
   bool _enableSoundEffects = PracticeLaunchOptions.defaults.enableSoundEffects;
+  PrepCustomPracticeSelection? _customPracticeSelection;
   String? _error;
   String? _pendingPayPalOrderId;
   Future<PracticeActiveSessionModel?>? _activeSessionPrefetch;
@@ -440,11 +442,26 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
         getIt<PracticeRepository>().getActiveSessionForQuiz(quizId);
   }
 
-  PracticeLaunchOptions get _currentLaunchOptions => PracticeLaunchOptions(
-        randomizeQuestions: _randomizeQuestions,
-        showTimer: _showTimer,
-        enableSoundEffects: _enableSoundEffects,
+  PracticeLaunchOptions get _currentLaunchOptions {
+    final item = _item;
+    final base = PracticeLaunchOptions(
+      randomizeQuestions: _randomizeQuestions,
+      showTimer: _showTimer,
+      enableSoundEffects: _enableSoundEffects,
+    );
+    if (item?.supportsCustomPractice == true &&
+        _customPracticeSelection != null) {
+      final selection = _customPracticeSelection!;
+      return base.copyWith(
+        catalogItemId: item!.catalogItemId,
+        sectionIds: selection.sectionIds,
+        topicIds: selection.topicIds,
+        difficulty: selection.difficulty,
+        questionCount: selection.questionCount,
       );
+    }
+    return base;
+  }
 
   Future<void> _loadPracticePreferences(String quizId) async {
     if (!mounted) return;
@@ -1207,20 +1224,44 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
                             padding: const EdgeInsets.symmetric(
                               horizontal: AppSpacing.md,
                             ),
-                            child: PrepPlusPracticeOptionsPanel(
-                              isLoading: _loadingPreferences,
-                              randomizeQuestions: _randomizeQuestions,
-                              showTimer: _showTimer,
-                              enableSoundEffects: _enableSoundEffects,
-                              onRandomizeQuestionsChanged: (value) =>
-                                  _updateRandomizeQuestions(
-                                _item!.quizId,
-                                value,
-                              ),
-                              onShowTimerChanged: (value) =>
-                                  _updateShowTimer(_item!.quizId, value),
-                              onSoundEffectsChanged: _updateSoundEffects,
-                            ),
+                            child: _item!.supportsCustomPractice
+                                ? PrepPlusCustomPracticePanel(
+                                    item: _item!,
+                                    isLoading: _loadingPreferences,
+                                    randomizeQuestions: _randomizeQuestions,
+                                    showTimer: _showTimer,
+                                    enableSoundEffects: _enableSoundEffects,
+                                    onSelectionChanged: (selection) {
+                                      setState(
+                                        () => _customPracticeSelection =
+                                            selection,
+                                      );
+                                    },
+                                    onRandomizeQuestionsChanged: (value) =>
+                                        _updateRandomizeQuestions(
+                                      _item!.quizId,
+                                      value,
+                                    ),
+                                    onShowTimerChanged: (value) =>
+                                        _updateShowTimer(_item!.quizId, value),
+                                    onSoundEffectsChanged:
+                                        _updateSoundEffects,
+                                  )
+                                : PrepPlusPracticeOptionsPanel(
+                                    isLoading: _loadingPreferences,
+                                    randomizeQuestions: _randomizeQuestions,
+                                    showTimer: _showTimer,
+                                    enableSoundEffects: _enableSoundEffects,
+                                    onRandomizeQuestionsChanged: (value) =>
+                                        _updateRandomizeQuestions(
+                                      _item!.quizId,
+                                      value,
+                                    ),
+                                    onShowTimerChanged: (value) =>
+                                        _updateShowTimer(_item!.quizId, value),
+                                    onSoundEffectsChanged:
+                                        _updateSoundEffects,
+                                  ),
                           ),
                           if (_item!.canPractice)
                             Padding(
@@ -1344,11 +1385,14 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
     if (item == null) return null;
 
     if (item.canPractice) {
+      final customBlocked = item.supportsCustomPractice &&
+          (_customPracticeSelection == null ||
+              !_customPracticeSelection!.isValid);
       return AppBottomActionBar(
         children: [
           AppPrimaryButton(
             label: l10n.prepPlusPracticeAction,
-            onPressed: () => _startPractice(item),
+            onPressed: customBlocked ? null : () => _startPractice(item),
           ),
         ],
       );
