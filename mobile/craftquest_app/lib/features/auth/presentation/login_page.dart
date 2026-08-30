@@ -63,11 +63,24 @@ class _LoginPageState extends State<LoginPage> {
       if (!mounted) return;
 
       if (savedEmail != null) {
-        _emailController.text = savedEmail;
-        _rememberLogin = true;
+        setState(() {
+          _emailController.text = savedEmail;
+          _rememberLogin = true;
+        });
       }
     } catch (_) {
       // Sin email guardado o almacenamiento no disponible.
+    }
+  }
+
+  Future<void> _onRememberLoginChanged(bool value) async {
+    setState(() => _rememberLogin = value);
+    if (!value) {
+      try {
+        await _credentialsStorage.clear();
+      } catch (_) {
+        // Preferimos no bloquear la UI si falla el almacenamiento local.
+      }
     }
   }
 
@@ -426,9 +439,7 @@ class _LoginPageState extends State<LoginPage> {
                             value: _rememberLogin,
                             label: l10n.loginRememberCredentials,
                             enabled: !isLoading,
-                            onChanged: (value) {
-                              setState(() => _rememberLogin = value);
-                            },
+                            onChanged: _onRememberLoginChanged,
                           ),
                           SizedBox(
                             height: compactHeight ? AppSpacing.sm : AppSpacing.md,
@@ -617,38 +628,45 @@ class _RememberCredentialsTile extends StatelessWidget {
   final bool enabled;
   final ValueChanged<bool> onChanged;
 
+  void _toggle() {
+    if (!enabled) {
+      return;
+    }
+    onChanged(!value);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.inputFill.withValues(alpha: 0.55),
       borderRadius: BorderRadius.circular(AppColors.radiusSm),
-      child: InkWell(
-        onTap: enabled ? () => onChanged(!value) : null,
-        borderRadius: BorderRadius.circular(AppColors.radiusSm),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm,
-            vertical: AppSpacing.xs,
-          ),
-          child: Row(
-            children: [
-              SizedBox(
-                width: 24,
-                height: 24,
-                child: Checkbox(
-                  value: value,
-                  onChanged: enabled ? (v) => onChanged(v ?? false) : null,
-                  activeColor: AppColors.accent,
-                  checkColor: AppColors.background,
-                  side: BorderSide(
-                    color: AppColors.textSecondary.withValues(alpha: 0.6),
-                  ),
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  visualDensity: VisualDensity.compact,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: Checkbox(
+                value: value,
+                onChanged: enabled ? (_) => _toggle() : null,
+                activeColor: AppColors.accent,
+                checkColor: AppColors.background,
+                side: BorderSide(
+                  color: AppColors.textSecondary.withValues(alpha: 0.6),
                 ),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
               ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: GestureDetector(
+                onTap: enabled ? _toggle : null,
+                behavior: HitTestBehavior.opaque,
                 child: Text(
                   label,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -657,8 +675,8 @@ class _RememberCredentialsTile extends StatelessWidget {
                       ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

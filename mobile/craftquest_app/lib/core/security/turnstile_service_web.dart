@@ -38,6 +38,7 @@ class TurnstileServiceWeb implements TurnstileService {
   String? _widgetId;
   web.HTMLDivElement? _container;
   Completer<String?>? _pending;
+  Future<String?>? _inFlight;
 
   @override
   bool get isConfigured => _siteKey != null && _siteKey!.isNotEmpty;
@@ -48,6 +49,10 @@ class TurnstileServiceWeb implements TurnstileService {
     if (normalized == _siteKey) {
       return;
     }
+
+    _completePending(null);
+    _pending = null;
+    _inFlight = null;
 
     _siteKey = normalized?.isNotEmpty == true ? normalized : null;
     _widgetId = null;
@@ -63,20 +68,45 @@ class TurnstileServiceWeb implements TurnstileService {
       return null;
     }
 
+    while (_inFlight != null) {
+      await _inFlight;
+    }
+
+    final request = _requestTokenInternal(timeout);
+    _inFlight = request;
+    try {
+      return await request;
+    } finally {
+      if (identical(_inFlight, request)) {
+        _inFlight = null;
+      }
+    }
+  }
+
+  Future<String?> _requestTokenInternal(Duration timeout) async {
     await _ensureWidget();
-    if (_widgetId == null || _widgetId!.isEmpty) {
+    final widgetId = _widgetId;
+    if (widgetId == null || widgetId.isEmpty) {
       return null;
     }
 
-    _pending?.complete(null);
-    _pending = Completer<String?>();
-    _turnstile.execute(_widgetId!);
+    _completePending(null);
+    final completer = Completer<String?>();
+    _pending = completer;
+
+    _turnstile.reset(widgetId);
+    _turnstile.execute(widgetId);
 
     try {
-      return await _pending!.future.timeout(timeout);
+      return await completer.future.timeout(timeout);
     } on TimeoutException {
-      _pending?.complete(null);
+      _completePending(null);
+      _turnstile.reset(widgetId);
       return null;
+    } finally {
+      if (identical(_pending, completer)) {
+        _pending = null;
+      }
     }
   }
 
@@ -103,13 +133,25 @@ class TurnstileServiceWeb implements TurnstileService {
   }
 
   void _onToken(String token) {
-    _pending?.complete(token);
-    if (_widgetId != null && _widgetId!.isNotEmpty) {
-      _turnstile.reset(_widgetId!);
+    _completePending(token);
+    final widgetId = _widgetId;
+    if (widgetId != null && widgetId.isNotEmpty) {
+      _turnstile.reset(widgetId);
     }
   }
 
   void _onError() {
-    _pending?.complete(null);
+    _completePending(null);
+    final widgetId = _widgetId;
+    if (widgetId != null && widgetId.isNotEmpty) {
+      _turnstile.reset(widgetId);
+    }
+  }
+
+  void _completePending(String? value) {
+    final pending = _pending;
+    if (pending != null && !pending.isCompleted) {
+      pending.complete(value);
+    }
   }
 }
