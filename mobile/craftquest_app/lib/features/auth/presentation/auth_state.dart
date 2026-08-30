@@ -33,7 +33,12 @@ class AuthAuthenticated extends AuthState {
 }
 
 class AuthFailure extends AuthState {
-  const AuthFailure(this.message, {required this.attemptId, this.errorCode});
+  const AuthFailure(
+    this.message, {
+    required this.attemptId,
+    this.errorCode,
+    this.isEmailLoginAttempt = false,
+  });
 
   final String message;
 
@@ -42,8 +47,12 @@ class AuthFailure extends AuthState {
 
   final String? errorCode;
 
+  /// Distingue fallos del formulario de correo de los de OAuth/registro.
+  final bool isEmailLoginAttempt;
+
   @override
-  List<Object?> get props => [message, attemptId, errorCode];
+  List<Object?> get props =>
+      [message, attemptId, errorCode, isEmailLoginAttempt];
 }
 
 class AuthEmailVerificationPending extends AuthState {

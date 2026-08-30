@@ -544,6 +544,8 @@ abstract final class ApiErrorMapper {
         return l10n.passwordChangeUnavailableError;
       case 'Invalid email or password.':
         return l10n.loginInvalidCredentials;
+      case 'Email address is not verified.':
+        return l10n.errorEmailNotVerified;
       case 'Invalid or expired reset token.':
         return l10n.errorInvalidResetToken;
       case 'New password must be at least 8 characters.':

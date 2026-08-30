@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:craftquest_app/core/network/network_connectivity_service.dart';
+import 'package:craftquest_app/features/offline_practice/data/offline_storage_bootstrap.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_sync_repository.dart';
 
 class OfflineSyncManager {
@@ -17,6 +18,10 @@ class OfflineSyncManager {
   int _backoffAttempt = 0;
 
   void start() {
+    if (!OfflinePlatformSupport.isSupported) {
+      return;
+    }
+
     _connectivityService.addListener(_onConnectivityChanged);
     unawaited(syncPendingSessions());
   }
@@ -27,6 +32,10 @@ class OfflineSyncManager {
   }
 
   Future<void> syncPendingSessions() async {
+    if (!OfflinePlatformSupport.isSupported) {
+      return;
+    }
+
     if (_isSyncing || !_connectivityService.isOnline) {
       return;
     }
@@ -52,6 +61,10 @@ class OfflineSyncManager {
   }
 
   void _onConnectivityChanged() {
+    if (!OfflinePlatformSupport.isSupported) {
+      return;
+    }
+
     if (_connectivityService.isOnline) {
       unawaited(syncPendingSessions());
     }

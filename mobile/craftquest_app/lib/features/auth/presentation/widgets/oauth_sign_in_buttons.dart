@@ -88,16 +88,18 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
     if (!mounted) {
       return;
     }
-    if (state is AuthAuthenticated || state is AuthFailure) {
-      setState(() => _busy = false);
-    }
     if (state is AuthAuthenticated) {
+      setState(() => _busy = false);
       _lastSubmittedOAuthIdToken = null;
       return;
     }
     if (state is AuthFailure) {
+      final wasOAuthBusy = _busy && !state.isEmailLoginAttempt;
+      setState(() => _busy = false);
       _lastSubmittedOAuthIdToken = null;
-      unawaited(_maybeShowOAuthFailure(state.message));
+      if (wasOAuthBusy) {
+        unawaited(_maybeShowOAuthFailure(state.message));
+      }
     }
   }
 

@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:craftquest_app/core/security/web_auth_captcha.dart';
 import 'package:craftquest_app/core/compliance/birth_date_correction.dart';
 import 'package:craftquest_app/core/compliance/legal_links.dart';
 import 'package:craftquest_app/core/auth/saved_login_credentials_storage.dart';
 import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_buttons.dart';
@@ -74,39 +77,71 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     setState(() => _isSubmitting = true);
-    final captchaToken = await requestWebAuthCaptchaToken();
-    if (!mounted) return;
+    try {
+      final captchaToken = await requestWebAuthCaptchaToken();
+      if (!mounted) {
+        return;
+      }
 
-    final bloc = context.read<AuthBloc>();
-    final loginAttemptId = DateTime.now().millisecondsSinceEpoch;
-    final resultFuture = bloc.stream.firstWhere(
-      (state) =>
-          state is AuthAuthenticated ||
-          (state is AuthFailure && state.attemptId == loginAttemptId),
-    );
-    bloc.add(
-      AuthLoginRequested(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-        rememberCredentials: _rememberLogin,
-        attemptId: loginAttemptId,
-        captchaToken: captchaToken,
-      ),
-    );
+      final bloc = context.read<AuthBloc>();
+      final l10n = AppLocalizations.of(context)!;
+      final loginAttemptId = DateTime.now().millisecondsSinceEpoch;
+      final resultFuture = bloc.stream
+          .firstWhere(
+            (state) =>
+                state is AuthAuthenticated ||
+                (state is AuthFailure &&
+                    state.attemptId == loginAttemptId &&
+                    state.isEmailLoginAttempt),
+          )
+          .timeout(const Duration(seconds: 60));
+      bloc.add(
+        AuthLoginRequested(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          rememberCredentials: _rememberLogin,
+          attemptId: loginAttemptId,
+          captchaToken: captchaToken,
+        ),
+      );
 
-    final result = await resultFuture;
+      final AuthState result;
+      try {
+        result = await resultFuture;
+      } on TimeoutException {
+        if (!mounted) {
+          return;
+        }
+        context.showErrorSnackBar(l10n.genericRequestErrorMessage);
+        return;
+      }
 
-    if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
-    setState(() => _isSubmitting = false);
-
-    if (result is AuthFailure) {
-      if (result.errorCode == 'EMAIL_NOT_VERIFIED') {
-        await _showEmailNotVerifiedDialog(_emailController.text.trim());
-      } else {
-        context.showErrorSnackBar(result.message);
+      if (result is AuthFailure) {
+        if (_isEmailNotVerifiedFailure(result, l10n)) {
+          await _showEmailNotVerifiedDialog(_emailController.text.trim());
+        } else {
+          context.showErrorSnackBar(result.message);
+        }
+      }
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      context.showErrorSnackBar(DioErrorMapper.mapAny(e));
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
       }
     }
+  }
+
+  bool _isEmailNotVerifiedFailure(AuthFailure failure, AppLocalizations l10n) {
+    return failure.errorCode == 'EMAIL_NOT_VERIFIED' ||
+        failure.message == l10n.errorEmailNotVerified;
   }
 
   Future<void> _showEmailNotVerifiedDialog(String email) async {

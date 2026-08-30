@@ -82,7 +82,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthLoginRequested event,
     Emitter<AuthState> emit,
   ) async {
-    if (state is AuthFailure) {
+    if (state is! AuthAuthenticated) {
       emit(const AuthUnauthenticated());
     }
 
@@ -97,9 +97,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       _resetSessionExpiredFlag();
       unawaited(_persistLoginCredentials(event));
     } on DioException catch (e) {
-      emit(_loginFailure(_repository.mapError(e), attemptId: event.attemptId, errorCode: _errorCodeFrom(e)));
-    } catch (_) {
-      emit(_loginFailure(DioErrorMapper.genericMessage(), attemptId: event.attemptId));
+      emit(
+        _loginFailure(
+          _repository.mapError(e),
+          attemptId: event.attemptId,
+          errorCode: _errorCodeFrom(e),
+          isEmailLoginAttempt: true,
+        ),
+      );
+    } catch (e) {
+      emit(
+        _loginFailure(
+          DioErrorMapper.mapAny(e),
+          attemptId: event.attemptId,
+          isEmailLoginAttempt: true,
+        ),
+      );
     }
   }
 
@@ -107,11 +120,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     String message, {
     int? attemptId,
     String? errorCode,
+    bool isEmailLoginAttempt = false,
   }) =>
       AuthFailure(
         message,
         attemptId: attemptId ?? DateTime.now().millisecondsSinceEpoch,
         errorCode: errorCode,
+        isEmailLoginAttempt: isEmailLoginAttempt,
       );
 
   String? _errorCodeFrom(DioException error) {
