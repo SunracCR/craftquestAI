@@ -166,6 +166,12 @@ class DeepLinkService {
           token: tokenParam,
         );
       }
+      if (path.contains('parental-consent')) {
+        return PendingAccountLink(
+          kind: AccountLinkKind.parentalConsent,
+          token: tokenParam,
+        );
+      }
     }
 
     return null;
@@ -179,6 +185,8 @@ class DeepLinkService {
         return AccountLinkKind.resetPassword;
       case 'confirm-password-change':
         return AccountLinkKind.confirmPasswordChange;
+      case 'parental-consent':
+        return AccountLinkKind.parentalConsent;
       default:
         return null;
     }

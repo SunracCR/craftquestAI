@@ -117,3 +117,8 @@ class RegisterResultModel {
   final String email;
   final String? guardianEmail;
 }
+
+enum ParentalConsentGrantResult {
+  accountActivated,
+  consentGrantedPendingEmail,
+}

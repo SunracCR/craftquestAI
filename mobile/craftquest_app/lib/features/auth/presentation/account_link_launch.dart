@@ -4,6 +4,7 @@ enum AccountLinkKind {
   verifyEmail,
   resetPassword,
   confirmPasswordChange,
+  parentalConsent,
 }
 
 class PendingAccountLink {
@@ -32,6 +33,8 @@ PendingAccountLink? readWebAccountLink() {
     kind = AccountLinkKind.resetPassword;
   } else if (path.contains('confirm-password-change')) {
     kind = AccountLinkKind.confirmPasswordChange;
+  } else if (path.contains('parental-consent')) {
+    kind = AccountLinkKind.parentalConsent;
   }
 
   if (kind == null) {

@@ -394,6 +394,30 @@ class AppLocalizationsEs extends AppLocalizations {
   String get confirmPasswordChangeRetryAction => 'Reintentar confirmación';
 
   @override
+  String get parentalConsentGrantTitle => 'Autorizar cuenta de menor';
+
+  @override
+  String get parentalConsentGrantInProgress => 'Registrando tu consentimiento…';
+
+  @override
+  String get parentalConsentGrantSuccess =>
+      'Consentimiento registrado. El menor ya puede iniciar sesión con su cuenta.';
+
+  @override
+  String get parentalConsentGrantSuccessPendingEmail =>
+      'Consentimiento registrado. El menor aún debe verificar su correo antes de entrar.';
+
+  @override
+  String get parentalConsentGrantRetryAction => 'Reintentar autorización';
+
+  @override
+  String get parentalConsentGrantDoneAction => 'Listo';
+
+  @override
+  String get errorInvalidParentalConsentToken =>
+      'El enlace de consentimiento no es válido o ha caducado. Pide al menor que reenvíe el correo al tutor.';
+
+  @override
   String get passwordChangePendingMessage =>
       'Revisa tu correo para confirmar el cambio de contraseña.';
 

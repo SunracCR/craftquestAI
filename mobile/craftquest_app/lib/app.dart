@@ -24,6 +24,7 @@ import 'package:craftquest_app/features/auth/presentation/join_launch.dart';
 import 'package:craftquest_app/features/auth/data/models/auth_models.dart';
 import 'package:craftquest_app/features/auth/presentation/account_link_launch.dart';
 import 'package:craftquest_app/features/auth/presentation/login_page.dart';
+import 'package:craftquest_app/features/auth/presentation/parental_consent_page.dart';
 import 'package:craftquest_app/features/auth/presentation/reset_password_page.dart';
 import 'package:craftquest_app/features/auth/presentation/verify_email_page.dart';
 import 'package:craftquest_app/features/billing/data/pending_paypal_payment_store.dart';
@@ -262,7 +263,8 @@ class _AuthGateState extends State<_AuthGate> {
     final accountLink =
         deepLinkService.pendingAccountLink ?? readWebAccountLink();
     if (accountLink != null) {
-      if (authState is AuthAuthenticated) {
+      if (authState is AuthAuthenticated &&
+          accountLink.kind != AccountLinkKind.parentalConsent) {
         clearWebEntryDeepLinkUrl();
         deepLinkService.consumePendingAccountLink();
         return;
@@ -493,6 +495,8 @@ class _AuthGateState extends State<_AuthGate> {
         return ResetPasswordPage(initialToken: link.token);
       case AccountLinkKind.confirmPasswordChange:
         return ConfirmPasswordChangePage(initialToken: link.token);
+      case AccountLinkKind.parentalConsent:
+        return ParentalConsentPage(initialToken: link.token);
     }
   }
 

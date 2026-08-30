@@ -765,6 +765,48 @@ abstract class AppLocalizations {
   /// **'Reintentar confirmación'**
   String get confirmPasswordChangeRetryAction;
 
+  /// No description provided for @parentalConsentGrantTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Autorizar cuenta de menor'**
+  String get parentalConsentGrantTitle;
+
+  /// No description provided for @parentalConsentGrantInProgress.
+  ///
+  /// In es, this message translates to:
+  /// **'Registrando tu consentimiento…'**
+  String get parentalConsentGrantInProgress;
+
+  /// No description provided for @parentalConsentGrantSuccess.
+  ///
+  /// In es, this message translates to:
+  /// **'Consentimiento registrado. El menor ya puede iniciar sesión con su cuenta.'**
+  String get parentalConsentGrantSuccess;
+
+  /// No description provided for @parentalConsentGrantSuccessPendingEmail.
+  ///
+  /// In es, this message translates to:
+  /// **'Consentimiento registrado. El menor aún debe verificar su correo antes de entrar.'**
+  String get parentalConsentGrantSuccessPendingEmail;
+
+  /// No description provided for @parentalConsentGrantRetryAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Reintentar autorización'**
+  String get parentalConsentGrantRetryAction;
+
+  /// No description provided for @parentalConsentGrantDoneAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Listo'**
+  String get parentalConsentGrantDoneAction;
+
+  /// No description provided for @errorInvalidParentalConsentToken.
+  ///
+  /// In es, this message translates to:
+  /// **'El enlace de consentimiento no es válido o ha caducado. Pide al menor que reenvíe el correo al tutor.'**
+  String get errorInvalidParentalConsentToken;
+
   /// No description provided for @passwordChangePendingMessage.
   ///
   /// In es, this message translates to:

@@ -71,12 +71,33 @@ class AuthRepository {
     );
   }
 
-  Future<AuthResponseModel> confirmParentalConsent({required String token}) async {
-    final response = await _apiClient.dio.post<Map<String, dynamic>>(
-      '/api/auth/confirm-parental-consent',
-      data: {'token': token},
-    );
-    return _persistAndMap(response.data!);
+  /// Registers guardian consent without opening a session for the minor.
+  Future<ParentalConsentGrantResult> grantParentalConsent({
+    required String token,
+  }) async {
+    try {
+      await _apiClient.dio.post<void>(
+        '/api/auth/confirm-parental-consent',
+        data: {'token': token},
+      );
+      return ParentalConsentGrantResult.accountActivated;
+    } on DioException catch (error) {
+      if (_errorCodeFrom(error) == 'EMAIL_NOT_VERIFIED') {
+        return ParentalConsentGrantResult.consentGrantedPendingEmail;
+      }
+      rethrow;
+    }
+  }
+
+  String? _errorCodeFrom(DioException error) {
+    final data = error.response?.data;
+    if (data is Map<String, dynamic>) {
+      final code = data['errorCode'];
+      if (code is String && code.isNotEmpty) {
+        return code;
+      }
+    }
+    return null;
   }
 
   Future<void> confirmPasswordChange({required String token}) async {

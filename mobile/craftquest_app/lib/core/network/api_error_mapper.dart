@@ -409,6 +409,8 @@ abstract final class ApiErrorMapper {
         return l10n.errorInvalidResetToken;
       case 'INVALID_PASSWORD_CHANGE_TOKEN':
         return l10n.errorInvalidPasswordChangeToken;
+      case 'INVALID_PARENTAL_CONSENT_TOKEN':
+        return l10n.errorInvalidParentalConsentToken;
       case 'PASSWORD_CHANGE_UNAVAILABLE':
         return l10n.passwordChangeUnavailableError;
       case 'INVALID_EMAIL':

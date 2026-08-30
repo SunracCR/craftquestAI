@@ -128,6 +128,7 @@ public class JoinController(
                         "/verify-email/*",
                         "/reset-password/*",
                         "/confirm-password-change/*",
+                        "/parental-consent/*",
                     },
                 }).ToArray(),
             },
