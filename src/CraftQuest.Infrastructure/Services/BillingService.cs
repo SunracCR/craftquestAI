@@ -298,16 +298,46 @@ public class BillingService(
 
     public async Task EnsureCanDownloadOfflineAsync(
         Guid userId,
+        Guid? quizId = null,
         CancellationToken cancellationToken = default)
     {
         var subscription = await GetActiveSubscriptionAsync(userId, cancellationToken);
-        if (!IsPaidPlan(subscription.Plan.Code))
+        if (IsPaidPlan(subscription.Plan.Code))
         {
-            throw new AppException(
-                "Offline quiz download requires a paid plan.",
-                403,
-                "OFFLINE_PLAN_REQUIRED");
+            return;
         }
+
+        if (quizId is Guid ownedQuizId
+            && await HasStandaloneOfflineQuizAccessAsync(userId, ownedQuizId, cancellationToken))
+        {
+            return;
+        }
+
+        throw new AppException(
+            "Offline quiz download requires a paid plan.",
+            403,
+            "OFFLINE_PLAN_REQUIRED");
+    }
+
+    private async Task<bool> HasStandaloneOfflineQuizAccessAsync(
+        Guid userId,
+        Guid quizId,
+        CancellationToken cancellationToken)
+    {
+        var now = DateTime.UtcNow;
+        return await dbContext.QuizAccesses
+            .AsNoTracking()
+            .AnyAsync(
+                a => a.UserId == userId
+                     && a.QuizId == quizId
+                     && (
+                         (a.AccessType == "redeemed"
+                          && a.AssignmentId == null
+                          && a.ClassId == null)
+                         || (a.AccessType == "purchase"
+                             && (a.IsLifetimeAccess
+                                 || (a.ExpiresAt != null && a.ExpiresAt > now)))),
+                cancellationToken);
     }
 
     public async Task<OfflineEntitlementsDto> GetOfflineEntitlementsAsync(

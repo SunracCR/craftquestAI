@@ -12,4 +12,11 @@ abstract final class BillingPlanAccess {
   static bool canExportQuizPdf(String? planCode) => isPaidPlan(planCode);
 
   static bool canDownloadOffline(String? planCode) => isPaidPlan(planCode);
+
+  /// Prep+ u otro acceso activo al quiz permite descarga offline aunque el plan sea free.
+  static bool canDownloadOfflineForQuiz({
+    required String? planCode,
+    required bool hasActiveQuizAccess,
+  }) =>
+      canDownloadOffline(planCode) || hasActiveQuizAccess;
 }

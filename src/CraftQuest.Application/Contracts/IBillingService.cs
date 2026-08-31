@@ -59,6 +59,7 @@ public interface IBillingService
 
     Task EnsureCanDownloadOfflineAsync(
         Guid userId,
+        Guid? quizId = null,
         CancellationToken cancellationToken = default);
 
     Task<OfflineEntitlementsDto> GetOfflineEntitlementsAsync(

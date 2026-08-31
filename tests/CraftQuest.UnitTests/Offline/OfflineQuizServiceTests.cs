@@ -207,6 +207,7 @@ public class OfflineQuizServiceTests
     {
         public Task EnsureCanDownloadOfflineAsync(
             Guid userId,
+            Guid? quizId = null,
             CancellationToken cancellationToken = default) =>
             Task.CompletedTask;
 

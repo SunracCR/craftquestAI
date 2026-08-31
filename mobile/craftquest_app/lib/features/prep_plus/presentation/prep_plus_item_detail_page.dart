@@ -186,7 +186,10 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       AppSnackBars.showError(OfflinePlatformSupport.unsupportedMessage);
       return;
     }
-    if (!BillingPlanAccess.canDownloadOffline(_planCode)) {
+    if (!BillingPlanAccess.canDownloadOfflineForQuiz(
+      planCode: _planCode,
+      hasActiveQuizAccess: _item?.canPractice ?? false,
+    )) {
       return;
     }
     if (_downloadingOffline) return;
@@ -1259,8 +1262,11 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
                               child: OfflineQuizActionsPanel(
                                 isDownloaded: _isOfflineDownloaded,
                                 isDownloading: _downloadingOffline,
-                                canDownloadOffline: BillingPlanAccess
-                                    .canDownloadOffline(_planCode),
+                                canDownloadOffline:
+                                    BillingPlanAccess.canDownloadOfflineForQuiz(
+                                  planCode: _planCode,
+                                  hasActiveQuizAccess: _item!.canPractice,
+                                ),
                                 isPlatformSupported:
                                     OfflinePlatformSupport.isSupported,
                                 onDownload: () =>

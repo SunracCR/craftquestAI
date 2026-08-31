@@ -30,7 +30,7 @@ public class OfflineQuizService(
         Guid quizId,
         CancellationToken cancellationToken = default)
     {
-        await billingService.EnsureCanDownloadOfflineAsync(userId, cancellationToken);
+        await billingService.EnsureCanDownloadOfflineAsync(userId, quizId, cancellationToken);
         var entitlements = await billingService.GetOfflineEntitlementsAsync(userId, cancellationToken);
 
         var quiz = await dbContext.Quizzes
