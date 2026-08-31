@@ -388,12 +388,7 @@ public class AuthService(
         EnsureTokenSecurityConfigured();
 
         var normalizedEmail = request.Email.Trim().ToUpperInvariant();
-        var user = await dbContext.Users
-            .FirstOrDefaultAsync(
-                u => u.EmailNormalized == normalizedEmail
-                    && u.Status == UserStatuses.PendingParentalConsent
-                    && u.ParentalConsentStatus == ParentalConsentStatuses.Pending,
-                cancellationToken);
+        var user = await FindPendingParentalConsentUserAsync(normalizedEmail, cancellationToken);
 
         if (user is null || string.IsNullOrWhiteSpace(user.GuardianEmail))
         {
@@ -401,6 +396,54 @@ public class AuthService(
         }
 
         await SendParentalConsentEmailAsync(user, cancellationToken);
+    }
+
+    public async Task<UpdateGuardianEmailResultDto> UpdateGuardianEmailAsync(
+        UpdateGuardianEmailRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(request.GuardianEmail))
+        {
+            throw new AuthException(
+                "Guardian email is required.",
+                400,
+                "GUARDIAN_EMAIL_REQUIRED");
+        }
+
+        var normalizedEmail = request.Email.Trim().ToUpperInvariant();
+        var guardianEmail = request.GuardianEmail.Trim();
+        var user = await FindPendingParentalConsentUserAsync(normalizedEmail, cancellationToken);
+
+        if (user is null)
+        {
+            throw new AuthException(
+                "Unable to update guardian email.",
+                404,
+                "GUARDIAN_EMAIL_UPDATE_UNAVAILABLE");
+        }
+
+        user.GuardianEmail = guardianEmail;
+        user.UpdatedAt = DateTime.UtcNow;
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await SendParentalConsentEmailAsync(user, cancellationToken);
+
+        return new UpdateGuardianEmailResultDto
+        {
+            GuardianEmail = guardianEmail,
+        };
+    }
+
+    private async Task<User?> FindPendingParentalConsentUserAsync(
+        string normalizedMinorEmail,
+        CancellationToken cancellationToken)
+    {
+        return await dbContext.Users
+            .FirstOrDefaultAsync(
+                u => u.EmailNormalized == normalizedMinorEmail
+                    && u.ParentalConsentStatus == ParentalConsentStatuses.Pending
+                    && (u.Status == UserStatuses.Pending
+                        || u.Status == UserStatuses.PendingParentalConsent),
+                cancellationToken);
     }
 
     public async Task<AuthResponseDto> LoginWithGoogleAsync(

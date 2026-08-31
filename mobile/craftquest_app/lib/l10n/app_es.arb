@@ -2312,6 +2312,12 @@
     }
   },
   "parentalConsentResend": "Reenviar correo al tutor",
+  "correctGuardianEmailTitle": "Corregir correo del tutor",
+  "correctGuardianEmailSubtitle": "Escribe el correo correcto de tu padre, madre o tutor. Le enviaremos de nuevo la solicitud de consentimiento.",
+  "correctGuardianEmailAction": "Guardar y reenviar",
+  "correctGuardianEmailSuccess": "Correo del tutor actualizado. Se envió una nueva solicitud de consentimiento.",
+  "correctGuardianEmailLoginHint": "¿Correo del tutor incorrecto?",
+  "errorGuardianEmailUpdateUnavailable": "No se pudo actualizar el correo del tutor. Comprueba que tu cuenta siga pendiente de consentimiento.",
   "correctBirthDateAction": "Corregir fecha de nacimiento",
   "correctBirthDateSubtitle": "Si te equivocaste al indicar tu edad",
   "correctBirthDateSuccess": "Fecha de nacimiento actualizada",

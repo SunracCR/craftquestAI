@@ -235,7 +235,7 @@ public sealed class NotificationReminderHostedService(
 
             var payload = new NotificationPayload
             {
-                PlanName = sub.Plan.Name,
+                PlanName = sub.Plan.Code,
                 DaysRemaining = daysRemaining,
                 Route = "profile/billing",
             };

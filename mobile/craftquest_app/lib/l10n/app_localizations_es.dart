@@ -5086,6 +5086,27 @@ class AppLocalizationsEs extends AppLocalizations {
   String get parentalConsentResend => 'Reenviar correo al tutor';
 
   @override
+  String get correctGuardianEmailTitle => 'Corregir correo del tutor';
+
+  @override
+  String get correctGuardianEmailSubtitle =>
+      'Escribe el correo correcto de tu padre, madre o tutor. Le enviaremos de nuevo la solicitud de consentimiento.';
+
+  @override
+  String get correctGuardianEmailAction => 'Guardar y reenviar';
+
+  @override
+  String get correctGuardianEmailSuccess =>
+      'Correo del tutor actualizado. Se envió una nueva solicitud de consentimiento.';
+
+  @override
+  String get correctGuardianEmailLoginHint => '¿Correo del tutor incorrecto?';
+
+  @override
+  String get errorGuardianEmailUpdateUnavailable =>
+      'No se pudo actualizar el correo del tutor. Comprueba que tu cuenta siga pendiente de consentimiento.';
+
+  @override
   String get correctBirthDateAction => 'Corregir fecha de nacimiento';
 
   @override

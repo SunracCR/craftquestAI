@@ -217,7 +217,7 @@ public sealed class MobileStoreWebhookProcessor(
                     NotificationTypes.PaymentIssuePending,
                     new NotificationPayload
                     {
-                        PlanName = subscription.Plan?.Name ?? subscription.Plan?.Code,
+                        PlanName = subscription.Plan?.Code ?? subscription.Plan?.Name,
                         Route = "profile/billing",
                     },
                     $"payment_issue:{subscription.UserId}:{eventId}",
@@ -497,7 +497,7 @@ public sealed class MobileStoreWebhookProcessor(
                 NotificationTypes.PaymentIssuePending,
                 new NotificationPayload
                 {
-                    PlanName = subscription.Plan?.Name ?? subscription.Plan?.Code,
+                    PlanName = subscription.Plan?.Code ?? subscription.Plan?.Name,
                     Route = "profile/billing",
                 },
                 $"payment_issue:{subscription.UserId}:{eventId}",

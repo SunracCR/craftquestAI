@@ -5051,6 +5051,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentalConsentResend => 'Resend email to guardian';
 
   @override
+  String get correctGuardianEmailTitle => 'Correct guardian email';
+
+  @override
+  String get correctGuardianEmailSubtitle =>
+      'Enter the correct parent or guardian email. We will send a new consent request.';
+
+  @override
+  String get correctGuardianEmailAction => 'Save and resend';
+
+  @override
+  String get correctGuardianEmailSuccess =>
+      'Guardian email updated. A new consent request was sent.';
+
+  @override
+  String get correctGuardianEmailLoginHint => 'Wrong guardian email?';
+
+  @override
+  String get errorGuardianEmailUpdateUnavailable =>
+      'Could not update the guardian email. Make sure your account is still waiting for consent.';
+
+  @override
   String get correctBirthDateAction => 'Correct date of birth';
 
   @override

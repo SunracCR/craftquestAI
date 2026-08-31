@@ -1,3 +1,4 @@
+using CraftQuest.Application;
 using CraftQuest.Application.Models.Notifications;
 using CraftQuest.Domain.Constants;
 
@@ -101,7 +102,7 @@ public static class NotificationTextBuilder
 
     private static (string, string) BuildMembershipExpiring(string lang, NotificationPayload p)
     {
-        var plan = p.PlanName ?? "Plan";
+        var plan = PlanDisplayNames.Localize(lang, p.PlanName);
         var days = p.DaysRemaining ?? 0;
         return lang switch
         {
@@ -113,7 +114,7 @@ public static class NotificationTextBuilder
 
     private static (string, string) BuildMembershipExpired(string lang, NotificationPayload p)
     {
-        var plan = p.PlanName ?? "Plan";
+        var plan = PlanDisplayNames.Localize(lang, p.PlanName);
         return lang switch
         {
             "en" => ("Membership ended", $"Your {plan} plan has ended. You are now on the Free plan."),
@@ -124,7 +125,7 @@ public static class NotificationTextBuilder
 
     private static (string, string) BuildPaymentIssuePending(string lang, NotificationPayload p)
     {
-        var plan = p.PlanName ?? "Plan";
+        var plan = PlanDisplayNames.Localize(lang, p.PlanName);
         return lang switch
         {
             "en" => ("Payment issue", $"There is a payment problem with your {plan} subscription. Update your payment method in Google Play."),

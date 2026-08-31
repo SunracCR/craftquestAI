@@ -5082,6 +5082,28 @@ class AppLocalizationsPt extends AppLocalizations {
   String get parentalConsentResend => 'Reenviar e-mail ao responsavel';
 
   @override
+  String get correctGuardianEmailTitle => 'Corrigir e-mail do responsavel';
+
+  @override
+  String get correctGuardianEmailSubtitle =>
+      'Informe o e-mail correto do pai, mae ou responsavel. Enviaremos uma nova solicitacao de consentimento.';
+
+  @override
+  String get correctGuardianEmailAction => 'Salvar e reenviar';
+
+  @override
+  String get correctGuardianEmailSuccess =>
+      'E-mail do responsavel atualizado. Uma nova solicitacao de consentimento foi enviada.';
+
+  @override
+  String get correctGuardianEmailLoginHint =>
+      'E-mail do responsavel incorreto?';
+
+  @override
+  String get errorGuardianEmailUpdateUnavailable =>
+      'Nao foi possivel atualizar o e-mail do responsavel. Verifique se sua conta ainda aguarda consentimento.';
+
+  @override
   String get correctBirthDateAction => 'Corrigir data de nascimento';
 
   @override

@@ -826,7 +826,7 @@ public class BillingService(
             cancellationToken);
 
         var wasTeacherPlan = active.Any(s => s.Plan.IsTeacherPlan);
-        var expiredPlanName = active.FirstOrDefault()?.Plan.Name ?? "Premium";
+        var expiredPlanName = active.FirstOrDefault()?.Plan.Code ?? "premium";
 
         var freePlan = await dbContext.Plans
             .FirstOrDefaultAsync(p => p.Code == "free" && p.IsActive, cancellationToken)

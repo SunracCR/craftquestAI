@@ -53,4 +53,20 @@ public class NotificationTextBuilderTests
         Assert.Contains("Pro", body);
         Assert.Contains("3", body);
     }
+
+    [Fact]
+    public void Build_MembershipExpiring_TeacherPlan_UsesTutorLabel()
+    {
+        var (_, body) = NotificationTextBuilder.Build(
+            NotificationTypes.MembershipExpiring,
+            "es",
+            new NotificationPayload
+            {
+                PlanName = "Teacher",
+                DaysRemaining = 7,
+            });
+
+        Assert.Contains("Tutor", body);
+        Assert.DoesNotContain("Teacher", body);
+    }
 }

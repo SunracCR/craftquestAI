@@ -7,6 +7,7 @@ import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/features/auth/data/auth_repository.dart';
 import 'package:craftquest_app/features/auth/presentation/auth_entry_navigation.dart';
+import 'package:craftquest_app/features/auth/presentation/guardian_email_correction_dialog.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -28,6 +29,13 @@ class VerifyEmailPendingPage extends StatefulWidget {
 class _VerifyEmailPendingPageState extends State<VerifyEmailPendingPage> {
   final _repository = getIt<AuthRepository>();
   bool _isResending = false;
+  String? _guardianEmail;
+
+  @override
+  void initState() {
+    super.initState();
+    _guardianEmail = widget.guardianEmail;
+  }
 
   Future<void> _resend() async {
     if (_isResending) {
@@ -60,6 +68,27 @@ class _VerifyEmailPendingPageState extends State<VerifyEmailPendingPage> {
     }
   }
 
+  Future<void> _correctGuardianEmail() async {
+    final guardianEmail = _guardianEmail;
+    if (guardianEmail == null || guardianEmail.isEmpty) {
+      return;
+    }
+
+    final updated = await showGuardianEmailCorrectionDialog(
+      context: context,
+      minorEmail: widget.email,
+      currentGuardianEmail: guardianEmail,
+    );
+    if (!mounted || updated == null) {
+      return;
+    }
+
+    setState(() => _guardianEmail = updated);
+    context.showSuccessSnackBar(
+      AppLocalizations.of(context)!.correctGuardianEmailSuccess,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -81,6 +110,13 @@ class _VerifyEmailPendingPageState extends State<VerifyEmailPendingPage> {
             isLoading: _isResending,
             onPressed: _resend,
           ),
+          if (_guardianEmail != null && _guardianEmail!.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            TextButton(
+              onPressed: _isResending ? null : _correctGuardianEmail,
+              child: Text(l10n.correctGuardianEmailLoginHint),
+            ),
+          ],
           const SizedBox(height: AppSpacing.md),
           TextButton(
             onPressed: () => returnToLogin(context),

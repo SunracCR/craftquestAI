@@ -2233,6 +2233,12 @@
     }
   },
   "parentalConsentResend": "Resend email to guardian",
+  "correctGuardianEmailTitle": "Correct guardian email",
+  "correctGuardianEmailSubtitle": "Enter the correct parent or guardian email. We will send a new consent request.",
+  "correctGuardianEmailAction": "Save and resend",
+  "correctGuardianEmailSuccess": "Guardian email updated. A new consent request was sent.",
+  "correctGuardianEmailLoginHint": "Wrong guardian email?",
+  "errorGuardianEmailUpdateUnavailable": "Could not update the guardian email. Make sure your account is still waiting for consent.",
   "correctBirthDateAction": "Correct date of birth",
   "correctBirthDateSubtitle": "If you entered the wrong age",
   "correctBirthDateSuccess": "Date of birth updated",

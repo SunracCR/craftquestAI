@@ -247,50 +247,22 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
   }
 
   Future<void> _cancelSubscription() async {
-    final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(l10n.teacherUpgradeCancelTitle,
-            style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w700)),
-        content: Text(l10n.teacherUpgradeCancelMessage,
-            style: const TextStyle(color: AppColors.textSecondary)),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(l10n.teacherUpgradeKeepPlan,
-                  style: const TextStyle(color: AppColors.textSecondary))),
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(l10n.teacherUpgradeCancelConfirm,
-                  style: const TextStyle(color: AppColors.error))),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
-
-    setState(() => _cancelling = true);
-    try {
-      final result = await _repo.cancelSubscription();
-      if (!mounted) return;
-      final accessDate = BillingDisplay.formatSubscriptionDate(
-        context,
-        result.accessUntil,
-      );
-      context.showSuccessSnackBar(
-        l10n.teacherUpgradeCancelSuccessUntil(accessDate),
-      );
-      await _load(forceRefreshBilling: true);
-      if (!mounted) return;
-      Navigator.of(context).pop();
-    } on DioException catch (e) {
-      if (!mounted) return;
-      context.showDioErrorSnackBar(e);
-    } finally {
-      if (mounted) setState(() => _cancelling = false);
+    final subscription = _subscription;
+    if (subscription == null) {
+      return;
     }
+    await SubscriptionCancelFlow.showCancelDialog(
+      context: context,
+      providerCode: subscription.providerCode,
+      onCompleted: () async {
+        setState(() => _cancelling = true);
+        try {
+          await _load(forceRefreshBilling: true);
+        } finally {
+          if (mounted) setState(() => _cancelling = false);
+        }
+      },
+    );
   }
 
   Future<void> _resumeSubscription() async {

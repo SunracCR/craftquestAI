@@ -401,6 +401,8 @@ abstract final class ApiErrorMapper {
         return l10n.registerEmailAlreadyInUseError;
       case 'GUARDIAN_EMAIL_REQUIRED':
         return l10n.registerGuardianEmailRequiredError;
+      case 'GUARDIAN_EMAIL_UPDATE_UNAVAILABLE':
+        return l10n.errorGuardianEmailUpdateUnavailable;
       case 'CAPTCHA_INVALID':
         return l10n.errorCaptchaVerificationFailed;
       case 'INVALID_VERIFICATION_TOKEN':

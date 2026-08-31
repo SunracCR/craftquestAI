@@ -13,9 +13,13 @@ import 'package:craftquest_app/features/offline_practice/domain/offline_sync_man
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (kIsWeb) {
+    usePathUrlStrategy();
+  }
   configureDevHttpOverrides();
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   await initializeOfflineStorage();

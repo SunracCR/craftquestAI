@@ -55,4 +55,8 @@ public interface IAuthService
     Task ResendParentalConsentAsync(
         ResendParentalConsentRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<UpdateGuardianEmailResultDto> UpdateGuardianEmailAsync(
+        UpdateGuardianEmailRequest request,
+        CancellationToken cancellationToken = default);
 }

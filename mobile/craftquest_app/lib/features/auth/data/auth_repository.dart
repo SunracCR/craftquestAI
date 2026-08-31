@@ -71,6 +71,30 @@ class AuthRepository {
     );
   }
 
+  Future<String> updateGuardianEmail({
+    required String email,
+    required String guardianEmail,
+  }) async {
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/api/auth/update-guardian-email',
+      data: {
+        'email': email,
+        'guardianEmail': guardianEmail,
+      },
+    );
+    final data = response.data;
+    final updated = data?['guardianEmail'] as String?;
+    if (updated == null || updated.isEmpty) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        response: response,
+        type: DioExceptionType.badResponse,
+        message: 'Update guardian email response was empty.',
+      );
+    }
+    return updated.trim();
+  }
+
   /// Registers guardian consent without opening a session for the minor.
   Future<ParentalConsentGrantResult> grantParentalConsent({
     required String token,

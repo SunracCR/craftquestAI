@@ -2,6 +2,7 @@ import 'package:craftquest_app/core/compliance/age_collection_controller.dart';
 import 'package:craftquest_app/core/compliance/age_screen.dart';
 import 'package:craftquest_app/core/compliance/compliance_pref_cache.dart';
 import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/features/auth/presentation/account_link_launch.dart';
 import 'package:flutter/material.dart';
 
 /// Muestra [AgeScreen] una sola vez antes del flujo de autenticación.
@@ -49,7 +50,7 @@ class _AgeCollectionGateState extends State<AgeCollectionGate> {
 
   @override
   Widget build(BuildContext context) {
-    if (_needsAge) {
+    if (_needsAge && readWebAccountLink() == null) {
       return AgeScreen(onCompleted: _onCompleted);
     }
 

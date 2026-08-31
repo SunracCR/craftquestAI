@@ -2233,6 +2233,12 @@
     }
   },
   "parentalConsentResend": "Reenviar e-mail ao responsavel",
+  "correctGuardianEmailTitle": "Corrigir e-mail do responsavel",
+  "correctGuardianEmailSubtitle": "Informe o e-mail correto do pai, mae ou responsavel. Enviaremos uma nova solicitacao de consentimento.",
+  "correctGuardianEmailAction": "Salvar e reenviar",
+  "correctGuardianEmailSuccess": "E-mail do responsavel atualizado. Uma nova solicitacao de consentimento foi enviada.",
+  "correctGuardianEmailLoginHint": "E-mail do responsavel incorreto?",
+  "errorGuardianEmailUpdateUnavailable": "Nao foi possivel atualizar o e-mail do responsavel. Verifique se sua conta ainda aguarda consentimento.",
   "correctBirthDateAction": "Corrigir data de nascimento",
   "correctBirthDateSubtitle": "Se voce indicou a idade errada",
   "correctBirthDateSuccess": "Data de nascimento atualizada",

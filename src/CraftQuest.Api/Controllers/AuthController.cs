@@ -136,6 +136,17 @@ public class AuthController(
         return NoContent();
     }
 
+    [HttpPost("update-guardian-email")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(UpdateGuardianEmailResultDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpdateGuardianEmail(
+        [FromBody] UpdateGuardianEmailRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await authService.UpdateGuardianEmailAsync(request, cancellationToken);
+        return Ok(result);
+    }
+
     [HttpPost("change-password")]
     [Authorize]
     [ProducesResponseType(typeof(ChangePasswordResultDto), StatusCodes.Status202Accepted)]

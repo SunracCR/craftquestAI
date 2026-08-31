@@ -8563,6 +8563,42 @@ abstract class AppLocalizations {
   /// **'Reenviar correo al tutor'**
   String get parentalConsentResend;
 
+  /// No description provided for @correctGuardianEmailTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Corregir correo del tutor'**
+  String get correctGuardianEmailTitle;
+
+  /// No description provided for @correctGuardianEmailSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Escribe el correo correcto de tu padre, madre o tutor. Le enviaremos de nuevo la solicitud de consentimiento.'**
+  String get correctGuardianEmailSubtitle;
+
+  /// No description provided for @correctGuardianEmailAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar y reenviar'**
+  String get correctGuardianEmailAction;
+
+  /// No description provided for @correctGuardianEmailSuccess.
+  ///
+  /// In es, this message translates to:
+  /// **'Correo del tutor actualizado. Se envió una nueva solicitud de consentimiento.'**
+  String get correctGuardianEmailSuccess;
+
+  /// No description provided for @correctGuardianEmailLoginHint.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Correo del tutor incorrecto?'**
+  String get correctGuardianEmailLoginHint;
+
+  /// No description provided for @errorGuardianEmailUpdateUnavailable.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo actualizar el correo del tutor. Comprueba que tu cuenta siga pendiente de consentimiento.'**
+  String get errorGuardianEmailUpdateUnavailable;
+
   /// No description provided for @correctBirthDateAction.
   ///
   /// In es, this message translates to:

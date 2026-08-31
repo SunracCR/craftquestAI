@@ -1,4 +1,5 @@
 using System.Net;
+using CraftQuest.Application;
 using CraftQuest.Application.Models.Notifications;
 
 namespace CraftQuest.Infrastructure.Email;
@@ -413,7 +414,7 @@ public static class EmailTemplateBuilder
         string language,
         NotificationPayload payload)
     {
-        var plan = payload.PlanName ?? "Plan";
+        var plan = PlanDisplayNames.Localize(language, payload.PlanName);
         var days = payload.DaysRemaining ?? 0;
         return language switch
         {
@@ -454,7 +455,7 @@ public static class EmailTemplateBuilder
         string language,
         NotificationPayload payload)
     {
-        var plan = payload.PlanName ?? "Plan";
+        var plan = PlanDisplayNames.Localize(language, payload.PlanName);
         return language switch
         {
             "en" => (
@@ -494,7 +495,7 @@ public static class EmailTemplateBuilder
         string language,
         NotificationPayload payload)
     {
-        var plan = payload.PlanName ?? "Plan";
+        var plan = PlanDisplayNames.Localize(language, payload.PlanName);
         return language switch
         {
             "en" => (

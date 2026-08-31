@@ -1,5 +1,6 @@
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
+import 'package:craftquest_app/core/utils/notification_display.dart';
 import 'package:craftquest_app/features/notifications/data/models/notification_models.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -39,7 +40,7 @@ class NotificationListTile extends StatelessWidget {
               : AppColors.accentGold,
         ),
         title: Text(
-          notification.title,
+          NotificationDisplay.localizedTitle(l10n, notification),
           style: TextStyle(
             color: AppColors.textPrimary,
             fontWeight:
@@ -52,7 +53,7 @@ class NotificationListTile extends StatelessWidget {
           children: [
             const SizedBox(height: 4),
             Text(
-              notification.body,
+              NotificationDisplay.localizedBody(l10n, notification),
               style: const TextStyle(
                 color: AppColors.textSecondary,
                 fontSize: 12,
