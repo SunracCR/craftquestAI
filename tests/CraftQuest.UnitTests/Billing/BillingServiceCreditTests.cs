@@ -14,7 +14,7 @@ public class BillingServiceCreditTests
     {
         await using var db = CreateDb();
         var userId = Guid.NewGuid();
-        await SeedUserWithFreePlanAsync(db, userId, monthlyAiCredits: 20, maxQuizzes: 2, maxQuestionsPerQuiz: 50);
+        await SeedUserWithFreePlanAsync(db, userId, monthlyAiCredits: 20, maxQuizzes: 2, maxQuestionsPerQuiz: 25);
 
         db.CreditLedgerEntries.Add(new CreditLedgerEntry
         {
@@ -53,7 +53,7 @@ public class BillingServiceCreditTests
     {
         await using var db = CreateDb();
         var userId = Guid.NewGuid();
-        await SeedUserWithFreePlanAsync(db, userId, monthlyAiCredits: 20, maxQuizzes: 2, maxQuestionsPerQuiz: 50);
+        await SeedUserWithFreePlanAsync(db, userId, monthlyAiCredits: 20, maxQuizzes: 2, maxQuestionsPerQuiz: 25);
 
         var lastMonth = DateTime.UtcNow.AddMonths(-1);
         db.CreditLedgerEntries.Add(new CreditLedgerEntry
@@ -258,8 +258,8 @@ public class BillingServiceCreditTests
         var capacity = await billing.GetQuizQuestionCapacityAsync(userId, quizId);
 
         Assert.Equal(2, (await db.Plans.FirstAsync(p => p.Code == "free")).MaxQuizzes);
-        Assert.Equal(50, capacity.MaxQuestionsPerQuiz);
-        Assert.Equal(50, capacity.RemainingSlots);
+        Assert.Equal(25, capacity.MaxQuestionsPerQuiz);
+        Assert.Equal(25, capacity.RemainingSlots);
     }
 
     private static async Task SeedUserWithFreePlanAsync(
@@ -267,7 +267,7 @@ public class BillingServiceCreditTests
         Guid userId,
         int monthlyAiCredits,
         int maxQuizzes = 2,
-        int maxQuestionsPerQuiz = 50)
+        int maxQuestionsPerQuiz = 25)
     {
         db.Users.Add(new User
         {

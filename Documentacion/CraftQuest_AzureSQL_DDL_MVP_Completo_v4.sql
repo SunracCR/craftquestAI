@@ -754,7 +754,7 @@ GO
 
 MERGE billing.Plans AS target
 USING (VALUES
-    ('free', 'Free', NULL, NULL, 2, 50, 20, 2, 0, 0),
+    ('free', 'Free', NULL, NULL, 2, 25, 20, 2, 0, 0),
     ('pro', 'Pro', 4.99, 48.99, NULL, NULL, 90, 20, 0, 0),
     ('teacher', 'Teacher', 9.99, 99.99, NULL, NULL, 180, 200, 1, 0),
     ('institution', 'Institution', NULL, NULL, NULL, NULL, 5000, 1000, 1, 1)

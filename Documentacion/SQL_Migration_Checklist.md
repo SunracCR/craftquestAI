@@ -20,7 +20,7 @@ Antes de ejecutar, comprueba la columna **Verificación**. Si ya cumple la condi
 | 44 | `AlterShareCodes_OnePerQuiz.sql` | Un código compartido por cuestionario | Restricción/índice según script | ☐ | ☐ | ☐ |
 | 45 | `AlterShareCodes_AccessPolicy.sql` | Política de acceso en códigos | Columnas/policy del script | ☐ | ☐ | ☐ |
 | 46 | `AlterPlans_MonthlyAiCredits.sql` | Créditos IA mensuales en planes | Columna en `billing.Plans` | ☐ | ☐ | ☐ |
-| 47 | `UpdateFreePlanLimits.sql` | Límites plan free (2 cuestionarios, 50 preguntas) | `MaxQuizzes`/`MaxQuestionsPerQuiz` en `free` | ☐ | ☐ | ☐ |
+| 47 | `UpdateFreePlanLimits.sql` | Límites plan free (2 cuestionarios, 25 preguntas) | `MaxQuizzes`/`MaxQuestionsPerQuiz` en `free` | ☐ | ☐ | ☐ |
 | 48 | `AlterStudyMaterials_AI_Generation.sql` | Materiales de estudio para IA | Tablas/columnas de study materials | ☐ | ☐ | ☐ |
 | 49 | `AlterAiJobs_Progress.sql` | Progreso en jobs de IA | Columnas progreso en `ai` jobs | ☐ | ☐ | ☐ |
 | 50 | `AlterAiJobs_DeferredRetry.sql` | Reintentos diferidos IA | Columnas retry en jobs IA | ☐ | ☐ | ☐ |

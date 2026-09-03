@@ -221,7 +221,7 @@ public class AuthServiceEmailVerificationTests
             IsActive = true,
             MonthlyAiCredits = 20,
             MaxQuizzes = 2,
-            MaxQuestionsPerQuiz = 50,
+            MaxQuestionsPerQuiz = 25,
         });
 
         await db.SaveChangesAsync();

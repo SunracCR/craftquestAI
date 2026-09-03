@@ -94,7 +94,7 @@ public class BillingServiceQuizModificationTests
             Name = "Free",
             IsActive = true,
             MaxQuizzes = maxQuizzes,
-            MaxQuestionsPerQuiz = 50,
+            MaxQuestionsPerQuiz = 25,
             MonthlyAiCredits = 20,
         });
         db.UserSubscriptions.Add(new UserSubscription

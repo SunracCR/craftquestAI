@@ -192,7 +192,7 @@ flutter run --dart-define=API_BASE_URL=https://10.0.2.2:7080
 
 | Código | Nombre | Precio mensual (USD) | Notas |
 |--------|--------|----------------------|--------|
-| `free` | Free | — | Límites: 2 cuestionarios, 50 preguntas/quiz, 2 códigos/mes |
+| `free` | Free | — | Límites: 2 cuestionarios, 25 preguntas/quiz, 2 códigos/mes |
 | `pro` | Pro | 4.99 | Comprable |
 | `teacher` | Teacher | 9.99 | Comprable |
 | `institution` | Institution | — | Contacto comercial (no IAP en MVP) |
