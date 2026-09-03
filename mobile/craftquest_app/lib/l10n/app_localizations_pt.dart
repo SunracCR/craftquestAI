@@ -2860,6 +2860,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'A IA devolveu um formato invalido. Toque em Tentar gerar novamente; nenhum credito foi descontado.';
 
   @override
+  String get errorAiGenerationTemporary =>
+      'Um erro temporario no servidor interrompeu a geracao. Toque em Tentar gerar novamente; nenhum credito foi descontado.';
+
+  @override
   String get aiGenerationFromQuizAction => 'Gerar com IA a partir de material';
 
   @override

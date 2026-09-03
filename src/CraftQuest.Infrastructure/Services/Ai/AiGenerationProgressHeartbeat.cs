@@ -12,6 +12,7 @@ internal sealed class AiGenerationProgressHeartbeat : IAsyncDisposable
     private readonly IAiGenerationJobProgress _progress;
     private readonly CancellationTokenSource _stopCts = new();
     private readonly Task _loop;
+    private readonly TimeSpan _tickInterval;
     private volatile int _current;
     private volatile int _ceiling;
 
@@ -19,11 +20,13 @@ internal sealed class AiGenerationProgressHeartbeat : IAsyncDisposable
         IAiGenerationJobProgress progress,
         int floorPercent,
         int ceilingPercent,
+        TimeSpan tickInterval,
         CancellationToken cancellationToken)
     {
         _progress = progress;
         _current = floorPercent;
         _ceiling = Math.Max(floorPercent + 1, ceilingPercent);
+        _tickInterval = tickInterval;
         _loop = RunAsync(cancellationToken);
     }
 
@@ -31,8 +34,9 @@ internal sealed class AiGenerationProgressHeartbeat : IAsyncDisposable
         IAiGenerationJobProgress progress,
         int floorPercent,
         int ceilingPercent,
-        CancellationToken cancellationToken) =>
-        new(progress, floorPercent, ceilingPercent, cancellationToken);
+        CancellationToken cancellationToken,
+        TimeSpan? tickInterval = null) =>
+        new(progress, floorPercent, ceilingPercent, tickInterval ?? TimeSpan.FromSeconds(3), cancellationToken);
 
     public void BumpTo(int percent)
     {
@@ -46,7 +50,7 @@ internal sealed class AiGenerationProgressHeartbeat : IAsyncDisposable
         {
             while (!linked.Token.IsCancellationRequested)
             {
-                await Task.Delay(3000, linked.Token);
+                await Task.Delay(_tickInterval, linked.Token);
                 var next = _current + 1;
                 if (next >= _ceiling)
                 {
@@ -54,7 +58,18 @@ internal sealed class AiGenerationProgressHeartbeat : IAsyncDisposable
                 }
 
                 _current = next;
-                await _progress.UpdateAsync(AiJobStages.Generating, _current, linked.Token);
+                try
+                {
+                    await _progress.UpdateAsync(AiJobStages.Generating, _current, linked.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch
+                {
+                    // A progress tick must never fail the generation job.
+                }
             }
         }
         catch (OperationCanceledException)
@@ -73,6 +88,10 @@ internal sealed class AiGenerationProgressHeartbeat : IAsyncDisposable
         catch (OperationCanceledException)
         {
             // Expected.
+        }
+        catch
+        {
+            // Progress loop is best-effort.
         }
 
         _stopCts.Dispose();

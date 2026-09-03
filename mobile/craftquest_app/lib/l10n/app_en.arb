@@ -1341,6 +1341,7 @@
   },
   "errorGroupAccessDeniedGeneric": "This code is only for members of the tutor's class.",
   "errorAiGenerationInvalidOutput": "The AI returned an invalid quiz format. Tap Retry generation; no credits were deducted.",
+  "errorAiGenerationTemporary": "A temporary server error interrupted generation. Tap Retry generation; no credits were deducted.",
   "aiGenerationFromQuizAction": "Generate with AI from material",
   "importAiGeneratedBadge": "AI generated",
   "errorAiCreditsInsufficient": "Not enough AI credits for this generation.",

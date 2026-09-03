@@ -2838,6 +2838,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'The AI returned an invalid quiz format. Tap Retry generation; no credits were deducted.';
 
   @override
+  String get errorAiGenerationTemporary =>
+      'A temporary server error interrupted generation. Tap Retry generation; no credits were deducted.';
+
+  @override
   String get aiGenerationFromQuizAction => 'Generate with AI from material';
 
   @override

@@ -4748,6 +4748,12 @@ abstract class AppLocalizations {
   /// **'La IA devolvió un formato inválido. Pulsa «Reintentar generación»; no se han descontado créditos.'**
   String get errorAiGenerationInvalidOutput;
 
+  /// No description provided for @errorAiGenerationTemporary.
+  ///
+  /// In es, this message translates to:
+  /// **'Un error temporal del servidor interrumpió la generación. Pulsa «Reintentar generación»; no se han descontado créditos.'**
+  String get errorAiGenerationTemporary;
+
   /// No description provided for @aiGenerationFromQuizAction.
   ///
   /// In es, this message translates to:

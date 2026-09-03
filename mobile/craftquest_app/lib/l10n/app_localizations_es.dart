@@ -2861,6 +2861,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'La IA devolvió un formato inválido. Pulsa «Reintentar generación»; no se han descontado créditos.';
 
   @override
+  String get errorAiGenerationTemporary =>
+      'Un error temporal del servidor interrumpió la generación. Pulsa «Reintentar generación»; no se han descontado créditos.';
+
+  @override
   String get aiGenerationFromQuizAction => 'Generar con IA desde material';
 
   @override

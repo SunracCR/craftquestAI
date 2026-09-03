@@ -131,6 +131,12 @@ abstract final class ApiErrorMapper {
       return l10n.errorAiGenerationInvalidOutput;
     }
 
+    if (lower.contains('current state is connecting')
+        || lower.contains('the connection was not closed')
+        || lower.contains('temporary database connection')) {
+      return l10n.errorAiGenerationTemporary;
+    }
+
     if (lower.contains('high demand')
         || lower.contains('temporarily overloaded')
         || lower.contains('gemini is temporarily overloaded')
@@ -373,6 +379,9 @@ abstract final class ApiErrorMapper {
       case 'AI_GENERATION_NO_VALID_QUESTIONS':
       case 'AI_GENERATION_IMPORT_EMPTY':
         return l10n.errorAiGenerationInvalidOutput;
+      case 'AI_GENERATION_TEMPORARY':
+      case 'AI_GENERATION_SAVE_FAILED':
+        return l10n.errorAiGenerationTemporary;
       case 'GENERATION_JOB_NOT_RETRYABLE':
         return l10n.errorGenerationJobNotRetryable;
       case 'GUEST_NOT_ALLOWED':

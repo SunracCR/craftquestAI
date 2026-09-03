@@ -5,7 +5,11 @@
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32"/>
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <!-- El selector de fotos de Android no requiere acceso a toda la galería.
+         image_picker puede fusionar este permiso; se elimina del manifiesto final. -->
+    <uses-permission
+        android:name="android.permission.READ_MEDIA_IMAGES"
+        tools:node="remove"/>
     <uses-permission
         android:name="com.google.android.gms.permission.AD_ID"
         tools:node="remove"/>

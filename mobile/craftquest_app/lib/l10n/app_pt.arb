@@ -1341,6 +1341,7 @@
   },
   "errorGroupAccessDeniedGeneric": "Este codigo e apenas para membros da turma do tutor.",
   "errorAiGenerationInvalidOutput": "A IA devolveu um formato invalido. Toque em Tentar gerar novamente; nenhum credito foi descontado.",
+  "errorAiGenerationTemporary": "Um erro temporario no servidor interrompeu a geracao. Toque em Tentar gerar novamente; nenhum credito foi descontado.",
   "aiGenerationFromQuizAction": "Gerar com IA a partir de material",
   "importAiGeneratedBadge": "Gerada por IA",
   "errorAiCreditsInsufficient": "Creditos IA insuficientes para esta geracao.",

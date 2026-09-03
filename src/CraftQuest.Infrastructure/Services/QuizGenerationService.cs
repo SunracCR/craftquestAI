@@ -536,8 +536,8 @@ public class QuizGenerationService(
             job.Status = "failed";
             job.Stage = AiJobStages.Failed;
             job.ProgressPercent = null;
-            job.ErrorCode = "AI_GENERATION_SAVE_FAILED";
-            job.ErrorMessage = TruncateJobError(inner);
+            job.ErrorCode = InferErrorCode(inner) ?? "AI_GENERATION_SAVE_FAILED";
+            job.ErrorMessage = SanitizeJobError(inner);
             job.CompletedAt = DateTime.UtcNow;
             job.NextRetryAt = null;
         }
@@ -548,8 +548,8 @@ public class QuizGenerationService(
             job.Status = "failed";
             job.Stage = AiJobStages.Failed;
             job.ProgressPercent = null;
-            job.ErrorCode = InferErrorCode(ex.Message);
-            job.ErrorMessage = TruncateJobError(ex.Message);
+            job.ErrorCode = InferErrorCode(ex.Message) ?? InferErrorCode(ex.InnerException?.Message);
+            job.ErrorMessage = SanitizeJobError(ex.Message);
             job.CompletedAt = DateTime.UtcNow;
             job.NextRetryAt = null;
         }
@@ -842,8 +842,8 @@ public class QuizGenerationService(
 
     private void ApplyJobFailure(AiJob job, AppException ex)
     {
-        job.ErrorCode = ex.ErrorCode ?? InferErrorCode(ex.Message);
-        job.ErrorMessage = TruncateJobError(ex.Message);
+        job.ErrorCode = ex.ErrorCode ?? InferErrorCode(ex.Message) ?? InferErrorCode(ex.InnerException?.Message);
+        job.ErrorMessage = SanitizeJobError(ex.Message);
 
         if (GeminiApiErrorHandler.IsDeferredRetryEligible(ex.ErrorCode)
             && job.RetryAttempt < generationOptions.Value.DeferredRetryMaxAttempts)
@@ -868,11 +868,32 @@ public class QuizGenerationService(
         job.NextRetryAt = null;
     }
 
-    private static string? InferErrorCode(string message) =>
-        message.Contains("Invalid CQIF JSON", StringComparison.OrdinalIgnoreCase)
-        || message.Contains("could not be converted", StringComparison.OrdinalIgnoreCase)
-            ? "AI_GENERATION_INVALID_OUTPUT"
-            : null;
+    private static string? InferErrorCode(string? message)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            return null;
+        }
+
+        if (IsDbConnectionBusy(message))
+        {
+            return "AI_GENERATION_TEMPORARY";
+        }
+
+        return message.Contains("Invalid CQIF JSON", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("could not be converted", StringComparison.OrdinalIgnoreCase)
+                ? "AI_GENERATION_INVALID_OUTPUT"
+                : null;
+    }
+
+    private static string SanitizeJobError(string message) =>
+        TruncateJobError(IsDbConnectionBusy(message)
+            ? "A temporary database connection error occurred. Please retry generation."
+            : message);
+
+    private static bool IsDbConnectionBusy(string message) =>
+        message.Contains("current state is connecting", StringComparison.OrdinalIgnoreCase)
+        || message.Contains("The connection was not closed", StringComparison.OrdinalIgnoreCase);
 
     private static string TruncateJobError(string message) =>
         message.Length > 2000 ? message[..2000] : message;
