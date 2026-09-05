@@ -153,16 +153,21 @@ class AppErrorView extends StatelessWidget {
 
 /// Spinner compacto para botones con estado de carga.
 class AppButtonLoader extends StatelessWidget {
-  const AppButtonLoader({super.key});
+  const AppButtonLoader({super.key, this.color});
+
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
-    return const SizedBox(
+    final loaderColor =
+        color ?? Theme.of(context).colorScheme.onPrimary;
+
+    return SizedBox(
       height: 20,
       width: 20,
       child: CircularProgressIndicator(
         strokeWidth: 2,
-        color: AppColors.textPrimary,
+        color: loaderColor,
       ),
     );
   }

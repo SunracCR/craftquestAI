@@ -11,9 +11,9 @@ abstract final class AppTheme {
     const scheme = ColorScheme(
       brightness: Brightness.dark,
       primary: AppColors.accent,
-      onPrimary: AppColors.textPrimary,
+      onPrimary: AppColors.onSurfaceSecondary,
       primaryContainer: AppColors.accent,
-      onPrimaryContainer: AppColors.textPrimary,
+      onPrimaryContainer: AppColors.onSurfaceSecondary,
       secondary: AppColors.accentCool,
       onSecondary: AppColors.textPrimary,
       secondaryContainer: AppColors.accentCool,
@@ -151,9 +151,10 @@ abstract final class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.accent,
-          foregroundColor: AppColors.textPrimary,
+          foregroundColor: AppColors.onSurfaceSecondary,
           disabledBackgroundColor: AppColors.accent.withValues(alpha: 0.4),
-          disabledForegroundColor: AppColors.textPrimary.withValues(alpha: 0.6),
+          disabledForegroundColor:
+              AppColors.onSurfaceSecondary.withValues(alpha: 0.5),
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           minimumSize: const Size(64, 48),
@@ -164,9 +165,10 @@ abstract final class AppTheme {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.accent,
-          foregroundColor: AppColors.textPrimary,
+          foregroundColor: AppColors.onSurfaceSecondary,
           disabledBackgroundColor: AppColors.accent.withValues(alpha: 0.35),
-          disabledForegroundColor: AppColors.textPrimary.withValues(alpha: 0.5),
+          disabledForegroundColor:
+              AppColors.onSurfaceSecondary.withValues(alpha: 0.5),
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           minimumSize: const Size(64, 52),

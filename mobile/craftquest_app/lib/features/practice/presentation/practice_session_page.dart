@@ -25,6 +25,7 @@ import 'package:craftquest_app/features/practice/presentation/practice_result_pa
 import 'package:craftquest_app/features/practice/presentation/practice_session_feedback.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_question_nav_header.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_question_nav_status.dart';
+import 'package:craftquest_app/features/practice/presentation/widgets/practice_question_stem.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_resume_dialog.dart';
 import 'package:craftquest_app/features/practice/presentation/widgets/practice_session_bottom_bar.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
@@ -916,10 +917,8 @@ class _PracticeSessionPageState extends State<PracticeSessionPage>
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const SizedBox(height: AppSpacing.xs),
-                                Text(
-                                  question.questionText,
-                                  style:
-                                      Theme.of(context).textTheme.titleLarge,
+                                PracticeQuestionStem(
+                                  text: question.questionText,
                                 ),
                                 if (_resolveMediaUrl(question.questionMediaUrl) !=
                                     null) ...[

@@ -15,6 +15,7 @@ import 'package:craftquest_app/features/offline_practice/presentation/cubit/offl
 import 'package:craftquest_app/features/offline_practice/presentation/cubit/offline_practice_session_state.dart';
 import 'package:craftquest_app/features/offline_practice/presentation/offline_practice_review_page.dart';
 import 'package:craftquest_app/features/offline_practice/presentation/widgets/offline_practice_resume_dialog.dart';
+import 'package:craftquest_app/features/practice/presentation/widgets/practice_question_stem.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -136,10 +137,7 @@ class _QuestionView extends StatelessWidget {
             style: Theme.of(context).textTheme.labelLarge,
           ),
           const SizedBox(height: AppSpacing.sm),
-          Text(
-            question.questionText,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
+          PracticeQuestionStem(text: question.questionText),
           if (question.questionMediaAssetId != null) ...[
             const SizedBox(height: AppSpacing.md),
             _OfflineMediaImage(

@@ -17,12 +17,14 @@ Widget _iconButtonLabelRow({
       Icon(icon, size: iconSize, color: iconColor),
       const SizedBox(width: AppSpacing.xs),
       Flexible(
-        child: Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
-          style: textStyle,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            label,
+            maxLines: 1,
+            textAlign: TextAlign.center,
+            style: textStyle,
+          ),
         ),
       ),
     ],
@@ -115,24 +117,24 @@ class AppGradientPrimaryButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppColors.radiusSm),
             child: Center(
               child: isLoading
-                  ? const AppButtonLoader()
+                  ? const AppButtonLoader(color: AppColors.onSurfaceSecondary)
                   : (icon != null
                       ? _iconButtonLabelRow(
                           icon: icon!,
                           label: label,
                           iconSize: 22,
-                          iconColor: AppColors.textPrimary,
+                          iconColor: AppColors.onSurfaceSecondary,
                           textStyle: Theme.of(context)
                               .textTheme
                               .labelLarge
-                              ?.copyWith(color: AppColors.textPrimary),
+                              ?.copyWith(color: AppColors.onSurfaceSecondary),
                         )
                       : Text(
                           label,
                           style: Theme.of(context)
                               .textTheme
                               .labelLarge
-                              ?.copyWith(color: AppColors.textPrimary),
+                              ?.copyWith(color: AppColors.onSurfaceSecondary),
                         )),
             ),
           ),
@@ -162,7 +164,7 @@ class AppSecondaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final child = isLoading
-        ? const AppButtonLoader()
+        ? const AppButtonLoader(color: AppColors.textPrimary)
         : (icon != null
             ? _iconButtonLabelRow(icon: icon!, label: label, iconSize: 20)
             : Text(label));
