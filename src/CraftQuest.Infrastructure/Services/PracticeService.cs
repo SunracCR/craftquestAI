@@ -934,8 +934,6 @@ public class PracticeService(
             throw new AppException("You do not have permission to view this session.", 403);
         }
 
-        await EnsureCanViewOwnSessionAsync(userId, session, cancellationToken);
-
         var revealCorrectAnswers = await CanStudentViewDetailedReviewAsync(
             session,
             cancellationToken);
@@ -1063,37 +1061,6 @@ public class PracticeService(
                 "You do not have access to this quiz. Redeem a share code first.",
                 403);
         }
-    }
-
-    private async Task EnsureCanViewOwnSessionAsync(
-        Guid userId,
-        PracticeSession session,
-        CancellationToken cancellationToken)
-    {
-        if (session.AssignmentId.HasValue)
-        {
-            var assignment = await dbContext.Assignments
-                .AsNoTracking()
-                .FirstOrDefaultAsync(
-                    a => a.AssignmentId == session.AssignmentId,
-                    cancellationToken)
-                ?? throw new AppException("Assignment not found.", 404);
-
-            var isMember = await dbContext.ClassMembers.AnyAsync(
-                m => m.ClassId == assignment.ClassId
-                    && m.UserId == userId
-                    && m.Status == "active",
-                cancellationToken);
-
-            if (!isMember)
-            {
-                throw new AppException("You do not have permission to view this session.", 403);
-            }
-
-            return;
-        }
-
-        await EnsureSharedQuizPracticeAccessAsync(userId, session.QuizId, cancellationToken);
     }
 
     private async Task<Assignment> LoadValidatedAssignmentForPracticeAsync(

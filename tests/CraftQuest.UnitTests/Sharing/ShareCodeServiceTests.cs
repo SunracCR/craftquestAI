@@ -227,6 +227,102 @@ public class ShareCodeServiceTests
     }
 
     [Fact]
+    public async Task HasQuizAccessAsync_LifetimePurchase_ReturnsTrue()
+    {
+        await using var db = CreateDb();
+        var (_, quizId) = await SeedOwnerAndPublishedQuizAsync(db);
+        var userId = Guid.NewGuid();
+        db.Users.Add(new User
+        {
+            UserId = userId,
+            Email = "buyer@test.com",
+            PasswordHash = [1],
+            Status = "active",
+            CreatedAt = DateTime.UtcNow,
+        });
+        db.QuizAccesses.Add(new QuizAccess
+        {
+            QuizAccessId = Guid.NewGuid(),
+            UserId = userId,
+            QuizId = quizId,
+            AccessType = "purchase",
+            GrantedAt = DateTime.UtcNow,
+            IsLifetimeAccess = true,
+            ExpiresAt = null,
+        });
+        await db.SaveChangesAsync();
+
+        var billing = BillingTestHelpers.CreateService(db);
+        var service = CreateService(db, billing);
+
+        Assert.True(await service.HasQuizAccessAsync(userId, quizId));
+    }
+
+    [Fact]
+    public async Task HasQuizAccessAsync_ActiveTemporalPurchase_ReturnsTrue()
+    {
+        await using var db = CreateDb();
+        var (_, quizId) = await SeedOwnerAndPublishedQuizAsync(db);
+        var userId = Guid.NewGuid();
+        db.Users.Add(new User
+        {
+            UserId = userId,
+            Email = "buyer@test.com",
+            PasswordHash = [1],
+            Status = "active",
+            CreatedAt = DateTime.UtcNow,
+        });
+        db.QuizAccesses.Add(new QuizAccess
+        {
+            QuizAccessId = Guid.NewGuid(),
+            UserId = userId,
+            QuizId = quizId,
+            AccessType = "purchase",
+            GrantedAt = DateTime.UtcNow.AddDays(-5),
+            IsLifetimeAccess = false,
+            ExpiresAt = DateTime.UtcNow.AddDays(10),
+        });
+        await db.SaveChangesAsync();
+
+        var billing = BillingTestHelpers.CreateService(db);
+        var service = CreateService(db, billing);
+
+        Assert.True(await service.HasQuizAccessAsync(userId, quizId));
+    }
+
+    [Fact]
+    public async Task HasQuizAccessAsync_ExpiredTemporalPurchase_ReturnsFalse()
+    {
+        await using var db = CreateDb();
+        var (_, quizId) = await SeedOwnerAndPublishedQuizAsync(db);
+        var userId = Guid.NewGuid();
+        db.Users.Add(new User
+        {
+            UserId = userId,
+            Email = "buyer@test.com",
+            PasswordHash = [1],
+            Status = "active",
+            CreatedAt = DateTime.UtcNow,
+        });
+        db.QuizAccesses.Add(new QuizAccess
+        {
+            QuizAccessId = Guid.NewGuid(),
+            UserId = userId,
+            QuizId = quizId,
+            AccessType = "purchase",
+            GrantedAt = DateTime.UtcNow.AddDays(-40),
+            IsLifetimeAccess = false,
+            ExpiresAt = DateTime.UtcNow.AddDays(-1),
+        });
+        await db.SaveChangesAsync();
+
+        var billing = BillingTestHelpers.CreateService(db);
+        var service = CreateService(db, billing);
+
+        Assert.False(await service.HasQuizAccessAsync(userId, quizId));
+    }
+
+    [Fact]
     public async Task InviteUsersByEmailAsync_ProOwner_InvitesRegisteredUser()
     {
         await using var db = CreateDb();

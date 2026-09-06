@@ -422,8 +422,8 @@ public class ShareCodeService(
                 a => a.UserId == userId
                     && a.QuizId == quizId
                     && a.AccessType == "purchase"
-                    && a.ExpiresAt != null
-                    && a.ExpiresAt > now,
+                    && (a.IsLifetimeAccess
+                        || (a.ExpiresAt != null && a.ExpiresAt > now)),
                 cancellationToken))
         {
             return true;
