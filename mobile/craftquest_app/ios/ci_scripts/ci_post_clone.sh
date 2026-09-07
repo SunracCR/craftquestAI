@@ -4,9 +4,14 @@ set -e
 
 FLUTTER_HOME="${FLUTTER_HOME:-$HOME/flutter}"
 FLUTTER_APP_PATH="$CI_PRIMARY_REPOSITORY_PATH/mobile/craftquest_app"
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname "$0")" && pwd)"
+
+. "$SCRIPT_DIR/write_google_service_info_plist.sh"
 
 echo ">>> ci_post_clone: repo=$CI_PRIMARY_REPOSITORY_PATH"
 echo ">>> ci_post_clone: flutter app=$FLUTTER_APP_PATH"
+
+write_google_service_info_plist "$FLUTTER_APP_PATH"
 
 if [ ! -d "$FLUTTER_HOME/bin" ]; then
   echo ">>> ci_post_clone: cloning Flutter stable to $FLUTTER_HOME"
