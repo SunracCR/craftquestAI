@@ -1420,6 +1420,7 @@
   "aiActivityStatusFailed": "Erro",
   "aiActivityStatusCompleted": "Concluida",
   "aiActivityReviewDraft": "Toque para rever e importar o rascunho",
+  "aiActivityOpenQuiz": "Toque para abrir o questionario",
   "aiActivityViewProgress": "Toque para ver o progresso",
   "aiActivityTapForDetails": "Toque para ver detalhes",
   "aiActivityUnknownMaterial": "Material",

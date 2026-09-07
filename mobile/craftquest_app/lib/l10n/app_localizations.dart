@@ -5042,6 +5042,12 @@ abstract class AppLocalizations {
   /// **'Toca para revisar e importar el borrador'**
   String get aiActivityReviewDraft;
 
+  /// No description provided for @aiActivityOpenQuiz.
+  ///
+  /// In es, this message translates to:
+  /// **'Toca para abrir el cuestionario'**
+  String get aiActivityOpenQuiz;
+
   /// No description provided for @aiActivityViewProgress.
   ///
   /// In es, this message translates to:

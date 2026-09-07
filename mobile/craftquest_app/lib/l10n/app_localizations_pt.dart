@@ -3046,6 +3046,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get aiActivityReviewDraft => 'Toque para rever e importar o rascunho';
 
   @override
+  String get aiActivityOpenQuiz => 'Toque para abrir o questionario';
+
+  @override
   String get aiActivityViewProgress => 'Toque para ver o progresso';
 
   @override

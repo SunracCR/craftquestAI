@@ -472,7 +472,7 @@ public class QuizGenerationService(
                 importStatus.QuestionsWithWarnings,
             });
 
-            if (importStatus.ValidQuestions == 0)
+            if (AiGenerationAutoImportRules.ShouldFailBeforeConfirm(importStatus.ValidQuestions))
             {
                 throw new AppException(
                     "Generated questions failed CQIF validation; none are importable.",
@@ -486,10 +486,38 @@ public class QuizGenerationService(
                     });
             }
 
+            job.QuestionImportBatchId = importStatus.ImportId;
+
+            var confirmResult = await questionImportService.ConfirmAsync(
+                job.RequestedByUserId,
+                importStatus.ImportId,
+                jobToken);
+
+            trace.Stage("import.confirm", "Questions imported into quiz", new
+            {
+                confirmResult.ImportId,
+                confirmResult.CreatedQuestions,
+                confirmResult.SkippedQuestions,
+                confirmResult.SkippedDueToPlanLimit,
+            });
+
+            if (AiGenerationAutoImportRules.ShouldFailAfterConfirm(confirmResult.CreatedQuestions))
+            {
+                throw new AppException(
+                    "Generated questions could not be imported into the quiz.",
+                    502,
+                    "AI_GENERATION_IMPORT_EMPTY",
+                    new Dictionary<string, object?>
+                    {
+                        ["importId"] = importStatus.ImportId,
+                        ["totalDetected"] = importStatus.TotalQuestionsDetected,
+                        ["skippedDueToPlanLimit"] = confirmResult.SkippedDueToPlanLimit,
+                    });
+            }
+
             job.Status = "completed";
             job.Stage = AiJobStages.Completed;
             job.ProgressPercent = 100;
-            job.QuestionImportBatchId = importStatus.ImportId;
             job.CreditsConsumed = credits;
             job.ResultJson = JsonSerializer.Serialize(document, JsonOptions);
             job.CompletedAt = DateTime.UtcNow;

@@ -3023,6 +3023,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiActivityReviewDraft => 'Tap to review and import the draft';
 
   @override
+  String get aiActivityOpenQuiz => 'Tap to open the quiz';
+
+  @override
   String get aiActivityViewProgress => 'Tap to view progress';
 
   @override

@@ -13,18 +13,16 @@ enum AiGenerationProgressStatus {
 class AiGenerationCompletionTarget extends Equatable {
   const AiGenerationCompletionTarget({
     required this.quizTitle,
-    this.importId,
     this.quizId,
+    this.importedQuestionCount,
   });
 
-  final String? importId;
   final String? quizId;
   final String quizTitle;
-
-  bool get opensPreview => importId != null;
+  final int? importedQuestionCount;
 
   @override
-  List<Object?> get props => [importId, quizId, quizTitle];
+  List<Object?> get props => [quizId, quizTitle, importedQuestionCount];
 }
 
 class AiGenerationProgressState extends Equatable {

@@ -3048,6 +3048,9 @@ class AppLocalizationsEs extends AppLocalizations {
       'Toca para revisar e importar el borrador';
 
   @override
+  String get aiActivityOpenQuiz => 'Toca para abrir el cuestionario';
+
+  @override
   String get aiActivityViewProgress => 'Toca para ver el progreso';
 
   @override

@@ -1420,6 +1420,7 @@
   "aiActivityStatusFailed": "Error",
   "aiActivityStatusCompleted": "Completada",
   "aiActivityReviewDraft": "Toca para revisar e importar el borrador",
+  "aiActivityOpenQuiz": "Toca para abrir el cuestionario",
   "aiActivityViewProgress": "Toca para ver el progreso",
   "aiActivityTapForDetails": "Toca para ver el detalle",
   "aiActivityUnknownMaterial": "Material",

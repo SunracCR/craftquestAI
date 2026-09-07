@@ -13,6 +13,7 @@ import 'package:craftquest_app/features/ai_generation/presentation/ai_generation
 import 'package:craftquest_app/features/ai_generation/presentation/widgets/ai_activity_tile.dart';
 import 'package:craftquest_app/features/imports/data/models/import_models.dart';
 import 'package:craftquest_app/features/imports/presentation/import_preview_page.dart';
+import 'package:craftquest_app/features/quizzes/presentation/quiz_detail_page.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -179,6 +180,18 @@ class _AiActivityPageState extends State<AiActivityPage> {
               questionsWithErrors: 0,
             ),
             fromAiGeneration: true,
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (job.isCompleted && job.targetQuizId != null) {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => QuizDetailPage(
+            quizId: job.targetQuizId!,
+            quizTitle: job.studyMaterialTitle ?? l10n.aiGenerationUploadTitle,
           ),
         ),
       );

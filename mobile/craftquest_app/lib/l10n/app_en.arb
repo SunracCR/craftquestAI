@@ -1420,6 +1420,7 @@
   "aiActivityStatusFailed": "Failed",
   "aiActivityStatusCompleted": "Completed",
   "aiActivityReviewDraft": "Tap to review and import the draft",
+  "aiActivityOpenQuiz": "Tap to open the quiz",
   "aiActivityViewProgress": "Tap to view progress",
   "aiActivityTapForDetails": "Tap for details",
   "aiActivityUnknownMaterial": "Material",

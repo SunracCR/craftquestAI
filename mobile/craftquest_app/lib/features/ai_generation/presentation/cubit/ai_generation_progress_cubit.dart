@@ -332,9 +332,8 @@ class AiGenerationProgressCubit extends Cubit<AiGenerationProgressState> {
       return false;
     }
 
-    final importId = job.questionImportBatchId;
     final quizId = job.targetQuizId ?? targetQuizId;
-    if (importId == null && quizId == null) {
+    if (quizId == null) {
       return false;
     }
 
@@ -343,9 +342,9 @@ class AiGenerationProgressCubit extends Cubit<AiGenerationProgressState> {
         status: AiGenerationProgressStatus.completed,
         job: job,
         completionTarget: AiGenerationCompletionTarget(
-          importId: importId,
           quizId: quizId,
           quizTitle: _quizTitle,
+          importedQuestionCount: job.questionCount,
         ),
         clearFailure: true,
       ),

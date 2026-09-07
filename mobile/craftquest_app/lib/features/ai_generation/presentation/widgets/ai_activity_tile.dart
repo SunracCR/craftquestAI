@@ -179,6 +179,9 @@ class _AiActivityTileState extends State<AiActivityTile> {
     if (job.canOpenPreview) {
       return l10n.aiActivityReviewDraft;
     }
+    if (job.isCompleted && job.targetQuizId != null) {
+      return l10n.aiActivityOpenQuiz;
+    }
     if (job.isActive) {
       return l10n.aiActivityViewProgress;
     }

@@ -25,7 +25,9 @@ void main() {
         ];
       repository.enqueueTransientFailure();
       repository.enqueueTransientFailure();
-      repository.responses.add(_completedJob(importId: 'import-1', quizId: 'quiz-1'));
+      repository.responses.add(
+        _completedJob(quizId: 'quiz-1', questionCount: 12),
+      );
 
       final cubit = AiGenerationProgressCubit(
         aiRepository: repository,
@@ -38,7 +40,8 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 200));
 
       expect(cubit.state.status, AiGenerationProgressStatus.completed);
-      expect(cubit.state.completionTarget?.importId, 'import-1');
+      expect(cubit.state.completionTarget?.quizId, 'quiz-1');
+      expect(cubit.state.completionTarget?.importedQuestionCount, 12);
       expect(repository.retryCalls, 0);
 
       await cubit.close();
@@ -46,7 +49,7 @@ void main() {
 
     test('refresh after resume reconciles completed job', () async {
       final repository = _FakeAiRepository()
-        ..responses = [_completedJob(importId: 'import-2', quizId: 'quiz-2')];
+        ..responses = [_completedJob(quizId: 'quiz-2', questionCount: 5)];
 
       final cubit = AiGenerationProgressCubit(
         aiRepository: repository,
@@ -63,29 +66,27 @@ void main() {
       await cubit.close();
     });
 
-    test('completed without import batch still completes with quiz target', () async {
+    test('completed without quiz id does not emit completion on refresh', () async {
       final repository = _FakeAiRepository()
-        ..responses = [_completedJob(quizId: 'quiz-3')];
+        ..responses = [_completedJob()];
 
       final cubit = AiGenerationProgressCubit(
         aiRepository: repository,
         aiJobId: 'job-3',
         quizTitle: 'Quiz IA',
-        targetQuizId: 'quiz-3',
       );
 
-      await cubit.startPolling(l10n);
+      await cubit.refresh(l10n);
 
-      expect(cubit.state.status, AiGenerationProgressStatus.completed);
-      expect(cubit.state.completionTarget?.importId, isNull);
-      expect(cubit.state.completionTarget?.quizId, 'quiz-3');
+      expect(cubit.state.status, isNot(AiGenerationProgressStatus.completed));
+      expect(cubit.state.completionTarget, isNull);
 
       await cubit.close();
     });
 
     test('retry on already completed job does not call retry endpoint', () async {
       final repository = _FakeAiRepository()
-        ..responses = [_completedJob(importId: 'import-4', quizId: 'quiz-4')];
+        ..responses = [_completedJob(quizId: 'quiz-4')];
 
       final cubit = AiGenerationProgressCubit(
         aiRepository: repository,
@@ -136,15 +137,15 @@ AiJobModel _processingJob() {
   );
 }
 
-AiJobModel _completedJob({String? importId, String? quizId}) {
+AiJobModel _completedJob({String? quizId, int? questionCount}) {
   return AiJobModel(
     aiJobId: 'job-1',
     status: 'completed',
     jobType: 'generate_quiz',
     stage: 'completed',
     progressPercent: 100,
-    questionImportBatchId: importId,
     targetQuizId: quizId,
+    questionCount: questionCount,
     createdAt: DateTime.now().toUtc().subtract(const Duration(minutes: 10)),
     completedAt: DateTime.now().toUtc(),
   );

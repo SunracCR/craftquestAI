@@ -14,9 +14,6 @@ import 'package:craftquest_app/features/ai_generation/presentation/cubit/ai_gene
 import 'package:craftquest_app/features/ai_generation/presentation/cubit/ai_generation_progress_state.dart';
 import 'package:craftquest_app/features/ai_generation/presentation/utils/ai_job_stage_labels.dart';
 import 'package:craftquest_app/features/ai_generation/presentation/widgets/ai_pipeline_progress_card.dart';
-import 'package:craftquest_app/features/imports/data/import_repository.dart';
-import 'package:craftquest_app/features/imports/data/models/import_models.dart';
-import 'package:craftquest_app/features/imports/presentation/import_preview_page.dart';
 import 'package:craftquest_app/features/notifications/presentation/notifications_cubit.dart';
 import 'package:craftquest_app/features/quizzes/presentation/quiz_flow_anchor.dart';
 import 'package:craftquest_app/features/quizzes/presentation/quiz_detail_page.dart';
@@ -70,7 +67,6 @@ class _AiGenerationProgressView extends StatefulWidget {
 class _AiGenerationProgressViewState extends State<_AiGenerationProgressView>
     with WidgetsBindingObserver {
   final _smoothedProgress = SmoothedProgressController();
-  final _importRepository = getIt<ImportRepository>();
   bool _handlingCompletion = false;
 
   @override
@@ -129,75 +125,30 @@ class _AiGenerationProgressViewState extends State<_AiGenerationProgressView>
     try {
       unawaited(getIt<NotificationsCubit>().refreshUnreadCount());
 
-      if (target.opensPreview) {
-        final importId = target.importId!;
-        await _importRepository.prefetchPreview(importId);
-        if (!mounted) {
-          return;
-        }
-
-        final confirmed = await Navigator.of(context).push<bool>(
-          MaterialPageRoute<bool>(
-            builder: (_) => ImportPreviewPage(
-              importId: importId,
-              quizTitle: target.quizTitle,
-              initialStatus: ImportStatusModel(
-                importId: importId,
-                status: 'ready_for_review',
-                totalQuestionsDetected: 0,
-                validQuestions: 0,
-                questionsWithWarnings: 0,
-                questionsWithErrors: 0,
-              ),
-              fromAiGeneration: true,
-            ),
-          ),
-        );
-
-        if (!mounted) {
-          return;
-        }
-
-        final quizId = target.quizId ?? widget.targetQuizId;
-        if (confirmed == true && quizId != null) {
-          if (QuizFlowAnchor.hasAnchor) {
-            QuizFlowAnchor.returnToAnchor(context);
-          } else {
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute<void>(
-                builder: (_) => QuizDetailPage(
-                  quizId: quizId,
-                  quizTitle: target.quizTitle,
-                ),
-              ),
-              (route) => route.isFirst,
-            );
-          }
-        } else if (QuizFlowAnchor.hasAnchor) {
-          QuizFlowAnchor.returnToAnchor(context);
-        } else {
-          Navigator.of(context).popUntil((route) => route.isFirst);
-        }
+      final quizId = target.quizId ?? widget.targetQuizId;
+      if (quizId == null) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
         return;
       }
 
-      final quizId = target.quizId ?? widget.targetQuizId;
-      if (quizId != null) {
-        if (QuizFlowAnchor.hasAnchor) {
-          QuizFlowAnchor.returnToAnchor(context);
-        } else {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute<void>(
-              builder: (_) => QuizDetailPage(
-                quizId: quizId,
-                quizTitle: target.quizTitle,
-              ),
-            ),
-            (route) => route.isFirst,
-          );
-        }
+      final l10n = AppLocalizations.of(context)!;
+      final importedCount = target.importedQuestionCount;
+      if (importedCount != null && importedCount > 0) {
+        context.showSuccessSnackBar(l10n.importConfirmSuccess(importedCount));
+      }
+
+      if (QuizFlowAnchor.hasAnchor) {
+        QuizFlowAnchor.returnToAnchor(context);
       } else {
-        Navigator.of(context).popUntil((route) => route.isFirst);
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute<void>(
+            builder: (_) => QuizDetailPage(
+              quizId: quizId,
+              quizTitle: target.quizTitle,
+            ),
+          ),
+          (route) => route.isFirst,
+        );
       }
     } finally {
       _handlingCompletion = false;
