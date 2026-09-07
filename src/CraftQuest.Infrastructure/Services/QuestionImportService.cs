@@ -352,6 +352,13 @@ public class QuestionImportService(
             .Where(s => s.QuizId == quizId)
             .ToDictionaryAsync(s => s.Name, s => s.QuizSectionId, StringComparer.OrdinalIgnoreCase, cancellationToken);
 
+        var nextSectionSortOrder = await dbContext.QuizSections
+            .Where(s => s.QuizId == quizId)
+            .MaxAsync(s => (int?)s.SortOrder, cancellationToken) ?? 0;
+
+        const int saveBatchSize = 20;
+        var rowsSinceLastSave = 0;
+
         foreach (var row in batch.Rows.OrderBy(r => r.RowNumber))
         {
             if (row.Status is not ("valid" or "warning"))
@@ -369,11 +376,11 @@ public class QuestionImportService(
 
             var question = JsonSerializer.Deserialize<CqifQuestion>(row.CqifQuestionJson!, JsonOptions)!;
             var createRequest = CqifImportMapper.ToCreateQuestionRequest(question, quizDefaultPoints);
-            createRequest.SectionId = await ResolveImportChapterSectionIdAsync(
+            createRequest.SectionId = ResolveImportChapterSectionId(
                 quizId,
                 question.Chapter,
                 sectionNameMap,
-                cancellationToken);
+                ref nextSectionSortOrder);
             if (string.Equals(batch.SourceType, "ai", StringComparison.OrdinalIgnoreCase))
             {
                 createRequest.IsGeneratedByAi = true;
@@ -413,6 +420,12 @@ public class QuestionImportService(
                 createdIds.Add(created.QuestionId);
                 row.Status = "created";
                 row.CreatedQuestionId = created.QuestionId;
+                rowsSinceLastSave++;
+                if (rowsSinceLastSave >= saveBatchSize)
+                {
+                    await dbContext.SaveChangesAsync(cancellationToken);
+                    rowsSinceLastSave = 0;
+                }
             }
             catch (Exception ex)
             {
@@ -632,11 +645,11 @@ public class QuestionImportService(
             QuestionsWithErrors = batch.ErrorRows,
         };
 
-    private async Task<Guid?> ResolveImportChapterSectionIdAsync(
+    private Guid? ResolveImportChapterSectionId(
         Guid quizId,
         string? chapterName,
         Dictionary<string, Guid> sectionNameMap,
-        CancellationToken cancellationToken)
+        ref int nextSectionSortOrder)
     {
         if (string.IsNullOrWhiteSpace(chapterName))
         {
@@ -649,16 +662,13 @@ public class QuestionImportService(
             return existingId;
         }
 
-        var maxSortOrder = await dbContext.QuizSections
-            .Where(s => s.QuizId == quizId)
-            .MaxAsync(s => (int?)s.SortOrder, cancellationToken) ?? 0;
-
+        nextSectionSortOrder++;
         var section = new QuizSection
         {
             QuizSectionId = Guid.NewGuid(),
             QuizId = quizId,
             Name = normalizedName,
-            SortOrder = maxSortOrder + 1,
+            SortOrder = nextSectionSortOrder,
             CreatedAt = DateTime.UtcNow,
         };
 

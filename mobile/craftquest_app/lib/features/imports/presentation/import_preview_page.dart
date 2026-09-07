@@ -139,14 +139,23 @@ class _ImportPreviewPageState extends State<ImportPreviewPage> {
 
   Future<void> _confirm() async {
     final l10n = AppLocalizations.of(context)!;
+    final importableCount =
+        _preview?.importableQuestionCount ?? _preview?.questions.length ?? 0;
     setState(() => _confirming = true);
     try {
-      final result = await _repository.confirm(widget.importId);
+      final result = await _repository.confirm(
+        widget.importId,
+        questionCount: importableCount,
+      );
       if (!mounted) return;
       _finishConfirm(l10n, result);
     } on DioException catch (e) {
       if (!mounted) return;
-      final recovered = await _recoverIfAlreadyImported();
+      final shouldPoll = DioErrorMapper.isTimeoutFailure(e) ||
+          DioErrorMapper.isTransientServerFailure(e);
+      final recovered = await _recoverIfAlreadyImported(
+        pollForCompletion: shouldPoll,
+      );
       if (!mounted) return;
       if (recovered != null) {
         _finishConfirm(l10n, recovered);
@@ -155,7 +164,7 @@ class _ImportPreviewPageState extends State<ImportPreviewPage> {
       context.showDioErrorSnackBar(e);
     } catch (_) {
       if (!mounted) return;
-      final recovered = await _recoverIfAlreadyImported();
+      final recovered = await _recoverIfAlreadyImported(pollForCompletion: true);
       if (!mounted) return;
       if (recovered != null) {
         _finishConfirm(l10n, recovered);
@@ -185,26 +194,46 @@ class _ImportPreviewPageState extends State<ImportPreviewPage> {
     Navigator.of(context).pop(true);
   }
 
-  Future<ImportConfirmResultModel?> _recoverIfAlreadyImported() async {
-    try {
-      final preview = await _repository.getPreview(
-        widget.importId,
-        forceRefresh: true,
-      );
-      final completed = preview.status == 'completed' ||
-          preview.status == 'completed_with_errors' ||
-          preview.status == 'confirmed';
-      if (!completed || preview.validQuestions <= 0) {
+  Future<ImportConfirmResultModel?> _recoverIfAlreadyImported({
+    bool pollForCompletion = false,
+  }) async {
+    const maxAttempts = 12;
+
+    for (var attempt = 0; attempt < (pollForCompletion ? maxAttempts : 1); attempt++) {
+      try {
+        final preview = await _repository.getPreview(
+          widget.importId,
+          forceRefresh: true,
+        );
+        final completed = preview.status == 'completed' ||
+            preview.status == 'completed_with_errors' ||
+            preview.status == 'confirmed';
+        if (completed && preview.validQuestions > 0) {
+          return ImportConfirmResultModel(
+            importId: preview.importId,
+            createdQuestions: preview.validQuestions,
+            skippedQuestions: preview.questionsWithErrors,
+          );
+        }
+
+        if (pollForCompletion &&
+            preview.status == 'ready_for_review' &&
+            attempt < maxAttempts - 1) {
+          await Future<void>.delayed(Duration(seconds: 3 + attempt));
+          continue;
+        }
+
+        return null;
+      } catch (_) {
+        if (pollForCompletion && attempt < maxAttempts - 1) {
+          await Future<void>.delayed(Duration(seconds: 3 + attempt));
+          continue;
+        }
         return null;
       }
-      return ImportConfirmResultModel(
-        importId: preview.importId,
-        createdQuestions: preview.validQuestions,
-        skippedQuestions: preview.questionsWithErrors,
-      );
-    } catch (_) {
-      return null;
     }
+
+    return null;
   }
 
   @override
