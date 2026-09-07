@@ -59,9 +59,9 @@ class PushNotificationService {
         sound: true,
       );
       _bindListeners();
-      await _handleInitialMessage();
       _firebaseReady = true;
       _logPush('Firebase push initialized');
+      unawaited(_handleInitialMessage());
     } catch (error, stackTrace) {
       _initFuture = null;
       _logPush('Push setup failed after Firebase init', error, stackTrace);
@@ -76,6 +76,10 @@ class PushNotificationService {
     }
 
     await _registerTokenWithBackend();
+    if (_currentToken == null) {
+      await Future<void>.delayed(const Duration(seconds: 3));
+      await _registerTokenWithBackend();
+    }
   }
 
   Future<void> onLogout() async {
@@ -321,9 +325,15 @@ class PushNotificationService {
   }
 
   Future<void> _handleInitialMessage() async {
-    final message = await FirebaseMessaging.instance.getInitialMessage();
-    if (message != null) {
-      await _openFromData(message.data);
+    try {
+      final message = await FirebaseMessaging.instance.getInitialMessage().timeout(
+        const Duration(seconds: 3),
+      );
+      if (message != null) {
+        await _openFromData(message.data);
+      }
+    } catch (error, stackTrace) {
+      _logPush('getInitialMessage skipped', error, stackTrace);
     }
   }
 
