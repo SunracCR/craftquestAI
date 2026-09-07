@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>398143602966-q6c8eo59i5e558qugg0tgtos0rlg32un.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBK7qSHWbqALktCn7dEGauJtZeykp3Ex3o</string>
+	<key>GCM_SENDER_ID</key>
+	<string>398143602966</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.craftquestai.craftquestaiApp</string>
+	<key>PROJECT_ID</key>
+	<string>craftquestai</string>
+	<key>STORAGE_BUCKET</key>
+	<string>craftquestai.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:398143602966:ios:156a8df2b083d8639e9037</string>
+</dict>
+</plist>
