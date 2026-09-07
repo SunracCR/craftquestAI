@@ -24,7 +24,9 @@ class PushNotificationService {
 
   String? _currentToken;
   bool _firebaseReady = false;
+  bool _listenersBound = false;
   Future<void>? _initFuture;
+  Future<void>? _registerInFlight;
 
   Future<void> initializeDeferred() async {
     if (kIsWeb) {
@@ -43,6 +45,7 @@ class PushNotificationService {
     try {
       await Firebase.initializeApp();
     } catch (error, stackTrace) {
+      _initFuture = null;
       _logPush('Firebase.initializeApp failed', error, stackTrace);
       return;
     }
@@ -50,13 +53,17 @@ class PushNotificationService {
     try {
       await _setupLocalNotifications();
       await _requestPermissions();
-      _listenForTokenRefresh();
-      _listenForForegroundMessages();
-      _listenForOpenedApp();
+      await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+      _bindListeners();
       await _handleInitialMessage();
       _firebaseReady = true;
       _logPush('Firebase push initialized');
     } catch (error, stackTrace) {
+      _initFuture = null;
       _logPush('Push setup failed after Firebase init', error, stackTrace);
     }
   }
@@ -69,10 +76,6 @@ class PushNotificationService {
     }
 
     await _registerTokenWithBackend();
-    if (_currentToken == null) {
-      await Future<void>.delayed(const Duration(seconds: 2));
-      await _registerTokenWithBackend();
-    }
   }
 
   Future<void> onLogout() async {
@@ -90,7 +93,11 @@ class PushNotificationService {
 
   Future<void> _setupLocalNotifications() async {
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const ios = DarwinInitializationSettings();
+    const ios = DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
     await _localNotifications.initialize(
       const InitializationSettings(android: android, iOS: ios),
       onDidReceiveNotificationResponse: (response) {
@@ -117,8 +124,14 @@ class PushNotificationService {
 
   Future<void> _requestPermissions() async {
     if (Platform.isIOS) {
-      final settings = await FirebaseMessaging.instance.requestPermission();
-      _logPush('iOS notification authorization: ${settings.authorizationStatus}');
+      final settings = await FirebaseMessaging.instance.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+      _logPush(
+        'iOS notification authorization: ${settings.authorizationStatus}',
+      );
     } else if (Platform.isAndroid) {
       final granted = await _localNotifications
           .resolvePlatformSpecificImplementation<
@@ -129,13 +142,40 @@ class PushNotificationService {
   }
 
   Future<void> _registerTokenWithBackend() async {
+    final inFlight = _registerInFlight;
+    if (inFlight != null) {
+      await inFlight;
+      return;
+    }
+
+    final future = _registerTokenWithBackendInternal();
+    _registerInFlight = future;
+    try {
+      await future;
+    } finally {
+      if (identical(_registerInFlight, future)) {
+        _registerInFlight = null;
+      }
+    }
+  }
+
+  Future<void> _registerTokenWithBackendInternal() async {
     try {
       if (!await _hasAuthenticatedSession()) {
         _logPush('Token registration skipped: no authenticated session');
         return;
       }
 
-      final token = await FirebaseMessaging.instance.getToken();
+      if (Platform.isIOS) {
+        final settings =
+            await FirebaseMessaging.instance.getNotificationSettings();
+        if (settings.authorizationStatus == AuthorizationStatus.denied) {
+          _logPush('Token registration skipped: notifications denied');
+          return;
+        }
+      }
+
+      final token = await _resolveFcmToken();
       if (token == null || token.isEmpty) {
         _logPush('FCM getToken returned empty');
         return;
@@ -157,6 +197,53 @@ class PushNotificationService {
     }
   }
 
+  Future<String?> _resolveFcmToken() async {
+    if (Platform.isIOS) {
+      final apnsToken = await _waitForApnsToken();
+      if (apnsToken == null) {
+        _logPush('APNs token not available; FCM token cannot be requested yet');
+        return null;
+      }
+    }
+
+    Object? lastError;
+    StackTrace? lastStack;
+    for (var attempt = 0; attempt < 8; attempt++) {
+      try {
+        final token = await FirebaseMessaging.instance.getToken();
+        if (token != null && token.isNotEmpty) {
+          return token;
+        }
+      } catch (error, stackTrace) {
+        lastError = error;
+        lastStack = stackTrace;
+        _logPush('FCM getToken attempt ${attempt + 1} failed', error, stackTrace);
+      }
+      await Future<void>.delayed(Duration(seconds: 1 + attempt));
+    }
+
+    if (lastError != null) {
+      _logPush('FCM getToken exhausted retries', lastError, lastStack);
+    }
+    return null;
+  }
+
+  Future<String?> _waitForApnsToken() async {
+    for (var attempt = 0; attempt < 15; attempt++) {
+      try {
+        final token = await FirebaseMessaging.instance.getAPNSToken();
+        if (token != null && token.isNotEmpty) {
+          _logPush('APNs token ready');
+          return token;
+        }
+      } catch (error, stackTrace) {
+        _logPush('getAPNSToken attempt ${attempt + 1} failed', error, stackTrace);
+      }
+      await Future<void>.delayed(const Duration(seconds: 1));
+    }
+    return null;
+  }
+
   Future<bool> _hasAuthenticatedSession() async {
     final storage = getIt<TokenStorage>();
     final access = await storage.getAccessToken();
@@ -165,6 +252,16 @@ class PushNotificationService {
     }
     final refresh = await storage.getRefreshToken();
     return refresh != null && refresh.isNotEmpty;
+  }
+
+  void _bindListeners() {
+    if (_listenersBound) {
+      return;
+    }
+    _listenersBound = true;
+    _listenForTokenRefresh();
+    _listenForForegroundMessages();
+    _listenForOpenedApp();
   }
 
   void _listenForTokenRefresh() {
@@ -193,6 +290,10 @@ class PushNotificationService {
 
       final notification = message.notification;
       if (notification == null) {
+        return;
+      }
+      // En iOS el sistema muestra el banner con setForegroundNotificationPresentationOptions.
+      if (Platform.isIOS) {
         return;
       }
       await _localNotifications.show(
@@ -276,11 +377,9 @@ class PushNotificationService {
   }
 
   void _logPush(String message, [Object? error, StackTrace? stackTrace]) {
-    if (!kDebugMode) {
-      return;
-    }
-
-    debugPrint('[PushNotificationService] $message${error != null ? ': $error' : ''}');
+    debugPrint(
+      '[PushNotificationService] $message${error != null ? ': $error' : ''}',
+    );
     if (stackTrace != null) {
       debugPrint(stackTrace.toString());
     }

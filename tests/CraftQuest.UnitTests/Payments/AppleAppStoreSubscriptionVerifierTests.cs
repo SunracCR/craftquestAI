@@ -1,11 +1,14 @@
 using System.Net;
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
 using CraftQuest.Application.Exceptions;
 using CraftQuest.Application.Options;
 using CraftQuest.Infrastructure.Services.Payments;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace CraftQuest.UnitTests.Payments;
 
@@ -209,6 +212,154 @@ public class AppleAppStoreSubscriptionVerifierTests
         }
     }
 
+    [Fact]
+    public async Task VerifyAsync_ValidStoreKit2Jws_ActivatesWithoutAppleServerApiKeys()
+    {
+        var expiresMs = DateTimeOffset.UtcNow.AddDays(30).ToUnixTimeMilliseconds();
+        var jws = BuildSignedTransactionJws(
+            productId: "craftquest_pro_monthly",
+            transactionId: "tx-jws-1",
+            originalTransactionId: "otx-jws-1",
+            expiresDate: expiresMs,
+            bundleId: "com.craftquestai.craftquestaiApp");
+
+        var handler = new QueueHttpMessageHandler();
+        var verifier = CreateVerifier(handler, new MobileStoreOptions
+        {
+            AppleBundleId = "com.craftquestai.craftquestaiApp",
+        });
+
+        var result = await verifier.VerifyAsync(
+            "craftquest_pro_monthly",
+            jws,
+            transactionId: "tx-jws-1",
+            CancellationToken.None);
+
+        Assert.Equal("pro", result.PlanCode);
+        Assert.Equal("monthly", result.BillingCycle);
+        Assert.Equal("otx-jws-1", result.ProviderSubscriptionId);
+        Assert.Equal("tx-jws-1", result.LatestTransactionId);
+        Assert.True(result.IsActive);
+        Assert.Empty(handler.Requests);
+    }
+
+    [Fact]
+    public async Task VerifyAsync_UnsignedJwsWithoutAppleKeys_ThrowsNotConfigured()
+    {
+        var verifier = CreateVerifier(new QueueHttpMessageHandler(), new MobileStoreOptions
+        {
+            AppleBundleId = "com.craftquestai.craftquestaiApp",
+        });
+
+        var ex = await Assert.ThrowsAsync<AppException>(() => verifier.VerifyAsync(
+            "craftquest_pro_monthly",
+            BuildFakeSignedTransactionInfo(
+                "craftquest_pro_monthly",
+                "tx-1",
+                "otx-1",
+                4_102_444_800_000),
+            transactionId: "tx-1",
+            CancellationToken.None));
+
+        Assert.Equal(503, ex.StatusCode);
+    }
+
+    [Fact]
+    public async Task VerifyConsumableAsync_ValidStoreKit2Jws_DoesNotCallAppStoreApi()
+    {
+        var jws = BuildSignedTransactionJws(
+            productId: "craftquest_ai_credits_50",
+            transactionId: "tx-credit-1",
+            originalTransactionId: "tx-credit-1",
+            expiresDate: 0,
+            bundleId: "com.craftquestai.craftquestaiApp");
+
+        var handler = new QueueHttpMessageHandler();
+        var verifier = CreateVerifier(handler, new MobileStoreOptions
+        {
+            AppleBundleId = "com.craftquestai.craftquestaiApp",
+        });
+
+        var result = await verifier.VerifyConsumableAsync(
+            "craftquest_ai_credits_50",
+            jws,
+            transactionId: "tx-credit-1",
+            CancellationToken.None);
+
+        Assert.True(result.IsValid);
+        Assert.Equal("tx-credit-1", result.TransactionId);
+        Assert.Empty(handler.Requests);
+    }
+
+    [Fact]
+    public void IsAppleSubscriptionCurrentlyActive_UnixSecondsExpiry_IsActive()
+    {
+        var expires = DateTimeOffset.UtcNow.AddDays(30).ToUnixTimeSeconds();
+        using var doc = JsonDocument.Parse($$"""{"expiresDate": {{expires}} }""");
+        Assert.True(
+            AppleAppStoreSubscriptionVerifier.IsAppleSubscriptionCurrentlyActive(
+                doc.RootElement,
+                DateTime.UtcNow));
+    }
+
+    [Fact]
+    public void IsAppleSubscriptionCurrentlyActive_ExpiredButFreshPurchase_IsActive()
+    {
+        var now = DateTime.UtcNow;
+        var expires = new DateTimeOffset(now.AddMinutes(-20)).ToUnixTimeMilliseconds();
+        var purchased = new DateTimeOffset(now.AddMinutes(-1)).ToUnixTimeMilliseconds();
+        using var doc = JsonDocument.Parse(
+            $$"""{"expiresDate": {{expires}}, "purchaseDate": {{purchased}} }""");
+        Assert.True(
+            AppleAppStoreSubscriptionVerifier.IsAppleSubscriptionCurrentlyActive(
+                doc.RootElement,
+                now));
+    }
+
+    [Fact]
+    public void IsAppleSubscriptionCurrentlyActive_StaleExpired_IsInactive()
+    {
+        var now = DateTime.UtcNow;
+        var expires = new DateTimeOffset(now.AddHours(-2)).ToUnixTimeMilliseconds();
+        var purchased = new DateTimeOffset(now.AddHours(-3)).ToUnixTimeMilliseconds();
+        using var doc = JsonDocument.Parse(
+            $$"""{"expiresDate": {{expires}}, "purchaseDate": {{purchased}} }""");
+        Assert.False(
+            AppleAppStoreSubscriptionVerifier.IsAppleSubscriptionCurrentlyActive(
+                doc.RootElement,
+                now));
+    }
+
+    [Fact]
+    public async Task VerifyAsync_TeacherJwsWithPastSandboxExpiry_IsActiveWhenFresh()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var jws = BuildSignedTransactionJws(
+            productId: "craftquest_teacher_monthly",
+            transactionId: "tx-teacher-1",
+            originalTransactionId: "otx-pro-1",
+            expiresDate: now.AddMinutes(-10).ToUnixTimeMilliseconds(),
+            bundleId: "com.craftquestai.craftquestaiApp",
+            purchaseDate: now.AddMinutes(-1).ToUnixTimeMilliseconds());
+
+        var handler = new QueueHttpMessageHandler();
+        var verifier = CreateVerifier(handler, new MobileStoreOptions
+        {
+            AppleBundleId = "com.craftquestai.craftquestaiApp",
+        });
+
+        var result = await verifier.VerifyAsync(
+            "craftquest_teacher_monthly",
+            jws,
+            transactionId: "tx-teacher-1",
+            CancellationToken.None);
+
+        Assert.Equal("teacher", result.PlanCode);
+        Assert.True(result.IsActive);
+        Assert.True(result.PeriodEnd > DateTime.UtcNow);
+        Assert.Empty(handler.Requests);
+    }
+
     private static AppleAppStoreSubscriptionVerifier CreateVerifier(
         QueueHttpMessageHandler handler,
         MobileStoreOptions mobileOptions)
@@ -223,6 +374,11 @@ public class AppleAppStoreSubscriptionVerifierTests
                 {
                     AppStoreProductId = "craftquest_pro_monthly",
                     AppStoreAnnualProductId = "craftquest_pro_annual",
+                },
+                ["teacher"] = new()
+                {
+                    AppStoreProductId = "craftquest_teacher_monthly",
+                    AppStoreAnnualProductId = "craftquest_teacher_annual",
                 },
             },
         });
@@ -262,6 +418,43 @@ public class AppleAppStoreSubscriptionVerifierTests
         });
         var payloadSegment = Base64UrlEncode(Encoding.UTF8.GetBytes(payloadJson));
         return $"eyJhbGciOiJFUzI1NiJ9.{payloadSegment}.signature";
+    }
+
+    private static string BuildSignedTransactionJws(
+        string productId,
+        string transactionId,
+        string originalTransactionId,
+        long expiresDate,
+        string bundleId,
+        long purchaseDate = 0)
+    {
+        using var ecdsa = ECDsa.Create(ECCurve.NamedCurves.nistP256);
+        var request = new CertificateRequest(
+            "CN=Apple Root CA TEST",
+            ecdsa,
+            HashAlgorithmName.SHA256);
+        using var cert = request.CreateSelfSigned(
+            DateTimeOffset.UtcNow.AddDays(-1),
+            DateTimeOffset.UtcNow.AddYears(1));
+
+        var header = new JwtHeader(
+            new SigningCredentials(new ECDsaSecurityKey(ecdsa), SecurityAlgorithms.EcdsaSha256));
+        header["x5c"] = new[] { Convert.ToBase64String(cert.RawData) };
+
+        var payload = new JwtPayload
+        {
+            { "productId", productId },
+            { "transactionId", transactionId },
+            { "originalTransactionId", originalTransactionId },
+            { "expiresDate", expiresDate },
+            { "bundleId", bundleId },
+        };
+        if (purchaseDate > 0)
+        {
+            payload["purchaseDate"] = purchaseDate;
+        }
+
+        return new JwtSecurityTokenHandler().WriteToken(new JwtSecurityToken(header, payload));
     }
 
     private static string Base64UrlEncode(byte[] bytes) =>

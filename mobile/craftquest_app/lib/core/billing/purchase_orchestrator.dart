@@ -331,6 +331,12 @@ class PurchaseOrchestrator extends ChangeNotifier {
           );
         }
         _releasePurchase(purchaseKey);
+        // Transacciones caducadas de otro producto (p. ej. Pro sandbox)
+        // no deben bloquear la compra activa de Tutor.
+        if (_isInactiveStoreSubscriptionError(e) && !canShowFailure) {
+          await completeMobileStorePurchaseIfNeeded(purchase);
+          continue;
+        }
         final recovered = await _tryRecoverViaServerReconcile(purchase);
         if (recovered != null) {
           await _completeVerifiedPurchase(
@@ -675,6 +681,19 @@ class PurchaseOrchestrator extends ChangeNotifier {
     return status == 200;
   }
 
+  bool _isInactiveStoreSubscriptionError(DioException error) {
+    final code = _readApiErrorCode(error)?.toUpperCase() ?? '';
+    if (code == 'STORE_SUBSCRIPTION_INACTIVE') {
+      return true;
+    }
+    final message = (error.response?.data is Map
+            ? (error.response!.data as Map)['detail']
+            : null)
+        ?.toString()
+        .toLowerCase();
+    return message != null && message.contains('store subscription is not active');
+  }
+
   Future<void> _reconcileUnfinishedStoreTransactions({
     String? productId,
     bool background = false,
@@ -907,7 +926,14 @@ class PurchaseOrchestrator extends ChangeNotifier {
   String? _readApiErrorCode(DioException error) {
     final data = error.response?.data;
     if (data is Map<String, dynamic>) {
-      return data['code']?.toString();
+      final direct = data['errorCode'] ?? data['code'];
+      if (direct != null) {
+        return direct.toString();
+      }
+      final extensions = data['extensions'];
+      if (extensions is Map && extensions['errorCode'] != null) {
+        return extensions['errorCode'].toString();
+      }
     }
     return null;
   }

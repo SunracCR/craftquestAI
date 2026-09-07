@@ -44,18 +44,10 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
   int _signInGeneration = 0;
   String? _lastSubmittedOAuthIdToken;
 
-  static bool get _supportsGoogleUi =>
-      kIsWeb ||
-      defaultTargetPlatform == TargetPlatform.android ||
-      defaultTargetPlatform == TargetPlatform.iOS ||
-      defaultTargetPlatform == TargetPlatform.macOS ||
-      defaultTargetPlatform == TargetPlatform.windows;
+  static bool get _supportsGoogleUi => OAuthConfig.showGoogleSignInButton;
 
-  /// Apple nativo: iOS/macOS. Web usa Services ID. Android no soportado (sin flujo web).
-  static bool get _supportsAppleUi =>
-      kIsWeb ||
-      defaultTargetPlatform == TargetPlatform.iOS ||
-      defaultTargetPlatform == TargetPlatform.macOS;
+  /// Apple nativo: iOS/macOS. Web usa Services ID. Android no muestra Apple.
+  static bool get _supportsAppleUi => OAuthConfig.showAppleSignInButton;
 
   /// Apple JS with usePopup expects origin-only redirect (no trailing slash).
   static String _normalizeAppleWebRedirectUri(String uri) {

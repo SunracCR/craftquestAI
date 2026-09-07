@@ -733,6 +733,7 @@ class _AuthenticatedShellState extends State<_AuthenticatedShell>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       unawaited(getIt<NotificationsCubit>().refreshUnreadCount());
+      unawaited(getIt<PushNotificationService>().onAuthenticated());
       unawaited(getIt<PurchaseOrchestrator>().onAppResume());
       unawaited(getIt<PayPalPaymentReconciler>().tryReconcileOnAppResume());
       unawaited(getIt<MembershipBillingRefreshCoordinator>().refreshOnAppResume());

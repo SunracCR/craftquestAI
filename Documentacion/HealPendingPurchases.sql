@@ -7,6 +7,7 @@ SET XACT_ABORT ON;
 BEGIN TRANSACTION;
 
 -- Suscripciones móviles/PayPal: plan activo tras la compra pending
+-- (incluye compras iniciadas mucho antes de que el plan se activara).
 UPDATE p
 SET
     p.Status = N'validated',
@@ -16,7 +17,9 @@ INNER JOIN billing.UserSubscriptions us
     ON us.UserId = p.UserId
    AND us.Status = N'active'
    AND us.ProviderCode = p.ProviderCode
-   AND us.StartedAt >= DATEADD(MINUTE, -5, p.CreatedAt)
+INNER JOIN billing.Plans pl
+    ON pl.PlanId = us.PlanId
+   AND pl.Code = p.ProductCode
 WHERE p.Status IN (N'pending', N'awaiting_payment')
   AND p.ProductType = N'subscription';
 

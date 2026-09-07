@@ -388,18 +388,35 @@ public sealed class MobileStoreWebhookProcessor(
                 case "DID_RENEW":
                 case "SUBSCRIBED":
                 case "DID_CHANGE_RENEWAL_PREF":
-                    await billingService.RenewSubscriptionPeriodAsync(
-                        originalTransactionId,
-                        "app_store",
-                        periodEnd,
-                        ReadString(tx, "transactionId"),
-                        cancellationToken);
+                    try
+                    {
+                        await billingService.RenewSubscriptionPeriodAsync(
+                            originalTransactionId,
+                            "app_store",
+                            periodEnd,
+                            ReadString(tx, "transactionId"),
+                            cancellationToken);
+                    }
+                    catch (AppException ex) when (ex.StatusCode == 404)
+                    {
+                        // verify-purchase aún no creó la fila local. Apple reintenta;
+                        // no debemos marcar esto como error duro ni ensuciar compras.
+                        logger.LogInformation(
+                            "App Store {NotificationType} for original transaction {OriginalTransactionId} has no local subscription yet.",
+                            notificationType,
+                            originalTransactionId);
+                    }
+
                     if (autoRenewEnabled.HasValue)
                     {
                         await ApplyAutoRenewStatusAsync(
                             originalTransactionId,
                             autoRenewEnabled.Value,
                             cancellationToken);
+                    }
+                    else
+                    {
+                        await dbContext.SaveChangesAsync(cancellationToken);
                     }
 
                     break;

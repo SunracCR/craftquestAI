@@ -49,7 +49,7 @@ class OAuthSignInService {
   GoogleSignIn? get googleSignIn => _googleSignIn;
 
   void _ensureGoogleSignIn() {
-    if (!isGoogleConfigured) {
+    if (!isGoogleConfigured || OAuthConfig.isAppleNativePlatform) {
       return;
     }
 
@@ -119,6 +119,10 @@ class OAuthSignInService {
 
   /// Cierra la sesión de Google en el dispositivo (p. ej. tras cerrar sesión en la app).
   static Future<void> clearGoogleSession({String? serverClientId}) async {
+    if (OAuthConfig.isAppleNativePlatform) {
+      return;
+    }
+
     final clientId = (serverClientId ?? OAuthConfig.googleServerClientId).trim();
     if (clientId.isEmpty) {
       return;
@@ -147,6 +151,9 @@ class OAuthSignInService {
   Future<OAuthSignInResult?> signInWithGoogle({
     bool forceAccountSelection = false,
   }) async {
+    if (OAuthConfig.isAppleNativePlatform) {
+      throw StateError('Google sign-in is not available on Apple platforms.');
+    }
     if (!isGoogleConfigured) {
       throw StateError('Google sign-in is not configured.');
     }

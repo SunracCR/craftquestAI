@@ -65,8 +65,14 @@ public static class DependencyInjection
         }
 
         var pushOptions = configuration.GetSection(PushOptions.SectionName).Get<PushOptions>() ?? new PushOptions();
-        if (pushOptions.Enabled && !string.IsNullOrWhiteSpace(pushOptions.CredentialsPath))
+        if (pushOptions.Enabled)
         {
+            var resolvedPath = PushCredentialsPathResolver.Resolve(pushOptions.CredentialsPath);
+            if (!string.IsNullOrWhiteSpace(resolvedPath))
+            {
+                services.PostConfigure<PushOptions>(options => options.CredentialsPath = resolvedPath);
+            }
+
             services.AddScoped<IPushSender, FirebasePushSender>();
         }
         else

@@ -216,6 +216,29 @@ public class AppleAppStoreWebhookTests
         Assert.Equal(SubscriptionStatuses.Active, subscription.Status);
     }
 
+    [Fact]
+    public async Task ProcessAppleNotificationAsync_SubscribedWithoutLocalSubscription_DoesNotThrow()
+    {
+        await using var db = CreateDb();
+        var processor = CreateProcessor(db, out _);
+
+        var body = BuildWebhookBody(
+            new
+            {
+                notificationType = "SUBSCRIBED",
+                subtype = "INITIAL_BUY",
+                notificationUUID = "subscribed-no-local",
+            },
+            originalTransactionId: "missing-otx");
+
+        var exception = await Record.ExceptionAsync(
+            () => processor.ProcessAppleNotificationAsync(body, CancellationToken.None));
+
+        Assert.Null(exception);
+        Assert.Single(await db.ProviderWebhookEvents.ToListAsync());
+        Assert.Empty(await db.Purchases.ToListAsync());
+    }
+
     private static MobileStoreWebhookProcessor CreateProcessor(
         CraftQuestDbContext db,
         out NoOpNotificationService notifications)

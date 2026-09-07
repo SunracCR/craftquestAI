@@ -27,6 +27,9 @@ public sealed class FirebasePushSender(
     {
         if (!EnsureInitialized())
         {
+            logger.LogWarning(
+                "FCM skipped for user {UserId}: Firebase Admin is not initialized",
+                userId);
             return;
         }
 
@@ -53,6 +56,26 @@ public sealed class FirebasePushSender(
                 Body = body,
             },
             Data = data?.ToDictionary(k => k.Key, v => v.Value) ?? [],
+            Apns = new ApnsConfig
+            {
+                Headers = new Dictionary<string, string>
+                {
+                    ["apns-priority"] = "10",
+                },
+                Aps = new Aps
+                {
+                    Sound = "default",
+                },
+            },
+            Android = new AndroidConfig
+            {
+                Priority = Priority.High,
+                Notification = new AndroidNotification
+                {
+                    ChannelId = "craftquest_default",
+                    Sound = "default",
+                },
+            },
         };
 
         try
@@ -120,9 +143,17 @@ public sealed class FirebasePushSender(
 
             _initialized = true;
             var options = pushOptions.Value;
-            if (!options.Enabled || string.IsNullOrWhiteSpace(options.CredentialsPath))
+            if (!options.Enabled)
             {
-                logger.LogInformation("Firebase push disabled (Push:Enabled or CredentialsPath missing).");
+                logger.LogInformation("Firebase push disabled (Push:Enabled=false).");
+                return false;
+            }
+
+            var credentialsPath = PushCredentialsPathResolver.Resolve(options.CredentialsPath);
+            if (string.IsNullOrWhiteSpace(credentialsPath))
+            {
+                logger.LogError(
+                    "Firebase push is enabled but no credentials file was found. Set Push__CredentialsPath or place firebase-credentials.json in /home/site/secrets/.");
                 return false;
             }
 
@@ -130,21 +161,15 @@ public sealed class FirebasePushSender(
             {
                 if (FirebaseApp.DefaultInstance is null)
                 {
-                    if (!File.Exists(options.CredentialsPath))
-                    {
-                        logger.LogError(
-                            "Firebase credentials file not found at {CredentialsPath}",
-                            options.CredentialsPath);
-                        return false;
-                    }
-
                     FirebaseApp.Create(new AppOptions
                     {
-                        Credential = GoogleCredential.FromFile(options.CredentialsPath),
+                        Credential = GoogleCredential.FromFile(credentialsPath),
                     });
                 }
 
-                logger.LogInformation("Firebase Admin SDK initialized for push notifications.");
+                logger.LogInformation(
+                    "Firebase Admin SDK initialized for push notifications from {CredentialsPath}.",
+                    credentialsPath);
                 return true;
             }
             catch (Exception ex)

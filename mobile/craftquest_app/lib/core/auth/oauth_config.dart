@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// OAuth client IDs: API (`GET /api/auth/oauth-config`) o `--dart-define=GOOGLE_SERVER_CLIENT_ID`.
 abstract final class OAuthConfig {
   /// Mismo Web Client ID que `ExternalAuth:Google:WebClientId` en la API.
@@ -10,4 +12,21 @@ abstract final class OAuthConfig {
   );
 
   static bool get isGoogleEnabled => googleServerClientId.isNotEmpty;
+
+  static bool get isAppleNativePlatform =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.macOS);
+
+  /// Google: Android nativo (+ Windows) y web. No en iOS/macOS.
+  static bool get showGoogleSignInButton =>
+      kIsWeb ||
+      defaultTargetPlatform == TargetPlatform.android ||
+      defaultTargetPlatform == TargetPlatform.windows;
+
+  /// Apple: iOS/macOS nativo y web. No en Android.
+  static bool get showAppleSignInButton =>
+      kIsWeb ||
+      defaultTargetPlatform == TargetPlatform.iOS ||
+      defaultTargetPlatform == TargetPlatform.macOS;
 }

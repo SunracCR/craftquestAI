@@ -2,7 +2,6 @@ import 'package:craftquest_app/core/billing/checkout_refresh_notifier.dart';
 import 'package:craftquest_app/core/billing/post_checkout_session_refresh.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/navigation/app_keys.dart';
-import 'package:craftquest_app/core/utils/billing_plan_access.dart';
 import 'package:craftquest_app/features/auth/data/auth_repository.dart';
 import 'package:craftquest_app/features/billing/data/billing_repository.dart';
 
@@ -45,12 +44,6 @@ class MembershipBillingRefreshCoordinator {
     final now = DateTime.now();
     if (_lastResumeRefreshAt != null &&
         now.difference(_lastResumeRefreshAt!) < _resumeThrottle) {
-      return;
-    }
-
-    final billingRepo = getIt<BillingRepository>();
-    final cached = billingRepo.cachedBilling;
-    if (cached == null || !BillingPlanAccess.isPaidPlan(cached.plan.code)) {
       return;
     }
 

@@ -102,4 +102,14 @@ Ajustes → Apps → CraftQuestAI → Notificaciones → activadas.
 4. **Background:** notificación en bandeja del sistema.
 5. **Foreground:** notificación local vía `flutter_local_notifications`.
 
-Prueba manual opcional: Firebase Console → Engage → Messaging → Send test message → pegar token de BD.
+## Cliente iOS (TestFlight / App Store)
+
+Las notificaciones **in-app** (campana) no usan APNs. El banner del sistema sí.
+
+1. El IPA de TestFlight debe firmarse con `aps-environment` = **production** (`RunnerRelease.entitlements`). Debug local sigue en `development`.
+2. Firebase Console → Project settings → Cloud Messaging → app iOS `com.craftquestai.craftquestaiApp` → subir la **clave APNs (.p8)** (Key ID + Team ID).
+3. Instalar desde TestFlight en un **iPhone físico**, iniciar sesión y aceptar el permiso.
+4. Confirmar fila `ios` reciente en `core.DeviceTokens` ([VerifyPushNotifications.sql](./VerifyPushNotifications.sql)).
+5. Probar con la app en segundo plano (no forzada a cerrar).
+
+Si hay in-app y no hay banner: o no hay token iOS, o FCM no está inicializado en Azure (`Push__CredentialsPath`), o falta la clave APNs en Firebase.

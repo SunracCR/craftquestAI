@@ -34,8 +34,9 @@ Future<List<PurchaseDetails>> listIosUnfinishedStorePurchases() async {
 }
 
 PurchaseDetails? _toPurchaseDetails(SK2Transaction transaction) {
-  final receipt = transaction.receiptData;
-  if (receipt == null || receipt.isEmpty) {
+  final jws = transaction.receiptData ?? '';
+  final json = transaction.jsonRepresentation ?? '';
+  if (jws.isEmpty && json.isEmpty && transaction.id.isEmpty) {
     return null;
   }
 
@@ -43,8 +44,10 @@ PurchaseDetails? _toPurchaseDetails(SK2Transaction transaction) {
     productID: transaction.productId,
     purchaseID: transaction.id,
     verificationData: PurchaseVerificationData(
-      localVerificationData: transaction.jsonRepresentation ?? '',
-      serverVerificationData: receipt,
+      localVerificationData: json,
+      // StoreKit 2: receiptData es el JWS. Sin él el backend no puede
+      // activar el plan y la transacción quedaría huérfana.
+      serverVerificationData: jws.isNotEmpty ? jws : json,
       source: kIAPSource,
     ),
     transactionDate: transaction.purchaseDate,

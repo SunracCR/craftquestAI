@@ -5,6 +5,7 @@ using System.Text.Json;
 using CraftQuest.Application.Exceptions;
 using CraftQuest.Application.Models.Billing;
 using CraftQuest.Application.Options;
+using CraftQuest.Infrastructure.Services.Billing;
 using Microsoft.Extensions.Options;
 
 namespace CraftQuest.Infrastructure.Services.Payments;
@@ -34,11 +35,21 @@ public sealed class AppleAppStoreSubscriptionVerifier(
         var resolver = new StoreProductResolver(options.Value);
         var (planCode, billingCycle) = resolver.Resolve(productId);
 
+        // StoreKit 2 envía el JWS de la transacción (no un recibo classic).
+        // Validarlo aquí activa el plan en TestFlight aunque falte el .p8 en Azure.
+        if (TryMapSubscriptionFromSignedTransaction(
+                purchaseToken,
+                productId,
+                planCode,
+                mobile.AppleBundleId,
+                options.Value,
+                out var fromJws))
+        {
+            return fromJws;
+        }
+
         if (!string.IsNullOrWhiteSpace(transactionId)
-            && !string.IsNullOrWhiteSpace(mobile.AppleIssuerId)
-            && !string.IsNullOrWhiteSpace(mobile.AppleKeyId)
-            && !string.IsNullOrWhiteSpace(mobile.ApplePrivateKeyPath)
-            && File.Exists(mobile.ApplePrivateKeyPath))
+            && HasAppleServerApiCredentials(mobile))
         {
             return await VerifyViaAppStoreServerApiAsync(
                 productId,
@@ -49,7 +60,8 @@ public sealed class AppleAppStoreSubscriptionVerifier(
                 cancellationToken);
         }
 
-        if (!string.IsNullOrWhiteSpace(mobile.AppleSharedSecret))
+        if (!string.IsNullOrWhiteSpace(mobile.AppleSharedSecret)
+            && !LooksLikeJws(purchaseToken))
         {
             return await VerifyViaReceiptAsync(
                 purchaseToken,
@@ -73,11 +85,17 @@ public sealed class AppleAppStoreSubscriptionVerifier(
     {
         var mobile = options.Value.Mobile;
 
+        if (TryMapConsumableFromSignedTransaction(
+                purchaseToken,
+                productId,
+                mobile.AppleBundleId,
+                out var fromJws))
+        {
+            return fromJws;
+        }
+
         if (!string.IsNullOrWhiteSpace(transactionId)
-            && !string.IsNullOrWhiteSpace(mobile.AppleIssuerId)
-            && !string.IsNullOrWhiteSpace(mobile.AppleKeyId)
-            && !string.IsNullOrWhiteSpace(mobile.ApplePrivateKeyPath)
-            && File.Exists(mobile.ApplePrivateKeyPath))
+            && HasAppleServerApiCredentials(mobile))
         {
             return await VerifyConsumableViaAppStoreServerApiAsync(
                 productId,
@@ -86,7 +104,8 @@ public sealed class AppleAppStoreSubscriptionVerifier(
                 cancellationToken);
         }
 
-        if (!string.IsNullOrWhiteSpace(mobile.AppleSharedSecret))
+        if (!string.IsNullOrWhiteSpace(mobile.AppleSharedSecret)
+            && !LooksLikeJws(purchaseToken))
         {
             return await VerifyConsumableViaReceiptAsync(
                 purchaseToken,
@@ -185,23 +204,17 @@ public sealed class AppleAppStoreSubscriptionVerifier(
         }
 
         var payload = DecodeAppleJwsPayload(signedInfoEl.GetString()!);
-        var expiresMs = ReadLong(payload, "expiresDate");
         var originalTransactionId = ReadString(payload, "originalTransactionId") ?? transactionId;
         var storeProductId = ReadString(payload, "productId") ?? productId;
         var (_, resolvedCycle) = new StoreProductResolver(options.Value).Resolve(storeProductId);
-
-        var periodEnd = expiresMs > 0
-            ? DateTimeOffset.FromUnixTimeMilliseconds(expiresMs).UtcDateTime
-            : (DateTime?)null;
-
-        var isActive = periodEnd is null || periodEnd > DateTime.UtcNow;
+        var periodEnd = ResolveSubscriptionPeriodEnd(payload, resolvedCycle);
 
         return new MobileStoreSubscriptionDetails
         {
             PlanCode = planCode,
             BillingCycle = resolvedCycle,
             ProviderSubscriptionId = originalTransactionId,
-            IsActive = isActive,
+            IsActive = IsAppleSubscriptionCurrentlyActive(payload, DateTime.UtcNow),
             AutoRenewEnabled = true,
             PeriodEnd = periodEnd,
             LatestTransactionId = transactionId,
@@ -227,20 +240,17 @@ public sealed class AppleAppStoreSubscriptionVerifier(
             throw new AppException("No matching subscription in Apple receipt.", 400);
         }
 
-        var expiresMs = ReadLong(latest.Value, "expires_date_ms");
         var originalId = ReadString(latest.Value, "original_transaction_id")
             ?? ReadString(latest.Value, "transaction_id");
 
-        var periodEnd = expiresMs > 0
-            ? DateTimeOffset.FromUnixTimeMilliseconds(expiresMs).UtcDateTime
-            : (DateTime?)null;
+        var periodEnd = ResolveSubscriptionPeriodEnd(latest.Value, billingCycle);
 
         return new MobileStoreSubscriptionDetails
         {
             PlanCode = planCode,
             BillingCycle = billingCycle,
             ProviderSubscriptionId = originalId ?? receiptData,
-            IsActive = periodEnd is null || periodEnd > DateTime.UtcNow,
+            IsActive = IsAppleSubscriptionCurrentlyActive(latest.Value, DateTime.UtcNow),
             AutoRenewEnabled = true,
             PeriodEnd = periodEnd,
             LatestTransactionId = ReadString(latest.Value, "transaction_id"),
@@ -415,6 +425,123 @@ public sealed class AppleAppStoreSubscriptionVerifier(
             || body.Contains("TRANSACTION_ID_NOT_FOUND", StringComparison.OrdinalIgnoreCase);
     }
 
+    private static bool HasAppleServerApiCredentials(MobileStoreOptions mobile) =>
+        !string.IsNullOrWhiteSpace(mobile.AppleIssuerId)
+        && !string.IsNullOrWhiteSpace(mobile.AppleKeyId)
+        && !string.IsNullOrWhiteSpace(mobile.ApplePrivateKeyPath)
+        && File.Exists(mobile.ApplePrivateKeyPath);
+
+    internal static bool LooksLikeJws(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        var parts = value.Split('.');
+        return parts.Length == 3
+            && parts[0].Length > 0
+            && parts[1].Length > 0
+            && parts[2].Length > 0;
+    }
+
+    internal static bool TryMapSubscriptionFromSignedTransaction(
+        string purchaseToken,
+        string expectedProductId,
+        string planCode,
+        string? expectedBundleId,
+        PaymentOptions paymentOptions,
+        out MobileStoreSubscriptionDetails details)
+    {
+        details = null!;
+        if (!TryReadSignedTransactionPayload(
+                purchaseToken,
+                expectedProductId,
+                expectedBundleId,
+                out var payload))
+        {
+            return false;
+        }
+
+        var transactionId = ReadString(payload, "transactionId") ?? expectedProductId;
+        var originalTransactionId = ReadString(payload, "originalTransactionId") ?? transactionId;
+        var storeProductId = ReadString(payload, "productId") ?? expectedProductId;
+        string resolvedCycle;
+        try
+        {
+            (_, resolvedCycle) = new StoreProductResolver(paymentOptions).Resolve(storeProductId);
+        }
+        catch (AppException)
+        {
+            return false;
+        }
+
+        var periodEnd = ResolveSubscriptionPeriodEnd(payload, resolvedCycle);
+
+        details = new MobileStoreSubscriptionDetails
+        {
+            PlanCode = planCode,
+            BillingCycle = resolvedCycle,
+            ProviderSubscriptionId = originalTransactionId,
+            IsActive = IsAppleSubscriptionCurrentlyActive(payload, DateTime.UtcNow),
+            AutoRenewEnabled = true,
+            PeriodEnd = periodEnd,
+            LatestTransactionId = transactionId,
+        };
+        return true;
+    }
+
+    internal static bool TryMapConsumableFromSignedTransaction(
+        string purchaseToken,
+        string expectedProductId,
+        string? expectedBundleId,
+        out MobileStoreProductDetails details)
+    {
+        details = null!;
+        if (!TryReadSignedTransactionPayload(
+                purchaseToken,
+                expectedProductId,
+                expectedBundleId,
+                out var payload))
+        {
+            return false;
+        }
+
+        details = new MobileStoreProductDetails
+        {
+            IsValid = true,
+            TransactionId = ReadString(payload, "transactionId") ?? expectedProductId,
+        };
+        return true;
+    }
+
+    private static bool TryReadSignedTransactionPayload(
+        string purchaseToken,
+        string expectedProductId,
+        string? expectedBundleId,
+        out JsonElement payload)
+    {
+        payload = default;
+        if (!LooksLikeJws(purchaseToken)
+            || !AppleAppStoreJwsVerifier.TryValidateJws(purchaseToken, expectedBundleId))
+        {
+            return false;
+        }
+
+        try
+        {
+            payload = AppleAppStoreJwsVerifier.DecodePayload(purchaseToken);
+        }
+        catch (AppException)
+        {
+            return false;
+        }
+
+        var storeProductId = ReadString(payload, "productId");
+        return string.IsNullOrWhiteSpace(storeProductId)
+            || string.Equals(storeProductId, expectedProductId, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static async Task<string> CreateAppStoreJwtAsync(
         MobileStoreOptions mobile,
         CancellationToken cancellationToken)
@@ -501,6 +628,114 @@ public sealed class AppleAppStoreSubscriptionVerifier(
         var padded = segment.Replace('-', '+').Replace('_', '/');
         padded = padded.PadRight(padded.Length + (4 - padded.Length % 4) % 4, '=');
         return Convert.FromBase64String(padded);
+    }
+
+    /// <summary>
+    /// Unix seconds vs milliseconds. Values below year 2286 in seconds are treated as seconds.
+    /// </summary>
+    internal const long UnixMillisecondsThreshold = 10_000_000_000L;
+
+    internal static readonly TimeSpan SubscriptionExpiryGrace = TimeSpan.FromMinutes(5);
+
+    internal static readonly TimeSpan FreshPurchaseWindow = TimeSpan.FromMinutes(15);
+
+    internal static DateTime? UnixTimeToUtc(long raw)
+    {
+        if (raw <= 0)
+        {
+            return null;
+        }
+
+        try
+        {
+            return raw < UnixMillisecondsThreshold
+                ? DateTimeOffset.FromUnixTimeSeconds(raw).UtcDateTime
+                : DateTimeOffset.FromUnixTimeMilliseconds(raw).UtcDateTime;
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            return null;
+        }
+    }
+
+    internal static DateTime? ReadAppleExpiryUtc(JsonElement payload)
+    {
+        var raw = ReadLong(payload, "expiresDate");
+        if (raw <= 0)
+        {
+            raw = ReadLong(payload, "expirationDate");
+        }
+
+        if (raw <= 0)
+        {
+            raw = ReadLong(payload, "expires_date_ms");
+        }
+
+        if (raw <= 0)
+        {
+            raw = ReadLong(payload, "expires_date");
+        }
+
+        return UnixTimeToUtc(raw);
+    }
+
+    internal static DateTime? ReadApplePurchaseDateUtc(JsonElement payload)
+    {
+        var raw = ReadLong(payload, "purchaseDate");
+        if (raw <= 0)
+        {
+            raw = ReadLong(payload, "purchase_date_ms");
+        }
+
+        if (raw <= 0)
+        {
+            raw = ReadLong(payload, "purchase_date");
+        }
+
+        return UnixTimeToUtc(raw);
+    }
+
+    internal static bool IsAppleSubscriptionCurrentlyActive(JsonElement payload, DateTime utcNow)
+    {
+        if (ReadLong(payload, "revocationDate") > 0
+            || ReadLong(payload, "revocation_date_ms") > 0)
+        {
+            return false;
+        }
+
+        // App Store Server API subscription status: 5 = revoked.
+        var status = ReadLong(payload, "status");
+        if (status == 5)
+        {
+            return false;
+        }
+
+        var periodEnd = ReadAppleExpiryUtc(payload);
+        if (periodEnd is null || periodEnd.Value >= utcNow - SubscriptionExpiryGrace)
+        {
+            return true;
+        }
+
+        var purchasedAt = ReadApplePurchaseDateUtc(payload);
+        return purchasedAt is not null
+            && utcNow - purchasedAt.Value <= FreshPurchaseWindow;
+    }
+
+    internal static DateTime? ResolveSubscriptionPeriodEnd(JsonElement payload, string billingCycle)
+    {
+        var periodEnd = ReadAppleExpiryUtc(payload);
+        var utcNow = DateTime.UtcNow;
+        if (periodEnd is not null && periodEnd.Value > utcNow)
+        {
+            return periodEnd;
+        }
+
+        if (IsAppleSubscriptionCurrentlyActive(payload, utcNow))
+        {
+            return SubscriptionPeriodCalculator.CalculatePeriodEnd(utcNow, billingCycle);
+        }
+
+        return periodEnd;
     }
 
     private static string? ReadString(JsonElement el, string name) =>
