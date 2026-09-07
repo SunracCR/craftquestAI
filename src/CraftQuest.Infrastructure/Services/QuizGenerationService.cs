@@ -98,7 +98,6 @@ public class QuizGenerationService(
         EnsureMaterialReadyForGeneration(material);
 
         await RecoverAbandonedGenerationJobsForMaterialAsync(studyMaterialId, cancellationToken);
-        await RecoverAbandonedGenerationJobsAsync(cancellationToken);
 
         var activeJob = await dbContext.AiJobs
             .Where(j => j.StudyMaterialId == studyMaterialId
@@ -561,8 +560,10 @@ public class QuizGenerationService(
 
         try
         {
-            await dbContext.SaveChangesAsync(cancellationToken);
-            await NotifyAiJobOutcomeAsync(job, cancellationToken);
+            if (await TryPersistFinalJobStateAsync(job, cancellationToken))
+            {
+                await NotifyAiJobOutcomeAsync(job, cancellationToken);
+            }
         }
         catch (Exception saveEx)
         {
@@ -572,6 +573,39 @@ public class QuizGenerationService(
                 job.AiJobId,
                 job.Status);
         }
+    }
+
+    private async Task<bool> TryPersistFinalJobStateAsync(
+        AiJob job,
+        CancellationToken cancellationToken)
+    {
+        if (job.Status == "failed" && job.QuestionImportBatchId.HasValue)
+        {
+            job.Status = "completed";
+            job.Stage = AiJobStages.Completed;
+            job.ProgressPercent = 100;
+            job.ErrorCode = null;
+            job.ErrorMessage = null;
+        }
+
+        var existingStatus = await dbContext.AiJobs
+            .AsNoTracking()
+            .Where(j => j.AiJobId == job.AiJobId)
+            .Select(j => j.Status)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (existingStatus == "completed")
+        {
+            return false;
+        }
+
+        if (existingStatus == "failed" && job.Status == "failed")
+        {
+            return false;
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return job.Status is "completed" or "failed";
     }
 
     private async Task NotifyAiJobOutcomeAsync(AiJob job, CancellationToken cancellationToken)
@@ -621,50 +655,65 @@ public class QuizGenerationService(
         var minutes = Math.Max(3, generationOptions.Value.StaleProcessingMinutesOnStart);
         await RecoverAbandonedGenerationJobsCoreAsync(
             studyMaterialId,
-            DateTime.UtcNow.AddMinutes(-minutes),
+            pendingQueueCutoffMinutes: minutes,
             cancellationToken);
     }
 
     private async Task RecoverAbandonedGenerationJobsAsync(CancellationToken cancellationToken)
     {
-        var cutoff = DateTime.UtcNow.AddMinutes(
-            -Math.Max(5, generationOptions.Value.StaleProcessingMinutes));
-        await RecoverAbandonedGenerationJobsCoreAsync(null, cutoff, cancellationToken);
+        var minutes = Math.Max(5, generationOptions.Value.StaleProcessingMinutes);
+        await RecoverAbandonedGenerationJobsCoreAsync(
+            studyMaterialId: null,
+            pendingQueueCutoffMinutes: minutes,
+            cancellationToken);
     }
 
     private async Task RecoverAbandonedGenerationJobsCoreAsync(
         Guid? studyMaterialId,
-        DateTime cutoff,
+        int pendingQueueCutoffMinutes,
         CancellationToken cancellationToken)
     {
+        var now = DateTime.UtcNow;
+        var options = generationOptions.Value;
 
-        var abandoned = await dbContext.AiJobs
+        var candidates = await dbContext.AiJobs
             .Where(j => j.JobType == "generate_quiz"
                 && j.CompletedAt == null
-                && j.CreatedAt < cutoff
                 && (studyMaterialId == null || j.StudyMaterialId == studyMaterialId)
                 && (j.Status == "processing"
                     || j.Status == "pending"
                     || j.Status == "pending_retry"))
             .ToListAsync(cancellationToken);
 
-        if (abandoned.Count == 0)
+        if (candidates.Count == 0)
         {
             return;
         }
 
         const string message =
             "Generation was interrupted or timed out. You can start a new generation.";
-        foreach (var job in abandoned)
+        var changed = false;
+
+        foreach (var job in candidates)
         {
-            job.Status = "failed";
-            job.ErrorCode = "GENERATION_STALE_ABORTED";
-            job.ErrorMessage = TruncateJobError(message);
-            job.CompletedAt = DateTime.UtcNow;
-            job.NextRetryAt = null;
+            var action = AiGenerationJobRecoveryRules.Evaluate(
+                job,
+                now,
+                options,
+                pendingQueueCutoffMinutes);
+            if (action == AiGenerationJobRecoveryRules.RecoveryAction.None)
+            {
+                continue;
+            }
+
+            AiGenerationJobRecoveryRules.Apply(job, action, now, TruncateJobError(message));
+            changed = true;
         }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        if (changed)
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
     }
 
     private async Task<Application.Models.Imports.CqifDocument> GenerateWithRetryAsync(

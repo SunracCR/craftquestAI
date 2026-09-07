@@ -1,8 +1,6 @@
 import 'dart:async';
 
 import 'package:craftquest_app/core/di/injection.dart';
-import 'package:craftquest_app/core/network/api_error_mapper.dart';
-import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/utils/smoothed_progress_controller.dart';
@@ -12,6 +10,8 @@ import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/features/ai/data/ai_repository.dart';
 import 'package:craftquest_app/features/ai/data/models/ai_job_model.dart';
+import 'package:craftquest_app/features/ai_generation/presentation/cubit/ai_generation_progress_cubit.dart';
+import 'package:craftquest_app/features/ai_generation/presentation/cubit/ai_generation_progress_state.dart';
 import 'package:craftquest_app/features/ai_generation/presentation/utils/ai_job_stage_labels.dart';
 import 'package:craftquest_app/features/ai_generation/presentation/widgets/ai_pipeline_progress_card.dart';
 import 'package:craftquest_app/features/imports/data/import_repository.dart';
@@ -21,16 +21,10 @@ import 'package:craftquest_app/features/notifications/presentation/notifications
 import 'package:craftquest_app/features/quizzes/presentation/quiz_flow_anchor.dart';
 import 'package:craftquest_app/features/quizzes/presentation/quiz_detail_page.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Aligns with backend [StaleProcessingMinutes] (appsettings AiGeneration).
-const _staleJobThreshold = Duration(minutes: 12);
-const _longRunningHint = Duration(minutes: 8);
-const _pollIntervalPending = Duration(seconds: 2);
-const _pollIntervalProcessing = Duration(milliseconds: 500);
-
-class AiGenerationProgressPage extends StatefulWidget {
+class AiGenerationProgressPage extends StatelessWidget {
   const AiGenerationProgressPage({
     super.key,
     required this.aiJobId,
@@ -43,41 +37,82 @@ class AiGenerationProgressPage extends StatefulWidget {
   final String? targetQuizId;
 
   @override
-  State<AiGenerationProgressPage> createState() => _AiGenerationProgressPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => AiGenerationProgressCubit(
+        aiRepository: getIt<AiRepository>(),
+        aiJobId: aiJobId,
+        quizTitle: quizTitle,
+        targetQuizId: targetQuizId,
+      ),
+      child: _AiGenerationProgressView(
+        quizTitle: quizTitle,
+        targetQuizId: targetQuizId,
+      ),
+    );
+  }
 }
 
-class _AiGenerationProgressPageState extends State<AiGenerationProgressPage> {
-  final _aiRepository = getIt<AiRepository>();
-  final _importRepository = getIt<ImportRepository>();
+class _AiGenerationProgressView extends StatefulWidget {
+  const _AiGenerationProgressView({
+    required this.quizTitle,
+    this.targetQuizId,
+  });
+
+  final String quizTitle;
+  final String? targetQuizId;
+
+  @override
+  State<_AiGenerationProgressView> createState() =>
+      _AiGenerationProgressViewState();
+}
+
+class _AiGenerationProgressViewState extends State<_AiGenerationProgressView>
+    with WidgetsBindingObserver {
   final _smoothedProgress = SmoothedProgressController();
-  String? _error;
-  String? _errorDetail;
-  AiJobModel? _job;
-  bool _isRetrying = false;
-  bool _stuckDetected = false;
-  DateTime? _processingSince;
+  final _importRepository = getIt<ImportRepository>();
+  bool _handlingCompletion = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _smoothedProgress.addListener(_onSmoothedProgress);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) unawaited(_poll());
+      if (!mounted) {
+        return;
+      }
+      final l10n = AppLocalizations.of(context)!;
+      unawaited(context.read<AiGenerationProgressCubit>().startPolling(l10n));
     });
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _smoothedProgress.removeListener(_onSmoothedProgress);
     _smoothedProgress.disposeController();
     super.dispose();
   }
 
-  void _onSmoothedProgress() {
-    if (mounted) setState(() {});
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && mounted) {
+      final l10n = AppLocalizations.of(context)!;
+      unawaited(context.read<AiGenerationProgressCubit>().refresh(l10n));
+    }
   }
 
-  void _syncProgressFromJob(AiJobModel job) {
+  void _onSmoothedProgress() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  void _syncProgressFromJob(AiJobModel? job) {
+    if (job == null) {
+      return;
+    }
     _smoothedProgress.updateFromServer(
       progressPercent: job.progressPercent,
       stage: job.stage,
@@ -85,177 +120,90 @@ class _AiGenerationProgressPageState extends State<AiGenerationProgressPage> {
     );
   }
 
-  bool _isJobStale(AiJobModel job) {
-    if (!job.isActiveGeneration) {
-      return false;
+  Future<void> _handleCompletion(AiGenerationCompletionTarget target) async {
+    if (_handlingCompletion || !mounted) {
+      return;
     }
-
-    final serverAge = job.age;
-    if (serverAge != null && serverAge > _staleJobThreshold) {
-      return true;
-    }
-
-    return _processingSince != null &&
-        DateTime.now().difference(_processingSince!) > _staleJobThreshold;
-  }
-
-  void _showStuckError(AppLocalizations l10n) {
-    setState(() {
-      _stuckDetected = true;
-      _error = l10n.aiGenerationProgressStuck;
-      _errorDetail = l10n.aiGenerationProgressStuckDetail;
-    });
-  }
-
-  Duration _pollIntervalFor(AiJobModel job) {
-    if (job.status == 'pending' || job.isDeferredRetry) {
-      return _pollIntervalPending;
-    }
-    return _pollIntervalProcessing;
-  }
-
-  Future<void> _poll() async {
-    if (!mounted) return;
-    final l10n = AppLocalizations.of(context)!;
-    final deadline = DateTime.now().add(const Duration(minutes: 35));
-
-    while (mounted && DateTime.now().isBefore(deadline)) {
-      try {
-        final job = await _aiRepository.getJob(widget.aiJobId);
-        if (!mounted) return;
-
-        setState(() {
-          _job = job;
-          _error = null;
-          _errorDetail = null;
-          _stuckDetected = false;
-          if (job.status == 'processing' && _processingSince == null) {
-            _processingSince = DateTime.now();
-          }
-        });
-        _syncProgressFromJob(job);
-
-        if (job.isFailed) {
-          unawaited(getIt<NotificationsCubit>().refreshUnreadCount());
-          setState(() {
-            _error = ApiErrorMapper.mapAiJobFailure(job, l10n);
-            _errorDetail = job.creditsWereNotConsumed
-                ? l10n.aiGenerationCreditsNotConsumed
-                : null;
-          });
-          return;
-        }
-
-        if (_isJobStale(job)) {
-          _showStuckError(l10n);
-          return;
-        }
-
-        if (job.isCompleted && job.questionImportBatchId != null) {
-          unawaited(getIt<NotificationsCubit>().refreshUnreadCount());
-          final importId = job.questionImportBatchId!;
-          await _importRepository.prefetchPreview(importId);
-          if (!mounted) return;
-
-          final quizId = job.targetQuizId ?? widget.targetQuizId;
-          final confirmed = await Navigator.of(context).push<bool>(
-            MaterialPageRoute<bool>(
-              builder: (_) => ImportPreviewPage(
-                importId: importId,
-                quizTitle: widget.quizTitle,
-                initialStatus: ImportStatusModel(
-                  importId: importId,
-                  status: 'ready_for_review',
-                  totalQuestionsDetected: 0,
-                  validQuestions: 0,
-                  questionsWithWarnings: 0,
-                  questionsWithErrors: 0,
-                ),
-                fromAiGeneration: true,
-              ),
-            ),
-          );
-
-          if (!mounted) return;
-          if (confirmed == true && quizId != null) {
-            if (QuizFlowAnchor.hasAnchor) {
-              QuizFlowAnchor.returnToAnchor(context);
-            } else {
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute<void>(
-                  builder: (_) => QuizDetailPage(
-                    quizId: quizId,
-                    quizTitle: widget.quizTitle,
-                  ),
-                ),
-                (route) => route.isFirst,
-              );
-            }
-          } else if (QuizFlowAnchor.hasAnchor) {
-            QuizFlowAnchor.returnToAnchor(context);
-          } else {
-            Navigator.of(context).popUntil((route) => route.isFirst);
-          }
-          return;
-        }
-
-        await Future<void>.delayed(_pollIntervalFor(job));
-      } on DioException catch (e) {
-        if (!mounted) return;
-        final status = e.response?.statusCode;
-        setState(() {
-          _error = status == 401
-              ? l10n.errorSessionExpired
-              : DioErrorMapper.map(e);
-        });
-        return;
-      } catch (_) {
-        if (!mounted) return;
-        setState(() => _error = DioErrorMapper.genericMessage());
-        return;
-      }
-    }
-
-    if (mounted && _error == null) {
-      setState(() => _error = l10n.aiGenerationFailed);
-    }
-  }
-
-  Future<void> _retryFailedJob() async {
-    if (_isRetrying) return;
-    _smoothedProgress.reset();
-    setState(() {
-      _isRetrying = true;
-      _error = null;
-      _errorDetail = null;
-      _job = null;
-      _stuckDetected = false;
-      _processingSince = null;
-    });
+    _handlingCompletion = true;
 
     try {
-      await _aiRepository.retryGenerationJob(widget.aiJobId);
-      if (!mounted) return;
-      setState(() => _isRetrying = false);
-      unawaited(_poll());
-    } on DioException catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _isRetrying = false;
-        _error = DioErrorMapper.map(e);
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _isRetrying = false;
-        _error = DioErrorMapper.genericMessage();
-      });
-    }
-  }
+      unawaited(getIt<NotificationsCubit>().refreshUnreadCount());
 
-  void _goBackToRetry() {
-    if (Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
+      if (target.opensPreview) {
+        final importId = target.importId!;
+        await _importRepository.prefetchPreview(importId);
+        if (!mounted) {
+          return;
+        }
+
+        final confirmed = await Navigator.of(context).push<bool>(
+          MaterialPageRoute<bool>(
+            builder: (_) => ImportPreviewPage(
+              importId: importId,
+              quizTitle: target.quizTitle,
+              initialStatus: ImportStatusModel(
+                importId: importId,
+                status: 'ready_for_review',
+                totalQuestionsDetected: 0,
+                validQuestions: 0,
+                questionsWithWarnings: 0,
+                questionsWithErrors: 0,
+              ),
+              fromAiGeneration: true,
+            ),
+          ),
+        );
+
+        if (!mounted) {
+          return;
+        }
+
+        final quizId = target.quizId ?? widget.targetQuizId;
+        if (confirmed == true && quizId != null) {
+          if (QuizFlowAnchor.hasAnchor) {
+            QuizFlowAnchor.returnToAnchor(context);
+          } else {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute<void>(
+                builder: (_) => QuizDetailPage(
+                  quizId: quizId,
+                  quizTitle: target.quizTitle,
+                ),
+              ),
+              (route) => route.isFirst,
+            );
+          }
+        } else if (QuizFlowAnchor.hasAnchor) {
+          QuizFlowAnchor.returnToAnchor(context);
+        } else {
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        }
+        return;
+      }
+
+      final quizId = target.quizId ?? widget.targetQuizId;
+      if (quizId != null) {
+        if (QuizFlowAnchor.hasAnchor) {
+          QuizFlowAnchor.returnToAnchor(context);
+        } else {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute<void>(
+              builder: (_) => QuizDetailPage(
+                quizId: quizId,
+                quizTitle: target.quizTitle,
+              ),
+            ),
+            (route) => route.isFirst,
+          );
+        }
+      } else {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
+    } finally {
+      _handlingCompletion = false;
+      if (mounted) {
+        context.read<AiGenerationProgressCubit>().acknowledgeCompletion();
+      }
     }
   }
 
@@ -266,17 +214,24 @@ class _AiGenerationProgressPageState extends State<AiGenerationProgressPage> {
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
-  String _progressSubtitle(AppLocalizations l10n) {
-    final job = _job;
+  String _progressSubtitle(AppLocalizations l10n, AiGenerationProgressState state) {
+    final job = state.job;
     if (job == null) {
       return l10n.aiGenerationProgressSubtitle;
     }
 
+    if (state.showLongRunningHint) {
+      return l10n.aiGenerationProgressTakingLong;
+    }
+
     if (job.isDeferredRetry) {
       if (job.nextRetryAt != null) {
-        final minutes = job.nextRetryAt!.difference(DateTime.now().toUtc()).inMinutes;
+        final minutes =
+            job.nextRetryAt!.difference(DateTime.now().toUtc()).inMinutes;
         if (minutes > 0) {
-          return l10n.aiGenerationProgressDeferredRetryMinutes(minutes.clamp(1, 999));
+          return l10n.aiGenerationProgressDeferredRetryMinutes(
+            minutes.clamp(1, 999),
+          );
         }
       }
       return l10n.aiGenerationProgressDeferredRetry;
@@ -290,94 +245,105 @@ class _AiGenerationProgressPageState extends State<AiGenerationProgressPage> {
       return job.stageLabel(l10n);
     }
 
-    final elapsed = job.age ?? (_processingSince != null
-        ? DateTime.now().difference(_processingSince!)
-        : null);
-
-    if (job.status == 'processing' &&
-        elapsed != null &&
-        elapsed > _longRunningHint) {
-      return l10n.aiGenerationProgressTakingLong;
-    }
-
     return l10n.aiGenerationProgressSubtitle;
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final canLeave = _error != null && !_isRetrying;
-    final job = _job;
-    final displayPercent = _smoothedProgress.displayPercent;
-    final showDeterminate = job?.isActiveGeneration == true &&
-        (job?.progressPercent != null || displayPercent > 0);
 
-    return PopScope(
-      canPop: canLeave,
-      child: EdgeAwareScaffold(
-        appBar: craftQuestAppBar(
-          title: l10n.aiGenerationProgressTitle,
-          automaticallyImplyLeading: false,
-          actions: [
-            IconButton(
-              onPressed: _goHome,
-              tooltip: l10n.practiceBackHomeAction,
-              icon: const Icon(Icons.home_rounded),
+    return BlocConsumer<AiGenerationProgressCubit, AiGenerationProgressState>(
+      listenWhen: (previous, current) =>
+          previous.job != current.job ||
+          previous.completionTarget != current.completionTarget,
+      listener: (context, state) {
+        _syncProgressFromJob(state.job);
+        final target = state.completionTarget;
+        if (target != null) {
+          unawaited(_handleCompletion(target));
+        }
+      },
+      builder: (context, state) {
+        final canLeave = state.isFailed && !state.isRetrying;
+        final job = state.job;
+        final displayPercent = _smoothedProgress.displayPercent;
+        final showDeterminate = job?.isActiveGeneration == true &&
+            (job?.progressPercent != null || displayPercent > 0);
+
+        return PopScope(
+          canPop: canLeave,
+          child: EdgeAwareScaffold(
+            appBar: craftQuestAppBar(
+              title: l10n.aiGenerationProgressTitle,
+              automaticallyImplyLeading: false,
+              actions: [
+                IconButton(
+                  onPressed: _goHome,
+                  tooltip: l10n.practiceBackHomeAction,
+                  icon: const Icon(Icons.home_rounded),
+                ),
+              ],
             ),
-          ],
-        ),
-        body: _error != null
-            ? AppErrorView(
-                message: _error!,
-                detail: _errorDetail,
-                retryLabel: _stuckDetected
-                    ? l10n.aiGenerationStuckGoBackAction
-                    : l10n.aiGenerationRetryAction,
-                onRetry: _stuckDetected ? _goBackToRetry : _retryFailedJob,
-              )
-            : ListView(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                children: [
-                  AiPipelineProgressCard(
-                    title: widget.quizTitle,
-                    subtitle: _progressSubtitle(l10n),
-                    percent: displayPercent,
-                    l10n: l10n,
-                    showStepper: job?.isActiveGeneration == true,
-                    stage: job?.stage,
-                    status: job?.status ?? 'processing',
-                    showStalledPulse: _smoothedProgress.isStalled,
-                    indeterminate: !showDeterminate,
-                    footer: Column(
-                      children: [
-                        Text(
-                          l10n.aiGenerationBackgroundSnack,
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.textSecondary,
+            body: state.isFailed
+                ? AppErrorView(
+                    message: state.failureMessage ?? l10n.aiGenerationFailed,
+                    detail: state.failureDetail,
+                    retryLabel: l10n.aiGenerationRetryAction,
+                    onRetry: () {
+                      _smoothedProgress.reset();
+                      unawaited(
+                        context.read<AiGenerationProgressCubit>().retry(l10n),
+                      );
+                    },
+                  )
+                : ListView(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    children: [
+                      AiPipelineProgressCard(
+                        title: widget.quizTitle,
+                        subtitle: _progressSubtitle(l10n, state),
+                        percent: displayPercent,
+                        l10n: l10n,
+                        showStepper: job?.isActiveGeneration == true,
+                        stage: job?.stage,
+                        status: job?.status ?? 'processing',
+                        showStalledPulse: _smoothedProgress.isStalled,
+                        indeterminate: !showDeterminate,
+                        footer: Column(
+                          children: [
+                            Text(
+                              l10n.aiGenerationBackgroundSnack,
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                            ),
+                            if (job?.isDeferredRetry == true) ...[
+                              const SizedBox(height: AppSpacing.sm),
+                              Text(
+                                l10n.aiGenerationCreditsNotConsumed,
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.bodySmall,
                               ),
+                            ],
+                            const SizedBox(height: AppSpacing.lg),
+                            AppSecondaryButton(
+                              label: l10n.practiceBackHomeAction,
+                              icon: Icons.home_rounded,
+                              accentColor: AppColors.accentCool,
+                              onPressed: _goHome,
+                            ),
+                          ],
                         ),
-                        if (job?.isDeferredRetry == true) ...[
-                          const SizedBox(height: AppSpacing.sm),
-                          Text(
-                            l10n.aiGenerationCreditsNotConsumed,
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ],
-                        const SizedBox(height: AppSpacing.lg),
-                        AppSecondaryButton(
-                          label: l10n.practiceBackHomeAction,
-                          icon: Icons.home_rounded,
-                          accentColor: AppColors.accentCool,
-                          onPressed: _goHome,
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

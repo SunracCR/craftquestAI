@@ -3,10 +3,11 @@ import 'dart:convert';
 import 'package:craftquest_app/core/network/api_client.dart';
 import 'package:craftquest_app/features/ai/data/models/ai_job_model.dart';
 import 'package:craftquest_app/features/ai/data/models/ai_job_summary_model.dart';
+import 'package:craftquest_app/features/ai_generation/domain/ai_generation_job_gateway.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:dio/dio.dart';
 
-class AiRepository {
+class AiRepository implements AiGenerationJobGateway {
   AiRepository(this._apiClient);
 
   final ApiClient _apiClient;
