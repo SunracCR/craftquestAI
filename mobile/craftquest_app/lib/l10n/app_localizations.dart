@@ -3599,7 +3599,7 @@ abstract class AppLocalizations {
   /// No description provided for @createShareCodeAction.
   ///
   /// In es, this message translates to:
-  /// **'Generar código'**
+  /// **'Compartir'**
   String get createShareCodeAction;
 
   /// No description provided for @shareCodeTitle.

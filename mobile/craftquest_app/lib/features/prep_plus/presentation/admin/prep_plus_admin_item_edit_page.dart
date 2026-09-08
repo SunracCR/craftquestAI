@@ -8,6 +8,7 @@ import 'package:craftquest_app/core/theme/app_media_display.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
+import 'package:craftquest_app/core/widgets/share_icons.dart';
 import 'package:craftquest_app/core/widgets/option_image_picker.dart';
 import 'package:craftquest_app/features/prep_plus/data/prep_plus_admin_models.dart';
 import 'package:craftquest_app/features/prep_plus/data/prep_plus_admin_repository.dart';
@@ -464,7 +465,7 @@ class _PrepPlusAdminItemEditPageState extends State<PrepPlusAdminItemEditPage> {
                       ),
                       OutlinedButton.icon(
                         onPressed: () => _sharePublicLink(shareUrl),
-                        icon: const Icon(Icons.share_outlined, size: 18),
+                        icon: ShareIcons.adaptiveIcon(size: 18),
                         label: Text(l10n.shareCodeShareLinkAction),
                       ),
                     ],

@@ -1,6 +1,7 @@
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
+import 'package:craftquest_app/core/widgets/share_icons.dart';
 import 'package:craftquest_app/features/sharing/data/models/sharing_models.dart';
 import 'package:craftquest_app/features/sharing/data/sharing_repository.dart';
 import 'package:craftquest_app/features/teacher/data/teacher_class_repository.dart';
@@ -208,15 +209,16 @@ class _CreateShareCodeSheetState extends State<CreateShareCodeSheet> {
             ],
           ],
           const SizedBox(height: 8),
-          FilledButton(
+          FilledButton.icon(
             onPressed: _creating ? null : _create,
-            child: _creating
+            icon: _creating
                 ? const SizedBox(
                     height: 22,
                     width: 22,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : Text(l10n.createShareCodeAction),
+                : ShareIcons.adaptiveIcon(size: 20),
+            label: Text(l10n.createShareCodeAction),
           ),
         ],
       ),
@@ -291,7 +293,7 @@ Future<void> showShareCodeResultDialog(
             child: Text(l10n.shareCodeCopyLinkAction),
           ),
         if (joinUrl != null)
-          TextButton(
+          TextButton.icon(
             onPressed: () async {
               final message = l10n.shareCodeShareLinkMessage(
                 displayTitle,
@@ -300,7 +302,8 @@ Future<void> showShareCodeResultDialog(
               );
               await Share.share(message);
             },
-            child: Text(l10n.shareCodeShareLinkAction),
+            icon: ShareIcons.adaptiveIcon(size: 18),
+            label: Text(l10n.shareCodeShareLinkAction),
           ),
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(),

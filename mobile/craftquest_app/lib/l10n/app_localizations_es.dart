@@ -2136,7 +2136,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get createShareCodeAction => 'Generar código';
+  String get createShareCodeAction => 'Compartir';
 
   @override
   String get shareCodeTitle => 'Código de acceso';

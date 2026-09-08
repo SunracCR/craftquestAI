@@ -17,6 +17,7 @@ import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/core/widgets/app_section_title.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
+import 'package:craftquest_app/core/widgets/share_icons.dart';
 import 'package:craftquest_app/features/quizzes/data/quiz_repository.dart';
 import 'package:craftquest_app/features/ai_generation/presentation/ai_generation_hub_page.dart';
 import 'package:craftquest_app/features/imports/data/models/import_models.dart';
@@ -1385,8 +1386,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
                                           _createShareCode();
                                         }
                                       },
-                                      icon: Icon(
-                                        Icons.vpn_key_rounded,
+                                      icon: ShareIcons.adaptiveIcon(
                                         color: _canCreateShareCode
                                             ? AppColors.accentViolet
                                             : Theme.of(context).disabledColor,

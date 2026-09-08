@@ -1009,7 +1009,7 @@
   "@myQuizAnalyticsBestLabel": {
     "placeholders": { "percentage": { "type": "double" } }
   },
-  "createShareCodeAction": "Generar código",
+  "createShareCodeAction": "Compartir",
   "shareCodeTitle": "Código de acceso",
   "shareCodeCreateTitle": "Compartir cuestionario",
   "shareCodeCreateTeacherSubtitle": "Elige si cualquiera puede practicar o solo tu grupo.",

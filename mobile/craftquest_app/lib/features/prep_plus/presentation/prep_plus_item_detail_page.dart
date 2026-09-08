@@ -19,6 +19,7 @@ import 'package:craftquest_app/core/widgets/app_section_card.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/core/widgets/app_states.dart';
 import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
+import 'package:craftquest_app/core/widgets/share_icons.dart';
 import 'package:craftquest_app/core/services/sound_service.dart';
 import 'package:craftquest_app/features/analytics/presentation/quiz_analytics_page.dart';
 import 'package:craftquest_app/features/billing/data/pending_paypal_payment_store.dart';
@@ -1160,7 +1161,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
                             height: 22,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.share_outlined),
+                        : ShareIcons.adaptiveIcon(),
                     tooltip: l10n.prepPlusShareAction,
                     onPressed:
                         _sharing ? null : () => _shareItem(shareContext),

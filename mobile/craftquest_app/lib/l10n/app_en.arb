@@ -1009,7 +1009,7 @@
   "@myQuizAnalyticsBestLabel": {
     "placeholders": { "percentage": { "type": "double" } }
   },
-  "createShareCodeAction": "Generate code",
+  "createShareCodeAction": "Share",
   "shareCodeTitle": "Access code",
   "shareCodeCreateTitle": "Share quiz",
   "shareCodeCreateTeacherSubtitle": "Choose whether anyone can practice or only your class.",
