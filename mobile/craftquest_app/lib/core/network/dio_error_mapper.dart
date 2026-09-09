@@ -159,13 +159,6 @@ abstract final class DioErrorMapper {
         lower.contains('10.0.2.2');
   }
 
-  static Map<String, dynamic>? _problemDetailsMap(dynamic data) {
-    if (data is Map<String, dynamic>) {
-      return data;
-    }
-    if (data is Map) {
-      return Map<String, dynamic>.from(data);
-    }
-    return null;
-  }
+  static Map<String, dynamic>? _problemDetailsMap(dynamic data) =>
+      ApiErrorMapper.tryParseResponseData(data);
 }

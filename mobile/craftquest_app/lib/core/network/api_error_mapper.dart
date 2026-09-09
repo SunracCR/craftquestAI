@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:craftquest_app/core/utils/billing_display.dart';
 import 'package:craftquest_app/features/ai/data/models/ai_job_model.dart';
 import 'package:craftquest_app/features/ai_generation/ai_generation_limits.dart';
@@ -60,8 +63,8 @@ abstract final class ApiErrorMapper {
   }
 
   static bool isPlanLimitError(DioException error) {
-    final data = error.response?.data;
-    if (data is! Map<String, dynamic>) {
+    final data = tryParseResponseData(error.response?.data);
+    if (data == null) {
       return false;
     }
 
@@ -79,6 +82,36 @@ abstract final class ApiErrorMapper {
       r'(Question|Quiz) limit reached',
       caseSensitive: false,
     ).hasMatch(title);
+  }
+
+  /// Decodifica respuestas JSON cuando Dio usa [ResponseType.bytes].
+  static Map<String, dynamic>? tryParseResponseData(dynamic data) {
+    if (data is Map<String, dynamic>) {
+      return data;
+    }
+    if (data is Map) {
+      return Map<String, dynamic>.from(data);
+    }
+
+    final bytes = switch (data) {
+      Uint8List typed => typed,
+      List<int> list => list,
+      _ => null,
+    };
+    if (bytes == null || bytes.isEmpty) {
+      return null;
+    }
+
+    try {
+      final decoded = jsonDecode(utf8.decode(bytes));
+      if (decoded is Map) {
+        return Map<String, dynamic>.from(decoded);
+      }
+    } catch (_) {
+      return null;
+    }
+
+    return null;
   }
   static String mapAiJobFailure(AiJobModel job, AppLocalizations l10n) {
     if (job.errorCode != null && job.errorCode!.isNotEmpty) {

@@ -2172,6 +2172,12 @@ abstract class AppLocalizations {
   /// **'No se pudo generar el PDF'**
   String get exportQuizPdfFailed;
 
+  /// No description provided for @exportQuizPdfShareFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'El PDF se generó pero no se pudo compartir'**
+  String get exportQuizPdfShareFailed;
+
   /// No description provided for @exportQuizPdfEmpty.
   ///
   /// In es, this message translates to:
@@ -2939,6 +2945,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'No se pudo descargar la plantilla'**
   String get excelImportTemplateFailed;
+
+  /// No description provided for @excelImportTemplateShareFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'La plantilla se descargó pero no se pudo compartir'**
+  String get excelImportTemplateShareFailed;
 
   /// No description provided for @excelImportDropHint.
   ///

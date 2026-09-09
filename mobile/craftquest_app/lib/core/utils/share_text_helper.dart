@@ -5,6 +5,8 @@ import 'package:share_plus/share_plus.dart';
 
 enum ShareTextOutcome { shared, copied, dismissed }
 
+enum ShareFileOutcome { shared, dismissed, failed }
+
 abstract final class ShareTextHelper {
   /// Calcula el rectángulo de anclaje del popover de compartir.
   /// Debe llamarse en el mismo frame del tap, antes de cualquier `await`.
@@ -25,7 +27,11 @@ abstract final class ShareTextHelper {
     );
   }
 
-  static Rect _resolveShareOrigin(Rect? sharePositionOrigin) {
+  static bool get needsShareOrigin =>
+      defaultTargetPlatform == TargetPlatform.iOS ||
+      defaultTargetPlatform == TargetPlatform.macOS;
+
+  static Rect resolveShareOrigin(Rect? sharePositionOrigin) {
     if (sharePositionOrigin != null &&
         sharePositionOrigin.width > 0 &&
         sharePositionOrigin.height > 0) {
@@ -34,6 +40,13 @@ abstract final class ShareTextHelper {
 
     // iOS (incl. iPhone recientes) exige un rect no nulo para UIActivityViewController.
     return const Rect.fromLTWH(0, 0, 48, 48);
+  }
+
+  /// Espera a que un overlay (p. ej. diálogo de carga) termine de cerrarse
+  /// antes de presentar UIActivityViewController en iOS.
+  static Future<void> waitForOverlayDismiss() async {
+    await WidgetsBinding.instance.endOfFrame;
+    await Future<void>.delayed(const Duration(milliseconds: 250));
   }
 
   static Future<ShareTextOutcome> shareText(
@@ -50,8 +63,8 @@ abstract final class ShareTextHelper {
       return ShareTextOutcome.copied;
     }
 
-    final origin = _needsShareOrigin()
-        ? _resolveShareOrigin(sharePositionOrigin)
+    final origin = needsShareOrigin
+        ? resolveShareOrigin(sharePositionOrigin)
         : sharePositionOrigin;
 
     try {
@@ -69,7 +82,32 @@ abstract final class ShareTextHelper {
     }
   }
 
-  static bool _needsShareOrigin() =>
-      defaultTargetPlatform == TargetPlatform.iOS ||
-      defaultTargetPlatform == TargetPlatform.macOS;
+  static Future<ShareFileOutcome> shareFiles({
+    required List<XFile> files,
+    String? subject,
+    Rect? sharePositionOrigin,
+  }) async {
+    if (files.isEmpty) {
+      throw ArgumentError('files must not be empty');
+    }
+
+    final origin = needsShareOrigin
+        ? resolveShareOrigin(sharePositionOrigin)
+        : sharePositionOrigin;
+
+    try {
+      final result = await Share.shareXFiles(
+        files,
+        subject: subject,
+        text: needsShareOrigin ? null : subject,
+        sharePositionOrigin: origin,
+      );
+      if (result.status == ShareResultStatus.dismissed) {
+        return ShareFileOutcome.dismissed;
+      }
+      return ShareFileOutcome.shared;
+    } on PlatformException {
+      return ShareFileOutcome.failed;
+    }
+  }
 }

@@ -60,8 +60,8 @@ import 'package:cross_file/cross_file.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:craftquest_app/core/utils/share_text_helper.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 
 class QuizDetailPage extends StatefulWidget {
   const QuizDetailPage({
@@ -604,7 +604,8 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
 
   String _pdfFileName() {
     final sanitized = _quizTitle
-        .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
+        .replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '')
+        .replaceAll(RegExp(r'[<>:"/\\|?*\n\r\t]'), '_')
         .trim();
     final base = sanitized.isEmpty ? 'quiz' : sanitized;
     return base.length > 120 ? '${base.substring(0, 120)}.pdf' : '$base.pdf';
@@ -797,6 +798,10 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
       return;
     }
 
+    // Capturar el origen del popover antes de cualquier await (requisito iOS).
+    final shareOrigin = ShareTextHelper.shareOriginFromContext(context);
+    final languageCode = Localizations.localeOf(context).languageCode;
+
     setState(() => _exportingPdf = true);
     await WidgetsBinding.instance.endOfFrame;
     if (!mounted) return;
@@ -859,7 +864,6 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
     await Future<void>.delayed(const Duration(milliseconds: 120));
 
     try {
-      final languageCode = Localizations.localeOf(context).languageCode;
       final bytes = await _repository.downloadQuizPdf(
         widget.quizId,
         languageCode: languageCode,
@@ -910,6 +914,9 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
           ),
         );
       } else {
+        await ShareTextHelper.waitForOverlayDismiss();
+        if (!mounted) return;
+
         final dir = await getTemporaryDirectory();
         final path = '${dir.path}/$fileName';
         final file = XFile.fromData(
@@ -918,12 +925,26 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
           mimeType: 'application/pdf',
         );
         await file.saveTo(path);
-        await Share.shareXFiles(
-          [XFile(path)],
-          text: l10n.exportQuizPdfReady,
+        final shareOutcome = await ShareTextHelper.shareFiles(
+          files: [
+            XFile(
+              path,
+              name: fileName,
+              mimeType: 'application/pdf',
+            ),
+          ],
+          subject: l10n.exportQuizPdfReady,
+          sharePositionOrigin: shareOrigin,
         );
         if (!mounted) return;
-        context.showSuccessSnackBar(l10n.exportQuizPdfReady);
+        switch (shareOutcome) {
+          case ShareFileOutcome.shared:
+            context.showSuccessSnackBar(l10n.exportQuizPdfReady);
+          case ShareFileOutcome.dismissed:
+            break;
+          case ShareFileOutcome.failed:
+            context.showErrorSnackBar(l10n.exportQuizPdfShareFailed);
+        }
       }
     } on DioException catch (e) {
       if (!mounted) return;

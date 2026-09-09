@@ -82,6 +82,7 @@ class CraftQuestApp extends StatelessWidget {
           return MaterialApp(
             navigatorKey: rootNavigatorKey,
             scaffoldMessengerKey: rootScaffoldMessengerKey,
+            debugShowCheckedModeBanner: false,
             onGenerateTitle: (context) =>
                 AppLocalizations.of(context)!.appTitle,
             locale: localeController.locale,

@@ -1240,6 +1240,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exportQuizPdfFailed => 'Could not generate the PDF';
 
   @override
+  String get exportQuizPdfShareFailed =>
+      'The PDF was created but could not be shared';
+
+  @override
   String get exportQuizPdfEmpty => 'Add questions before exporting';
 
   @override
@@ -1686,6 +1690,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get excelImportTemplateFailed => 'Could not download the template';
+
+  @override
+  String get excelImportTemplateShareFailed =>
+      'The template was downloaded but could not be shared';
 
   @override
   String get excelImportDropHint => 'Drag your .xlsx file here';

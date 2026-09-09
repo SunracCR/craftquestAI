@@ -15,8 +15,9 @@ import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:cross_file/cross_file.dart';
+import 'package:craftquest_app/core/utils/share_text_helper.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 
 class ExcelImportPage extends StatefulWidget {
   const ExcelImportPage({
@@ -53,6 +54,7 @@ class _ExcelImportPageState extends State<ExcelImportPage> {
 
   Future<void> _downloadTemplate() async {
     final l10n = AppLocalizations.of(context)!;
+    final shareOrigin = ShareTextHelper.shareOriginFromContext(context);
     setState(() => _downloadingTemplate = true);
     try {
       final languageCode = Localizations.localeOf(context).languageCode;
@@ -68,20 +70,37 @@ class _ExcelImportPageState extends State<ExcelImportPage> {
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       );
 
+      ShareFileOutcome shareOutcome;
       if (kIsWeb) {
-        await Share.shareXFiles([file], text: l10n.excelImportTemplateReady);
+        shareOutcome = await ShareTextHelper.shareFiles(
+          files: [file],
+          subject: l10n.excelImportTemplateReady,
+        );
       } else {
         final dir = await getTemporaryDirectory();
         final path = '${dir.path}/craftquest_import_template.xlsx';
         await file.saveTo(path);
-        await Share.shareXFiles(
-          [XFile(path)],
-          text: l10n.excelImportTemplateReady,
+        shareOutcome = await ShareTextHelper.shareFiles(
+          files: [
+            XFile(
+              path,
+              name: 'craftquest_import_template.xlsx',
+              mimeType:
+                  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ),
+          ],
+          subject: l10n.excelImportTemplateReady,
+          sharePositionOrigin: shareOrigin,
         );
       }
-
       if (!mounted) return;
-      context.showSuccessSnackBar(l10n.excelImportTemplateReady);
+      if (shareOutcome == ShareFileOutcome.failed) {
+        context.showErrorSnackBar(l10n.excelImportTemplateShareFailed);
+        return;
+      }
+      if (shareOutcome != ShareFileOutcome.dismissed) {
+        context.showSuccessSnackBar(l10n.excelImportTemplateReady);
+      }
     } on DioException catch (e) {
       if (!mounted) return;
       context.showDioErrorSnackBar(e);
