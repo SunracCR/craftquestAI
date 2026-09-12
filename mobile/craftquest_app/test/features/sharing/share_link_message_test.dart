@@ -17,11 +17,11 @@ void main() {
             final message = buildShareLinkMessage(
               AppLocalizations.of(context)!,
               title: 'Cuestionario 1',
-              joinUrl: 'https://app.craftquestai.com/join/CQ-563141',
+              joinUrl: 'https://api.craftquestai.com/join/CQ-563141',
               code: 'CQ-563141',
             );
             expect(message, contains('Cuestionario 1'));
-            expect(message, contains('https://app.craftquestai.com/join/CQ-563141'));
+            expect(message, contains('https://api.craftquestai.com/join/CQ-563141'));
             expect(message, contains('CQ-563141'));
             return const SizedBox.shrink();
           },

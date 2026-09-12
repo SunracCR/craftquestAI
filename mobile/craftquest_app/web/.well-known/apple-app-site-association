@@ -1,0 +1,16 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "SDW35AHMW6.com.craftquestai.craftquestaiApp",
+        "paths": [
+          "/join",
+          "/join/*",
+          "/prep",
+          "/prep/*"
+        ]
+      }
+    ]
+  }
+}
