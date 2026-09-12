@@ -121,4 +121,81 @@ public class CqifImportTests
 
         Assert.Empty(issues);
     }
+
+    [Fact]
+    public void JsonParser_CoercesSingularCorrectAnswerKey()
+    {
+        const string json = """
+            {
+              "cqifVersion": "2.0",
+              "questions": [
+                {
+                  "type": "single_choice",
+                  "text": "What is 2+2?",
+                  "answerOptions": [
+                    { "key": "a", "text": "3" },
+                    { "key": "b", "text": "4" }
+                  ],
+                  "correctAnswerKey": "b"
+                }
+              ]
+            }
+            """;
+
+        var document = CqifJsonParser.Parse(json);
+
+        Assert.Single(document.Questions);
+        Assert.Contains(document.Questions[0].CorrectAnswerKeys, k => k == "b");
+    }
+
+    [Fact]
+    public void JsonParser_CoercesIsCorrectFromAnswerOptions()
+    {
+        const string json = """
+            {
+              "cqifVersion": "2.0",
+              "questions": [
+                {
+                  "type": "single_choice",
+                  "text": "What is 2+2?",
+                  "answerOptions": [
+                    { "key": "a", "text": "3", "isCorrect": false },
+                    { "key": "b", "text": "4", "isCorrect": true }
+                  ]
+                }
+              ]
+            }
+            """;
+
+        var document = CqifJsonParser.Parse(json);
+
+        Assert.Single(document.Questions);
+        Assert.Contains(document.Questions[0].CorrectAnswerKeys, k => k == "b");
+    }
+
+    [Fact]
+    public void JsonParser_CoercesCorrectAnswerByOptionText()
+    {
+        const string json = """
+            {
+              "cqifVersion": "2.0",
+              "questions": [
+                {
+                  "type": "single_choice",
+                  "text": "Capital of France?",
+                  "answerOptions": [
+                    { "key": "a", "text": "London" },
+                    { "key": "b", "text": "Paris" }
+                  ],
+                  "correctAnswer": "Paris"
+                }
+              ]
+            }
+            """;
+
+        var document = CqifJsonParser.Parse(json);
+
+        Assert.Single(document.Questions);
+        Assert.Contains(document.Questions[0].CorrectAnswerKeys, k => k == "b");
+    }
 }

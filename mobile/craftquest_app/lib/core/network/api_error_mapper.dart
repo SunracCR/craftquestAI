@@ -160,7 +160,9 @@ abstract final class ApiErrorMapper {
 
     if (lower.contains('invalid cqif json')
         || lower.contains('could not be converted')
-        || lower.contains('quiz format')) {
+        || lower.contains('quiz format')
+        || lower.contains('correctanswerkey')
+        || lower.contains('at least one correct')) {
       return l10n.errorAiGenerationInvalidOutput;
     }
 

@@ -1,3 +1,4 @@
+using CraftQuest.Application.Exceptions;
 using CraftQuest.Application.Models.Imports;
 using CraftQuest.Application.Services.Imports;
 
@@ -5,6 +6,9 @@ namespace CraftQuest.Application.Services.StudyMaterials;
 
 public static class CqifGenerationSanitizer
 {
+    private const string InvalidOutputMessage =
+        "The AI returned a response that could not be converted to a valid quiz format. Please try again.";
+
     private static readonly HashSet<string> ImageTypes =
     [
         "image_choice",
@@ -25,19 +29,25 @@ public static class CqifGenerationSanitizer
 
     public static void ValidateOrThrow(CqifDocument document)
     {
-        var issues = CqifValidator.ValidateDocument(document)
-            .Where(i => i.Severity == "error")
-            .ToList();
+        var validQuestions = new List<CqifQuestion>();
+
+        for (var i = 0; i < document.Questions.Count; i++)
+        {
+            var question = document.Questions[i];
+            var hasErrors = CqifValidator.ValidateQuestion(question, i + 1)
+                .Any(issue => issue.Severity == "error");
+
+            if (!hasErrors)
+            {
+                validQuestions.Add(question);
+            }
+        }
+
+        document.Questions = validQuestions;
 
         if (document.Questions.Count == 0)
         {
-            var detail = issues.Count > 0 ? issues[0].Message : "No questions remain after sanitization.";
-            throw new InvalidOperationException(detail);
-        }
-
-        if (issues.Count > 0)
-        {
-            throw new InvalidOperationException(issues[0].Message);
+            throw new AppException(InvalidOutputMessage, 502, "AI_GENERATION_INVALID_OUTPUT");
         }
     }
 }

@@ -324,6 +324,21 @@ public class GeminiQuizGenerationProvider(
         try
         {
             var doc = CqifJsonParser.Parse(jsonText);
+            if (HasSchemaErrors(doc))
+            {
+                trace.GeminiResponse(
+                    label,
+                    model,
+                    jsonText,
+                    doc.Questions.Count,
+                    "parsed OK but CQIF schema invalid");
+                trace.RecordCqifRepair(label);
+                trace.Stage("repair.start", $"Repairing CQIF schema for {label}");
+                var repaired = await RepairCqifAsync(jsonText, model, label, cancellationToken);
+                trace.DocumentSnapshot($"{label}-repaired", repaired);
+                return repaired;
+            }
+
             trace.GeminiResponse(label, model, jsonText, doc.Questions.Count, "parsed OK");
             return doc;
         }
@@ -337,6 +352,9 @@ public class GeminiQuizGenerationProvider(
             return repaired;
         }
     }
+
+    private static bool HasSchemaErrors(CqifDocument document) =>
+        CqifValidator.ValidateDocument(document).Any(issue => issue.Severity == "error");
 
     private async Task<CqifDocument> RepairCqifAsync(
         string invalidJson,

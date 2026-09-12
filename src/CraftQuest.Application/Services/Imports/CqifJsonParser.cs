@@ -141,14 +141,248 @@ public static partial class CqifJsonParser
         }
     }
 
+    private static readonly string[] CorrectAnswerKeyFieldAliases =
+    [
+        "correctAnswerKeys",
+        "correctAnswerKey",
+        "correctAnswer",
+        "correctAnswers",
+        "correct",
+    ];
+
     private static void CoerceCorrectAnswerKeys(JsonObject question)
     {
-        var keysNode = question["correctAnswerKeys"];
-        if (keysNode is JsonValue value && value.GetValueKind() == JsonValueKind.String)
+        var options = question["answerOptions"] as JsonArray;
+        var resolvedKeys = new List<string>();
+
+        var aliasField = FindCorrectAnswerAliasField(question);
+        if (aliasField is not null)
         {
-            question["correctAnswerKeys"] = new JsonArray(value.GetValue<string>());
+            resolvedKeys.AddRange(ResolveCorrectAnswerValues(aliasField.Value.Node, options));
+        }
+
+        foreach (var key in ExtractCorrectKeysFromOptions(options))
+        {
+            if (!ContainsKey(resolvedKeys, key))
+            {
+                resolvedKeys.Add(key);
+            }
+        }
+
+        if (resolvedKeys.Count == 0)
+        {
+            return;
+        }
+
+        question["correctAnswerKeys"] = new JsonArray(
+            resolvedKeys.Select(k => JsonValue.Create(k)).ToArray());
+
+        foreach (var alias in CorrectAnswerKeyFieldAliases)
+        {
+            if (!string.Equals(alias, "correctAnswerKeys", StringComparison.Ordinal)
+                && question.ContainsKey(alias))
+            {
+                question.Remove(alias);
+            }
         }
     }
+
+    private static (string Name, JsonNode Node)? FindCorrectAnswerAliasField(JsonObject question)
+    {
+        foreach (var alias in CorrectAnswerKeyFieldAliases)
+        {
+            if (question[alias] is JsonNode node)
+            {
+                return (alias, node);
+            }
+        }
+
+        return null;
+    }
+
+    private static IEnumerable<string> ResolveCorrectAnswerValues(JsonNode? node, JsonArray? options)
+    {
+        if (node is null)
+        {
+            yield break;
+        }
+
+        switch (node)
+        {
+            case JsonArray array:
+                foreach (var item in array)
+                {
+                    foreach (var resolved in ResolveSingleCorrectAnswerValue(item, options))
+                    {
+                        yield return resolved;
+                    }
+                }
+
+                break;
+            default:
+                foreach (var resolved in ResolveSingleCorrectAnswerValue(node, options))
+                {
+                    yield return resolved;
+                }
+
+                break;
+        }
+    }
+
+    private static IEnumerable<string> ResolveSingleCorrectAnswerValue(JsonNode? node, JsonArray? options)
+    {
+        if (node is null)
+        {
+            yield break;
+        }
+
+        if (node is JsonValue value)
+        {
+            switch (value.GetValueKind())
+            {
+                case JsonValueKind.String:
+                    var text = value.GetValue<string>()?.Trim();
+                    if (string.IsNullOrWhiteSpace(text))
+                    {
+                        yield break;
+                    }
+
+                    foreach (var resolved in MapCorrectAnswerToken(text, options))
+                    {
+                        yield return resolved;
+                    }
+
+                    break;
+                case JsonValueKind.Number:
+                    if (options is not null
+                        && value.TryGetValue<int>(out var index))
+                    {
+                        foreach (var resolved in MapCorrectAnswerIndex(index, options))
+                        {
+                            yield return resolved;
+                        }
+                    }
+
+                    break;
+            }
+
+            yield break;
+        }
+
+        if (node is JsonObject obj && obj["key"] is JsonValue keyValue
+            && keyValue.GetValueKind() == JsonValueKind.String)
+        {
+            var key = keyValue.GetValue<string>()?.Trim();
+            if (!string.IsNullOrWhiteSpace(key))
+            {
+                yield return key;
+            }
+        }
+    }
+
+    private static IEnumerable<string> MapCorrectAnswerToken(string token, JsonArray? options)
+    {
+        if (options is null || options.Count == 0)
+        {
+            yield return token;
+            yield break;
+        }
+
+        foreach (var option in options.OfType<JsonObject>())
+        {
+            var key = option["key"]?.GetValue<string>()?.Trim();
+            var optionText = option["text"]?.GetValue<string>()?.Trim();
+
+            if (!string.IsNullOrWhiteSpace(key)
+                && string.Equals(key, token, StringComparison.OrdinalIgnoreCase))
+            {
+                yield return key;
+                yield break;
+            }
+
+            if (!string.IsNullOrWhiteSpace(optionText)
+                && string.Equals(optionText, token, StringComparison.OrdinalIgnoreCase))
+            {
+                yield return key ?? token;
+                yield break;
+            }
+        }
+
+        if (int.TryParse(token, out var numericIndex))
+        {
+            foreach (var resolved in MapCorrectAnswerIndex(numericIndex, options))
+            {
+                yield return resolved;
+            }
+
+            yield break;
+        }
+
+        yield return token;
+    }
+
+    private static IEnumerable<string> MapCorrectAnswerIndex(int index, JsonArray options)
+    {
+        var zeroBased = index >= 0 && index < options.Count ? index : -1;
+        var oneBased = index >= 1 && index <= options.Count ? index - 1 : -1;
+        var resolvedIndex = zeroBased >= 0 ? zeroBased : oneBased;
+
+        if (resolvedIndex < 0 || resolvedIndex >= options.Count)
+        {
+            yield break;
+        }
+
+        if (options[resolvedIndex] is JsonObject option)
+        {
+            var key = option["key"]?.GetValue<string>()?.Trim();
+            if (!string.IsNullOrWhiteSpace(key))
+            {
+                yield return key;
+            }
+        }
+    }
+
+    private static IEnumerable<string> ExtractCorrectKeysFromOptions(JsonArray? options)
+    {
+        if (options is null)
+        {
+            yield break;
+        }
+
+        foreach (var option in options.OfType<JsonObject>())
+        {
+            if (!IsMarkedCorrect(option))
+            {
+                continue;
+            }
+
+            var key = option["key"]?.GetValue<string>()?.Trim();
+            if (!string.IsNullOrWhiteSpace(key))
+            {
+                yield return key;
+            }
+        }
+    }
+
+    private static bool IsMarkedCorrect(JsonObject option)
+    {
+        if (option["isCorrect"] is JsonValue isCorrect
+            && isCorrect.GetValueKind() == JsonValueKind.True)
+        {
+            return true;
+        }
+
+        if (option["correct"] is JsonValue correct
+            && correct.GetValueKind() == JsonValueKind.True)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool ContainsKey(IReadOnlyList<string> keys, string candidate) =>
+        keys.Any(k => string.Equals(k, candidate, StringComparison.OrdinalIgnoreCase));
 
     private static string NormalizePropertyNames(string json) =>
         json.Replace("\"Questions\"", "\"questions\"", StringComparison.Ordinal);

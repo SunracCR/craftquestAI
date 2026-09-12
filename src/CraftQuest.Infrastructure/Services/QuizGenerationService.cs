@@ -959,6 +959,10 @@ public class QuizGenerationService(
 
         return message.Contains("Invalid CQIF JSON", StringComparison.OrdinalIgnoreCase)
             || message.Contains("could not be converted", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("correctAnswerKey", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("At least one correct", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("Answer option key is required", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("At least two answer options", StringComparison.OrdinalIgnoreCase)
                 ? "AI_GENERATION_INVALID_OUTPUT"
                 : null;
     }
