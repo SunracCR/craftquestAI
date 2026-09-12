@@ -35,7 +35,9 @@ import 'package:craftquest_app/features/billing/data/billing_repository.dart';
 import 'package:craftquest_app/features/billing/data/billing_snapshot_store.dart';
 import 'package:craftquest_app/features/billing/data/pending_paypal_payment_store.dart';
 import 'package:craftquest_app/features/prep_plus/data/pending_prep_referral_store.dart';
+import 'package:craftquest_app/features/sharing/data/pending_join_code_store.dart';
 import 'package:craftquest_app/features/sharing/data/sharing_repository.dart';
+import 'package:craftquest_app/features/sharing/presentation/join_deep_link_navigator.dart';
 import 'package:craftquest_app/features/teacher/data/teacher_assignment_repository.dart';
 import 'package:craftquest_app/features/teacher/data/teacher_class_repository.dart';
 import 'package:craftquest_app/features/teacher/data/teacher_dashboard_repository.dart';
@@ -158,7 +160,16 @@ void configureDependencies() {
   getIt.registerLazySingleton(
     () => PendingPrepReferralStore(SharedPreferences.getInstance()),
   );
+  getIt.registerLazySingleton(
+    () => PendingJoinCodeStore(SharedPreferences.getInstance()),
+  );
   getIt.registerLazySingleton(() => SharingRepository(getIt<ApiClient>()));
+  getIt.registerLazySingleton(
+    () => JoinDeepLinkNavigator(
+      getIt<SharingRepository>(),
+      getIt<PendingJoinCodeStore>(),
+    ),
+  );
   getIt.registerLazySingleton(() => AiRepository(getIt<ApiClient>()));
   getIt.registerLazySingleton(() => StudyMaterialRepository(getIt<ApiClient>()));
   getIt.registerLazySingleton(() => AnalyticsRepository(getIt<ApiClient>()));

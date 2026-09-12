@@ -55,6 +55,7 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
   String? _error;
   bool _storeAvailable = false;
   String? _pendingPayPalSubscriptionId;
+  bool _storePurchaseInProgress = false;
 
   bool get _purchasing => _orchestrator.isBusy || _paypalPurchasing;
 
@@ -83,7 +84,7 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
     final state = _orchestrator.state;
     if (state is PurchaseDeferred) {
       showStorePurchaseDeferred(context);
-    } else if (state is PurchaseFailed) {
+    } else if (state is PurchaseFailed && !_storePurchaseInProgress) {
       showStorePurchaseFailure(context, state);
       _orchestrator.resetToIdle();
     }
@@ -180,25 +181,38 @@ class _UpgradePlanPageState extends State<UpgradePlanPage> {
       return;
     }
 
-    final result = await _orchestrator.buy(
-      StorePurchaseRequest(
-        kind: PurchaseProductKind.subscription,
-        productId: productId,
-        product: product,
-        billingCycle: _billingCycle.apiValue,
-      ),
-    );
-
-    if (!mounted) return;
-    _orchestrator.resetToIdle();
-
-    if (result is SubscriptionPurchaseResult) {
-      context.showSuccessSnackBar(
-        l10n.upgradeSuccess(
-          BillingDisplay.localizedPlanName(l10n, code: result.planCode),
+    setState(() => _storePurchaseInProgress = true);
+    try {
+      final result = await _orchestrator.buy(
+        StorePurchaseRequest(
+          kind: PurchaseProductKind.subscription,
+          productId: productId,
+          product: product,
+          billingCycle: _billingCycle.apiValue,
         ),
       );
-      Navigator.of(context).pop(true);
+
+      if (!mounted) return;
+
+      if (result is SubscriptionPurchaseResult) {
+        context.showSuccessSnackBar(
+          l10n.upgradeSuccess(
+            BillingDisplay.localizedPlanName(l10n, code: result.planCode),
+          ),
+        );
+        Navigator.of(context).pop(true);
+        return;
+      }
+
+      final state = _orchestrator.state;
+      if (state is PurchaseFailed) {
+        showStorePurchaseFailure(context, state);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _storePurchaseInProgress = false);
+      }
+      _orchestrator.resetToIdle();
     }
   }
 

@@ -3713,13 +3713,13 @@ abstract class AppLocalizations {
   /// No description provided for @shareCodeCopyLinkAction.
   ///
   /// In es, this message translates to:
-  /// **'Copiar link'**
+  /// **'Copiar para compartir'**
   String get shareCodeCopyLinkAction;
 
   /// No description provided for @shareCodeLinkCopied.
   ///
   /// In es, this message translates to:
-  /// **'Link copiado'**
+  /// **'Mensaje copiado para compartir'**
   String get shareCodeLinkCopied;
 
   /// No description provided for @shareCodeShareLinkAction.

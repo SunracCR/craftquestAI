@@ -2205,10 +2205,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get shareCodeCopied => 'Código copiado';
 
   @override
-  String get shareCodeCopyLinkAction => 'Copiar link';
+  String get shareCodeCopyLinkAction => 'Copiar para compartir';
 
   @override
-  String get shareCodeLinkCopied => 'Link copiado';
+  String get shareCodeLinkCopied => 'Mensaje copiado para compartir';
 
   @override
   String get shareCodeShareLinkAction => 'Compartir link';

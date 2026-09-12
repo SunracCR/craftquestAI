@@ -38,7 +38,8 @@ import 'package:craftquest_app/features/guest/presentation/guest_code_page.dart'
 import 'package:craftquest_app/features/guest/presentation/guest_shell_page.dart';
 import 'package:craftquest_app/core/services/push_notification_service.dart';
 import 'package:craftquest_app/features/notifications/presentation/notifications_cubit.dart';
-import 'package:craftquest_app/features/sharing/presentation/redeem_code_page.dart';
+import 'package:craftquest_app/features/sharing/data/pending_join_code_store.dart';
+import 'package:craftquest_app/features/sharing/presentation/join_deep_link_navigator.dart';
 import 'package:craftquest_app/features/prep_plus/data/models/prep_plus_models.dart';
 import 'package:craftquest_app/features/prep_plus/data/pending_prep_referral_store.dart';
 import 'package:craftquest_app/features/prep_plus/data/prep_plus_repository.dart';
@@ -216,8 +217,16 @@ class _AuthGateState extends State<_AuthGate> {
     _capturedPayPalReturn = null;
     consumeWebPayPalReturn();
     getIt<DeepLinkService>().clearPendingLinks();
+    unawaited(getIt<PendingJoinCodeStore>().clear());
     clearWebEntryDeepLinkUrl();
   }
+
+  String? _pendingJoinCode() {
+    final deepLinkService = getIt<DeepLinkService>();
+    return deepLinkService.pendingJoinCode ?? readWebJoinCode();
+  }
+
+  bool get _hasPendingJoinLink => _pendingJoinCode() != null;
 
   void _scheduleDeepLinkRoute() {
     if (!mounted) {
@@ -289,7 +298,7 @@ class _AuthGateState extends State<_AuthGate> {
       }
     }
 
-    final code = deepLinkService.pendingJoinCode ?? readWebJoinCode();
+    final code = _pendingJoinCode();
     if (code == null || _handledJoinCodes.contains(code)) {
       return;
     }
@@ -299,18 +308,10 @@ class _AuthGateState extends State<_AuthGate> {
       return;
     }
 
-    _handledJoinCodes.add(code);
-    deepLinkService.consumePendingJoinCode();
+    unawaited(getIt<PendingJoinCodeStore>().save(code));
 
     if (authState is AuthAuthenticated) {
-      rootNavigatorKey.currentState?.push(
-        MaterialPageRoute<void>(
-          builder: (_) => RedeemCodePage(
-            initialCode: code,
-            autoRedeem: true,
-          ),
-        ),
-      );
+      unawaited(_openJoinQuiz(code));
       return;
     }
 
@@ -324,6 +325,31 @@ class _AuthGateState extends State<_AuthGate> {
         builder: (_) => GuestCodePage(initialCode: code),
       ),
     );
+  }
+
+  Future<void> _openJoinQuiz(String code) async {
+    if (_handledJoinCodes.contains(code)) {
+      return;
+    }
+
+    // Esperar a que MainShell esté montado tras restaurar la sesión.
+    await Future<void>.delayed(Duration.zero);
+    if (rootNavigatorKey.currentState == null) {
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    }
+    if (!mounted) {
+      return;
+    }
+
+    _handledJoinCodes.add(code);
+    getIt<DeepLinkService>().consumePendingJoinCode();
+
+    final success =
+        await getIt<JoinDeepLinkNavigator>().openQuizFromJoinCode(code);
+    if (!success && mounted) {
+      _handledJoinCodes.remove(code);
+      await getIt<PendingJoinCodeStore>().save(code);
+    }
   }
 
   Future<void> _routePrepReferral(
@@ -532,13 +558,14 @@ class _AuthGateState extends State<_AuthGate> {
             }
             final user = state.user;
             final pendingPayPalReturn = _pendingPayPalReturn;
-            if (pendingPayPalReturn == null) {
+            final pendingJoin = _hasPendingJoinLink;
+            if (pendingPayPalReturn == null && !pendingJoin) {
               clearWebEntryDeepLinkUrl();
             }
             WidgetsBinding.instance.addPostFrameCallback((_) async {
               // Register/login guest hacen push sobre el navigator raíz; hay que
               // sacarlos aunque el home ya sea MainShellPage.
-              if (pendingPayPalReturn == null) {
+              if (pendingPayPalReturn == null && !pendingJoin) {
                 rootNavigatorKey.currentState?.popUntil((route) => route.isFirst);
               }
               rootScaffoldMessengerKey.currentState?.hideCurrentSnackBar();

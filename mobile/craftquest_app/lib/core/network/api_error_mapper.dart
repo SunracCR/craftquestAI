@@ -166,6 +166,11 @@ abstract final class ApiErrorMapper {
       return l10n.errorAiGenerationInvalidOutput;
     }
 
+    if (lower.contains('store subscription is not active')
+        || lower.contains('store subscription is not ready')) {
+      return l10n.purchaseVerificationFailed;
+    }
+
     if (lower.contains('current state is connecting')
         || lower.contains('the connection was not closed')
         || lower.contains('temporary database connection')) {
@@ -375,6 +380,8 @@ abstract final class ApiErrorMapper {
       case 'AI_CREDIT_PACK_UNKNOWN_PRODUCT':
       case 'STORE_PURCHASE_VERIFY_FAILED':
       case 'STORE_PURCHASE_INVALID':
+      case 'STORE_SUBSCRIPTION_INACTIVE':
+      case 'STORE_SUBSCRIPTION_NOT_READY':
         return l10n.purchaseVerificationFailed;
       case 'MATERIAL_NEEDS_OCR':
         return l10n.errorMaterialNeedsOcr;

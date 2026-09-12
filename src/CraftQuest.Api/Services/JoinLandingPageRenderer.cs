@@ -92,8 +92,9 @@ public static class JoinLandingPageRenderer
     {
         var labels = ResolveLabels(acceptLanguage);
         var encodedCode = WebUtility.HtmlEncode(code);
-        var deepLink = $"craftquest://join/{encodedCode}";
         var webJoinUrl = JoinLinkUrlBuilder.BuildWebJoinUrl(options, code);
+        var apiJoinUrl = $"{options.LinkBaseUrl.TrimEnd('/')}/join/{Uri.EscapeDataString(code)}";
+        var deepLink = $"craftquest://join/{code}";
         var storeUrl = device switch
         {
             JoinDeviceKind.Android => options.PlayStoreUrl,
@@ -127,9 +128,18 @@ public static class JoinLandingPageRenderer
             _ => string.Empty,
         };
 
-        var mobileScript = device is JoinDeviceKind.Android or JoinDeviceKind.Ios
-            ? $"<script>(function(){{var d='{deepLink}';window.location.href=d;setTimeout(function(){{document.body.classList.add('show-fallback');}},1200);}})();</script>"
-            : string.Empty;
+        var openAppButton = device switch
+        {
+            JoinDeviceKind.Android => BuildAndroidIntentButton(
+                options,
+                code,
+                apiJoinUrl,
+                labels.OpenInApp),
+            JoinDeviceKind.Ios => $"""
+                <a class="btn primary" href="{WebUtility.HtmlEncode(deepLink)}">{WebUtility.HtmlEncode(labels.OpenInApp)}</a>
+                """,
+            _ => string.Empty,
+        };
 
         const string copyScript = """
             <script>
@@ -153,20 +163,48 @@ public static class JoinLandingPageRenderer
                 <button type="button" class="btn ghost" onclick="copyCode()">{WebUtility.HtmlEncode(labels.CopyCode)}</button>
               </div>
               <div class="actions">
+                {openAppButton}
+                <a class="btn secondary" href="{WebUtility.HtmlEncode(webJoinUrl)}">{WebUtility.HtmlEncode(labels.ContinueWeb)}</a>
                 {storeButton}
-                <a class="btn primary" href="{WebUtility.HtmlEncode(webJoinUrl)}">{WebUtility.HtmlEncode(labels.ContinueWeb)}</a>
               </div>
               <p class="footer-note">{WebUtility.HtmlEncode(labels.FooterNote)} · www.CraftQuestAI.com</p>
             </main>
-            {mobileScript}
             {copyScript}
             """;
 
+        var pageTitle = string.IsNullOrWhiteSpace(quizTitle)
+            ? $"{labels.JoinTitle} · CraftQuestAI"
+            : $"{quizTitle} · CraftQuestAI";
+        var ogDescription = string.IsNullOrWhiteSpace(quizTitle)
+            ? policyHint
+            : $"{quizTitle} — {policyHint}";
+
         return BuildDocument(
-            title: $"{labels.JoinTitle} · CraftQuestAI",
+            title: pageTitle,
             body: body,
             labels: labels,
-            initialShowFallback: device == JoinDeviceKind.Desktop);
+            initialShowFallback: true,
+            openGraph: new OpenGraphMetadata(
+                Title: string.IsNullOrWhiteSpace(quizTitle) ? labels.JoinTitle : quizTitle,
+                Description: ogDescription,
+                Url: webJoinUrl,
+                ImageUrl: options.BrandIconUrl ?? options.DefaultOgImageUrl));
+    }
+
+    private static string BuildAndroidIntentButton(
+        JoinLinkOptions options,
+        string code,
+        string fallbackUrl,
+        string label)
+    {
+        var host = Uri.TryCreate(fallbackUrl, UriKind.Absolute, out var uri)
+            ? uri.Host
+            : "api.craftquestai.com";
+        var intentUrl =
+            $"intent://join/{Uri.EscapeDataString(code)}#Intent;scheme=https;host={host};package={options.AndroidPackageName};S.browser_fallback_url={Uri.EscapeDataString(fallbackUrl)};end";
+        return $"""
+            <a class="btn primary" href="{WebUtility.HtmlEncode(intentUrl)}">{WebUtility.HtmlEncode(label)}</a>
+            """;
     }
 
     public static string RenderAccountLinkLanding(
@@ -236,6 +274,7 @@ public static class JoinLandingPageRenderer
                 CodeLabel: string.Empty,
                 CopyCode: string.Empty,
                 ContinueWeb: labels.ContinueWeb,
+                OpenInApp: labels.ContinueWeb,
                 GetAndroid: labels.GetAndroid,
                 GetIos: labels.GetIos,
                 GuestOpenHint: labels.Subtitle,
@@ -325,13 +364,44 @@ public static class JoinLandingPageRenderer
         string GetIos,
         string FooterNote);
 
+    private sealed record OpenGraphMetadata(
+        string Title,
+        string Description,
+        string Url,
+        string? ImageUrl);
+
+    private static string BuildOpenGraphTags(OpenGraphMetadata? openGraph)
+    {
+        if (openGraph is null)
+        {
+            return string.Empty;
+        }
+
+        var imageTag = string.IsNullOrWhiteSpace(openGraph.ImageUrl)
+            ? string.Empty
+            : $"""<meta property="og:image" content="{WebUtility.HtmlEncode(openGraph.ImageUrl)}" />""";
+
+        return $"""
+              <meta property="og:type" content="website" />
+              <meta property="og:title" content="{WebUtility.HtmlEncode(openGraph.Title)}" />
+              <meta property="og:description" content="{WebUtility.HtmlEncode(openGraph.Description)}" />
+              <meta property="og:url" content="{WebUtility.HtmlEncode(openGraph.Url)}" />
+              {imageTag}
+              <meta name="twitter:card" content="summary" />
+              <meta name="twitter:title" content="{WebUtility.HtmlEncode(openGraph.Title)}" />
+              <meta name="twitter:description" content="{WebUtility.HtmlEncode(openGraph.Description)}" />
+            """;
+    }
+
     private static string BuildDocument(
         string title,
         string body,
         LandingLabels labels,
-        bool initialShowFallback = true)
+        bool initialShowFallback = true,
+        OpenGraphMetadata? openGraph = null)
     {
         var fallbackClass = initialShowFallback ? "show-fallback" : string.Empty;
+        var openGraphTags = BuildOpenGraphTags(openGraph);
         return $$"""
             <!DOCTYPE html>
             <html lang="{{labels.Lang}}">
@@ -339,6 +409,7 @@ public static class JoinLandingPageRenderer
               <meta charset="utf-8" />
               <meta name="viewport" content="width=device-width, initial-scale=1" />
               <title>{{WebUtility.HtmlEncode(title)}}</title>
+              {{openGraphTags}}
               <style>
                 :root {
                   --bg: #1A2F35;
@@ -438,6 +509,11 @@ public static class JoinLandingPageRenderer
                   background: var(--accent);
                   color: #0f1c20;
                 }
+                .btn.secondary {
+                  background: transparent;
+                  color: var(--text);
+                  border: 1px solid rgba(253, 253, 253, 0.25);
+                }
                 .btn.store {
                   background: transparent;
                   color: var(--text);
@@ -492,6 +568,7 @@ public static class JoinLandingPageRenderer
                 CodeLabel: "Access code",
                 CopyCode: "Copy code",
                 ContinueWeb: "Continue on web",
+                OpenInApp: "Open in CraftQuest",
                 GetAndroid: "Get on Google Play",
                 GetIos: "Get on App Store",
                 GuestOpenHint: "Practice without an account or sign in from the web app.",
@@ -511,6 +588,7 @@ public static class JoinLandingPageRenderer
                 CodeLabel: "Codigo de acesso",
                 CopyCode: "Copiar codigo",
                 ContinueWeb: "Continuar na web",
+                OpenInApp: "Abrir no CraftQuest",
                 GetAndroid: "Baixar no Google Play",
                 GetIos: "Baixar na App Store",
                 GuestOpenHint: "Pratique sem conta ou entre pela web.",
@@ -528,6 +606,7 @@ public static class JoinLandingPageRenderer
             CodeLabel: "Codigo de acceso",
             CopyCode: "Copiar codigo",
             ContinueWeb: "Continuar en la web",
+            OpenInApp: "Abrir en CraftQuest",
             GetAndroid: "Descargar en Google Play",
             GetIos: "Descargar en App Store",
             GuestOpenHint: "Practica sin cuenta o inicia sesion desde la web.",
@@ -545,6 +624,7 @@ public static class JoinLandingPageRenderer
         string CodeLabel,
         string CopyCode,
         string ContinueWeb,
+        string OpenInApp,
         string GetAndroid,
         string GetIos,
         string GuestOpenHint,

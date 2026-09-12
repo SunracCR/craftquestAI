@@ -49,6 +49,10 @@
                     android:pathPrefix="/join"/>
                 <data
                     android:scheme="https"
+                    android:host="app.craftquestai.com"
+                    android:pathPrefix="/join"/>
+                <data
+                    android:scheme="https"
                     android:host="api.craftquestai.com"
                     android:pathPrefix="/prep"/>
                 <data

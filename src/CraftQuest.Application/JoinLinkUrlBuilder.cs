@@ -12,14 +12,10 @@ public static class JoinLinkUrlBuilder
     public static string BuildJoinUrl(JoinLinkOptions options, string code)
     {
         var normalized = code.Trim().ToUpperInvariant();
-        var baseUrl = options.LinkBaseUrl.TrimEnd('/');
+        var baseUrl = options.WebAppUrl.TrimEnd('/');
         return $"{baseUrl}/join/{Uri.EscapeDataString(normalized)}";
     }
 
-    public static string BuildWebJoinUrl(JoinLinkOptions options, string code)
-    {
-        var normalized = code.Trim().ToUpperInvariant();
-        var baseUrl = options.WebAppUrl.TrimEnd('/');
-        return $"{baseUrl}/join?code={Uri.EscapeDataString(normalized)}";
-    }
+    public static string BuildWebJoinUrl(JoinLinkOptions options, string code) =>
+        BuildJoinUrl(options, code);
 }

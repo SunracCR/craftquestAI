@@ -1034,8 +1034,8 @@
   "shareCodeResultGroupHint": "Solo miembros de la clase seleccionada, con cuenta.",
   "shareCodeCopyAction": "Copiar",
   "shareCodeCopied": "Código copiado",
-  "shareCodeCopyLinkAction": "Copiar link",
-  "shareCodeLinkCopied": "Link copiado",
+  "shareCodeCopyLinkAction": "Copiar para compartir",
+  "shareCodeLinkCopied": "Mensaje copiado para compartir",
   "shareCodeShareLinkAction": "Compartir link",
   "shareCodeShareLinkMessage": "Únete a \"{title}\" en CraftQuestAI:\n{url}\n\nO usa el código: {code}",
   "@shareCodeShareLinkMessage": {

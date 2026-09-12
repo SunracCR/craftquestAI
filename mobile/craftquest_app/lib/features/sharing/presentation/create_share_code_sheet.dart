@@ -226,6 +226,15 @@ class _CreateShareCodeSheetState extends State<CreateShareCodeSheet> {
   }
 }
 
+String buildShareLinkMessage(
+  AppLocalizations l10n, {
+  required String title,
+  required String joinUrl,
+  required String code,
+}) {
+  return l10n.shareCodeShareLinkMessage(title, joinUrl, code);
+}
+
 Future<void> showShareCodeResultDialog(
   BuildContext context,
   ShareCodeModel shareCode, {
@@ -236,6 +245,14 @@ Future<void> showShareCodeResultDialog(
   final displayTitle = (quizTitle?.trim().isNotEmpty ?? false)
       ? quizTitle!.trim()
       : l10n.shareCodeTitle;
+  final shareMessage = joinUrl == null
+      ? null
+      : buildShareLinkMessage(
+          l10n,
+          title: displayTitle,
+          joinUrl: joinUrl,
+          code: shareCode.code,
+        );
 
   await showDialog<void>(
     context: context,
@@ -282,25 +299,20 @@ Future<void> showShareCodeResultDialog(
           },
           child: Text(l10n.shareCodeCopyAction),
         ),
-        if (joinUrl != null)
+        if (shareMessage != null)
           TextButton(
             onPressed: () {
-              Clipboard.setData(ClipboardData(text: joinUrl));
+              Clipboard.setData(ClipboardData(text: shareMessage));
               ScaffoldMessenger.of(ctx).showSnackBar(
                 SnackBar(content: Text(l10n.shareCodeLinkCopied)),
               );
             },
             child: Text(l10n.shareCodeCopyLinkAction),
           ),
-        if (joinUrl != null)
+        if (shareMessage != null)
           TextButton.icon(
             onPressed: () async {
-              final message = l10n.shareCodeShareLinkMessage(
-                displayTitle,
-                joinUrl,
-                shareCode.code,
-              );
-              await Share.share(message);
+              await Share.share(shareMessage);
             },
             icon: ShareIcons.adaptiveIcon(size: 18),
             label: Text(l10n.shareCodeShareLinkAction),

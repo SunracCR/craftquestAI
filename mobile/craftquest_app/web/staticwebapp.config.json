@@ -1,4 +1,18 @@
 {
+  "routes": [
+    {
+      "route": "/join/*",
+      "rewrite": "https://api.craftquestai.com/join/*"
+    },
+    {
+      "route": "/.well-known/assetlinks.json",
+      "rewrite": "https://api.craftquestai.com/.well-known/assetlinks.json"
+    },
+    {
+      "route": "/.well-known/apple-app-site-association",
+      "rewrite": "https://api.craftquestai.com/.well-known/apple-app-site-association"
+    }
+  ],
   "navigationFallback": {
     "rewrite": "/index.html",
     "exclude": [

@@ -2186,10 +2186,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareCodeCopied => 'Code copied';
 
   @override
-  String get shareCodeCopyLinkAction => 'Copy link';
+  String get shareCodeCopyLinkAction => 'Copy to share';
 
   @override
-  String get shareCodeLinkCopied => 'Link copied';
+  String get shareCodeLinkCopied => 'Share message copied';
 
   @override
   String get shareCodeShareLinkAction => 'Share link';

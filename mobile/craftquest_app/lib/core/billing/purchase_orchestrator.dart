@@ -6,6 +6,7 @@ import 'package:craftquest_app/core/billing/mobile_store_product_query.dart';
 import 'package:craftquest_app/core/billing/pending_store_purchase_store.dart';
 import 'package:craftquest_app/core/billing/post_checkout_session_refresh.dart';
 import 'package:craftquest_app/core/billing/purchase_flow_state.dart';
+import 'package:craftquest_app/core/billing/store_purchase_batch_policy.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/navigation/app_keys.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
@@ -32,6 +33,8 @@ class PurchaseOrchestrator extends ChangeNotifier {
   static const _restoreThrottle = Duration(seconds: 30);
   static const _watchdogDuration = Duration(seconds: 90);
   static const _inFlightTtl = Duration(minutes: 5);
+  static const _verifyMaxAttempts = 6;
+  static const _inactiveSubscriptionRetryDelay = Duration(seconds: 2);
   static const _emptyGuid = '00000000-0000-0000-0000-000000000000';
 
   final PendingStorePurchaseStore _pendingStore;
@@ -252,6 +255,8 @@ class PurchaseOrchestrator extends ChangeNotifier {
     List<PurchaseDetails> purchases, {
     bool background = false,
   }) async {
+    final successfulProductIds = _successfulProductIdsInBatch(purchases);
+
     for (final purchase in purchases) {
       if (purchase.status == PurchaseStatus.pending) {
         if (background) {
@@ -273,6 +278,16 @@ class PurchaseOrchestrator extends ChangeNotifier {
             debugPrint(
               '[IAP] background terminal failure product=${purchase.productID} '
               'status=${purchase.status}',
+            );
+          }
+        } else if (_shouldIgnoreTerminalFailureForPurchase(
+          purchase,
+          successfulProductIds: successfulProductIds,
+        )) {
+          if (kDebugMode) {
+            debugPrint(
+              '[IAP] ignoring terminal failure product=${purchase.productID} '
+              'status=${purchase.status} (batch has success or verify in flight)',
             );
           }
         } else {
@@ -305,6 +320,16 @@ class PurchaseOrchestrator extends ChangeNotifier {
         final result = await _verifyAndFulfillWithRetry(purchase);
         if (result == null) {
           _releasePurchase(purchaseKey);
+          final billingRecovered = await _tryRecoverViaActiveBilling(purchase);
+          if (billingRecovered != null) {
+            await _completeVerifiedPurchase(
+              purchase: purchase,
+              purchaseKey: purchaseKey,
+              result: billingRecovered,
+              background: background,
+            );
+            continue;
+          }
           if (canShowFailure) {
             _fail(PurchaseFailureReason.verificationFailed);
           } else if (kDebugMode) {
@@ -347,6 +372,30 @@ class PurchaseOrchestrator extends ChangeNotifier {
           );
           continue;
         }
+        final billingRecovered = await _tryRecoverViaActiveBilling(purchase);
+        if (billingRecovered != null) {
+          await _completeVerifiedPurchase(
+            purchase: purchase,
+            purchaseKey: purchaseKey,
+            result: billingRecovered,
+            background: background,
+          );
+          continue;
+        }
+        if (canShowFailure && _isInactiveStoreSubscriptionError(e)) {
+          await completeMobileStorePurchaseIfNeeded(purchase);
+          await _reconcileServerPurchases();
+          final deferredBilling = await _tryRecoverViaActiveBilling(purchase);
+          if (deferredBilling != null) {
+            await _completeVerifiedPurchase(
+              purchase: purchase,
+              purchaseKey: purchaseKey,
+              result: deferredBilling,
+              background: background,
+            );
+            continue;
+          }
+        }
         if (canShowFailure) {
           _fail(
             PurchaseFailureReason.verificationFailed,
@@ -376,6 +425,16 @@ class PurchaseOrchestrator extends ChangeNotifier {
           );
           continue;
         }
+        final billingRecovered = await _tryRecoverViaActiveBilling(purchase);
+        if (billingRecovered != null) {
+          await _completeVerifiedPurchase(
+            purchase: purchase,
+            purchaseKey: purchaseKey,
+            result: billingRecovered,
+            background: background,
+          );
+          continue;
+        }
         if (canShowFailure) {
           _fail(PurchaseFailureReason.verificationFailed);
         } else if (kDebugMode) {
@@ -386,6 +445,49 @@ class PurchaseOrchestrator extends ChangeNotifier {
         }
       }
     }
+  }
+
+  Set<String> _successfulProductIdsInBatch(List<PurchaseDetails> purchases) {
+    return purchases
+        .where(
+          (purchase) =>
+              purchase.status == PurchaseStatus.purchased ||
+              purchase.status == PurchaseStatus.restored,
+        )
+        .map((purchase) => purchase.productID)
+        .toSet();
+  }
+
+  bool _shouldIgnoreTerminalFailureForPurchase(
+    PurchaseDetails purchase, {
+    required Set<String> successfulProductIds,
+  }) {
+    return StorePurchaseBatchPolicy.shouldIgnoreTerminalFailure(
+      matchesActiveRequest: _productMatchesActiveRequest(purchase.productID),
+      batchHasSuccessfulForProduct: StorePurchaseBatchPolicy
+          .batchContainsSuccessfulPurchase(
+        successfulProductIds,
+        purchase.productID,
+      ),
+      isVerifyingOrSucceeded:
+          _state is PurchaseVerifying || _state is PurchaseSucceeded,
+      hasInFlightVerificationForProduct:
+          _hasInFlightVerificationForProduct(purchase.productID),
+    );
+  }
+
+  bool _hasInFlightVerificationForProduct(String productId) {
+    for (final key in _inFlightPurchaseKeys.keys) {
+      final separatorIndex = key.indexOf('|');
+      if (separatorIndex <= 0) {
+        continue;
+      }
+      final keyProductId = key.substring(0, separatorIndex);
+      if (storeProductIdsMatch(keyProductId, productId)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   Future<void> _completeVerifiedPurchase({
@@ -450,7 +552,11 @@ class PurchaseOrchestrator extends ChangeNotifier {
   }
 
   void _handleTerminalFailure(PurchaseDetails purchase) {
-    if (_activeRequest == null || purchase.productID != _activeRequest!.productId) {
+    if (_activeRequest == null ||
+        !storeProductIdsMatch(purchase.productID, _activeRequest!.productId)) {
+      return;
+    }
+    if (_state is PurchaseVerifying || _state is PurchaseSucceeded) {
       return;
     }
     _cancelWatchdog();
@@ -468,15 +574,21 @@ class PurchaseOrchestrator extends ChangeNotifier {
     PurchaseDetails purchase,
   ) async {
     DioException? lastError;
-    for (var attempt = 0; attempt < 3; attempt++) {
+    for (var attempt = 0; attempt < _verifyMaxAttempts; attempt++) {
       if (attempt > 0) {
-        await Future<void>.delayed(Duration(seconds: 2 * attempt));
+        final delay = lastError != null &&
+                _isInactiveStoreSubscriptionError(lastError)
+            ? _inactiveSubscriptionRetryDelay
+            : Duration(seconds: 2 * attempt);
+        await Future<void>.delayed(delay);
       }
       try {
         return await _verifyAndFulfill(purchase);
       } on DioException catch (e) {
         lastError = e;
-        if (attempt == 2 || !DioErrorMapper.isTransientFailure(e)) {
+        final shouldRetry = DioErrorMapper.isTransientFailure(e) ||
+            _isInactiveStoreSubscriptionError(e);
+        if (attempt == _verifyMaxAttempts - 1 || !shouldRetry) {
           rethrow;
         }
       }
@@ -491,6 +603,38 @@ class PurchaseOrchestrator extends ChangeNotifier {
     try {
       await _billingRepository.reconcilePendingPurchases();
     } catch (_) {}
+  }
+
+  Future<PurchaseFlowResult?> _tryRecoverViaActiveBilling(
+    PurchaseDetails purchase,
+  ) async {
+    if (!_isSubscriptionProduct(purchase.productID)) {
+      return null;
+    }
+
+    final expectedPlan = _planCodeForProduct(purchase.productID);
+    try {
+      final billing = await _billingRepository.getMyBilling(forceRefresh: true);
+      if (billing.subscription.status.toLowerCase() != 'active') {
+        return null;
+      }
+
+      final activePlan = billing.plan.code.toLowerCase();
+      if (activePlan != 'pro' &&
+          activePlan != 'teacher' &&
+          activePlan != 'premium') {
+        return null;
+      }
+
+      if (expectedPlan != null &&
+          activePlan != expectedPlan.toLowerCase()) {
+        return null;
+      }
+
+      return SubscriptionPurchaseResult(planCode: billing.plan.code);
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<PurchaseFlowResult?> _tryRecoverViaServerReconcile(
@@ -683,7 +827,8 @@ class PurchaseOrchestrator extends ChangeNotifier {
 
   bool _isInactiveStoreSubscriptionError(DioException error) {
     final code = _readApiErrorCode(error)?.toUpperCase() ?? '';
-    if (code == 'STORE_SUBSCRIPTION_INACTIVE') {
+    if (code == 'STORE_SUBSCRIPTION_INACTIVE' ||
+        code == 'STORE_SUBSCRIPTION_NOT_READY') {
       return true;
     }
     final message = (error.response?.data is Map
@@ -907,12 +1052,35 @@ class PurchaseOrchestrator extends ChangeNotifier {
 
   String _billingCycleForProduct(String productId) {
     for (final plan in _plans) {
-      if (plan.googlePlayAnnualProductId == productId ||
-          plan.appStoreAnnualProductId == productId) {
+      if ((plan.googlePlayAnnualProductId != null &&
+              storeProductIdsMatch(plan.googlePlayAnnualProductId!, productId)) ||
+          (plan.appStoreAnnualProductId != null &&
+              storeProductIdsMatch(plan.appStoreAnnualProductId!, productId))) {
         return 'annual';
       }
     }
     return 'monthly';
+  }
+
+  String? _planCodeForProduct(String productId) {
+    for (final plan in _plans) {
+      for (final candidate in plan.nativeStoreProductIds(
+        isIos: defaultTargetPlatform == TargetPlatform.iOS,
+      )) {
+        if (storeProductIdsMatch(candidate, productId)) {
+          return plan.code;
+        }
+      }
+    }
+
+    final lower = productId.toLowerCase();
+    if (lower.contains('_teacher_')) {
+      return 'teacher';
+    }
+    if (lower.contains('_pro_')) {
+      return 'pro';
+    }
+    return null;
   }
 
   String _purchaseKey(PurchaseDetails purchase) {
