@@ -50,6 +50,65 @@ public class PaymentServiceSqlServerTransactionTests
         Assert.Equal("validated", purchase.Status);
     }
 
+    [Fact]
+    public async Task VerifyMobilePurchase_TranslatesOpenPurchaseQuery_WithSqlServer()
+    {
+        await using var db = await TryCreateSqlServerDbAsync();
+        if (db is null)
+        {
+            return;
+        }
+
+        var userId = Guid.NewGuid();
+        await SeedFreeUserWithProPlanAsync(db, userId);
+        var service = CreatePaymentService(db);
+
+        var result = await service.VerifyMobilePurchaseAsync(
+            userId,
+            new VerifyMobilePurchaseRequest
+            {
+                Platform = "google_play",
+                ProductId = "craftquest_pro_monthly",
+                PurchaseToken = $"gp-token-{Guid.NewGuid():N}",
+            });
+
+        Assert.Equal("pro", result.PlanCode);
+        Assert.Equal("validated", result.Status);
+    }
+
+    [Fact]
+    public async Task GetMyBilling_CachedFreePlan_TranslatesPendingStorePurchaseQuery_WithSqlServer()
+    {
+        await using var db = await TryCreateSqlServerDbAsync();
+        if (db is null)
+        {
+            return;
+        }
+
+        var userId = Guid.NewGuid();
+        await SeedFreeUserWithProPlanAsync(db, userId);
+
+        db.Purchases.Add(new Purchase
+        {
+            PurchaseId = Guid.NewGuid(),
+            UserId = userId,
+            ProductCode = "pro",
+            ProductType = "subscription",
+            ProviderCode = "google_play",
+            ProviderTransactionId = $"gp-open-{Guid.NewGuid():N}",
+            Status = "pending",
+            CreatedAt = DateTime.UtcNow,
+        });
+        await db.SaveChangesAsync();
+
+        var billing = BillingTestHelpers.CreateService(db);
+        var first = await billing.GetMyBillingAsync(userId);
+        Assert.Equal("free", first.Plan.Code);
+
+        var second = await billing.GetMyBillingAsync(userId);
+        Assert.Equal("free", second.Plan.Code);
+    }
+
     private static async Task<CraftQuestDbContext?> TryCreateSqlServerDbAsync()
     {
         var connectionString = Environment.GetEnvironmentVariable("CRAFTQUEST_TEST_SQLSERVER")
@@ -88,6 +147,14 @@ public class PaymentServiceSqlServerTransactionTests
         var paymentOptions = Options.Create(new PaymentOptions
         {
             UseMockPayments = true,
+            PlanProducts = new Dictionary<string, PlanProductMapping>
+            {
+                ["pro"] = new()
+                {
+                    GooglePlayProductId = "craftquest_pro_monthly",
+                    AppStoreProductId = "craftquest_pro_monthly",
+                },
+            },
             AiCreditPacks =
             [
                 new AiCreditPackDefinition
@@ -181,6 +248,61 @@ public class PaymentServiceSqlServerTransactionTests
             BalanceAfter = 150,
             Reason = "grant_plan",
             CreatedAt = DateTime.UtcNow,
+        });
+
+        await db.SaveChangesAsync();
+    }
+
+    private static async Task SeedFreeUserWithProPlanAsync(CraftQuestDbContext db, Guid userId)
+    {
+        if (!await db.Plans.AnyAsync(p => p.Code == "free"))
+        {
+            db.Plans.Add(new Plan
+            {
+                PlanId = 1,
+                Code = "free",
+                Name = "Free",
+                IsActive = true,
+                MonthlyAiCredits = 20,
+            });
+        }
+
+        if (!await db.Plans.AnyAsync(p => p.Code == "pro"))
+        {
+            db.Plans.Add(new Plan
+            {
+                PlanId = 2,
+                Code = "pro",
+                Name = "Pro",
+                MonthlyPrice = 4.99m,
+                IsActive = true,
+                MonthlyAiCredits = 150,
+            });
+        }
+
+        var freePlanId = await db.Plans.Where(p => p.Code == "free").Select(p => p.PlanId).FirstAsync();
+
+        db.Users.Add(new User
+        {
+            UserId = userId,
+            Email = $"{userId:N}@test.com",
+            PasswordHash = [1],
+            DisplayName = "Test",
+            Status = "active",
+            CreatedAt = DateTime.UtcNow,
+        });
+
+        db.UserSubscriptions.Add(new UserSubscription
+        {
+            UserSubscriptionId = Guid.NewGuid(),
+            UserId = userId,
+            PlanId = freePlanId,
+            Status = "active",
+            StartedAt = DateTime.UtcNow,
+            CreatedAt = DateTime.UtcNow,
+            ProviderCode = "internal",
+            BillingCycle = "monthly",
+            AutoRenewEnabled = false,
         });
 
         await db.SaveChangesAsync();

@@ -2091,7 +2091,8 @@ public class PaymentService(
         var query = dbContext.Purchases
             .Where(p => p.ProviderCode == providerCode
                         && p.ProductType == "subscription"
-                        && PurchaseStatuses.NeedsFulfillment(p.Status));
+                        && (p.Status == PurchaseStatuses.Pending
+                            || p.Status == PurchaseStatuses.AwaitingPayment));
 
         if (userId.HasValue)
         {

@@ -81,6 +81,35 @@ public class BillingServicePurchasesTests
         Assert.Empty(purchases);
     }
 
+    [Fact]
+    public async Task GetMyBillingAsync_CachedFreePlan_WithPendingStorePurchase_DoesNotThrow()
+    {
+        await using var db = CreateDb();
+        var userId = Guid.NewGuid();
+        await SeedUserAndPlanAsync(db, userId, planCode: "free", planName: "Free");
+
+        db.Purchases.Add(new Purchase
+        {
+            PurchaseId = Guid.NewGuid(),
+            UserId = userId,
+            ProductCode = "teacher",
+            ProductType = "subscription",
+            ProviderCode = "google_play",
+            ProviderTransactionId = "gp-token-open",
+            Status = "pending",
+            BillingCycle = "annual",
+            CreatedAt = DateTime.UtcNow,
+        });
+        await db.SaveChangesAsync();
+
+        var billing = BillingTestHelpers.CreateService(db);
+        var first = await billing.GetMyBillingAsync(userId);
+        Assert.Equal("free", first.Plan.Code);
+
+        var second = await billing.GetMyBillingAsync(userId);
+        Assert.Equal("free", second.Plan.Code);
+    }
+
     private static CraftQuestDbContext CreateDb()
     {
         var options = new DbContextOptionsBuilder<CraftQuestDbContext>()

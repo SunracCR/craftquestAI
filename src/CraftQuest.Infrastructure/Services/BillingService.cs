@@ -1162,7 +1162,8 @@ public class BillingService(
             p => p.UserId == userId
                  && p.ProductType == "subscription"
                  && (p.ProviderCode == "google_play" || p.ProviderCode == "app_store")
-                 && PurchaseStatuses.NeedsFulfillment(p.Status),
+                 && (p.Status == PurchaseStatuses.Pending
+                     || p.Status == PurchaseStatuses.AwaitingPayment),
             cancellationToken);
 
     private void InvalidateBillingCache(Guid userId) =>

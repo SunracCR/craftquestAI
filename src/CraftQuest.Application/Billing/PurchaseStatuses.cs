@@ -17,6 +17,10 @@ public static class PurchaseStatuses
         string.Equals(status, AwaitingPayment, StringComparison.OrdinalIgnoreCase)
         || string.Equals(status, Pending, StringComparison.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// In-memory helper. Do not use inside EF IQueryable; compare
+    /// <see cref="Pending"/> / <see cref="AwaitingPayment"/> in the query instead.
+    /// </summary>
     public static bool NeedsFulfillment(string? status) =>
         IsOpenCheckout(status);
 }
