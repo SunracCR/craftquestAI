@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:craftquest_app/core/billing/purchase_orchestrator.dart';
 import 'package:craftquest_app/core/auth/oauth_sign_in_service.dart';
 import 'package:craftquest_app/core/auth/saved_login_credentials_storage.dart';
 import 'package:craftquest_app/core/auth/session_expired_notifier.dart';
@@ -344,7 +345,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Future<void> _warmBillingForUser(UserProfileModel user) async {
     final billingRepo = getIt<BillingRepository>();
     await billingRepo.preloadFromDisk(user.userId);
-    unawaited(billingRepo.getMyBilling(userId: user.userId));
+    unawaited(
+      billingRepo.getMyBilling(
+        userId: user.userId,
+        forceRefresh: true,
+      ),
+    );
+    if (PurchaseOrchestrator.supportsStore) {
+      unawaited(billingRepo.reconcilePendingPurchases());
+    }
   }
 
   Future<void> _clearBillingSnapshotForCurrentUser() async {

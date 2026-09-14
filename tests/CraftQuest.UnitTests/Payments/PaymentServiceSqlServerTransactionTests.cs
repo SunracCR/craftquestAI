@@ -122,6 +122,7 @@ public class PaymentServiceSqlServerTransactionTests
             google,
             new NoOpNotificationService(),
             new AppleAppStoreJwsVerifier(paymentOptions),
+            PaymentTestScopeFactory.CreateDefault(),
             paymentOptions,
             NullLogger<MobileStoreWebhookProcessor>.Instance);
 

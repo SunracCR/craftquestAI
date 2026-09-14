@@ -9,6 +9,7 @@ using CraftQuest.Domain.Entities;
 using CraftQuest.Infrastructure.Notifications;
 using CraftQuest.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -20,6 +21,7 @@ public sealed class MobileStoreWebhookProcessor(
     GooglePlaySubscriptionVerifier googlePlayVerifier,
     INotificationService notificationService,
     AppleAppStoreJwsVerifier appleJwsVerifier,
+    IServiceScopeFactory scopeFactory,
     IOptions<PaymentOptions> options,
     ILogger<MobileStoreWebhookProcessor> logger)
 {
@@ -122,10 +124,15 @@ public sealed class MobileStoreWebhookProcessor(
                     return;
                 }
 
+                var subscriptionId = subNotification.TryGetProperty("subscriptionId", out var subscriptionIdEl)
+                    ? subscriptionIdEl.GetString()
+                    : null;
+
                 await ProcessGooglePlaySubscriptionNotificationAsync(
                     root,
                     purchaseToken,
                     notificationType,
+                    subscriptionId,
                     cancellationToken);
             }
         }
@@ -135,6 +142,7 @@ public sealed class MobileStoreWebhookProcessor(
         JsonElement root,
         string purchaseToken,
         int notificationType,
+        string? subscriptionId,
         CancellationToken cancellationToken)
     {
 
@@ -160,6 +168,23 @@ public sealed class MobileStoreWebhookProcessor(
 
         if (subscription is null)
         {
+            // 1=RECOVERED, 4=NEW, 7=RESTARTED — primera activación vía webhook
+            if (notificationType is 1 or 4 or 7)
+            {
+                var activated = await TryActivateFirstMobileSubscriptionAsync(
+                    "google_play",
+                    purchaseToken,
+                    subscriptionId,
+                    eventId,
+                    cancellationToken);
+                if (activated)
+                {
+                    await RecordEventAsync("google_play", eventId, $"type-{notificationType}", cancellationToken);
+                    await dbContext.SaveChangesAsync(cancellationToken);
+                    return;
+                }
+            }
+
             logger.LogInformation(
                 "Google Play Pub/Sub event {EventId} ignored: no subscription for purchase token.",
                 eventId);
@@ -388,23 +413,33 @@ public sealed class MobileStoreWebhookProcessor(
                 case "DID_RENEW":
                 case "SUBSCRIBED":
                 case "DID_CHANGE_RENEWAL_PREF":
+                    var productId = ReadString(tx, "productId");
+                    var transactionId = ReadString(tx, "transactionId");
+                    var activatedFromWebhook = false;
                     try
                     {
                         await billingService.RenewSubscriptionPeriodAsync(
                             originalTransactionId,
                             "app_store",
                             periodEnd,
-                            ReadString(tx, "transactionId"),
+                            transactionId,
                             cancellationToken);
                     }
                     catch (AppException ex) when (ex.StatusCode == 404)
                     {
-                        // verify-purchase aún no creó la fila local. Apple reintenta;
-                        // no debemos marcar esto como error duro ni ensuciar compras.
-                        logger.LogInformation(
-                            "App Store {NotificationType} for original transaction {OriginalTransactionId} has no local subscription yet.",
-                            notificationType,
-                            originalTransactionId);
+                        activatedFromWebhook = await TryActivateFirstMobileSubscriptionAsync(
+                            "app_store",
+                            originalTransactionId,
+                            productId,
+                            transactionId,
+                            cancellationToken);
+                        if (!activatedFromWebhook)
+                        {
+                            logger.LogInformation(
+                                "App Store {NotificationType} for original transaction {OriginalTransactionId} has no local subscription yet.",
+                                notificationType,
+                                originalTransactionId);
+                        }
                     }
 
                     if (autoRenewEnabled.HasValue)
@@ -547,6 +582,23 @@ public sealed class MobileStoreWebhookProcessor(
                         && s.ProviderCode == "app_store"
                         && s.Status == "active")
             .FirstOrDefaultAsync(cancellationToken);
+
+    private async Task<bool> TryActivateFirstMobileSubscriptionAsync(
+        string providerCode,
+        string providerSubscriptionId,
+        string? productId,
+        string? transactionId,
+        CancellationToken cancellationToken)
+    {
+        await using var scope = scopeFactory.CreateAsyncScope();
+        var paymentService = scope.ServiceProvider.GetRequiredService<IPaymentService>();
+        return await paymentService.TryActivateMobileSubscriptionFromStoreWebhookAsync(
+            providerCode,
+            providerSubscriptionId,
+            productId,
+            transactionId,
+            cancellationToken);
+    }
 
     private async Task<bool> IsDuplicateEventAsync(
         string provider,

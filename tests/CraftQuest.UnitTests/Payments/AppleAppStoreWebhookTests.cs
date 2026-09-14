@@ -251,6 +251,7 @@ public class AppleAppStoreWebhookTests
             new GooglePlaySubscriptionVerifier(paymentOptions),
             notifications,
             new AppleAppStoreJwsVerifier(paymentOptions),
+            PaymentTestScopeFactory.CreateDefault(),
             paymentOptions,
             NullLogger<MobileStoreWebhookProcessor>.Instance);
     }

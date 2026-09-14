@@ -228,7 +228,7 @@ class _HomePageState extends State<HomePage> {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          await _load();
+          await _load(forceRefresh: true);
           await _refreshBannerVisibility(markShownIfVisible: true);
           if (mounted) {
             await getIt<NotificationsCubit>().refreshUnreadCount();

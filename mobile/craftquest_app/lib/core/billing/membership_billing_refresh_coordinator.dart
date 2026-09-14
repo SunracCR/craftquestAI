@@ -7,7 +7,7 @@ import 'package:craftquest_app/features/billing/data/billing_repository.dart';
 
 /// Sincroniza billing (y perfil si aplica) tras webhooks de membresía o resume.
 class MembershipBillingRefreshCoordinator {
-  static const _resumeThrottle = Duration(seconds: 60);
+  static const _resumeThrottle = Duration(seconds: 30);
 
   static const _billingOnlyTypes = {
     'membership_expiring',

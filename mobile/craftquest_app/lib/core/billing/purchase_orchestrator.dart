@@ -33,8 +33,8 @@ class PurchaseOrchestrator extends ChangeNotifier {
   static const _restoreThrottle = Duration(seconds: 30);
   static const _watchdogDuration = Duration(seconds: 90);
   static const _inFlightTtl = Duration(minutes: 5);
-  static const _verifyMaxAttempts = 6;
-  static const _inactiveSubscriptionRetryDelay = Duration(seconds: 2);
+  static const _verifyMaxAttempts = 12;
+  static const _inactiveSubscriptionRetryDelay = Duration(seconds: 3);
   static const _emptyGuid = '00000000-0000-0000-0000-000000000000';
 
   final PendingStorePurchaseStore _pendingStore;

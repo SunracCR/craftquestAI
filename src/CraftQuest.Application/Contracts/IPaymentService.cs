@@ -80,4 +80,14 @@ public interface IPaymentService
     Task<ReconcilePendingPurchasesResponse> ReconcileUserPendingPurchasesAsync(
         Guid userId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Activa una suscripción móvil pendiente cuando llega un webhook de primera compra.
+    /// </summary>
+    Task<bool> TryActivateMobileSubscriptionFromStoreWebhookAsync(
+        string providerCode,
+        string providerSubscriptionId,
+        string? productId,
+        string? transactionId,
+        CancellationToken cancellationToken = default);
 }

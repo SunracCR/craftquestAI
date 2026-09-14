@@ -35,7 +35,7 @@ class BillingRepository {
     if (snapshot != null) {
       _cachedBilling = snapshot;
       _cachedUserId = userId;
-      _cachedAt = DateTime.now();
+      // Snapshot en disco no cuenta como caché de red fresca.
     }
     return snapshot;
   }

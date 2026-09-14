@@ -31,7 +31,14 @@ public class BillingService(
         var cacheKey = BillingCacheKey(userId);
         if (memoryCache.TryGetValue(cacheKey, out UserBillingDto? cached) && cached is not null)
         {
-            return cached;
+            var skipFreeCache = cached.Plan.Code.Equals("free", StringComparison.OrdinalIgnoreCase)
+                && await HasPendingMobileSubscriptionPurchaseAsync(userId, cancellationToken);
+            if (!skipFreeCache)
+            {
+                return cached;
+            }
+
+            memoryCache.Remove(cacheKey);
         }
 
         var subscription = await GetActiveSubscriptionAsync(userId, cancellationToken);
@@ -1147,6 +1154,16 @@ public class BillingService(
     }
 
     private static string BillingCacheKey(Guid userId) => $"billing:me:{userId:D}";
+
+    private Task<bool> HasPendingMobileSubscriptionPurchaseAsync(
+        Guid userId,
+        CancellationToken cancellationToken) =>
+        dbContext.Purchases.AsNoTracking().AnyAsync(
+            p => p.UserId == userId
+                 && p.ProductType == "subscription"
+                 && (p.ProviderCode == "google_play" || p.ProviderCode == "app_store")
+                 && PurchaseStatuses.NeedsFulfillment(p.Status),
+            cancellationToken);
 
     private void InvalidateBillingCache(Guid userId) =>
         memoryCache.Remove(BillingCacheKey(userId));

@@ -619,7 +619,17 @@ public class PaymentService(
 
         if (!storeDetails.IsActive)
         {
-            throw new AppException("Store subscription is not active.", 400, "STORE_SUBSCRIPTION_INACTIVE");
+            await UpsertPendingMobileSubscriptionPurchaseAsync(
+                userId,
+                platform,
+                plan,
+                billingCycle,
+                request,
+                cancellationToken);
+            throw new AppException(
+                "Store subscription is not active.",
+                409,
+                "STORE_SUBSCRIPTION_INACTIVE");
         }
 
         var providerCode = platform;
@@ -628,11 +638,12 @@ public class PaymentService(
             ?? request.TransactionId
             ?? request.PurchaseToken;
 
-        var existingPurchase = await dbContext.Purchases
-            .FirstOrDefaultAsync(
-                p => p.ProviderCode == providerCode
-                     && p.ProviderTransactionId == paymentTransactionId,
-                cancellationToken);
+        var existingPurchase = await FindOpenMobileSubscriptionPurchaseAsync(
+            userId,
+            providerCode,
+            paymentTransactionId,
+            request.PurchaseToken,
+            cancellationToken);
 
         EnsurePurchaseOwnership(existingPurchase, userId);
 
@@ -696,6 +707,13 @@ public class PaymentService(
             BillingCycle = storeDetails.BillingCycle,
             CreatedAt = DateTime.UtcNow,
         };
+
+        if (existingPurchase is not null)
+        {
+            purchase.ProviderTransactionId = paymentTransactionId;
+            purchase.ProductCode = plan.Code;
+            purchase.BillingCycle = storeDetails.BillingCycle;
+        }
 
         var periodStart = DateTime.UtcNow;
         var periodEnd = storeDetails.PeriodEnd
@@ -1533,6 +1551,77 @@ public class PaymentService(
         return new ReconcilePendingPurchasesResponse { FulfilledCount = fulfilled };
     }
 
+    public async Task<bool> TryActivateMobileSubscriptionFromStoreWebhookAsync(
+        string providerCode,
+        string providerSubscriptionId,
+        string? productId,
+        string? transactionId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(providerSubscriptionId))
+        {
+            return false;
+        }
+
+        var purchase = await FindOpenMobileSubscriptionPurchaseAsync(
+            userId: null,
+            providerCode,
+            providerSubscriptionId,
+            transactionId,
+            cancellationToken);
+
+        if (purchase is null)
+        {
+            return false;
+        }
+
+        productId ??= ResolveStoreProductId(
+            purchase.ProductCode,
+            purchase.BillingCycle,
+            providerCode);
+        if (string.IsNullOrWhiteSpace(productId))
+        {
+            logger.LogWarning(
+                "Cannot activate mobile subscription from webhook: unknown product for plan {PlanCode}.",
+                purchase.ProductCode);
+            return false;
+        }
+
+        try
+        {
+            await VerifyMobilePurchaseAsync(
+                purchase.UserId,
+                new VerifyMobilePurchaseRequest
+                {
+                    Platform = providerCode,
+                    ProductId = productId,
+                    PurchaseToken = providerCode == "google_play"
+                        ? providerSubscriptionId
+                        : transactionId ?? providerSubscriptionId,
+                    TransactionId = transactionId ?? providerSubscriptionId,
+                },
+                cancellationToken);
+            return true;
+        }
+        catch (AppException ex) when (ex.ErrorCode == "STORE_SUBSCRIPTION_INACTIVE")
+        {
+            logger.LogInformation(
+                "Store webhook activation deferred for {Provider} subscription {SubscriptionId}: not active yet.",
+                providerCode,
+                providerSubscriptionId);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(
+                ex,
+                "Store webhook activation failed for {Provider} subscription {SubscriptionId}.",
+                providerCode,
+                providerSubscriptionId);
+            return false;
+        }
+    }
+
     private async Task ExpireStaleAwaitingPaymentsAsync(CancellationToken cancellationToken)
     {
         var cutoff = DateTime.UtcNow.AddHours(-48);
@@ -1618,14 +1707,34 @@ public class PaymentService(
     {
         if (purchase.ProductType == "subscription")
         {
-            var hasMatchingSubscription = await dbContext.UserSubscriptions.AnyAsync(
-                s => s.UserId == purchase.UserId
-                     && s.Status == SubscriptionStatuses.Active
-                     && s.ProviderCode == purchase.ProviderCode
-                     && s.StartedAt >= purchase.CreatedAt.AddMinutes(-5),
-                cancellationToken);
+            var productId = ResolveStoreProductId(
+                purchase.ProductCode,
+                purchase.BillingCycle,
+                purchase.ProviderCode);
+            if (string.IsNullOrWhiteSpace(productId))
+            {
+                return false;
+            }
 
-            if (!hasMatchingSubscription)
+            try
+            {
+                await VerifyMobilePurchaseAsync(
+                    purchase.UserId,
+                    new VerifyMobilePurchaseRequest
+                    {
+                        Platform = purchase.ProviderCode,
+                        ProductId = productId,
+                        PurchaseToken = purchase.ProviderCode == "google_play"
+                            ? purchase.ProviderTransactionId!
+                            : purchase.ProviderTransactionId!,
+                        TransactionId = purchase.ProviderCode == "app_store"
+                            ? purchase.ProviderTransactionId
+                            : null,
+                    },
+                    cancellationToken);
+                return true;
+            }
+            catch (AppException ex) when (ex.ErrorCode == "STORE_SUBSCRIPTION_INACTIVE")
             {
                 return false;
             }
@@ -1909,6 +2018,113 @@ public class PaymentService(
         });
 
         await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task UpsertPendingMobileSubscriptionPurchaseAsync(
+        Guid userId,
+        string providerCode,
+        Plan plan,
+        string billingCycle,
+        VerifyMobilePurchaseRequest request,
+        CancellationToken cancellationToken)
+    {
+        var token = request.PurchaseToken;
+        var transactionId = request.TransactionId ?? token;
+
+        var existing = await FindOpenMobileSubscriptionPurchaseAsync(
+            userId,
+            providerCode,
+            transactionId,
+            token,
+            cancellationToken);
+
+        var amount = billingCycle == BillingCycles.Annual
+            ? plan.AnnualPrice ?? plan.MonthlyPrice
+            : plan.MonthlyPrice;
+
+        if (existing is null)
+        {
+            dbContext.Purchases.Add(new Purchase
+            {
+                PurchaseId = Guid.NewGuid(),
+                UserId = userId,
+                ProductCode = plan.Code,
+                ProductType = "subscription",
+                ProviderCode = providerCode,
+                ProviderTransactionId = token,
+                Amount = amount,
+                CurrencyCode = options.Value.CurrencyCode,
+                Status = PurchaseStatuses.Pending,
+                BillingCycle = billingCycle,
+                CreatedAt = DateTime.UtcNow,
+            });
+        }
+        else
+        {
+            existing.ProductCode = plan.Code;
+            existing.BillingCycle = billingCycle;
+            existing.Amount = amount;
+            existing.Status = PurchaseStatuses.Pending;
+            existing.ProviderTransactionId = token;
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task<Purchase?> FindOpenMobileSubscriptionPurchaseAsync(
+        Guid? userId,
+        string providerCode,
+        string? primaryTransactionId,
+        string? alternateTransactionId,
+        CancellationToken cancellationToken)
+    {
+        var lookupIds = new[] { primaryTransactionId, alternateTransactionId }
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        if (lookupIds.Count == 0)
+        {
+            return null;
+        }
+
+        var query = dbContext.Purchases
+            .Where(p => p.ProviderCode == providerCode
+                        && p.ProductType == "subscription"
+                        && PurchaseStatuses.NeedsFulfillment(p.Status));
+
+        if (userId.HasValue)
+        {
+            query = query.Where(p => p.UserId == userId.Value);
+        }
+
+        return await query
+            .Where(p => lookupIds.Contains(p.ProviderTransactionId!))
+            .OrderByDescending(p => p.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    private string? ResolveStoreProductId(
+        string planCode,
+        string? billingCycle,
+        string providerCode)
+    {
+        if (!options.Value.PlanProducts.TryGetValue(planCode, out var mapping))
+        {
+            return null;
+        }
+
+        var isAnnual = billingCycle?.Equals(BillingCycles.Annual, StringComparison.OrdinalIgnoreCase) == true;
+        return providerCode switch
+        {
+            "google_play" => isAnnual
+                ? mapping.GooglePlayAnnualProductId
+                : mapping.GooglePlayProductId,
+            "app_store" => isAnnual
+                ? mapping.AppStoreAnnualProductId
+                : mapping.AppStoreProductId,
+            _ => null,
+        };
     }
 
 }

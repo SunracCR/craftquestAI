@@ -1,10 +1,13 @@
 import 'dart:async';
 
 import 'package:craftquest_app/core/billing/checkout_refresh_notifier.dart';
+import 'package:craftquest_app/core/billing/purchase_orchestrator.dart';
 import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/utils/billing_plan_access.dart';
 import 'package:craftquest_app/features/auth/data/auth_repository.dart';
 import 'package:craftquest_app/features/auth/presentation/auth_bloc.dart';
 import 'package:craftquest_app/features/billing/data/billing_repository.dart';
+import 'package:craftquest_app/features/billing/data/models/billing_models.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -21,6 +24,7 @@ Future<void> refreshAppSessionAfterCheckout(
     context: context,
     affectsHomeTab: affectsHomeTab,
     timeout: billingTimeout,
+    pollForPaidPlan: PurchaseOrchestrator.supportsStore,
   );
 }
 
@@ -44,6 +48,7 @@ Future<void> refreshBillingAfterStorePurchase({
   await _refreshBillingBestEffort(
     affectsHomeTab: affectsHomeTab,
     timeout: const Duration(seconds: 20),
+    pollForPaidPlan: PurchaseOrchestrator.supportsStore,
   );
 }
 
@@ -75,9 +80,15 @@ Future<void> _refreshBillingBestEffort({
   BuildContext? context,
   bool affectsHomeTab = true,
   required Duration timeout,
+  bool pollForPaidPlan = false,
 }) async {
   try {
-    final billing = await getIt<BillingRepository>()
+    UserBillingModel? billing;
+    if (pollForPaidPlan) {
+      billing = await pollBillingUntilPaidPlan();
+    }
+
+    billing ??= await getIt<BillingRepository>()
         .getMyBilling(forceRefresh: true)
         .timeout(timeout);
 
@@ -92,6 +103,38 @@ Future<void> _refreshBillingBestEffort({
   } catch (_) {
     // Mantener UI actual; el usuario puede refrescar manualmente.
   }
+}
+
+/// Espera a que `/billing/me` refleje Pro, Tutor u otro plan de pago.
+Future<UserBillingModel?> pollBillingUntilPaidPlan({
+  Duration timeout = const Duration(seconds: 90),
+  Duration interval = const Duration(seconds: 2),
+}) async {
+  final repo = getIt<BillingRepository>();
+  final deadline = DateTime.now().add(timeout);
+
+  while (DateTime.now().isBefore(deadline)) {
+    try {
+      final billing = await repo.getMyBilling(forceRefresh: true);
+      if (_isPaidMembershipPlan(billing.plan.code)) {
+        return billing;
+      }
+    } catch (_) {
+      // Reintentar hasta timeout.
+    }
+
+    await Future<void>.delayed(interval);
+  }
+
+  return null;
+}
+
+bool _isPaidMembershipPlan(String planCode) {
+  final normalized = planCode.toLowerCase();
+  return normalized == 'pro' ||
+      normalized == 'teacher' ||
+      normalized == 'premium' ||
+      BillingPlanAccess.isPaidPlan(planCode);
 }
 
 /// Si otro listener ya procesó la compra, refresca billing tras un breve delay.

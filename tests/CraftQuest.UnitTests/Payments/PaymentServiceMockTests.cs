@@ -474,6 +474,7 @@ public class PaymentServiceMockTests
             google,
             new CraftQuest.UnitTests.Notifications.NoOpNotificationService(),
             new AppleAppStoreJwsVerifier(paymentOptions),
+            PaymentTestScopeFactory.CreateDefault(),
             paymentOptions,
             NullLogger<MobileStoreWebhookProcessor>.Instance);
         return new PaymentService(

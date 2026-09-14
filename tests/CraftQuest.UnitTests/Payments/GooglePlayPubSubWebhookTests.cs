@@ -51,20 +51,18 @@ public class GooglePlayPubSubWebhookTests
     }
 
     [Fact]
-    public async Task ProcessGooglePlayPubSubAsync_SubscriptionWithoutLocalRow_RecordsEventOnly()
+    public async Task ProcessGooglePlayPubSubAsync_SubscriptionWithoutLocalRow_DoesNotActivateWithoutPendingPurchase()
     {
         await using var db = CreateDb();
         var processor = CreateProcessor(db, out _);
 
-        var inner = BuildSubscriptionNotificationInner(2, "missing-token");
+        var inner = BuildSubscriptionNotificationInner(4, "missing-token");
         var envelope = BuildPubSubEnvelope(inner);
 
         await processor.ProcessGooglePlayPubSubAsync(envelope, CancellationToken.None);
 
-        var events = await db.ProviderWebhookEvents.ToListAsync();
-        Assert.Single(events);
-        Assert.Equal("google_play", events[0].ProviderCode);
-        Assert.Equal("type-2", events[0].EventType);
+        Assert.Empty(await db.ProviderWebhookEvents.ToListAsync());
+        Assert.Empty(await db.UserSubscriptions.Where(s => s.ProviderSubscriptionId == "missing-token").ToListAsync());
     }
 
     [Fact]
@@ -157,6 +155,7 @@ public class GooglePlayPubSubWebhookTests
             new GooglePlaySubscriptionVerifier(paymentOptions),
             notifications,
             new AppleAppStoreJwsVerifier(paymentOptions),
+            PaymentTestScopeFactory.CreateDefault(),
             paymentOptions,
             NullLogger<MobileStoreWebhookProcessor>.Instance);
     }
