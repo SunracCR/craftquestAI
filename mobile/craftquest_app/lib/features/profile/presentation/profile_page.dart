@@ -15,6 +15,7 @@ import 'package:craftquest_app/core/widgets/edge_aware_scaffold.dart';
 import 'package:craftquest_app/core/widgets/user_avatar.dart';
 import 'package:craftquest_app/features/auth/data/auth_repository.dart';
 import 'package:craftquest_app/features/auth/data/models/auth_models.dart';
+import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/features/auth/presentation/auth_bloc.dart';
 import 'package:craftquest_app/core/utils/billing_display.dart';
 import 'package:craftquest_app/core/billing/checkout_refresh_notifier.dart';
@@ -26,6 +27,7 @@ import 'package:craftquest_app/features/billing/presentation/ai_credit_packs_pag
 import 'package:craftquest_app/features/billing/presentation/upgrade_plan_page.dart';
 import 'package:craftquest_app/features/profile/domain/avatar_catalog.dart';
 import 'package:craftquest_app/features/profile/presentation/change_password_page.dart';
+import 'package:craftquest_app/features/profile/presentation/delete_account_platform_copy.dart';
 import 'package:craftquest_app/features/profile/presentation/payment_history_page.dart';
 import 'package:craftquest_app/features/profile/presentation/widgets/avatar_picker_sheet.dart';
 import 'package:craftquest_app/features/profile/presentation/widgets/edit_display_name_dialog.dart';
@@ -289,6 +291,11 @@ class _ProfilePageState extends State<ProfilePage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(l10n.deleteAccountSubtitle),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              deleteAccountSubscriptionNotice(l10n),
+              style: Theme.of(dialogContext).textTheme.bodySmall,
+            ),
             const SizedBox(height: AppSpacing.md),
             TextField(
               controller: confirmController,
@@ -325,11 +332,49 @@ class _ProfilePageState extends State<ProfilePage> {
       return;
     }
 
-    context.read<AuthBloc>().add(const AuthDeleteAccountRequested());
-    if (!context.mounted) {
-      return;
+    await _executeDeleteAccount(context);
+  }
+
+  Future<void> _executeDeleteAccount(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    final authRepository = getIt<AuthRepository>();
+    unawaited(
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) => AlertDialog(
+          content: Row(
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(child: Text(l10n.deleteAccountInProgress)),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final completer = Completer<void>();
+    context.read<AuthBloc>().add(
+          AuthDeleteAccountRequested(completer: completer),
+        );
+
+    try {
+      await completer.future;
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+    } on DioException catch (error) {
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+        context.showErrorSnackBar(authRepository.mapError(error));
+      }
+    } catch (_) {
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+        context.showErrorSnackBar(DioErrorMapper.genericMessage());
+      }
     }
-    context.showSuccessSnackBar(l10n.deleteAccountSuccess);
   }
 
   Future<void> _correctBirthDate() async {

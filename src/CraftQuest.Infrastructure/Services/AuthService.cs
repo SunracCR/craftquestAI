@@ -285,10 +285,11 @@ public class AuthService(
         CancellationToken cancellationToken = default)
     {
         var user = await dbContext.Users
+            .Include(u => u.AuthProviders)
             .FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken)
             ?? throw new AuthException("User not found.", 404);
 
-        if (user.Status == "deleted" || user.DeletedAt is not null)
+        if (user.Status == UserStatuses.Deleted || user.DeletedAt is not null)
         {
             throw new AuthException("User account is already deleted.", 404);
         }
@@ -319,11 +320,58 @@ public class AuthService(
         dbContext.ParentalConsentTokens.RemoveRange(parentalTokens);
 
         var now = DateTime.UtcNow;
+
+        var activeSubscriptions = await dbContext.UserSubscriptions
+            .Where(s => s.UserId == userId && s.Status == SubscriptionStatuses.Active)
+            .ToListAsync(cancellationToken);
+
+        foreach (var subscription in activeSubscriptions)
+        {
+            subscription.Status = SubscriptionStatuses.Cancelled;
+            subscription.EndsAt = now;
+            subscription.AutoRenewEnabled = false;
+            subscription.CancelAtPeriodEnd = true;
+        }
+
+        foreach (var provider in user.AuthProviders)
+        {
+            provider.ProviderSubject = BuildDeletedAuthProviderSubject(userId, provider.ProviderSubject);
+        }
+
+        user.Email = BuildDeletedUserEmail(userId);
+        user.PasswordHash = null;
+        user.DisplayName = null;
+        user.PhotoUrl = null;
+        user.PhoneNumber = null;
+        user.GuardianEmail = null;
+        user.ExternalSubject = null;
+        user.AvatarId = null;
+        user.PreferredLanguage = null;
+        user.CountryCode = null;
         user.Status = UserStatuses.Deleted;
         user.DeletedAt = now;
         user.UpdatedAt = now;
 
         await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private static string BuildDeletedUserEmail(Guid userId) =>
+        $"deleted+{userId:N}@deleted.invalid";
+
+    private static string BuildDeletedAuthProviderSubject(Guid userId, string originalSubject)
+    {
+        var candidate = $"deleted:{userId:N}:{originalSubject}";
+        const int maxLength = 300;
+        if (candidate.Length <= maxLength)
+        {
+            return candidate;
+        }
+
+        var keepFromEnd = Math.Max(1, maxLength - $"deleted:{userId:N}:".Length);
+        var trimmedSubject = originalSubject.Length <= keepFromEnd
+            ? originalSubject
+            : originalSubject[^keepFromEnd..];
+        return $"deleted:{userId:N}:{trimmedSubject}";
     }
 
     public async Task<AuthResponseDto> ConfirmParentalConsentAsync(

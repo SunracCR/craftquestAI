@@ -608,8 +608,15 @@ class _AuthGateState extends State<_AuthGate> {
         BlocListener<AuthBloc, AuthState>(
           listenWhen: (previous, current) =>
               previous is AuthAuthenticated &&
-              current is AuthUnauthenticated,
-          listener: (context, _) {
+              (current is AuthUnauthenticated || current is AuthAccountDeleted),
+          listener: (context, state) {
+            if (state is AuthAccountDeleted) {
+              final l10n = AppLocalizations.of(context)!;
+              rootScaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+              rootScaffoldMessengerKey.currentState?.showSnackBar(
+                SnackBar(content: Text(l10n.deleteAccountSuccess)),
+              );
+            }
             _resetEntryDeepLinkState();
             WidgetsBinding.instance.addPostFrameCallback((_) {
               rootNavigatorKey.currentState?.popUntil((route) => route.isFirst);

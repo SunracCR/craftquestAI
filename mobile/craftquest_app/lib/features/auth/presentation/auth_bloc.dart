@@ -278,16 +278,39 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthDeleteAccountRequested event,
     Emitter<AuthState> emit,
   ) async {
+    final previousUser = state is AuthAuthenticated
+        ? (state as AuthAuthenticated).user
+        : null;
+
     try {
       await _clearBillingSnapshotForCurrentUser();
       await _repository.deleteAccount();
       unawaited(OAuthSignInService.clearGoogleSession());
       _resetSessionExpiredFlag();
-      emit(const AuthUnauthenticated());
+      event.completer?.complete();
+      emit(const AuthAccountDeleted());
     } on DioException catch (e) {
-      emit(_loginFailure(_repository.mapError(e)));
-    } catch (_) {
-      emit(_loginFailure(DioErrorMapper.genericMessage()));
+      if (previousUser != null) {
+        emit(AuthAuthenticated(previousUser));
+      } else {
+        emit(const AuthUnauthenticated());
+      }
+      if (event.completer != null) {
+        event.completer!.completeError(e);
+      } else {
+        emit(_loginFailure(_repository.mapError(e)));
+      }
+    } catch (e) {
+      if (previousUser != null) {
+        emit(AuthAuthenticated(previousUser));
+      } else {
+        emit(const AuthUnauthenticated());
+      }
+      if (event.completer != null) {
+        event.completer!.completeError(e);
+      } else {
+        emit(_loginFailure(DioErrorMapper.genericMessage()));
+      }
     }
   }
 

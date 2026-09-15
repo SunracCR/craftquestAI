@@ -84,7 +84,9 @@ class AuthLogoutRequested extends AuthEvent {
 }
 
 class AuthDeleteAccountRequested extends AuthEvent {
-  const AuthDeleteAccountRequested();
+  const AuthDeleteAccountRequested({this.completer});
+
+  final Completer<void>? completer;
 }
 
 /// Sesión invalidada (p. ej. refresh token expirado); cierra sesión en la app.

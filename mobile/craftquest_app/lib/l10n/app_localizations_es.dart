@@ -5048,6 +5048,21 @@ class AppLocalizationsEs extends AppLocalizations {
   String get deleteAccountCancel => 'Cancelar';
 
   @override
+  String get deleteAccountInProgress => 'Eliminando cuenta…';
+
+  @override
+  String get deleteAccountSubscriptionNoticeAppStore =>
+      'Eliminar tu cuenta de CraftQuest no cancela la suscripción de App Store. Cancélala en Ajustes → Apple ID → Suscripciones.';
+
+  @override
+  String get deleteAccountSubscriptionNoticePlayStore =>
+      'Eliminar tu cuenta de CraftQuest no cancela la suscripción de Google Play. Cancélala en Google Play → Pagos y suscripciones.';
+
+  @override
+  String get deleteAccountSubscriptionNoticePayPal =>
+      'Eliminar tu cuenta de CraftQuest no cancela la suscripción de PayPal. Cancélala desde tu cuenta de PayPal.';
+
+  @override
   String get parentalGateTitle => 'Verificación de adulto';
 
   @override

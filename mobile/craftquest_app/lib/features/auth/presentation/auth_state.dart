@@ -19,6 +19,10 @@ class AuthUnauthenticated extends AuthState {
   const AuthUnauthenticated();
 }
 
+class AuthAccountDeleted extends AuthState {
+  const AuthAccountDeleted();
+}
+
 class AuthAuthenticated extends AuthState {
   const AuthAuthenticated(
     this.user, {

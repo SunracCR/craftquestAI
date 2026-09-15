@@ -8491,6 +8491,30 @@ abstract class AppLocalizations {
   /// **'Cancelar'**
   String get deleteAccountCancel;
 
+  /// No description provided for @deleteAccountInProgress.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminando cuenta…'**
+  String get deleteAccountInProgress;
+
+  /// No description provided for @deleteAccountSubscriptionNoticeAppStore.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar tu cuenta de CraftQuest no cancela la suscripción de App Store. Cancélala en Ajustes → Apple ID → Suscripciones.'**
+  String get deleteAccountSubscriptionNoticeAppStore;
+
+  /// No description provided for @deleteAccountSubscriptionNoticePlayStore.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar tu cuenta de CraftQuest no cancela la suscripción de Google Play. Cancélala en Google Play → Pagos y suscripciones.'**
+  String get deleteAccountSubscriptionNoticePlayStore;
+
+  /// No description provided for @deleteAccountSubscriptionNoticePayPal.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar tu cuenta de CraftQuest no cancela la suscripción de PayPal. Cancélala desde tu cuenta de PayPal.'**
+  String get deleteAccountSubscriptionNoticePayPal;
+
   /// No description provided for @parentalGateTitle.
   ///
   /// In es, this message translates to:
