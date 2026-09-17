@@ -5013,6 +5013,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get termsOfServiceLink => 'Termos de servico';
 
   @override
+  String get termsOfUseEulaLink => 'Termos de uso (EULA)';
+
+  @override
   String get registerLegalDisclaimerPrefix =>
       'Ao se cadastrar, voce aceita os ';
 

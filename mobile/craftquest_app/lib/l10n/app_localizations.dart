@@ -8431,6 +8431,12 @@ abstract class AppLocalizations {
   /// **'Términos de servicio'**
   String get termsOfServiceLink;
 
+  /// No description provided for @termsOfUseEulaLink.
+  ///
+  /// In es, this message translates to:
+  /// **'Términos de uso (EULA)'**
+  String get termsOfUseEulaLink;
+
   /// No description provided for @registerLegalDisclaimerPrefix.
   ///
   /// In es, this message translates to:

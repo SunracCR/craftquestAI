@@ -4983,6 +4983,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get termsOfServiceLink => 'Terms of Service';
 
   @override
+  String get termsOfUseEulaLink => 'Terms of Use (EULA)';
+
+  @override
   String get registerLegalDisclaimerPrefix => 'By signing up you agree to the ';
 
   @override

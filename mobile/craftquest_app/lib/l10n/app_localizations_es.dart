@@ -5017,6 +5017,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get termsOfServiceLink => 'Términos de servicio';
 
   @override
+  String get termsOfUseEulaLink => 'Términos de uso (EULA)';
+
+  @override
   String get registerLegalDisclaimerPrefix => 'Al registrarte aceptas los ';
 
   @override

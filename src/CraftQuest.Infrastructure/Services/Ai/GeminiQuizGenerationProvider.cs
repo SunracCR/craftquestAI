@@ -472,10 +472,16 @@ public class GeminiQuizGenerationProvider(
             correctAnswerKeys as JSON array referencing those keys (never a single string).
             For true_false use keys "true" and "false".
             Assign unique externalId per question (e.g. "q-1", "q-2").
+            Answer option text rules:
+            - Every answerOptions[].text MUST start with an uppercase letter (first real letter after ¿, ¡, quotes, or spaces).
+            - Do NOT leave the first word in lowercase unless it is a formula, symbol, or acronym (e.g. pH, mRNA, NaCl).
             {(parameters.IncludeExplanations
                 ? """
                   Each question MUST include a justification object:
-                  - text: one paragraph explaining why the correct answer(s) are correct (cover all relevant options in this single text).
+                  - text: one paragraph explaining why the correct fact or concept is correct. Explain the reasoning, not the option label.
+                  - NEVER mention option keys (A/B/C/D), letters, positions, or ordinals ("option A", "opción B", "the first option", "la respuesta correcta es C").
+                  - Answer options are shuffled on every practice attempt; justifications must remain valid regardless of on-screen order.
+                  - You MAY name the correct concept or fact (e.g. "Paris is the capital of France") but NOT tie it to a letter or slot.
                   - visibility: "never" (review only; not shown during practice)
                   - sources: when SOURCE contains "--- Page N ---" markers, include at least one source per question with pageNumber (integer N) and snippet (short quote from that page). Use url "craftquest://source#page=N" when no external URL exists.
                   """

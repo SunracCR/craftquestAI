@@ -878,14 +878,22 @@ class _ProfilePageState extends State<ProfilePage> {
                   leading: const Icon(Icons.privacy_tip_outlined),
                   title: Text(l10n.privacyPolicyLink),
                   trailing: const Icon(Icons.open_in_new_rounded, size: 18),
-                  onTap: () => openLegalUrl(LegalUrls.privacyPolicyUrl),
+                  onTap: () => openLegalUrl(
+                    LegalUrls.privacyPolicyUrlFor(
+                      Localizations.localeOf(context).languageCode,
+                    ),
+                  ),
                 ),
                 _divider(),
                 ListTile(
                   leading: const Icon(Icons.description_outlined),
                   title: Text(l10n.termsOfServiceLink),
                   trailing: const Icon(Icons.open_in_new_rounded, size: 18),
-                  onTap: () => openLegalUrl(LegalUrls.termsOfServiceUrl),
+                  onTap: () => openLegalUrl(
+                    LegalUrls.termsOfServiceUrlFor(
+                      Localizations.localeOf(context).languageCode,
+                    ),
+                  ),
                 ),
               ],
             ),

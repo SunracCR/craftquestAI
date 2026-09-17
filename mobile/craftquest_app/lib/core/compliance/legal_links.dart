@@ -4,6 +4,7 @@ import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/l10n/app_localizations.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -42,6 +43,9 @@ class RegisterLegalDisclaimer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final languageCode = Localizations.localeOf(context).languageCode;
+    final termsUrl = LegalUrls.termsOfServiceUrlFor(languageCode);
+    final privacyUrl = LegalUrls.privacyPolicyUrlFor(languageCode);
     final style = Theme.of(context).textTheme.bodySmall?.copyWith(
           color: AppColors.textSecondary,
           height: 1.4,
@@ -63,14 +67,14 @@ class RegisterLegalDisclaimer extends StatelessWidget {
               text: l10n.termsOfServiceLink,
               style: linkStyle,
               recognizer: TapGestureRecognizer()
-                ..onTap = () => openLegalUrl(LegalUrls.termsOfServiceUrl),
+                ..onTap = () => openLegalUrl(termsUrl),
             ),
             TextSpan(text: l10n.registerLegalDisclaimerAnd),
             TextSpan(
               text: l10n.privacyPolicyLink,
               style: linkStyle,
               recognizer: TapGestureRecognizer()
-                ..onTap = () => openLegalUrl(LegalUrls.privacyPolicyUrl),
+                ..onTap = () => openLegalUrl(privacyUrl),
             ),
             TextSpan(text: l10n.registerLegalDisclaimerSuffix),
           ],
@@ -90,6 +94,9 @@ class LegalLinksRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final languageCode = Localizations.localeOf(context).languageCode;
+    final privacyUrl = LegalUrls.privacyPolicyUrlFor(languageCode);
+    final termsUrl = LegalUrls.termsOfServiceUrlFor(languageCode);
     final linkStyle = Theme.of(context).textTheme.labelMedium?.copyWith(
           color: AppColors.accent,
           fontWeight: FontWeight.w600,
@@ -106,7 +113,7 @@ class LegalLinksRow extends StatelessWidget {
             minimumSize: Size.zero,
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
-          onPressed: () => openLegalUrl(LegalUrls.privacyPolicyUrl),
+          onPressed: () => openLegalUrl(privacyUrl),
           child: Text(l10n.privacyPolicyLink, style: linkStyle),
         ),
         Text('·', style: linkStyle?.copyWith(color: AppColors.textSecondary)),
@@ -116,7 +123,7 @@ class LegalLinksRow extends StatelessWidget {
             minimumSize: Size.zero,
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
-          onPressed: () => openLegalUrl(LegalUrls.termsOfServiceUrl),
+          onPressed: () => openLegalUrl(termsUrl),
           child: Text(l10n.termsOfServiceLink, style: linkStyle),
         ),
       ],
@@ -125,6 +132,65 @@ class LegalLinksRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: centered ? Center(child: row) : row,
+    );
+  }
+}
+
+/// Enlaces legales en pantallas de suscripción (Apple Guideline 3.1.2).
+///
+/// En iOS el enlace de términos usa la etiqueta "Terms of Use (EULA)" exigida
+/// por App Review; en otras plataformas se mantiene "Términos de servicio".
+class SubscriptionPaywallLegalLinks extends StatelessWidget {
+  const SubscriptionPaywallLegalLinks({super.key});
+
+  static String termsLinkLabel(AppLocalizations l10n) {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+      return l10n.termsOfUseEulaLink;
+    }
+    return l10n.termsOfServiceLink;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final languageCode = Localizations.localeOf(context).languageCode;
+    final privacyUrl = LegalUrls.privacyPolicyUrlFor(languageCode);
+    final termsUrl = LegalUrls.termsOfServiceUrlFor(languageCode);
+    final linkStyle = Theme.of(context).textTheme.labelMedium?.copyWith(
+          color: AppColors.accent,
+          fontWeight: FontWeight.w600,
+        );
+
+    final row = Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: AppSpacing.xs,
+      children: [
+        TextButton(
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          onPressed: () => openLegalUrl(privacyUrl),
+          child: Text(l10n.privacyPolicyLink, style: linkStyle),
+        ),
+        Text('·', style: linkStyle?.copyWith(color: AppColors.textSecondary)),
+        TextButton(
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          onPressed: () => openLegalUrl(termsUrl),
+          child: Text(termsLinkLabel(l10n), style: linkStyle),
+        ),
+      ],
+    );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      child: Center(child: row),
     );
   }
 }

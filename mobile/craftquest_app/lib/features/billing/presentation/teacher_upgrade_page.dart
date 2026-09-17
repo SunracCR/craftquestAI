@@ -5,6 +5,7 @@ import 'package:craftquest_app/core/billing/purchase_orchestrator.dart';
 import 'package:craftquest_app/core/billing/store_purchase_feedback.dart';
 import 'package:craftquest_app/core/billing/paypal_checkout_launch.dart';
 import 'package:craftquest_app/core/billing/payment_platform.dart';
+import 'package:craftquest_app/core/compliance/legal_links.dart';
 import 'package:craftquest_app/core/compliance/parental_gate_dialog.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
@@ -553,6 +554,7 @@ class _TeacherUpgradePageState extends State<TeacherUpgradePage> {
                 fontSize: 11,
               ),
             ),
+            const SubscriptionPaywallLegalLinks(),
             const SizedBox(height: AppSpacing.sm),
             TextButton(
               onPressed: () {
