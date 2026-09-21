@@ -1,4 +1,5 @@
 import 'package:craftquest_app/core/security/web_auth_captcha.dart';
+import 'package:craftquest_app/core/compliance/age_collection_policy.dart';
 import 'package:craftquest_app/core/compliance/age_collection_storage.dart';
 import 'package:craftquest_app/core/compliance/birth_date_correction.dart';
 import 'package:craftquest_app/core/compliance/legal_links.dart';
@@ -84,7 +85,8 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    if (_birthDate == null) {
+    if (AgeCollectionPolicy.requiresRegistrationBirthDate &&
+        _birthDate == null) {
       AppSnackBars.showError(
         AppLocalizations.of(context)!.ageScreenBirthDateLabel,
       );
@@ -108,7 +110,9 @@ class _RegisterPageState extends State<RegisterPage> {
         email: _emailController.text.trim(),
         password: _passwordController.text,
         displayName: _displayNameController.text.trim(),
-        dateOfBirth: _birthDate,
+        dateOfBirth: AgeCollectionPolicy.requiresRegistrationBirthDate
+            ? _birthDate
+            : null,
         guardianEmail: _isMinor ? _guardianEmailController.text.trim() : null,
         captchaToken: captchaToken,
         attemptId: registerAttemptId,
@@ -156,6 +160,8 @@ class _RegisterPageState extends State<RegisterPage> {
     final formattedBirthDate = _birthDate == null
         ? null
         : DateFormat.yMMMMd(locale).format(_birthDate!);
+    final showBirthDateFields =
+        AgeCollectionPolicy.requiresRegistrationBirthDate;
 
     return EdgeAwareScaffold(
       appBar: craftQuestAppBar(title: l10n.registerTitle),
@@ -195,59 +201,62 @@ class _RegisterPageState extends State<RegisterPage> {
                   return null;
                 },
               ),
-              const SizedBox(height: AppSpacing.md),
-              InputDecorator(
-                decoration: InputDecoration(
-                  labelText: l10n.ageScreenBirthDateLabel,
-                ),
-                isEmpty: _birthDate == null,
-                child: InkWell(
-                  onTap: _pickBirthDate,
-                  borderRadius: BorderRadius.circular(AppColors.radiusSm),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.calendar_today_outlined,
-                        size: 20,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Text(
-                          formattedBirthDate ?? '',
-                          style: Theme.of(context).textTheme.bodyLarge,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              if (_isMinor) ...[
+              if (showBirthDateFields) ...[
                 const SizedBox(height: AppSpacing.md),
-                Text(
-                  l10n.ageScreenMinorNotice,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.accentCool,
-                      ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                TextFormField(
-                  controller: _guardianEmailController,
-                  keyboardType: TextInputType.emailAddress,
+                InputDecorator(
                   decoration: InputDecoration(
-                    labelText: l10n.guardianEmailLabel,
-                    hintText: l10n.guardianEmailHint,
+                    labelText: l10n.ageScreenBirthDateLabel,
                   ),
-                  validator: (value) {
-                    if (!_isMinor) {
-                      return null;
-                    }
-                    if (value == null || value.trim().isEmpty) {
-                      return l10n.fieldRequired;
-                    }
-                    return null;
-                  },
+                  isEmpty: _birthDate == null,
+                  child: InkWell(
+                    onTap: _pickBirthDate,
+                    borderRadius: BorderRadius.circular(AppColors.radiusSm),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.calendar_today_outlined,
+                          size: 20,
+                          color:
+                              Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Text(
+                            formattedBirthDate ?? '',
+                            style: Theme.of(context).textTheme.bodyLarge,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
+                if (_isMinor) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    l10n.ageScreenMinorNotice,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.accentCool,
+                        ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  TextFormField(
+                    controller: _guardianEmailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      labelText: l10n.guardianEmailLabel,
+                      hintText: l10n.guardianEmailHint,
+                    ),
+                    validator: (value) {
+                      if (!_isMinor) {
+                        return null;
+                      }
+                      if (value == null || value.trim().isEmpty) {
+                        return l10n.fieldRequired;
+                      }
+                      return null;
+                    },
+                  ),
+                ],
               ],
               const SizedBox(height: AppSpacing.lg),
               AppGradientPrimaryButton(

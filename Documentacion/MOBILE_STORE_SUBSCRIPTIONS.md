@@ -74,6 +74,8 @@ Body `verify-purchase`:
 
 - Productos de tienda: tipo **suscripción** en Play Console / App Store Connect.
 - Paywall iOS (Guideline 3.1.2): enlaces a Privacidad y EULA en pantalla de compra → ver [APP_STORE_SUBSCRIPTION_REVIEW.md](./APP_STORE_SUBSCRIPTION_REVIEW.md).
+- Enviar IAP a revisión con el binario (Guideline 2.1(b)) → ver [APP_STORE_IAP_SUBMISSION.md](./APP_STORE_IAP_SUBMISSION.md).
+- Respuesta a rechazo + guión de screen recording → [APP_STORE_RESOLUTION_REPLY.md](./APP_STORE_RESOLUTION_REPLY.md).
 - `UpgradeablePlanModel` expone IDs mensual y anual; la compra usa el ciclo elegido.
 - Tras compra, `verifyMobilePurchase` con `purchaseToken` + `transactionId` (iOS).
 

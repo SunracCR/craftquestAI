@@ -1,4 +1,5 @@
 import 'package:craftquest_app/core/compliance/age_collection_controller.dart';
+import 'package:craftquest_app/core/compliance/age_collection_policy.dart';
 import 'package:craftquest_app/core/compliance/age_collection_storage.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/features/auth/data/auth_repository.dart';
@@ -49,7 +50,12 @@ abstract final class BirthDateCorrection {
   }
 
   /// Limpia el almacenamiento local y vuelve a la pantalla inicial de edad.
+  ///
+  /// Solo aplica en Android; en iOS/web no se exige DOB (Guideline 5.1.1(v)).
   static Future<void> requestFullAgeScreen() async {
+    if (!AgeCollectionPolicy.requiresStartupAgeGate) {
+      return;
+    }
     await getIt<AgeCollectionController>().requestRecollection();
   }
 }

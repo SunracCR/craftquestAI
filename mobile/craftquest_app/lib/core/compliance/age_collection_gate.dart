@@ -1,4 +1,5 @@
 import 'package:craftquest_app/core/compliance/age_collection_controller.dart';
+import 'package:craftquest_app/core/compliance/age_collection_policy.dart';
 import 'package:craftquest_app/core/compliance/age_screen.dart';
 import 'package:craftquest_app/core/compliance/compliance_pref_cache.dart';
 import 'package:craftquest_app/core/di/injection.dart';
@@ -50,7 +51,9 @@ class _AgeCollectionGateState extends State<AgeCollectionGate> {
 
   @override
   Widget build(BuildContext context) {
-    if (_needsAge && readWebAccountLink() == null) {
+    if (AgeCollectionPolicy.requiresStartupAgeGate &&
+        _needsAge &&
+        readWebAccountLink() == null) {
       return AgeScreen(onCompleted: _onCompleted);
     }
 

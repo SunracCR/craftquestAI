@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:craftquest_app/core/compliance/age_collection_policy.dart';
 import 'package:craftquest_app/core/compliance/birth_date_correction.dart';
 import 'package:craftquest_app/core/compliance/age_collection_storage.dart';
 import 'package:craftquest_app/core/compliance/legal_links.dart';
@@ -866,14 +867,16 @@ class _ProfilePageState extends State<ProfilePage> {
             padding: EdgeInsets.zero,
             child: Column(
               children: [
-                ListTile(
-                  leading: const Icon(Icons.cake_outlined),
-                  title: Text(l10n.correctBirthDateAction),
-                  subtitle: Text(_birthDateSubtitle(l10n)),
-                  trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: _correctBirthDate,
-                ),
-                _divider(),
+                if (AgeCollectionPolicy.showsBirthDateSettings) ...[
+                  ListTile(
+                    leading: const Icon(Icons.cake_outlined),
+                    title: Text(l10n.correctBirthDateAction),
+                    subtitle: Text(_birthDateSubtitle(l10n)),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: _correctBirthDate,
+                  ),
+                  _divider(),
+                ],
                 ListTile(
                   leading: const Icon(Icons.privacy_tip_outlined),
                   title: Text(l10n.privacyPolicyLink),
