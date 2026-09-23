@@ -536,11 +536,13 @@ class _OfficialAppleSignInButton extends StatelessWidget {
           child: InkWell(
             onTap: enabled ? onPressed : null,
             borderRadius: BorderRadius.circular(8),
-            child: AspectRatio(
-              aspectRatio: 600 / 132,
+            child: SizedBox(
+              height: 44,
+              width: double.infinity,
               child: Image.asset(
                 assetFor(languageCode),
-                fit: BoxFit.fill,
+                fit: BoxFit.contain,
+                alignment: Alignment.center,
                 gaplessPlayback: true,
                 excludeFromSemantics: true,
               ),
