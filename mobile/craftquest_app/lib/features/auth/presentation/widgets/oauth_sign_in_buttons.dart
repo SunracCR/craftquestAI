@@ -453,17 +453,13 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
     }
 
     final l10n = AppLocalizations.of(context)!;
+    final languageCode = Localizations.localeOf(context).languageCode;
     return LayoutBuilder(
       builder: (context, constraints) {
-        final sideBySide = _showGoogle && _showApple;
         final narrow = constraints.maxWidth < 340;
-        final googleLabel = sideBySide || narrow
+        final googleLabel = narrow
             ? l10n.oauthSignInGoogleShort
             : l10n.oauthSignInWithGoogle;
-        final appleLabel = sideBySide || narrow
-            ? l10n.oauthSignInAppleShort
-            : l10n.oauthSignInWithApple;
-        const logoSize = 20.0;
 
         return Column(
           mainAxisSize: MainAxisSize.min,
@@ -471,59 +467,20 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
           children: [
             _OAuthDivider(label: l10n.oauthDividerLabel),
             const SizedBox(height: AppSpacing.xs),
-            if (sideBySide)
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: _buildGoogleSignInButton(
-                      label: googleLabel,
-                      compactInline: true,
-                      logoSize: logoSize,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Expanded(
-                    child: _PremiumOAuthButton(
-                      label: appleLabel,
-                      enabled: widget.enabled && !_busy,
-                      compactInline: true,
-                      backgroundColor: const Color(0xFFFDFDFD),
-                      foregroundColor: const Color(0xFF1A1A1A),
-                      borderColor: Colors.white.withValues(alpha: 0.12),
-                      highlightColor: Colors.white.withValues(alpha: 0.08),
-                      logo: const AppleBrandLogo(
-                        size: logoSize,
-                        color: Color(0xFF1A1A1A),
-                      ),
-                      onPressed: _signInApple,
-                    ),
-                  ),
-                ],
-              )
-            else ...[
-              if (_showGoogle)
-                _buildGoogleSignInButton(
-                  label: googleLabel,
-                  compactInline: false,
-                  logoSize: 22,
-                ),
-              if (_showApple) ...[
-                if (_showGoogle) const SizedBox(height: AppSpacing.xs),
-                _PremiumOAuthButton(
-                  label: appleLabel,
-                  enabled: widget.enabled && !_busy,
-                  backgroundColor: const Color(0xFFFDFDFD),
-                  foregroundColor: const Color(0xFF1A1A1A),
-                  borderColor: Colors.white.withValues(alpha: 0.12),
-                  highlightColor: Colors.white.withValues(alpha: 0.08),
-                  logo: const AppleBrandLogo(
-                    size: 22,
-                    color: Color(0xFF1A1A1A),
-                  ),
-                  onPressed: _signInApple,
-                ),
-              ],
+            if (_showGoogle)
+              _buildGoogleSignInButton(
+                label: googleLabel,
+                compactInline: false,
+                logoSize: 22,
+              ),
+            if (_showApple) ...[
+              if (_showGoogle) const SizedBox(height: AppSpacing.xs),
+              _OfficialAppleSignInButton(
+                languageCode: languageCode,
+                semanticsLabel: l10n.oauthSignInWithApple,
+                enabled: widget.enabled && !_busy,
+                onPressed: _signInApple,
+              ),
             ],
             if (_busy) ...[
               const SizedBox(height: AppSpacing.xs),
@@ -538,6 +495,59 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
           ],
         );
       },
+    );
+  }
+}
+
+/// Botón oficial de Sign in with Apple (artwork de Apple Design Resources).
+///
+/// No se recorta ni se sustituye el logo: la imagen incluye logo y texto.
+class _OfficialAppleSignInButton extends StatelessWidget {
+  const _OfficialAppleSignInButton({
+    required this.languageCode,
+    required this.semanticsLabel,
+    required this.enabled,
+    required this.onPressed,
+  });
+
+  final String languageCode;
+  final String semanticsLabel;
+  final bool enabled;
+  final VoidCallback onPressed;
+
+  static String assetFor(String languageCode) {
+    return switch (languageCode) {
+      'es' => 'assets/icons/oauth/apple_sign_in_es.png',
+      'pt' => 'assets/icons/oauth/apple_sign_in_pt.png',
+      _ => 'assets/icons/oauth/apple_sign_in_en.png',
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: semanticsLabel,
+      enabled: enabled,
+      child: Opacity(
+        opacity: enabled ? 1 : 0.45,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: enabled ? onPressed : null,
+            borderRadius: BorderRadius.circular(8),
+            child: AspectRatio(
+              aspectRatio: 600 / 132,
+              child: Image.asset(
+                assetFor(languageCode),
+                fit: BoxFit.fill,
+                gaplessPlayback: true,
+                excludeFromSemantics: true,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
