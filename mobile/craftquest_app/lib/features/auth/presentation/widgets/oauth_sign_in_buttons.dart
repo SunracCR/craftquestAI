@@ -501,8 +501,9 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
 
 /// Botón de Sign in with Apple del mismo tamaño que el botón de entrar.
 ///
-/// El texto es el oficial de Apple. El rectángulo ocupa el ancho del formulario
-/// y la altura de [AppSpacing.buttonHeight].
+/// El texto es el oficial de Apple y usa el mismo [TextTheme.labelLarge] que
+/// «Entrar», para que no salte de línea en portugués. El rectángulo ocupa el
+/// ancho del formulario y la altura de [AppSpacing.buttonHeight].
 class _OfficialAppleSignInButton extends StatelessWidget {
   const _OfficialAppleSignInButton({
     required this.languageCode,
@@ -516,6 +517,8 @@ class _OfficialAppleSignInButton extends StatelessWidget {
   final bool enabled;
   final VoidCallback onPressed;
 
+  static const _logoSize = 18.0;
+
   static String labelFor(String languageCode) {
     return switch (languageCode) {
       'es' => 'Iniciar sesión con Apple',
@@ -526,6 +529,14 @@ class _OfficialAppleSignInButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ink = enabled ? Colors.black : Colors.black.withValues(alpha: 0.38);
+    final radius = BorderRadius.circular(AppColors.radiusSm);
+    final textStyle = Theme.of(context).textTheme.labelLarge?.copyWith(
+          color: ink,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.2,
+        );
+
     return Semantics(
       button: true,
       label: semanticsLabel,
@@ -533,13 +544,45 @@ class _OfficialAppleSignInButton extends StatelessWidget {
       child: SizedBox(
         width: double.infinity,
         height: AppSpacing.buttonHeight,
-        child: SignInWithAppleButton(
-          onPressed: enabled ? onPressed : null,
-          text: labelFor(languageCode),
-          height: AppSpacing.buttonHeight,
-          style: SignInWithAppleButtonStyle.whiteOutlined,
-          borderRadius: BorderRadius.circular(AppColors.radiusSm),
-          iconAlignment: SignInWithAppleIconAlignment.center,
+        child: Material(
+          color: Colors.white,
+          borderRadius: radius,
+          child: InkWell(
+            onTap: enabled ? onPressed : null,
+            borderRadius: radius,
+            child: Ink(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: radius,
+                border: Border.all(color: ink, width: 1),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: _logoSize,
+                      height: _logoSize,
+                      child: CustomPaint(
+                        painter: AppleLogoPainter(color: ink),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        labelFor(languageCode),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: textStyle,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
