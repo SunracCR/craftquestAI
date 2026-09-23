@@ -499,9 +499,10 @@ class _OAuthSignInButtonsState extends State<OAuthSignInButtons> {
   }
 }
 
-/// Botón oficial de Sign in with Apple (artwork de Apple Design Resources).
+/// Botón de Sign in with Apple del mismo tamaño que el botón de entrar.
 ///
-/// No se recorta ni se sustituye el logo: la imagen incluye logo y texto.
+/// El texto es el oficial de Apple. El rectángulo ocupa el ancho del formulario
+/// y la altura de [AppSpacing.buttonHeight].
 class _OfficialAppleSignInButton extends StatelessWidget {
   const _OfficialAppleSignInButton({
     required this.languageCode,
@@ -515,11 +516,11 @@ class _OfficialAppleSignInButton extends StatelessWidget {
   final bool enabled;
   final VoidCallback onPressed;
 
-  static String assetFor(String languageCode) {
+  static String labelFor(String languageCode) {
     return switch (languageCode) {
-      'es' => 'assets/icons/oauth/apple_sign_in_es.png',
-      'pt' => 'assets/icons/oauth/apple_sign_in_pt.png',
-      _ => 'assets/icons/oauth/apple_sign_in_en.png',
+      'es' => 'Iniciar sesión con Apple',
+      'pt' => 'Iniciar sessão com a Apple',
+      _ => 'Sign in with Apple',
     };
   }
 
@@ -529,25 +530,16 @@ class _OfficialAppleSignInButton extends StatelessWidget {
       button: true,
       label: semanticsLabel,
       enabled: enabled,
-      child: Opacity(
-        opacity: enabled ? 1 : 0.45,
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: enabled ? onPressed : null,
-            borderRadius: BorderRadius.circular(8),
-            child: SizedBox(
-              height: 44,
-              width: double.infinity,
-              child: Image.asset(
-                assetFor(languageCode),
-                fit: BoxFit.contain,
-                alignment: Alignment.center,
-                gaplessPlayback: true,
-                excludeFromSemantics: true,
-              ),
-            ),
-          ),
+      child: SizedBox(
+        width: double.infinity,
+        height: AppSpacing.buttonHeight,
+        child: SignInWithAppleButton(
+          onPressed: enabled ? onPressed : null,
+          text: labelFor(languageCode),
+          height: AppSpacing.buttonHeight,
+          style: SignInWithAppleButtonStyle.whiteOutlined,
+          borderRadius: BorderRadius.circular(AppColors.radiusSm),
+          iconAlignment: SignInWithAppleIconAlignment.center,
         ),
       ),
     );
