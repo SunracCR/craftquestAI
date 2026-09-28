@@ -72,7 +72,7 @@ class _HomePageState extends State<HomePage> {
     _checkoutRefresh = getIt<CheckoutRefreshNotifier>()
       ..addListener(_onCheckoutCompleted);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      unawaited(_initHome());
+      unawaited(_initHome(forceRefreshBilling: true));
     });
   }
 
@@ -161,7 +161,6 @@ class _HomePageState extends State<HomePage> {
     if (!mounted) return;
 
     if (billing == null) {
-      setState(() => _billing = null);
       unawaited(_loadOfflineDownloadCount());
       return;
     }
