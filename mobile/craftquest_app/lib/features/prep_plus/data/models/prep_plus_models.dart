@@ -82,10 +82,12 @@ class PrepBrowseItemModel {
     this.accessExpiresAt,
     this.isLifetimeAccess = false,
     required this.canPurchase,
+    this.offers = const [],
   });
 
   factory PrepBrowseItemModel.fromJson(Map<String, dynamic> json) {
     final tagsJson = json['tags'] as List<dynamic>? ?? [];
+    final offersJson = json['offers'] as List<dynamic>? ?? [];
     return PrepBrowseItemModel(
       catalogItemId: json['catalogItemId'] as String,
       quizId: json['quizId'] as String,
@@ -104,6 +106,10 @@ class PrepBrowseItemModel {
           : null,
       isLifetimeAccess: json['isLifetimeAccess'] as bool? ?? false,
       canPurchase: json['canPurchase'] as bool? ?? false,
+      offers: offersJson
+          .map((e) => PrepAccessOfferModel.fromJson(e as Map<String, dynamic>))
+          .where((o) => o.isActive)
+          .toList(),
     );
   }
 
@@ -122,6 +128,7 @@ class PrepBrowseItemModel {
   final DateTime? accessExpiresAt;
   final bool isLifetimeAccess;
   final bool canPurchase;
+  final List<PrepAccessOfferModel> offers;
 }
 
 class PrepAccessOfferModel {
@@ -269,6 +276,33 @@ class PrepItemDetailModel {
       accessExpiresAt: access.expiresAt,
       isLifetimeAccess: access.isLifetimeAccess,
       canPractice: access.canPractice,
+    );
+  }
+
+  /// Vista parcial desde el listado, para poder tomar un acceso gratis
+  /// aunque el GET del detalle falle.
+  factory PrepItemDetailModel.fromBrowse(PrepBrowseItemModel item) {
+    final canPractice = item.isLifetimeAccess ||
+        item.userAccessState == 'active' ||
+        item.userAccessState == 'owned';
+    return PrepItemDetailModel(
+      catalogItemId: item.catalogItemId,
+      quizId: item.quizId,
+      slug: item.slug,
+      title: item.title,
+      description: item.description,
+      categoryId: '',
+      categoryName: '',
+      rootCategoryType: 'geographic',
+      tags: item.tags,
+      institutionTag: item.institutionTag,
+      questionCount: item.questionCount,
+      canPurchase: item.canPurchase,
+      userAccessState: item.userAccessState,
+      accessExpiresAt: item.accessExpiresAt,
+      isLifetimeAccess: item.isLifetimeAccess,
+      canPractice: canPractice,
+      offers: item.offers,
     );
   }
 

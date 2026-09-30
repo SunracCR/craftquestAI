@@ -33,6 +33,7 @@ public sealed class PrepCatalogBrowseItemDto
     public DateTime? AccessExpiresAt { get; init; }
     public bool IsLifetimeAccess { get; init; }
     public required bool CanPurchase { get; init; }
+    public IReadOnlyList<PrepAccessOfferDto> Offers { get; init; } = [];
 }
 
 public sealed class PrepCatalogItemPublicDetailDto

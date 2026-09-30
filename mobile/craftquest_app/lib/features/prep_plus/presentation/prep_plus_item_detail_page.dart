@@ -65,6 +65,7 @@ class PrepPlusItemDetailPage extends StatefulWidget {
     super.key,
     required this.catalogItemId,
     this.initialFromAccess,
+    this.initialFromBrowse,
     this.initialFromPreview,
     this.resumePendingWebCheckout = false,
     this.pendingWebPayPalCancelled = false,
@@ -75,6 +76,9 @@ class PrepPlusItemDetailPage extends StatefulWidget {
 
   /// Datos ya conocidos desde Mis accesos para pintar sin esperar al API.
   final PrepMyAccessItemModel? initialFromAccess;
+
+  /// Datos del listado, incluidas las ofertas, por si el detalle no carga.
+  final PrepBrowseItemModel? initialFromBrowse;
 
   /// Datos parciales desde preview pública (referido Prep+).
   final PrepItemDetailModel? initialFromPreview;
@@ -149,6 +153,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       _checkingOut = true;
     }
     final initial = widget.initialFromAccess;
+    final browseInitial = widget.initialFromBrowse;
     final previewInitial = widget.initialFromPreview;
     if (initial != null) {
       _item = PrepItemDetailModel.fromAccessItem(initial);
@@ -156,6 +161,18 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       if (initial.canPractice) {
         _warmPracticeLaunch(initial.quizId);
         unawaited(_loadPracticePreferences(initial.quizId));
+        unawaited(_loadSoundPreferences());
+      }
+      if (!_shouldResumeWebPayPal) {
+        unawaited(_load());
+      }
+    } else if (browseInitial != null) {
+      _item = PrepItemDetailModel.fromBrowse(browseInitial);
+      _selectedOfferId = _defaultOfferId(_item!.offers);
+      _loading = false;
+      if (_item!.canPractice) {
+        _warmPracticeLaunch(_item!.quizId);
+        unawaited(_loadPracticePreferences(_item!.quizId));
         unawaited(_loadSoundPreferences());
       }
       if (!_shouldResumeWebPayPal) {
@@ -386,11 +403,10 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       }
     } on DioException catch (e) {
       if (!mounted) return;
-      final l10n = AppLocalizations.of(context)!;
-      if (hadItem) {
-        // Vista parcial (referido/acceso): no alarmar si el refresh en background falla.
+      if (hadItem && _partialItemIsUsable) {
         return;
       }
+      final l10n = AppLocalizations.of(context)!;
       setState(() {
         _error = _repository.mapError(e, l10n);
         _loading = false;
@@ -401,7 +417,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
         debugPrint('$stackTrace');
       }
       if (!mounted) return;
-      if (hadItem) {
+      if (hadItem && _partialItemIsUsable) {
         return;
       }
       final l10n = AppLocalizations.of(context)!;
@@ -413,6 +429,12 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
         _loading = false;
       });
     }
+  }
+
+  bool get _partialItemIsUsable {
+    final item = _item;
+    if (item == null) return false;
+    return item.offers.isNotEmpty || item.canPractice;
   }
 
   String? _defaultOfferId(List<PrepAccessOfferModel> offers) {
@@ -490,11 +512,11 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       randomizeQuestions: _randomizeQuestions,
       showTimer: _showTimer,
       enableSoundEffects: _enableSoundEffects,
+      catalogItemId: item?.catalogItemId,
     );
-    if (item?.canPractice == true && _customPracticeSelection != null) {
-      final selection = _customPracticeSelection!;
+    final selection = _customPracticeSelection;
+    if (item?.canPractice == true && selection != null && selection.isValid) {
       return base.copyWith(
-        catalogItemId: item!.catalogItemId,
         sectionIds: selection.sectionIds,
         difficulty: selection.difficulty,
         questionCount: selection.questionCount,
@@ -1437,13 +1459,11 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
     if (item == null) return null;
 
     if (item.canPractice) {
-      final customBlocked = _customPracticeSelection == null ||
-          !_customPracticeSelection!.isValid;
       return AppBottomActionBar(
         children: [
           AppPrimaryButton(
             label: l10n.prepPlusPracticeAction,
-            onPressed: customBlocked ? null : () => _startPractice(item),
+            onPressed: () => _startPractice(item),
           ),
         ],
       );

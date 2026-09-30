@@ -590,15 +590,19 @@ public class PaymentService(
         if (options.Value.UseMockPayments)
         {
             var now = DateTime.UtcNow;
+            var mockTransactionId = StoreTransactionIds.Normalize(
+                    request.TransactionId ?? request.PurchaseToken)
+                ?? request.TransactionId
+                ?? request.PurchaseToken;
             storeDetails = new MobileStoreSubscriptionDetails
             {
                 PlanCode = planCode,
                 BillingCycle = billingCycle,
-                ProviderSubscriptionId = request.TransactionId ?? request.PurchaseToken,
+                ProviderSubscriptionId = mockTransactionId,
                 IsActive = true,
                 AutoRenewEnabled = true,
                 PeriodEnd = SubscriptionPeriodCalculator.CalculatePeriodEnd(now, billingCycle),
-                LatestTransactionId = request.TransactionId ?? request.PurchaseToken,
+                LatestTransactionId = mockTransactionId,
             };
         }
         else if (platform == "google_play")
@@ -633,10 +637,12 @@ public class PaymentService(
         }
 
         var providerCode = platform;
-        var providerSubscriptionId = storeDetails.ProviderSubscriptionId;
-        var paymentTransactionId = storeDetails.LatestTransactionId
+        var providerSubscriptionId = StoreTransactionIds.Normalize(storeDetails.ProviderSubscriptionId)
+            ?? storeDetails.ProviderSubscriptionId;
+        var paymentTransactionId = StoreTransactionIds.Normalize(
+            storeDetails.LatestTransactionId
             ?? request.TransactionId
-            ?? request.PurchaseToken;
+            ?? request.PurchaseToken);
 
         var existingPurchase = await FindOpenMobileSubscriptionPurchaseAsync(
             userId,
@@ -1392,10 +1398,13 @@ public class PaymentService(
         MobileStoreProductDetails storeDetails;
         if (options.Value.UseMockPayments)
         {
+            var mockTransactionId = StoreTransactionIds.Normalize(
+                    request.TransactionId ?? request.PurchaseToken)
+                ?? request.PurchaseToken;
             storeDetails = new MobileStoreProductDetails
             {
                 IsValid = true,
-                TransactionId = request.TransactionId ?? request.PurchaseToken,
+                TransactionId = mockTransactionId,
             };
         }
         else if (platform == "google_play")
@@ -1422,7 +1431,8 @@ public class PaymentService(
                 "STORE_PURCHASE_INVALID");
         }
 
-        var paymentTransactionId = storeDetails.TransactionId;
+        var paymentTransactionId = StoreTransactionIds.Normalize(storeDetails.TransactionId)
+            ?? storeDetails.TransactionId;
 
         var existingPurchase = await dbContext.Purchases
             .FirstOrDefaultAsync(
@@ -2028,14 +2038,14 @@ public class PaymentService(
         VerifyMobilePurchaseRequest request,
         CancellationToken cancellationToken)
     {
-        var token = request.PurchaseToken;
-        var transactionId = request.TransactionId ?? token;
+        var storedTransactionId = StoreTransactionIds.Normalize(request.TransactionId)
+            ?? StoreTransactionIds.Normalize(request.PurchaseToken);
 
         var existing = await FindOpenMobileSubscriptionPurchaseAsync(
             userId,
             providerCode,
-            transactionId,
-            token,
+            storedTransactionId,
+            StoreTransactionIds.Normalize(request.PurchaseToken),
             cancellationToken);
 
         var amount = billingCycle == BillingCycles.Annual
@@ -2051,7 +2061,7 @@ public class PaymentService(
                 ProductCode = plan.Code,
                 ProductType = "subscription",
                 ProviderCode = providerCode,
-                ProviderTransactionId = token,
+                ProviderTransactionId = storedTransactionId,
                 Amount = amount,
                 CurrencyCode = options.Value.CurrencyCode,
                 Status = PurchaseStatuses.Pending,
@@ -2065,7 +2075,7 @@ public class PaymentService(
             existing.BillingCycle = billingCycle;
             existing.Amount = amount;
             existing.Status = PurchaseStatuses.Pending;
-            existing.ProviderTransactionId = token;
+            existing.ProviderTransactionId = storedTransactionId;
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);

@@ -192,6 +192,7 @@ class _PrepPlusCategoryPageState extends State<PrepPlusCategoryPage> {
                                         MaterialPageRoute<void>(
                                           builder: (_) => PrepPlusItemDetailPage(
                                             catalogItemId: item.catalogItemId,
+                                            initialFromBrowse: item,
                                           ),
                                         ),
                                       );

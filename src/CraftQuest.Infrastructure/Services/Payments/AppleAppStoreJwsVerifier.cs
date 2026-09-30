@@ -40,6 +40,60 @@ public sealed class AppleAppStoreJwsVerifier(IOptions<PaymentOptions> options)
         return doc.RootElement.Clone();
     }
 
+    /// <summary>
+    /// Si <paramref name="value"/> es un JWS de StoreKit, devuelve el transactionId del payload.
+    /// Un identificador ya corto se devuelve igual.
+    /// </summary>
+    public static string? ResolveStoreTransactionId(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var trimmed = value.Trim();
+        if (!LooksLikeJws(trimmed))
+        {
+            return trimmed;
+        }
+
+        try
+        {
+            var payload = DecodePayload(trimmed);
+            var transactionId = ReadJsonString(payload, "transactionId")
+                ?? ReadJsonString(payload, "originalTransactionId");
+            return string.IsNullOrWhiteSpace(transactionId) ? trimmed : transactionId;
+        }
+        catch (Exception ex) when (ex is AppException or FormatException or JsonException)
+        {
+            return trimmed;
+        }
+    }
+
+    private static bool LooksLikeJws(string value)
+    {
+        var parts = value.Split('.');
+        return parts.Length == 3
+            && parts[0].Length > 0
+            && parts[1].Length > 0
+            && parts[2].Length > 0;
+    }
+
+    private static string? ReadJsonString(JsonElement element, string name)
+    {
+        if (!element.TryGetProperty(name, out var prop))
+        {
+            return null;
+        }
+
+        return prop.ValueKind switch
+        {
+            JsonValueKind.String => prop.GetString(),
+            JsonValueKind.Number => prop.GetRawText(),
+            _ => null,
+        };
+    }
+
     private bool IsVerificationEnabled() =>
         !options.Value.UseMockPayments && options.Value.Webhooks.RequireVerification;
 

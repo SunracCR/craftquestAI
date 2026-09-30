@@ -207,7 +207,8 @@ public class PrepPlusPaymentService(
             cancellationToken);
 
         var providerCode = platform == "google_play" ? "google_play" : "app_store";
-        var transactionId = request.TransactionId ?? request.PurchaseToken;
+        var transactionId = StoreTransactionIds.Normalize(request.TransactionId)
+            ?? StoreTransactionIds.Normalize(request.PurchaseToken);
 
         if (!options.Value.UseMockPayments)
         {
@@ -236,7 +237,8 @@ public class PrepPlusPaymentService(
                     PrepPlusErrorCodes.StorePurchaseInvalid);
             }
 
-            transactionId = storeDetails.TransactionId;
+            transactionId = StoreTransactionIds.Normalize(storeDetails.TransactionId)
+                ?? transactionId;
         }
 
         var productCode = BuildProductCode(catalogItemId, offerId);

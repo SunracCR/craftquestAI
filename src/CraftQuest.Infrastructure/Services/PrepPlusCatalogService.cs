@@ -222,18 +222,31 @@ public class PrepPlusCatalogService(
         var rootType = await ResolveRootCategoryTypeAsync(category, cancellationToken);
         var state = ResolveAccessState(access, now);
         var canPractice = state is "active" or "owned";
-        var practiceSections = canPractice
-            ? await prepPlusQuestionBankService.BuildPracticeStructureAsync(item.QuizId, cancellationToken)
-            : [];
-        var availableDifficulties = canPractice
-            ? await dbContext.Questions
-                .AsNoTracking()
-                .Where(q => q.QuizId == item.QuizId && q.Difficulty != null)
-                .Select(q => q.Difficulty!)
-                .Distinct()
-                .OrderBy(d => d)
-                .ToListAsync(cancellationToken)
-            : [];
+        var practiceSections = Array.Empty<PrepPracticeSectionPublicDto>();
+        var availableDifficulties = new List<string>();
+        if (canPractice)
+        {
+            try
+            {
+                practiceSections = (await prepPlusQuestionBankService.BuildPracticeStructureAsync(
+                    item.QuizId,
+                    cancellationToken)).ToArray();
+                availableDifficulties = await dbContext.Questions
+                    .AsNoTracking()
+                    .Where(q => q.QuizId == item.QuizId && q.Difficulty != null)
+                    .Select(q => q.Difficulty!)
+                    .Distinct()
+                    .OrderBy(d => d)
+                    .ToListAsync(cancellationToken);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                logger.LogError(
+                    ex,
+                    "Prep detail practice structure failed for catalog item {CatalogItemId}",
+                    item.CatalogItemId);
+            }
+        }
 
         return new PrepCatalogItemPublicDetailDto
         {
@@ -805,11 +818,11 @@ public class PrepPlusCatalogService(
 
         var parent = await dbContext.PrepCategories
             .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.CategoryId == category.ParentCategoryId.Value, cancellationToken)
-            ?? throw new AppException(
-                "Category hierarchy is broken.",
-                500,
-                PrepPlusErrorCodes.CategoryHierarchyBroken);
+            .FirstOrDefaultAsync(c => c.CategoryId == category.ParentCategoryId.Value, cancellationToken);
+        if (parent is null)
+        {
+            return category.CategoryType;
+        }
 
         if (!parent.ParentCategoryId.HasValue)
         {
@@ -823,15 +836,24 @@ public class PrepPlusCatalogService(
         PrepCategory current,
         CancellationToken cancellationToken)
     {
-        while (current.ParentCategoryId.HasValue)
+        var visited = new HashSet<Guid> { current.CategoryId };
+        for (var depth = 0; current.ParentCategoryId.HasValue && depth < 8; depth++)
         {
-            current = await dbContext.PrepCategories
+            var parentId = current.ParentCategoryId.Value;
+            if (!visited.Add(parentId))
+            {
+                return current.CategoryType;
+            }
+
+            var parent = await dbContext.PrepCategories
                 .AsNoTracking()
-                .FirstOrDefaultAsync(c => c.CategoryId == current.ParentCategoryId.Value, cancellationToken)
-                ?? throw new AppException(
-                    "Category hierarchy is broken.",
-                    500,
-                    PrepPlusErrorCodes.CategoryHierarchyBroken);
+                .FirstOrDefaultAsync(c => c.CategoryId == parentId, cancellationToken);
+            if (parent is null)
+            {
+                return current.CategoryType;
+            }
+
+            current = parent;
         }
 
         return current.CategoryType;
@@ -937,6 +959,21 @@ public class PrepPlusCatalogService(
             AccessExpiresAt = access?.ExpiresAt,
             IsLifetimeAccess = access?.IsLifetimeAccess ?? false,
             CanPurchase = CanPurchase(item, now) && userAccessState != "owned",
+            Offers = activeOffers
+                .OrderBy(o => o.IsLifetimeAccess)
+                .ThenBy(o => o.DurationDays)
+                .Select(o => new PrepAccessOfferDto
+                {
+                    OfferId = o.OfferId,
+                    DurationDays = o.DurationDays,
+                    IsLifetimeAccess = o.IsLifetimeAccess,
+                    PriceAmount = o.PriceAmount,
+                    CurrencyCode = o.CurrencyCode,
+                    IsFree = o.IsFree,
+                    StoreProductId = o.StoreProductId,
+                    IsActive = o.IsActive,
+                })
+                .ToList(),
         };
     }
 
