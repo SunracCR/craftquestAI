@@ -439,7 +439,9 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
 
   String? _defaultOfferId(List<PrepAccessOfferModel> offers) {
     if (offers.isEmpty) return null;
-    PrepAccessOfferModel? pickPreferred(Iterable<PrepAccessOfferModel> candidates) {
+    PrepAccessOfferModel? pickPreferred(Iterable<PrepAccessOfferModel> source) {
+      final candidates = source.toList();
+      if (candidates.isEmpty) return null;
       for (final o in candidates) {
         if (o.isLifetimeAccess) return o;
       }

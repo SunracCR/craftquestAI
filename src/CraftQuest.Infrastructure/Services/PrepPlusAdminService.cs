@@ -420,9 +420,9 @@ public class PrepPlusAdminService(
                 offer.IsLifetimeAccess = isLifetime;
                 offer.DurationDays = durationDays;
                 offer.PriceAmount = input.IsFree ? 0 : input.PriceAmount;
-                offer.CurrencyCode = input.CurrencyCode.Trim().ToUpperInvariant();
+                offer.CurrencyCode = NormalizeCurrencyCode(input.CurrencyCode);
                 offer.IsFree = input.IsFree;
-                offer.StoreProductId = NormalizeStoreProductId(input.StoreProductId);
+                offer.StoreProductId = input.IsFree ? null : NormalizeStoreProductId(input.StoreProductId);
                 offer.IsActive = input.IsActive;
             }
             else
@@ -434,9 +434,9 @@ public class PrepPlusAdminService(
                     IsLifetimeAccess = isLifetime,
                     DurationDays = durationDays,
                     PriceAmount = input.IsFree ? 0 : input.PriceAmount,
-                    CurrencyCode = input.CurrencyCode.Trim().ToUpperInvariant(),
+                    CurrencyCode = NormalizeCurrencyCode(input.CurrencyCode),
                     IsFree = input.IsFree,
-                    StoreProductId = NormalizeStoreProductId(input.StoreProductId),
+                    StoreProductId = input.IsFree ? null : NormalizeStoreProductId(input.StoreProductId),
                     IsActive = input.IsActive,
                 });
             }
@@ -1113,5 +1113,11 @@ public class PrepPlusAdminService(
         }
 
         return storeProductId.Trim();
+    }
+
+    private static string NormalizeCurrencyCode(string? currencyCode)
+    {
+        var code = currencyCode?.Trim().ToUpperInvariant();
+        return code is { Length: 3 } && code.All(char.IsAsciiLetter) ? code : "USD";
     }
 }

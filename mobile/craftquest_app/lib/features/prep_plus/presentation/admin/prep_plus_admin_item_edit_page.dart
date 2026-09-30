@@ -56,10 +56,11 @@ class _OfferDraft {
         'durationDays': isLifetimeAccess ? 0 : durationDays,
         'isLifetimeAccess': isLifetimeAccess,
         'priceAmount': isFree ? 0 : priceAmount,
-        'currencyCode': currencyCode,
+        'currencyCode': currencyCode.trim().length == 3 ? currencyCode.trim() : 'USD',
         'isFree': isFree,
-        'storeProductId':
-            storeProductId?.trim().isEmpty == true ? null : storeProductId?.trim(),
+        'storeProductId': isFree || storeProductId?.trim().isEmpty == true
+            ? null
+            : storeProductId?.trim(),
         'isActive': isActive,
       };
 }
@@ -1197,6 +1198,7 @@ class _OfferRow extends StatelessWidget {
             ),
             if (!offer.isFree)
               TextFormField(
+                key: ValueKey('price-$label'),
                 enabled: enabled,
                 initialValue: offer.priceAmount.toString(),
                 decoration: InputDecoration(
@@ -1209,21 +1211,24 @@ class _OfferRow extends StatelessWidget {
                 },
               ),
             TextFormField(
+              key: ValueKey('currency-$label'),
               enabled: enabled,
               initialValue: offer.currencyCode,
               decoration: InputDecoration(
                 labelText: l10n.prepAdminOfferCurrencyLabel,
               ),
-              onChanged: (v) => offer.currencyCode = v.toUpperCase(),
+              onChanged: (v) => offer.currencyCode = v.trim().toUpperCase(),
             ),
-            TextFormField(
-              enabled: enabled,
-              initialValue: offer.storeProductId ?? '',
-              decoration: InputDecoration(
-                labelText: l10n.prepAdminStoreProductIdLabel,
+            if (!offer.isFree)
+              TextFormField(
+                key: ValueKey('iap-$label'),
+                enabled: enabled,
+                initialValue: offer.storeProductId ?? '',
+                decoration: InputDecoration(
+                  labelText: l10n.prepAdminStoreProductIdLabel,
+                ),
+                onChanged: (v) => offer.storeProductId = v,
               ),
-              onChanged: (v) => offer.storeProductId = v,
-            ),
           ],
         ],
       ),
