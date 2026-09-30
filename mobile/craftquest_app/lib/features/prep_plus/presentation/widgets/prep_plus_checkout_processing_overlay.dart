@@ -3,21 +3,28 @@ import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 
 /// Bloquea la pantalla de detalle Prep+ mientras se verifica el pago
-/// (tienda en iOS/Android, PayPal en web) y se actualiza el acceso.
+/// y se actualiza el acceso. Incluye Cancelar para no dejar la UI atrapada.
 class PrepPlusCheckoutProcessingOverlay extends StatelessWidget {
   const PrepPlusCheckoutProcessingOverlay({
     super.key,
     required this.message,
+    required this.cancelLabel,
+    required this.onCancel,
   });
 
   final String message;
+  final String cancelLabel;
+  final VoidCallback onCancel;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.black.withValues(alpha: 0.45),
-      child: AbsorbPointer(
-        child: SafeArea(
+    return Stack(
+      children: [
+        const ModalBarrier(
+          dismissible: false,
+          color: Color(0x73000000),
+        ),
+        SafeArea(
           child: Center(
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.lg),
@@ -45,6 +52,11 @@ class PrepPlusCheckoutProcessingOverlay extends StatelessWidget {
                               height: 1.35,
                             ),
                       ),
+                      const SizedBox(height: AppSpacing.sm),
+                      TextButton(
+                        onPressed: onCancel,
+                        child: Text(cancelLabel),
+                      ),
                     ],
                   ),
                 ),
@@ -52,7 +64,7 @@ class PrepPlusCheckoutProcessingOverlay extends StatelessWidget {
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 }

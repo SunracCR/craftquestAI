@@ -17,6 +17,7 @@ Future<void> refreshAppSessionAfterCheckout(
   bool affectsHomeTab = true,
   Duration authTimeout = const Duration(seconds: 20),
   Duration billingTimeout = const Duration(seconds: 20),
+  bool? pollForPaidPlan,
 }) async {
   getIt<BillingRepository>().invalidateMyBillingCache();
   await _refreshAuthBestEffort(context, timeout: authTimeout);
@@ -24,13 +25,14 @@ Future<void> refreshAppSessionAfterCheckout(
     context: context,
     affectsHomeTab: affectsHomeTab,
     timeout: billingTimeout,
-    pollForPaidPlan: PurchaseOrchestrator.supportsStore,
+    pollForPaidPlan: pollForPaidPlan ?? PurchaseOrchestrator.supportsStore,
   );
 }
 
 /// Refresh de billing cuando no hay [BuildContext] (p. ej. coordinador en background).
 Future<void> refreshBillingAfterStorePurchase({
   bool affectsHomeTab = true,
+  bool? pollForPaidPlan,
 }) async {
   getIt<BillingRepository>().invalidateMyBillingCache();
 
@@ -48,7 +50,7 @@ Future<void> refreshBillingAfterStorePurchase({
   await _refreshBillingBestEffort(
     affectsHomeTab: affectsHomeTab,
     timeout: const Duration(seconds: 20),
-    pollForPaidPlan: PurchaseOrchestrator.supportsStore,
+    pollForPaidPlan: pollForPaidPlan ?? PurchaseOrchestrator.supportsStore,
   );
 }
 

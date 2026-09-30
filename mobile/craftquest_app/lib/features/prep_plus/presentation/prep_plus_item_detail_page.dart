@@ -125,11 +125,13 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
   List<ProductDetails> _storeProducts = [];
   bool _storeAvailable = false;
   bool _sharing = false;
+  bool _ownsStorePurchase = false;
+  bool _leavingDuringAccessProcessing = false;
 
   bool get _isCheckoutBusy => _checkingOut || _orchestrator.isBusy;
 
   bool get _showPrepAccessProcessingOverlay =>
-      _isCheckoutBusy || _refreshingAccessAfterCheckout;
+      _orchestrator.state is PurchaseVerifying || _checkingOut;
 
   bool get _shouldResumeWebPayPal =>
       kIsWeb && widget.resumePendingWebCheckout;
@@ -269,6 +271,9 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
   @override
   void dispose() {
     _orchestrator.removeListener(_onOrchestratorChanged);
+    if (_ownsStorePurchase && _orchestrator.canAbandonStoreWait) {
+      _orchestrator.cancelActivePurchase();
+    }
     super.dispose();
   }
 
@@ -281,7 +286,6 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       showStorePurchaseDeferred(context);
     } else if (state is PurchaseFailed) {
       showStorePurchaseFailure(context, state);
-      _orchestrator.resetToIdle();
     } else if (state is PurchaseSucceeded && state.result is PrepPlusPurchaseResult) {
       // Compras en segundo plano (p. ej. al reanudar la app). Las iniciadas
       // desde esta pantalla las cierra _buyWithStore / _confirmPayPalCapture.
@@ -290,6 +294,30 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       }
     }
     setState(() {});
+  }
+
+  void _leaveDuringAccessProcessing() {
+    if (!mounted || _leavingDuringAccessProcessing) {
+      return;
+    }
+    setState(() => _leavingDuringAccessProcessing = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    });
+  }
+
+  void _releaseStorePurchaseUi() {
+    _ownsStorePurchase = false;
+    final state = _orchestrator.state;
+    if (state is PurchasePreparing || state is PurchaseAwaitingStore) {
+      _orchestrator.cancelActivePurchase();
+    }
+    if (_orchestrator.state is! PurchaseIdle &&
+        _orchestrator.state is! PurchaseVerifying) {
+      _orchestrator.resetToIdle();
+    }
   }
 
   Future<void> _refreshAfterPrepCheckout({
@@ -367,13 +395,21 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
         _error = _repository.mapError(e, l10n);
         _loading = false;
       });
-    } catch (_) {
+    } catch (error, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('PrepPlusItemDetailPage._load failed: $error');
+        debugPrint('$stackTrace');
+      }
       if (!mounted) return;
       if (hadItem) {
         return;
       }
+      final l10n = AppLocalizations.of(context)!;
+      final isParseError = error is FormatException || error is TypeError;
       setState(() {
-        _error = DioErrorMapper.genericMessage(AppLocalizations.of(context)!);
+        _error = isParseError
+            ? l10n.imageUploadInvalidResponse
+            : DioErrorMapper.genericMessage(l10n);
         _loading = false;
       });
     }
@@ -958,19 +994,34 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
     }
 
     final referralCode = await _referralCodeForPurchase();
-    final result = await _orchestrator.buy(
-      StorePurchaseRequest(
-        kind: PurchaseProductKind.prepPlus,
-        productId: product.id,
-        product: product,
-        catalogItemId: widget.catalogItemId,
-        offerId: offer.offerId,
-        referralCode: referralCode,
-      ),
-    );
+    _ownsStorePurchase = true;
+    PurchaseFlowResult? result;
+    try {
+      result = await _orchestrator.buy(
+        StorePurchaseRequest(
+          kind: PurchaseProductKind.prepPlus,
+          productId: product.id,
+          product: product,
+          catalogItemId: widget.catalogItemId,
+          offerId: offer.offerId,
+          referralCode: referralCode,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        _releaseStorePurchaseUi();
+      } else if (_orchestrator.state is! PurchaseVerifying) {
+        if (_orchestrator.canAbandonStoreWait) {
+          _orchestrator.cancelActivePurchase();
+        }
+        if (_orchestrator.state is! PurchaseIdle &&
+            _orchestrator.state is! PurchaseVerifying) {
+          _orchestrator.resetToIdle();
+        }
+      }
+    }
 
     if (!mounted) return;
-    _orchestrator.resetToIdle();
 
     if (result is PrepPlusPurchaseResult) {
       await _refreshAfterPrepCheckout(showSuccessMessage: true, l10n: l10n);
@@ -1145,7 +1196,13 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return Stack(
+    return PopScope(
+      canPop: _leavingDuringAccessProcessing || !_showPrepAccessProcessingOverlay,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        _leaveDuringAccessProcessing();
+      },
+      child: Stack(
       children: [
         EdgeAwareScaffold(
       appBar: craftQuestAppBar(
@@ -1367,8 +1424,11 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
         if (_showPrepAccessProcessingOverlay)
           PrepPlusCheckoutProcessingOverlay(
             message: l10n.prepPlusConfirmingAccess,
+            cancelLabel: l10n.cancel,
+            onCancel: _leaveDuringAccessProcessing,
           ),
       ],
+    ),
     );
   }
 

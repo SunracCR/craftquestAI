@@ -206,12 +206,20 @@ public class PrepPlusCatalogService(
         CancellationToken cancellationToken = default)
     {
         var item = await LoadPublishedItemAsync(catalogItemId, cancellationToken);
+        var quiz = RequireNavigation(
+            item.Quiz,
+            "Quiz not found.",
+            PrepPlusErrorCodes.QuizNotFound);
+        var category = RequireNavigation(
+            item.Category,
+            "Category not found.",
+            PrepPlusErrorCodes.CategoryNotFound);
         var now = DateTime.UtcNow;
         var access = await GetPurchaseAccessAsync(userId, item.CatalogItemId, item.QuizId, cancellationToken);
         var questionCount = await dbContext.Questions
             .AsNoTracking()
             .CountAsync(q => q.QuizId == item.QuizId, cancellationToken);
-        var rootType = await ResolveRootCategoryTypeAsync(item.Category, cancellationToken);
+        var rootType = await ResolveRootCategoryTypeAsync(category, cancellationToken);
         var state = ResolveAccessState(access, now);
         var canPractice = state is "active" or "owned";
         var practiceSections = canPractice
@@ -232,10 +240,10 @@ public class PrepPlusCatalogService(
             CatalogItemId = item.CatalogItemId,
             QuizId = item.QuizId,
             Slug = item.Slug,
-            Title = item.TitleOverride ?? item.Quiz.Title,
-            Description = item.Description ?? item.Quiz.Description,
+            Title = item.TitleOverride ?? quiz.Title,
+            Description = item.Description ?? quiz.Description,
             CategoryId = item.CategoryId,
-            CategoryName = item.Category.Name,
+            CategoryName = category.Name,
             RootCategoryType = rootType,
             Tags = DeserializeTags(item.TagsJson),
             InstitutionTag = item.InstitutionTag,
@@ -871,6 +879,17 @@ public class PrepPlusCatalogService(
             .OrderByDescending(a => a.IsLifetimeAccess)
             .ThenByDescending(a => a.ExpiresAt)
             .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    private static T RequireNavigation<T>(T? value, string message, string errorCode)
+        where T : class
+    {
+        if (value is null)
+        {
+            throw new AppException(message, 404, errorCode);
+        }
+
+        return value;
     }
 
     private static bool CanPurchase(PrepCatalogItem item, DateTime now) =>

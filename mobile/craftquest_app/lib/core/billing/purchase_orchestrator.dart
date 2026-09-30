@@ -45,6 +45,7 @@ class PurchaseOrchestrator extends ChangeNotifier {
   Timer? _watchdogTimer;
   bool _started = false;
   bool _inFlight = false;
+  int _flowGeneration = 0;
   DateTime? _lastRestoreAt;
   StorePurchaseRequest? _activeRequest;
 
@@ -151,16 +152,19 @@ class PurchaseOrchestrator extends ChangeNotifier {
     _inFlight = true;
     _activeRequest = request;
     _setState(const PurchasePreparing());
+    _startWatchdog();
 
     try {
       if (!await isMobileStoreAvailable()) {
         _fail(PurchaseFailureReason.storeUnavailable);
         return null;
       }
+      if (!_inFlight) return null;
 
       ProductDetails? product = request.product;
       final normalizedProductId = normalizeStoreProductId(request.productId);
       product ??= await findMobileStoreProduct(normalizedProductId);
+      if (!_inFlight) return null;
       if (product == null) {
         _fail(PurchaseFailureReason.productNotFound);
         return null;
@@ -177,6 +181,7 @@ class PurchaseOrchestrator extends ChangeNotifier {
           referralCode: request.referralCode,
         ),
       );
+      if (!_inFlight) return null;
 
       await _drainUnfinishedStoreTransactions(
         preferredProductId: product.id,
@@ -185,6 +190,7 @@ class PurchaseOrchestrator extends ChangeNotifier {
       if (_state is PurchaseSucceeded) {
         return (_state as PurchaseSucceeded).result;
       }
+      if (!_inFlight) return null;
 
       await _reconcileUnfinishedStoreTransactions(
         productId: product.id,
@@ -193,6 +199,7 @@ class PurchaseOrchestrator extends ChangeNotifier {
       if (_state is PurchaseSucceeded) {
         return (_state as PurchaseSucceeded).result;
       }
+      if (!_inFlight) return null;
 
       _setState(const PurchaseAwaitingStore());
       _startWatchdog();
@@ -207,6 +214,9 @@ class PurchaseOrchestrator extends ChangeNotifier {
       }
       if (_state is PurchaseSucceeded) {
         return (_state as PurchaseSucceeded).result;
+      }
+      if (!_inFlight || _state is PurchaseFailed) {
+        return null;
       }
 
       // El resultado llega vía purchaseStream; el caller espera el estado final.
@@ -227,6 +237,14 @@ class PurchaseOrchestrator extends ChangeNotifier {
         }
       };
       addListener(listener);
+      if (_state is PurchaseSucceeded) {
+        removeListener(listener);
+        return (_state as PurchaseSucceeded).result;
+      }
+      if (_state is PurchaseFailed || !_inFlight) {
+        removeListener(listener);
+        return null;
+      }
 
       return completer.future.timeout(
         _watchdogDuration + const Duration(seconds: 30),
@@ -239,7 +257,9 @@ class PurchaseOrchestrator extends ChangeNotifier {
       if (kDebugMode) {
         debugPrint('[IAP] buy failed: $e');
       }
-      _fail(PurchaseFailureReason.storeError);
+      if (_inFlight) {
+        _fail(PurchaseFailureReason.storeError);
+      }
       return null;
     }
   }
@@ -249,6 +269,21 @@ class PurchaseOrchestrator extends ChangeNotifier {
     _activeRequest = null;
     _cancelWatchdog();
     _setState(const PurchaseIdle());
+  }
+
+  /// True mientras se prepara la compra o se espera la hoja de la tienda.
+  /// La verificación no se abandona: un cobro ya emitido debe poder completarse.
+  bool get canAbandonStoreWait =>
+      _inFlight &&
+      (_state is PurchasePreparing || _state is PurchaseAwaitingStore);
+
+  /// Suelta la espera de la tienda. Si el cobro llega después, se verifica
+  /// en segundo plano porque la compra ya no está marcada como activa.
+  void cancelActivePurchase() {
+    if (!canAbandonStoreWait) {
+      return;
+    }
+    _fail(PurchaseFailureReason.cancelled);
   }
 
   Future<void> _onPurchaseUpdate(
@@ -307,17 +342,21 @@ class PurchaseOrchestrator extends ChangeNotifier {
       }
 
       if (!background) {
-        _cancelWatchdog();
         _setState(const PurchaseVerifying());
+        _startWatchdog();
       }
 
       // Un evento solo puede mostrar un error visible al usuario si NO es de
       // reconciliación en segundo plano Y corresponde exactamente al producto
       // que el usuario está comprando activamente ahora mismo.
       final canShowFailure = !background && _productMatchesActiveRequest(purchase.productID);
+      final generation = _flowGeneration;
 
       try {
         final result = await _verifyAndFulfillWithRetry(purchase);
+        if (generation != _flowGeneration) {
+          continue;
+        }
         if (result == null) {
           _releasePurchase(purchaseKey);
           final billingRecovered = await _tryRecoverViaActiveBilling(purchase);
@@ -348,6 +387,9 @@ class PurchaseOrchestrator extends ChangeNotifier {
           background: background,
         );
       } on DioException catch (e) {
+        if (generation != _flowGeneration) {
+          continue;
+        }
         if (kDebugMode) {
           debugPrint(
             '[IAP] verify failed product=${purchase.productID} '
@@ -408,6 +450,9 @@ class PurchaseOrchestrator extends ChangeNotifier {
           );
         }
       } catch (e) {
+        if (generation != _flowGeneration) {
+          continue;
+        }
         if (kDebugMode) {
           debugPrint(
             '[IAP] verify failed product=${purchase.productID} '
@@ -507,13 +552,36 @@ class PurchaseOrchestrator extends ChangeNotifier {
     await _reconcileServerPurchases();
 
     final matchesActive = _productMatchesActiveRequest(purchase.productID);
+    final activeKind = _activeRequest?.kind;
     final userInitiated = matchesActive && (_activeRequest?.userInitiated ?? false);
+    final affectsHomeTab = activeKind != PurchaseProductKind.prepPlus;
+    // Solo una suscripción cambia el plan. Prep+ y créditos no deben esperar
+    // hasta 90 s a que /billing/me muestre Pro o Tutor.
+    final pollForPaidPlan = activeKind == PurchaseProductKind.subscription;
+
+    if (!pollForPaidPlan && (!background || matchesActive)) {
+      _cancelWatchdog();
+      _inFlight = false;
+      _activeRequest = null;
+      _setState(PurchaseSucceeded(result));
+      unawaited(
+        _refreshAfterPurchase(
+          userInitiated: userInitiated,
+          affectsHomeTab: affectsHomeTab,
+          pollForPaidPlan: false,
+        ),
+      );
+      return;
+    }
+
     await _refreshAfterPurchase(
       userInitiated: userInitiated,
-      affectsHomeTab: _activeRequest?.kind != PurchaseProductKind.prepPlus,
+      affectsHomeTab: affectsHomeTab,
+      pollForPaidPlan: pollForPaidPlan,
     );
 
     if (!background || matchesActive) {
+      _cancelWatchdog();
       _inFlight = false;
       _activeRequest = null;
       _setState(PurchaseSucceeded(result));
@@ -552,22 +620,49 @@ class PurchaseOrchestrator extends ChangeNotifier {
   }
 
   void _handleTerminalFailure(PurchaseDetails purchase) {
-    if (_activeRequest == null ||
-        !storeProductIdsMatch(purchase.productID, _activeRequest!.productId)) {
+    if (!_targetsActivePurchase(purchase)) {
       return;
     }
-    if (_state is PurchaseVerifying || _state is PurchaseSucceeded) {
+    if (_state is PurchaseSucceeded) {
+      return;
+    }
+    // Google Play rechaza la tarjeta con productID vacío. Durante la
+    // preparación ese evento no pertenece a la hoja de pago todavía.
+    if (purchase.productID.trim().isEmpty &&
+        _state is! PurchaseAwaitingStore &&
+        _state is! PurchaseVerifying) {
       return;
     }
     _cancelWatchdog();
+    final message = _userVisibleStoreMessage(purchase.error?.message);
     if (purchase.status == PurchaseStatus.canceled) {
-      _fail(PurchaseFailureReason.cancelled, message: purchase.error?.message);
+      _fail(PurchaseFailureReason.cancelled, message: message);
     } else {
-      _fail(
-        PurchaseFailureReason.storeError,
-        message: purchase.error?.message,
-      );
+      _fail(PurchaseFailureReason.storeError, message: message);
     }
+  }
+
+  /// Un error de la hoja de pago sin productID sigue siendo de la compra activa.
+  bool _targetsActivePurchase(PurchaseDetails purchase) {
+    final activeRequest = _activeRequest;
+    if (activeRequest == null || !_inFlight) {
+      return false;
+    }
+    if (purchase.productID.trim().isEmpty) {
+      return true;
+    }
+    return storeProductIdsMatch(purchase.productID, activeRequest.productId);
+  }
+
+  String? _userVisibleStoreMessage(String? message) {
+    final normalized = message?.trim();
+    if (normalized == null || normalized.isEmpty) {
+      return null;
+    }
+    if (normalized.startsWith('BillingResponse.')) {
+      return null;
+    }
+    return normalized;
   }
 
   Future<PurchaseFlowResult?> _verifyAndFulfillWithRetry(
@@ -715,16 +810,21 @@ class PurchaseOrchestrator extends ChangeNotifier {
   Future<void> _refreshAfterPurchase({
     required bool userInitiated,
     bool affectsHomeTab = true,
+    bool pollForPaidPlan = true,
   }) async {
     final context = rootNavigatorKey.currentContext;
     if (context != null && context.mounted && userInitiated) {
       await refreshAppSessionAfterCheckout(
         context,
         affectsHomeTab: affectsHomeTab,
+        pollForPaidPlan: pollForPaidPlan,
       );
       return;
     }
-    await refreshBillingAfterStorePurchase(affectsHomeTab: affectsHomeTab);
+    await refreshBillingAfterStorePurchase(
+      affectsHomeTab: affectsHomeTab,
+      pollForPaidPlan: pollForPaidPlan,
+    );
   }
 
   Future<void> _reconcilePendingIntent() async {
@@ -936,6 +1036,7 @@ class PurchaseOrchestrator extends ChangeNotifier {
   }
 
   void _fail(PurchaseFailureReason reason, {String? message}) {
+    _flowGeneration++;
     _cancelWatchdog();
     _inFlight = false;
     _activeRequest = null;

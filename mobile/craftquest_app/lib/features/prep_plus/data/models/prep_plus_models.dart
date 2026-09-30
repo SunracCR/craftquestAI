@@ -1,6 +1,23 @@
 import 'package:craftquest_app/features/prep_plus/data/models/prep_plus_question_bank_models.dart';
 import 'package:craftquest_app/features/teacher/data/models/teacher_review_models.dart';
 
+int _jsonInt(Object? value, {int fallback = 0}) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  if (value is String) {
+    return int.tryParse(value) ??
+        double.tryParse(value)?.toInt() ??
+        fallback;
+  }
+  return fallback;
+}
+
+double _jsonDouble(Object? value, {double fallback = 0}) {
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value) ?? fallback;
+  return fallback;
+}
+
 class PrepCategoryModel {
   const PrepCategoryModel({
     required this.categoryId,
@@ -75,7 +92,7 @@ class PrepBrowseItemModel {
       slug: json['slug'] as String?,
       title: json['title'] as String,
       description: json['description'] as String?,
-      questionCount: json['questionCount'] as int? ?? 0,
+      questionCount: _jsonInt(json['questionCount']),
       tags: tagsJson.map((e) => e as String).toList(),
       institutionTag: json['institutionTag'] as String?,
       hasFreeOffer: json['hasFreeOffer'] as bool? ?? false,
@@ -122,9 +139,9 @@ class PrepAccessOfferModel {
   factory PrepAccessOfferModel.fromJson(Map<String, dynamic> json) {
     return PrepAccessOfferModel(
       offerId: json['offerId'] as String,
-      durationDays: json['durationDays'] as int,
+      durationDays: _jsonInt(json['durationDays']),
       isLifetimeAccess: json['isLifetimeAccess'] as bool? ?? false,
-      priceAmount: (json['priceAmount'] as num).toDouble(),
+      priceAmount: _jsonDouble(json['priceAmount']),
       currencyCode: json['currencyCode'] as String? ?? 'USD',
       isFree: json['isFree'] as bool? ?? false,
       isActive: json['isActive'] as bool? ?? true,
@@ -211,7 +228,7 @@ class PrepItemDetailModel {
       rootCategoryType: json['rootCategoryType'] as String,
       tags: tagsJson.map((e) => e as String).toList(),
       institutionTag: json['institutionTag'] as String?,
-      questionCount: json['questionCount'] as int? ?? 0,
+      questionCount: _jsonInt(json['questionCount']),
       canPurchase: json['canPurchase'] as bool? ?? false,
       listingEndsAt: json['listingEndsAt'] != null
           ? DateTime.parse(json['listingEndsAt'] as String)
@@ -547,7 +564,7 @@ class PrepMyAccessItemModel {
       catalogItemId: json['catalogItemId'] as String,
       quizId: json['quizId'] as String,
       title: json['title'] as String,
-      questionCount: json['questionCount'] as int? ?? 0,
+      questionCount: _jsonInt(json['questionCount']),
       grantedAt: DateTime.parse(json['grantedAt'] as String),
       expiresAt: json['expiresAt'] != null
           ? DateTime.parse(json['expiresAt'] as String)
@@ -671,7 +688,7 @@ class PrepPublicPreviewModel {
       description: json['description'] as String?,
       categoryName: json['categoryName'] as String,
       rootCategoryType: json['rootCategoryType'] as String,
-      questionCount: json['questionCount'] as int? ?? 0,
+      questionCount: _jsonInt(json['questionCount']),
       hasFreeOffer: json['hasFreeOffer'] as bool? ?? false,
       referralRewardsEligible: json['referralRewardsEligible'] as bool? ?? false,
       lowestPaidPrice: (json['lowestPaidPrice'] as num?)?.toDouble(),
