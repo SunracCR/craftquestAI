@@ -250,6 +250,9 @@ class PurchaseOrchestrator extends ChangeNotifier {
         _watchdogDuration + const Duration(seconds: 30),
         onTimeout: () {
           removeListener(listener);
+          if (_inFlight && _state is! PurchaseSucceeded) {
+            _fail(PurchaseFailureReason.timeout);
+          }
           return null;
         },
       );
@@ -276,6 +279,15 @@ class PurchaseOrchestrator extends ChangeNotifier {
   bool get canAbandonStoreWait =>
       _inFlight &&
       (_state is PurchasePreparing || _state is PurchaseAwaitingStore);
+
+  /// Hay un token de la tienda en verificación para el producto de esta compra.
+  bool get isVerifyingActiveStorePurchase {
+    final request = _activeRequest;
+    if (request == null) {
+      return false;
+    }
+    return _hasInFlightVerificationForProduct(request.productId);
+  }
 
   /// Suelta la espera de la tienda. Si el cobro llega después, se verifica
   /// en segundo plano porque la compra ya no está marcada como activa.
@@ -308,26 +320,11 @@ class PurchaseOrchestrator extends ChangeNotifier {
 
       if (purchase.status == PurchaseStatus.error ||
           purchase.status == PurchaseStatus.canceled) {
-        if (background) {
-          if (kDebugMode) {
-            debugPrint(
-              '[IAP] background terminal failure product=${purchase.productID} '
-              'status=${purchase.status}',
-            );
-          }
-        } else if (_shouldIgnoreTerminalFailureForPurchase(
+        _dispatchTerminalFailure(
           purchase,
+          listenerMarkedBackground: background,
           successfulProductIds: successfulProductIds,
-        )) {
-          if (kDebugMode) {
-            debugPrint(
-              '[IAP] ignoring terminal failure product=${purchase.productID} '
-              'status=${purchase.status} (batch has success or verify in flight)',
-            );
-          }
-        } else {
-          _handleTerminalFailure(purchase);
-        }
+        );
         continue;
       }
 
@@ -336,25 +333,71 @@ class PurchaseOrchestrator extends ChangeNotifier {
         continue;
       }
 
+      // Play a veces manda la compra con estado purchased y, a la vez,
+      // BillingResponse.error (tarjeta rechazada). Eso no se verifica.
+      if (purchase.error != null) {
+        _dispatchTerminalFailure(
+          purchase,
+          listenerMarkedBackground: background,
+          successfulProductIds: successfulProductIds,
+        );
+        continue;
+      }
+
+      if (!_hasStorePurchaseToken(purchase)) {
+        _dispatchTerminalFailure(
+          purchase,
+          listenerMarkedBackground: background,
+          successfulProductIds: successfulProductIds,
+        );
+        continue;
+      }
+
+      final drivesUi = StorePurchaseBatchPolicy.drivesActivePurchaseUi(
+        inFlight: _inFlight,
+        productMatchesActiveRequest:
+            _productMatchesActiveRequest(purchase.productID),
+        isRestored: purchase.status == PurchaseStatus.restored,
+        hasProductId: purchase.productID.trim().isNotEmpty,
+        hasPurchaseToken: true,
+      );
+      final effectiveBackground = !drivesUi;
+
       final purchaseKey = _purchaseKey(purchase);
       if (!_tryClaimPurchase(purchaseKey)) {
         continue;
       }
 
-      if (!background) {
+      if (drivesUi) {
         _setState(const PurchaseVerifying());
         _startWatchdog();
       }
 
-      // Un evento solo puede mostrar un error visible al usuario si NO es de
-      // reconciliación en segundo plano Y corresponde exactamente al producto
-      // que el usuario está comprando activamente ahora mismo.
-      final canShowFailure = !background && _productMatchesActiveRequest(purchase.productID);
+      // Un evento solo puede mostrar un error visible al usuario si corresponde
+      // a la compra que acaba de confirmar en la hoja, con token real.
+      final canShowFailure = !effectiveBackground &&
+          _productMatchesActiveRequest(purchase.productID);
       final generation = _flowGeneration;
 
       try {
-        final result = await _verifyAndFulfillWithRetry(purchase);
+        final result = await _verifyAndFulfillWithRetry(
+          purchase,
+          generation: generation,
+        );
         if (generation != _flowGeneration) {
+          if (result != null) {
+            if (!_inFlight && _state is! PurchaseSucceeded) {
+              _publishSuccess(result);
+            }
+            await _completeVerifiedPurchase(
+              purchase: purchase,
+              purchaseKey: purchaseKey,
+              result: result,
+              background: true,
+            );
+          } else {
+            _releasePurchase(purchaseKey);
+          }
           continue;
         }
         if (result == null) {
@@ -365,7 +408,7 @@ class PurchaseOrchestrator extends ChangeNotifier {
               purchase: purchase,
               purchaseKey: purchaseKey,
               result: billingRecovered,
-              background: background,
+              background: effectiveBackground,
             );
             continue;
           }
@@ -384,7 +427,7 @@ class PurchaseOrchestrator extends ChangeNotifier {
           purchase: purchase,
           purchaseKey: purchaseKey,
           result: result,
-          background: background,
+          background: effectiveBackground,
         );
       } on DioException catch (e) {
         if (generation != _flowGeneration) {
@@ -398,6 +441,13 @@ class PurchaseOrchestrator extends ChangeNotifier {
           );
         }
         _releasePurchase(purchaseKey);
+        if (canShowFailure && _isDefinitiveVerificationRejection(e)) {
+          _fail(
+            PurchaseFailureReason.verificationFailed,
+            message: DioErrorMapper.map(e),
+          );
+          continue;
+        }
         // Transacciones caducadas de otro producto (p. ej. Pro sandbox)
         // no deben bloquear la compra activa de Tutor.
         if (_isInactiveStoreSubscriptionError(e) && !canShowFailure) {
@@ -410,7 +460,7 @@ class PurchaseOrchestrator extends ChangeNotifier {
             purchase: purchase,
             purchaseKey: purchaseKey,
             result: recovered,
-            background: background,
+            background: effectiveBackground,
           );
           continue;
         }
@@ -420,7 +470,7 @@ class PurchaseOrchestrator extends ChangeNotifier {
             purchase: purchase,
             purchaseKey: purchaseKey,
             result: billingRecovered,
-            background: background,
+            background: effectiveBackground,
           );
           continue;
         }
@@ -433,7 +483,7 @@ class PurchaseOrchestrator extends ChangeNotifier {
               purchase: purchase,
               purchaseKey: purchaseKey,
               result: deferredBilling,
-              background: background,
+              background: effectiveBackground,
             );
             continue;
           }
@@ -460,13 +510,17 @@ class PurchaseOrchestrator extends ChangeNotifier {
           );
         }
         _releasePurchase(purchaseKey);
+        if (canShowFailure) {
+          _fail(PurchaseFailureReason.verificationFailed);
+          continue;
+        }
         final recovered = await _tryRecoverViaServerReconcile(purchase);
         if (recovered != null) {
           await _completeVerifiedPurchase(
             purchase: purchase,
             purchaseKey: purchaseKey,
             result: recovered,
-            background: background,
+            background: effectiveBackground,
           );
           continue;
         }
@@ -476,13 +530,11 @@ class PurchaseOrchestrator extends ChangeNotifier {
             purchase: purchase,
             purchaseKey: purchaseKey,
             result: billingRecovered,
-            background: background,
+            background: effectiveBackground,
           );
           continue;
         }
-        if (canShowFailure) {
-          _fail(PurchaseFailureReason.verificationFailed);
-        } else if (kDebugMode) {
+        if (kDebugMode) {
           debugPrint(
             '[IAP] verify failed silently product=${purchase.productID} '
             'background=$background',
@@ -496,11 +548,73 @@ class PurchaseOrchestrator extends ChangeNotifier {
     return purchases
         .where(
           (purchase) =>
-              purchase.status == PurchaseStatus.purchased ||
-              purchase.status == PurchaseStatus.restored,
+              purchase.status == PurchaseStatus.purchased &&
+              purchase.error == null &&
+              purchase.productID.trim().isNotEmpty &&
+              _hasStorePurchaseToken(purchase),
         )
         .map((purchase) => purchase.productID)
         .toSet();
+  }
+
+  bool _hasStorePurchaseToken(PurchaseDetails purchase) {
+    if (purchase.verificationData.serverVerificationData.trim().isNotEmpty) {
+      return true;
+    }
+    return (purchase.purchaseID ?? '').trim().isNotEmpty;
+  }
+
+  bool get _waitingForStoreOutcome =>
+      _state is PurchaseAwaitingStore ||
+      _state is PurchaseVerifying ||
+      _state is PurchaseDeferred;
+
+  void _dispatchTerminalFailure(
+    PurchaseDetails purchase, {
+    required bool listenerMarkedBackground,
+    required Set<String> successfulProductIds,
+  }) {
+    final surface = StorePurchaseBatchPolicy.shouldSurfaceTerminalFailure(
+      listenerMarkedBackground: listenerMarkedBackground,
+      inFlight: _inFlight,
+      waitingForStoreOutcome: _waitingForStoreOutcome,
+      productIdEmpty: purchase.productID.trim().isEmpty,
+      productMatchesActiveRequest:
+          _productMatchesActiveRequest(purchase.productID),
+    );
+    if (!surface) {
+      if (kDebugMode) {
+        debugPrint(
+          '[IAP] background terminal failure product=${purchase.productID} '
+          'status=${purchase.status}',
+        );
+      }
+      return;
+    }
+    final sheetStillOpen =
+        _state is PurchaseAwaitingStore || _state is PurchaseDeferred;
+    final batchHasRealSuccess =
+        StorePurchaseBatchPolicy.batchContainsSuccessfulPurchase(
+      successfulProductIds,
+      purchase.productID,
+    );
+    if (_shouldIgnoreTerminalFailureForPurchase(
+      purchase,
+      successfulProductIds: successfulProductIds,
+    )) {
+      // Una restauración del historial no debe tragarse el atrás o el rechazo
+      // mientras la hoja de Play sigue siendo el resultado que esperamos.
+      if (!(sheetStillOpen && !batchHasRealSuccess)) {
+        if (kDebugMode) {
+          debugPrint(
+          '[IAP] ignoring terminal failure product=${purchase.productID} '
+          'status=${purchase.status} (batch has a confirmed purchase)',
+          );
+        }
+        return;
+      }
+    }
+    _handleTerminalFailure(purchase);
   }
 
   bool _shouldIgnoreTerminalFailureForPurchase(
@@ -514,10 +628,6 @@ class PurchaseOrchestrator extends ChangeNotifier {
         successfulProductIds,
         purchase.productID,
       ),
-      isVerifyingOrSucceeded:
-          _state is PurchaseVerifying || _state is PurchaseSucceeded,
-      hasInFlightVerificationForProduct:
-          _hasInFlightVerificationForProduct(purchase.productID),
     );
   }
 
@@ -535,12 +645,42 @@ class PurchaseOrchestrator extends ChangeNotifier {
     return false;
   }
 
+  bool _isDefinitiveVerificationRejection(DioException error) {
+    return !DioErrorMapper.isTransientFailure(error) &&
+        !_isInactiveStoreSubscriptionError(error);
+  }
+
+  void _publishSuccess(PurchaseFlowResult result) {
+    if (_state is PurchaseSucceeded) {
+      return;
+    }
+    _cancelWatchdog();
+    _inFlight = false;
+    _activeRequest = null;
+    _setState(PurchaseSucceeded(result));
+  }
+
   Future<void> _completeVerifiedPurchase({
     required PurchaseDetails purchase,
     required String purchaseKey,
     required PurchaseFlowResult result,
     required bool background,
   }) async {
+    final matchesActive = _productMatchesActiveRequest(purchase.productID);
+    final activeKind = _activeRequest?.kind;
+    final userInitiated =
+        matchesActive && (_activeRequest?.userInitiated ?? false);
+    final affectsHomeTab = activeKind != PurchaseProductKind.prepPlus;
+    // Solo una suscripción sigue en pantalla hasta que /billing/me muestra
+    // el plan. Prep+ y créditos cierran el diálogo en cuanto el servidor
+    // confirma el cobro; consumir la compra y reconciliar va después.
+    final pollForPaidPlan = activeKind == PurchaseProductKind.subscription;
+    final publishToUi = !background || matchesActive;
+
+    if (publishToUi && !pollForPaidPlan) {
+      _publishSuccess(result);
+    }
+
     if (purchase.pendingCompletePurchase) {
       await completeMobileStorePurchaseIfNeeded(purchase);
     }
@@ -551,48 +691,23 @@ class PurchaseOrchestrator extends ChangeNotifier {
     _markPurchaseCompleted(purchaseKey);
     await _reconcileServerPurchases();
 
-    final matchesActive = _productMatchesActiveRequest(purchase.productID);
-    final activeKind = _activeRequest?.kind;
-    final userInitiated = matchesActive && (_activeRequest?.userInitiated ?? false);
-    final affectsHomeTab = activeKind != PurchaseProductKind.prepPlus;
-    // Solo una suscripción cambia el plan. Prep+ y créditos no deben esperar
-    // hasta 90 s a que /billing/me muestre Pro o Tutor.
-    final pollForPaidPlan = activeKind == PurchaseProductKind.subscription;
-
-    if (!pollForPaidPlan && (!background || matchesActive)) {
-      _cancelWatchdog();
-      _inFlight = false;
-      _activeRequest = null;
-      _setState(PurchaseSucceeded(result));
-      unawaited(
-        _refreshAfterPurchase(
-          userInitiated: userInitiated,
-          affectsHomeTab: affectsHomeTab,
-          pollForPaidPlan: false,
-        ),
+    if (publishToUi && pollForPaidPlan) {
+      await _refreshAfterPurchase(
+        userInitiated: userInitiated,
+        affectsHomeTab: affectsHomeTab,
+        pollForPaidPlan: true,
       );
+      _publishSuccess(result);
       return;
     }
 
-    await _refreshAfterPurchase(
-      userInitiated: userInitiated,
-      affectsHomeTab: affectsHomeTab,
-      pollForPaidPlan: pollForPaidPlan,
+    unawaited(
+      _refreshAfterPurchase(
+        userInitiated: userInitiated,
+        affectsHomeTab: affectsHomeTab,
+        pollForPaidPlan: false,
+      ),
     );
-
-    if (!background || matchesActive) {
-      _cancelWatchdog();
-      _inFlight = false;
-      _activeRequest = null;
-      _setState(PurchaseSucceeded(result));
-      return;
-    }
-
-    if (kDebugMode) {
-      debugPrint(
-        '[IAP] background fulfilled silently product=${purchase.productID}',
-      );
-    }
   }
 
   bool _productMatchesActiveRequest(String productId) {
@@ -626,16 +741,18 @@ class PurchaseOrchestrator extends ChangeNotifier {
     if (_state is PurchaseSucceeded) {
       return;
     }
-    // Google Play rechaza la tarjeta con productID vacío. Durante la
-    // preparación ese evento no pertenece a la hoja de pago todavía.
-    if (purchase.productID.trim().isEmpty &&
-        _state is! PurchaseAwaitingStore &&
-        _state is! PurchaseVerifying) {
+    // Google Play rechaza la tarjeta o cierra la hoja con productID vacío.
+    // Durante la preparación ese evento todavía no es de la hoja de pago.
+    // Si ya estamos esperando el resultado, el rechazo cierra el diálogo.
+    if (purchase.productID.trim().isEmpty && !_waitingForStoreOutcome) {
       return;
     }
     _cancelWatchdog();
     final message = _userVisibleStoreMessage(purchase.error?.message);
-    if (purchase.status == PurchaseStatus.canceled) {
+    final emptyPurchase = purchase.productID.trim().isEmpty &&
+        !_hasStorePurchaseToken(purchase);
+    if (purchase.status == PurchaseStatus.canceled ||
+        (emptyPurchase && purchase.status != PurchaseStatus.error)) {
       _fail(PurchaseFailureReason.cancelled, message: message);
     } else {
       _fail(PurchaseFailureReason.storeError, message: message);
@@ -666,16 +783,23 @@ class PurchaseOrchestrator extends ChangeNotifier {
   }
 
   Future<PurchaseFlowResult?> _verifyAndFulfillWithRetry(
-    PurchaseDetails purchase,
-  ) async {
+    PurchaseDetails purchase, {
+    required int generation,
+  }) async {
     DioException? lastError;
     for (var attempt = 0; attempt < _verifyMaxAttempts; attempt++) {
+      if (generation != _flowGeneration) {
+        return null;
+      }
       if (attempt > 0) {
         final delay = lastError != null &&
                 _isInactiveStoreSubscriptionError(lastError)
             ? _inactiveSubscriptionRetryDelay
             : Duration(seconds: 2 * attempt);
         await Future<void>.delayed(delay);
+        if (generation != _flowGeneration) {
+          return null;
+        }
       }
       try {
         return await _verifyAndFulfill(purchase);
@@ -1018,15 +1142,15 @@ class PurchaseOrchestrator extends ChangeNotifier {
 
   void _startWatchdog() {
     _watchdogTimer?.cancel();
-    _watchdogTimer = Timer(_watchdogDuration, () async {
+    _watchdogTimer = Timer(_watchdogDuration, () {
       if (!_inFlight) {
         return;
       }
       if (kDebugMode) {
         debugPrint('[IAP] watchdog timeout product=${_activeRequest?.productId}');
       }
-      await _restorePurchases(force: true);
       _fail(PurchaseFailureReason.timeout);
+      unawaited(_restorePurchases(force: true));
     });
   }
 

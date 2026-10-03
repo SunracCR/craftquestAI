@@ -18,22 +18,18 @@ void main() {
         StorePurchaseBatchPolicy.shouldIgnoreTerminalFailure(
           matchesActiveRequest: true,
           batchHasSuccessfulForProduct: true,
-          isVerifyingOrSucceeded: false,
-          hasInFlightVerificationForProduct: false,
         ),
         isTrue,
       );
     });
 
-    test('shouldIgnoreTerminalFailure when verification is in flight', () {
+    test('a confirmed rejection is not ignored because verification started', () {
       expect(
         StorePurchaseBatchPolicy.shouldIgnoreTerminalFailure(
           matchesActiveRequest: true,
           batchHasSuccessfulForProduct: false,
-          isVerifyingOrSucceeded: false,
-          hasInFlightVerificationForProduct: true,
         ),
-        isTrue,
+        isFalse,
       );
     });
 
@@ -42,8 +38,91 @@ void main() {
         StorePurchaseBatchPolicy.shouldIgnoreTerminalFailure(
           matchesActiveRequest: false,
           batchHasSuccessfulForProduct: true,
-          isVerifyingOrSucceeded: true,
-          hasInFlightVerificationForProduct: true,
+        ),
+        isFalse,
+      );
+    });
+
+    test('restored or tokenless events do not drive the confirming overlay', () {
+      expect(
+        StorePurchaseBatchPolicy.drivesActivePurchaseUi(
+          inFlight: true,
+          productMatchesActiveRequest: true,
+          isRestored: true,
+          hasProductId: true,
+          hasPurchaseToken: true,
+        ),
+        isFalse,
+      );
+      expect(
+        StorePurchaseBatchPolicy.drivesActivePurchaseUi(
+          inFlight: true,
+          productMatchesActiveRequest: true,
+          isRestored: false,
+          hasProductId: false,
+          hasPurchaseToken: false,
+        ),
+        isFalse,
+      );
+      expect(
+        StorePurchaseBatchPolicy.drivesActivePurchaseUi(
+          inFlight: false,
+          productMatchesActiveRequest: true,
+          isRestored: false,
+          hasProductId: true,
+          hasPurchaseToken: true,
+        ),
+        isFalse,
+      );
+    });
+
+    test('a real purchased token drives the confirming overlay', () {
+      expect(
+        StorePurchaseBatchPolicy.drivesActivePurchaseUi(
+          inFlight: true,
+          productMatchesActiveRequest: true,
+          isRestored: false,
+          hasProductId: true,
+          hasPurchaseToken: true,
+        ),
+        isTrue,
+      );
+    });
+
+    test('background cancel surfaces while the payment sheet is open', () {
+      expect(
+        StorePurchaseBatchPolicy.shouldSurfaceTerminalFailure(
+          listenerMarkedBackground: true,
+          inFlight: true,
+          waitingForStoreOutcome: true,
+          productIdEmpty: true,
+          productMatchesActiveRequest: false,
+        ),
+        isTrue,
+      );
+    });
+
+    test('background cancel still surfaces after verification started', () {
+      expect(
+        StorePurchaseBatchPolicy.shouldSurfaceTerminalFailure(
+          listenerMarkedBackground: true,
+          inFlight: true,
+          waitingForStoreOutcome: true,
+          productIdEmpty: true,
+          productMatchesActiveRequest: false,
+        ),
+        isTrue,
+      );
+    });
+
+    test('background cancel is ignored when no checkout is waiting', () {
+      expect(
+        StorePurchaseBatchPolicy.shouldSurfaceTerminalFailure(
+          listenerMarkedBackground: true,
+          inFlight: false,
+          waitingForStoreOutcome: false,
+          productIdEmpty: true,
+          productMatchesActiveRequest: false,
         ),
         isFalse,
       );

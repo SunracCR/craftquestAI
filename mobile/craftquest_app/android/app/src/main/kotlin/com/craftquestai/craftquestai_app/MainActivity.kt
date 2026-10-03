@@ -1,7 +1,7 @@
 package com.craftquestai.craftquestai_app
 
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
+import androidx.core.view.WindowCompat
 import com.google.android.play.agesignals.AgeSignalsAccessRequest
 import com.google.android.play.agesignals.AgeSignalsException
 import com.google.android.play.agesignals.AgeSignalsManager
@@ -21,7 +21,10 @@ import java.util.TimeZone
 class MainActivity : FlutterFragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
+        // Edge-to-edge sin EdgeToEdge.enable(): esa API asigna setStatusBarColor,
+        // setNavigationBarColor y LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES, obsoletos
+        // en Android 15. El brillo de los iconos lo aplica Flutter vía SystemUiOverlayStyle.
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
     }
 

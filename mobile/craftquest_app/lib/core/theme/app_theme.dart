@@ -118,9 +118,9 @@ abstract final class AppTheme {
         surfaceTintColor: Colors.transparent,
         titleTextStyle: textTheme.titleLarge,
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
-        systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
-          statusBarColor: Colors.transparent,
-          systemNavigationBarColor: AppColors.background,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarIconBrightness: Brightness.light,
+          statusBarBrightness: Brightness.dark,
           systemNavigationBarIconBrightness: Brightness.light,
         ),
       ),

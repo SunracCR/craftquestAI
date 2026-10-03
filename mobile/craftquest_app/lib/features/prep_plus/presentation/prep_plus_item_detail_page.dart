@@ -290,6 +290,10 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
     _orchestrator.removeListener(_onOrchestratorChanged);
     if (_ownsStorePurchase && _orchestrator.canAbandonStoreWait) {
       _orchestrator.cancelActivePurchase();
+    } else if (_ownsStorePurchase &&
+        _orchestrator.state is PurchaseVerifying &&
+        !_orchestrator.isVerifyingActiveStorePurchase) {
+      _orchestrator.resetToIdle();
     }
     super.dispose();
   }
@@ -331,6 +335,10 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
     if (state is PurchasePreparing || state is PurchaseAwaitingStore) {
       _orchestrator.cancelActivePurchase();
     }
+    if (_orchestrator.state is PurchaseVerifying &&
+        !_orchestrator.isVerifyingActiveStorePurchase) {
+      _orchestrator.resetToIdle();
+    }
     if (_orchestrator.state is! PurchaseIdle &&
         _orchestrator.state is! PurchaseVerifying) {
       _orchestrator.resetToIdle();
@@ -345,7 +353,10 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       return;
     }
 
-    setState(() => _refreshingAccessAfterCheckout = true);
+    setState(() {
+      _checkingOut = false;
+      _refreshingAccessAfterCheckout = true;
+    });
     try {
       await _clearReferralIfMatched();
       await _load(forceRefresh: true);
@@ -879,6 +890,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       final orderId = widget.pendingWebPayPalOrderId ?? pending?.id;
       if (orderId == null || orderId.isEmpty) {
         if (!mounted) return;
+        setState(() => _checkingOut = false);
         context.showErrorSnackBar(l10n.paypalReturnError);
         await _load(fullScreenLoading: _item == null);
         return;
@@ -887,18 +899,24 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       final granted = await _capturePrepPayPalOrderWithRetries(orderId);
       if (!mounted) return;
       if (granted) {
-        setState(() => _pendingPayPalOrderId = null);
+        setState(() {
+          _pendingPayPalOrderId = null;
+          _checkingOut = false;
+        });
         await _refreshAfterPrepCheckout(showSuccessMessage: true, l10n: l10n);
       } else {
+        if (mounted) setState(() => _checkingOut = false);
         context.showErrorSnackBar(l10n.paypalReturnError);
         await _load(fullScreenLoading: _item == null);
       }
     } on DioException catch (e) {
       if (!mounted) return;
+      setState(() => _checkingOut = false);
       context.showDioErrorSnackBar(e);
       await _load(fullScreenLoading: _item == null);
     } catch (_) {
       if (!mounted) return;
+      setState(() => _checkingOut = false);
       context.showErrorSnackBar(l10n.paypalReturnError);
       await _load(fullScreenLoading: _item == null);
     } finally {
@@ -1032,17 +1050,7 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
         ),
       );
     } finally {
-      if (mounted) {
-        _releaseStorePurchaseUi();
-      } else if (_orchestrator.state is! PurchaseVerifying) {
-        if (_orchestrator.canAbandonStoreWait) {
-          _orchestrator.cancelActivePurchase();
-        }
-        if (_orchestrator.state is! PurchaseIdle &&
-            _orchestrator.state is! PurchaseVerifying) {
-          _orchestrator.resetToIdle();
-        }
-      }
+      _releaseStorePurchaseUi();
     }
 
     if (!mounted) return;

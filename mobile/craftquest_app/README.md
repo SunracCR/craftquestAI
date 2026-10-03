@@ -12,9 +12,13 @@ Checklist de prueba manual:
 Configuracion:
 
 - `android/app/build.gradle.kts`: compileSdk 36, targetSdk 36
-- `MainActivity.kt`: `enableEdgeToEdge()` antes de `super.onCreate()`
+- `MainActivity.kt`: `WindowCompat.setDecorFitsSystemWindows(window, false)` antes de `super.onCreate()`
+- `res/values-v27` y `res/values-night-v27`: `windowLayoutInDisplayCutoutMode=always`
+- `lib/core/theme/app_theme.dart`: iconos de barras claros, sin `statusBarColor` ni `systemNavigationBarColor`
 - `lib/core/widgets/edge_aware_scaffold.dart`
 - `main.dart`: `SystemUiMode.edgeToEdge`
+
+Play Console puede seguir marcando `Window.setStatusBarColor` y `Window.setNavigationBarColor`. En Flutter 3.44 esas llamadas quedan en el embedding (`PlatformPlugin` y `FlutterFragmentActivity`), protegidas con `SDK_INT < 35`. No están en el código de la app. No se usa `enableEdgeToEdge()` ni `LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES`.
 
 ## Media y pagos
 
@@ -45,18 +49,22 @@ Salida del AAB para Play Store:
 
 La app web debería publicarse en `https://app.craftquestai.com` (o el dominio raíz). Ver también `README.md` en la raíz del repo.
 
-## Android: Built-in Kotlin y dependencias
+## Android: AGP 9 y Kotlin
 
-La app ya está migrada a **Built-in Kotlin** (Flutter 3.44+ / AGP 9+). Configuración:
+Flutter 3.44 con Android Gradle Plugin 9.0.1 y Gradle 9.1.0. Built-in Kotlin sigue desactivado hasta Flutter 3.47: con `android.builtInKotlin=true` fallan los plugins que aún aplican el Kotlin Gradle Plugin.
 
-- `android/gradle.properties`: `android.builtInKotlin=true`
-- `android/app/build.gradle.kts`: bloque `kotlin { compilerOptions { jvmTarget = JVM_11 } }` (sin plugin `kotlin-android`)
+- `android/settings.gradle.kts`: AGP `9.0.1`, Kotlin `2.2.20`
+- `android/gradle/wrapper/gradle-wrapper.properties`: Gradle `9.1.0`
+- `android/gradle.properties`: `android.builtInKotlin=false` y `android.newDsl=false`
+- `android/app/build.gradle.kts`: bloque `kotlin { compilerOptions { jvmTarget = JVM_11 } }` (el plugin de Flutter aplica `kotlin-android` porque built-in Kotlin está apagado)
+
+El shrinking de recursos optimizado de R8 queda activo en release porque AGP 9 lo enciende cuando `isShrinkResources` es true, y el plugin de Flutter ya lo pone en el build type release.
 
 ### Versiones fijadas en `pubspec.yaml`
 
 | Paquete | Versión | Motivo |
 |---------|---------|--------|
-| `share_plus` | `^10.1.4` | `13.3.0` falla al compilar con AGP 8.x + `builtInKotlin=true` (`ShareSuccessManager` no resuelto). Requiere AGP 9+ para usar built-in Kotlin del plugin. |
+| `share_plus` | `^10.1.4` | `13.x` aplica built-in Kotlin y exige Flutter 3.47+ con `android.builtInKotlin=true`. En Flutter 3.44 hay que dejar el flag en false. |
 | `file_picker` | `^8.1.7` | `share_plus >=13.1.0` exige `win32 ^6.x`; `file_picker 8.x` usa `win32 ^5.x`. No subir `share_plus` sin subir también `file_picker` (p. ej. `^11.0.0`). |
 
 ### Warnings de KGP en plugins (no bloquean el build)
@@ -71,7 +79,7 @@ Son advertencias para futuras versiones de Flutter. El AAB se genera correctamen
 
 ### Cuándo volver a subir `share_plus`
 
-1. Flutter/AGP del proyecto en **AGP 9+** (para que `share_plus 13.x` use built-in Kotlin sin KGP).
+1. Flutter **3.47+** con `android.builtInKotlin=true` (AGP 9 ya está en el proyecto).
 2. Subir en conjunto `file_picker` a `^11.0.0` o superior.
 3. Probar build release y flujo de compartir antes de publicar.
 

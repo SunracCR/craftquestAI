@@ -9,24 +9,56 @@ abstract final class StorePurchaseBatchPolicy {
   ) =>
       productIds.any((id) => storeProductIdsMatch(id, targetProductId));
 
+  /// Un rechazo confirmado no se ignora porque la verificación ya empezó.
+  /// Solo se ignora si el mismo lote trae un cobro real del mismo producto:
+  /// ese cobro es la confirmación y el cancel que viaja con él es ruido.
   static bool shouldIgnoreTerminalFailure({
     required bool matchesActiveRequest,
     required bool batchHasSuccessfulForProduct,
-    required bool isVerifyingOrSucceeded,
-    required bool hasInFlightVerificationForProduct,
   }) {
     if (!matchesActiveRequest) {
       return false;
     }
-    if (batchHasSuccessfulForProduct) {
+    return batchHasSuccessfulForProduct;
+  }
+
+  /// Solo una compra nueva, con token, del producto que el usuario acaba de
+  /// pedir puede mostrar "Confirmando tu acceso…". Las restauradas (historial
+  /// al reanudar la app) y los eventos vacíos de la hoja de Play no.
+  static bool drivesActivePurchaseUi({
+    required bool inFlight,
+    required bool productMatchesActiveRequest,
+    required bool isRestored,
+    required bool hasProductId,
+    required bool hasPurchaseToken,
+  }) {
+    if (!inFlight || !productMatchesActiveRequest) {
+      return false;
+    }
+    if (isRestored || !hasProductId || !hasPurchaseToken) {
+      return false;
+    }
+    return true;
+  }
+
+  /// Un cancel/error de la hoja de Play tiene que cerrar la compra activa
+  /// aunque el listener lo haya marcado como background (resume, pending).
+  static bool shouldSurfaceTerminalFailure({
+    required bool listenerMarkedBackground,
+    required bool inFlight,
+    required bool waitingForStoreOutcome,
+    required bool productIdEmpty,
+    required bool productMatchesActiveRequest,
+  }) {
+    if (!listenerMarkedBackground) {
       return true;
     }
-    if (isVerifyingOrSucceeded) {
+    if (!inFlight || !waitingForStoreOutcome) {
+      return false;
+    }
+    if (productIdEmpty) {
       return true;
     }
-    if (hasInFlightVerificationForProduct) {
-      return true;
-    }
-    return false;
+    return productMatchesActiveRequest;
   }
 }
