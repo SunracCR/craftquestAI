@@ -55,7 +55,7 @@ public class QuizService(
             Title = request.Title.Trim(),
             Description = request.Description?.Trim(),
             Visibility = request.Visibility,
-            PublicationStatus = "draft",
+            PublicationStatus = "published",
             DefaultRandomizeAnswerOptions = request.DefaultRandomizeAnswerOptions,
             RandomizeQuestions = request.RandomizeQuestions,
             CreatedAt = DateTime.UtcNow,

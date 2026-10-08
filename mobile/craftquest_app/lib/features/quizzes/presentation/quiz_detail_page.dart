@@ -68,7 +68,7 @@ class QuizDetailPage extends StatefulWidget {
     super.key,
     required this.quizId,
     required this.quizTitle,
-    this.publicationStatus = 'draft',
+    this.publicationStatus = 'published',
     this.isOwner = true,
   });
 
@@ -97,7 +97,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
   bool _loading = true;
   bool _loadingPreferences = false;
   String? _error;
-  String _publicationStatus = 'draft';
+  String _publicationStatus = 'published';
   bool _randomizeQuestions = false;
   bool _showTimer = true;
   bool _enableSoundEffects = PracticeLaunchOptions.defaults.enableSoundEffects;
@@ -555,8 +555,6 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
 
   bool get _canPractice =>
       _publicationStatus == 'published' && _questionCount > 0;
-
-  bool get _canPublish => _publicationStatus != 'published';
 
   bool get _canCreateShareCode => _publicationStatus == 'published';
 
@@ -1158,25 +1156,6 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
     );
   }
 
-  Future<void> _publish() async {
-    if (_quizModificationLocked) {
-      _showQuizModificationLockedMessage();
-      return;
-    }
-    final l10n = AppLocalizations.of(context)!;
-    try {
-      await _repository.publishQuiz(widget.quizId);
-      if (!mounted) return;
-      setState(() => _publicationStatus = 'published');
-      await _syncPracticeUiIfNeeded(beginScreenLoad());
-      if (!mounted) return;
-      context.showSuccessSnackBar(l10n.quizPublishedMessage);
-    } on DioException catch (e) {
-      if (!mounted) return;
-      context.showDioErrorSnackBar(e);
-    }
-  }
-
   Future<void> _confirmRemoveFromShared() async {
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
@@ -1379,26 +1358,6 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
                                   child: _buildEditableTitle(context),
                                 ),
                                 if (isOwner) ...[
-                                  Tooltip(
-                                    message: l10n.publishQuizAction,
-                                    child: IconButton(
-                                      onPressed: () {
-                                        if (_canPublish &&
-                                            !_quizModificationLocked) {
-                                          _publish();
-                                        } else if (_quizModificationLocked) {
-                                          _showQuizModificationLockedMessage();
-                                        }
-                                      },
-                                      icon: Icon(
-                                        Icons.publish_rounded,
-                                        color: _canPublish &&
-                                                !_quizModificationLocked
-                                            ? AppColors.accentMint
-                                            : Theme.of(context).disabledColor,
-                                      ),
-                                    ),
-                                  ),
                                   Tooltip(
                                     message: l10n.createShareCodeAction,
                                     child: IconButton(

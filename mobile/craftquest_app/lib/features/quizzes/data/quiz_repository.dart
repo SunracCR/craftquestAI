@@ -231,14 +231,6 @@ class QuizRepository {
     return QuizModel.fromJson(response.data!);
   }
 
-  Future<QuizModel> publishQuiz(String quizId) async {
-    final response = await _apiClient.dio.patch<Map<String, dynamic>>(
-      '/api/quizzes/$quizId',
-      data: {'publicationStatus': 'published'},
-    );
-    return QuizModel.fromJson(response.data!);
-  }
-
   Future<void> deleteQuiz(String quizId) async {
     await _apiClient.dio.delete<void>('/api/quizzes/$quizId');
   }

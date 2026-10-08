@@ -123,12 +123,9 @@ class _TeacherCreateAssignmentPageState
       final all = results[0] as List<QuizModel>;
       final folders = results[1] as List<QuizFolderModel>;
       final quizzes = all.toList()
-        ..sort((a, b) {
-          final pubA = a.publicationStatus == 'published' ? 0 : 1;
-          final pubB = b.publicationStatus == 'published' ? 0 : 1;
-          if (pubA != pubB) return pubA.compareTo(pubB);
-          return a.title.toLowerCase().compareTo(b.title.toLowerCase());
-        });
+        ..sort(
+          (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()),
+        );
       if (mounted) {
         setState(() {
           _quizzes = quizzes;
@@ -512,7 +509,6 @@ class _TeacherCreateAssignmentPageState
                             onSelectQuiz: _openQuizPicker,
                             selectLabel: l10n.teacherAssignmentSelectQuizAction,
                             changeLabel: l10n.teacherAssignmentChangeQuizAction,
-                            draftWarning: l10n.teacherAssignmentQuizDraftWarning,
                             emptyHint: l10n.teacherAssignmentNoQuizzesHint,
                           ),
                   ),
@@ -782,7 +778,6 @@ class _QuizSelectionSection extends StatelessWidget {
     required this.onSelectQuiz,
     required this.selectLabel,
     required this.changeLabel,
-    required this.draftWarning,
     required this.emptyHint,
   });
 
@@ -791,7 +786,6 @@ class _QuizSelectionSection extends StatelessWidget {
   final VoidCallback onSelectQuiz;
   final String selectLabel;
   final String changeLabel;
-  final String draftWarning;
   final String emptyHint;
 
   @override
@@ -814,10 +808,6 @@ class _QuizSelectionSection extends StatelessWidget {
             changeLabel: changeLabel,
             onChange: onSelectQuiz,
           ),
-          if (selectedQuiz!.publicationStatus != 'published') ...[
-            const SizedBox(height: AppSpacing.sm),
-            _DraftWarningBanner(message: draftWarning),
-          ],
           const SizedBox(height: AppSpacing.sm),
         ] else ...[
           Text(
@@ -855,7 +845,6 @@ class _SelectedQuizCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isPublished = quiz.publicationStatus == 'published';
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -895,23 +884,12 @@ class _SelectedQuizCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Row(
-                  children: [
-                    _StatusChip(
-                      label: isPublished
-                          ? l10n.quizStatusPublished
-                          : l10n.quizStatusDraft,
-                      isPublished: isPublished,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.quizQuestionsCount(quiz.questionCount),
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
+                Text(
+                  l10n.quizQuestionsCount(quiz.questionCount),
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 11,
+                  ),
                 ),
               ],
             ),
@@ -991,47 +969,6 @@ class _LockedQuizCard extends StatelessWidget {
   }
 }
 
-class _DraftWarningBanner extends StatelessWidget {
-  const _DraftWarningBanner({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.sm),
-      decoration: BoxDecoration(
-        color: AppColors.warning.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(AppColors.radiusSm),
-        border: Border.all(
-          color: AppColors.warning.withValues(alpha: 0.35),
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(
-            Icons.info_outline_rounded,
-            size: 16,
-            color: AppColors.warning,
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          Expanded(
-            child: Text(
-              message,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 12,
-                height: 1.4,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _QuizPickerTile extends StatelessWidget {
   const _QuizPickerTile({
     required this.quiz,
@@ -1046,7 +983,6 @@ class _QuizPickerTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isPublished = quiz.publicationStatus == 'published';
 
     return Material(
       color: selected
@@ -1081,23 +1017,12 @@ class _QuizPickerTile extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        _StatusChip(
-                          label: isPublished
-                              ? l10n.quizStatusPublished
-                              : l10n.quizStatusDraft,
-                          isPublished: isPublished,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          l10n.quizQuestionsCount(quiz.questionCount),
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      l10n.quizQuestionsCount(quiz.questionCount),
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 11,
+                      ),
                     ),
                   ],
                 ),
@@ -1110,38 +1035,6 @@ class _QuizPickerTile extends StatelessWidget {
                 ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _StatusChip extends StatelessWidget {
-  const _StatusChip({
-    required this.label,
-    required this.isPublished,
-  });
-
-  final String label;
-  final bool isPublished;
-
-  @override
-  Widget build(BuildContext context) {
-    final color =
-        isPublished ? AppColors.accentMint : AppColors.textSecondary;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: color,
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.2,
         ),
       ),
     );

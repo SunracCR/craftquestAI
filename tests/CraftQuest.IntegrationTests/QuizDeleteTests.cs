@@ -78,13 +78,6 @@ public class QuizDeleteTests : IClassFixture<CraftQuestWebApplicationFactory>
         var createQuestionResponse = await _client.SendAsync(createQuestion);
         Assert.Equal(HttpStatusCode.Created, createQuestionResponse.StatusCode);
 
-        using var publishQuiz = new HttpRequestMessage(HttpMethod.Patch, $"/api/quizzes/{quizId}");
-        publishQuiz.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-        publishQuiz.Content = JsonContent.Create(new { publicationStatus = "published" });
-
-        var publishResponse = await _client.SendAsync(publishQuiz);
-        Assert.Equal(HttpStatusCode.OK, publishResponse.StatusCode);
-
         using var startPractice = new HttpRequestMessage(HttpMethod.Post, "/api/practice-sessions");
         startPractice.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         startPractice.Content = JsonContent.Create(new

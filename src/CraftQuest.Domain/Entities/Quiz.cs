@@ -7,7 +7,7 @@ public class Quiz
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
     public string Visibility { get; set; } = "private";
-    public string PublicationStatus { get; set; } = "draft";
+    public string PublicationStatus { get; set; } = "published";
     public decimal DefaultQuestionPoints { get; set; } = 1;
     public bool RandomizeQuestions { get; set; }
     public bool DefaultRandomizeAnswerOptions { get; set; } = true;

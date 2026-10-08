@@ -1260,12 +1260,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'A exportacao para PDF esta disponivel nos planos pagos.';
 
   @override
-  String get publishQuizAction => 'Publicar';
-
-  @override
-  String get quizPublishedMessage => 'Questionario publicado';
-
-  @override
   String get deleteQuizAction => 'Excluir questionario';
 
   @override
@@ -3815,10 +3809,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get teacherAssignmentChangeQuizAction => 'Alterar';
-
-  @override
-  String get teacherAssignmentQuizDraftWarning =>
-      'Este quiz está em rascunho. Publique-o para que os alunos vejam a tarefa.';
 
   @override
   String get teacherAssignmentNoQuizzesHint =>

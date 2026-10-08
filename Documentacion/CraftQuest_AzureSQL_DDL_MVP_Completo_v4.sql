@@ -208,7 +208,7 @@ CREATE TABLE quiz.Quizzes (
     Title NVARCHAR(220) NOT NULL,
     Description NVARCHAR(1000) NULL,
     Visibility NVARCHAR(40) NOT NULL CONSTRAINT DF_Quizzes_Visibility DEFAULT('private'),
-    PublicationStatus NVARCHAR(40) NOT NULL CONSTRAINT DF_Quizzes_PublicationStatus DEFAULT('draft'),
+    PublicationStatus NVARCHAR(40) NOT NULL CONSTRAINT DF_Quizzes_PublicationStatus DEFAULT('published'),
     DefaultQuestionPoints DECIMAL(10,2) NOT NULL CONSTRAINT DF_Quizzes_DefaultQuestionPoints DEFAULT(1),
     RandomizeQuestions BIT NOT NULL CONSTRAINT DF_Quizzes_RandomizeQuestions DEFAULT(0),
     DefaultRandomizeAnswerOptions BIT NOT NULL CONSTRAINT DF_Quizzes_DefaultRandomizeAnswers DEFAULT(1),

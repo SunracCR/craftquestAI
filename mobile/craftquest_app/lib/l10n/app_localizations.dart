@@ -2196,18 +2196,6 @@ abstract class AppLocalizations {
   /// **'La exportación a PDF está disponible en planes de pago.'**
   String get exportQuizPdfPlanRequired;
 
-  /// No description provided for @publishQuizAction.
-  ///
-  /// In es, this message translates to:
-  /// **'Publicar'**
-  String get publishQuizAction;
-
-  /// No description provided for @quizPublishedMessage.
-  ///
-  /// In es, this message translates to:
-  /// **'Cuestionario publicado'**
-  String get quizPublishedMessage;
-
   /// No description provided for @deleteQuizAction.
   ///
   /// In es, this message translates to:
@@ -6395,12 +6383,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Cambiar'**
   String get teacherAssignmentChangeQuizAction;
-
-  /// No description provided for @teacherAssignmentQuizDraftWarning.
-  ///
-  /// In es, this message translates to:
-  /// **'Este cuestionario está en borrador. Publícalo para que los estudiantes puedan ver la asignación.'**
-  String get teacherAssignmentQuizDraftWarning;
 
   /// No description provided for @teacherAssignmentNoQuizzesHint.
   ///

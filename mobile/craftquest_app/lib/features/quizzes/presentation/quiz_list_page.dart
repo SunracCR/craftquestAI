@@ -5,6 +5,7 @@ import 'package:craftquest_app/core/utils/deferred_screen_load.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:dio/dio.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
+import 'package:craftquest_app/core/utils/publication_status_labels.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/core/widgets/app_bottom_bar.dart';
 import 'package:craftquest_app/core/widgets/app_buttons.dart';
@@ -203,11 +204,8 @@ class _QuizListPageState extends State<QuizListPage> with ScreenLoadGeneration {
   Widget _buildQuizCard(QuizModel quiz) {
     final l10n = AppLocalizations.of(context)!;
     final activePractice = _inProgressByQuizId[quiz.quizId];
-    final isPublished = quiz.publicationStatus == 'published';
-    final accent =
-        isPublished ? AppColors.accentMint : AppColors.accentGold;
     var subtitle = l10n.quizListSubtitle(
-      quiz.publicationStatus,
+      quiz.publicationStatus.publicationStatusLabel(l10n),
       quiz.questionCount,
     );
     if (quiz.hasPendingAiDraft) {
@@ -221,9 +219,8 @@ class _QuizListPageState extends State<QuizListPage> with ScreenLoadGeneration {
     return _CompactQuizListTile(
       title: quiz.title,
       subtitle: subtitle,
-      accentColor: accent,
-      leadingIcon:
-          isPublished ? Icons.check_circle_rounded : Icons.edit_note_rounded,
+      accentColor: AppColors.accentMint,
+      leadingIcon: Icons.quiz_rounded,
       onMove: _folders.isEmpty ? null : () => _moveQuiz(quiz),
       moveTooltip: l10n.quizFolderMoveQuizAction,
       onTap: () async {

@@ -131,11 +131,15 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
   bool _sharing = false;
   bool _ownsStorePurchase = false;
   bool _leavingDuringAccessProcessing = false;
+  bool _prepStoreCheckoutActive = false;
+  bool _prepCardResultSettled = false;
 
-  bool get _isCheckoutBusy => _checkingOut || _orchestrator.isBusy;
+  bool get _isCheckoutBusy =>
+      _checkingOut || _orchestrator.isBusy || _prepStoreCheckoutActive;
 
   bool get _showPrepAccessProcessingOverlay =>
-      _orchestrator.state is PurchaseVerifying || _checkingOut;
+      _checkingOut ||
+      (_prepStoreCheckoutActive && !_prepCardResultSettled);
 
   bool get _shouldResumeWebPayPal =>
       kIsWeb && widget.resumePendingWebCheckout;
@@ -303,6 +307,11 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       return;
     }
     final state = _orchestrator.state;
+    if (_prepStoreCheckoutActive &&
+        !_prepCardResultSettled &&
+        (state is PurchaseSucceeded || state is PurchaseFailed)) {
+      _prepCardResultSettled = true;
+    }
     if (state is PurchaseDeferred) {
       showStorePurchaseDeferred(context);
     } else if (state is PurchaseFailed) {
@@ -776,29 +785,47 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
   }
 
   Future<void> _buyPaid(PrepAccessOfferModel offer) async {
-    if (!await showParentalGate(context)) {
+    if (_prepStoreCheckoutActive || _checkingOut) {
       return;
     }
-    final l10n = AppLocalizations.of(context)!;
     final storeProductId = _supportsStorePurchase
         ? offer.nativeStoreProductId(
             isIos: defaultTargetPlatform == TargetPlatform.iOS,
           )
         : null;
-
-    if (_supportsStorePurchase &&
+    final usesStore = _supportsStorePurchase &&
         storeProductId != null &&
-        storeProductId.isNotEmpty) {
-      await _buyWithStore(offer, storeProductId);
-      return;
+        storeProductId.isNotEmpty;
+    if (usesStore) {
+      _prepStoreCheckoutActive = true;
+      _prepCardResultSettled = false;
+      if (mounted) setState(() {});
     }
 
-    if (PaymentPlatform.supportsPayPalCheckout) {
-      await _buyWithPayPal(offer);
-      return;
-    }
+    try {
+      if (!await showParentalGate(context)) {
+        return;
+      }
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
 
-    context.showErrorSnackBar(l10n.prepPlusStoreProductMissing);
+      if (usesStore) {
+        await _buyWithStore(offer, storeProductId!);
+        return;
+      }
+
+      if (PaymentPlatform.supportsPayPalCheckout) {
+        await _buyWithPayPal(offer);
+        return;
+      }
+
+      context.showErrorSnackBar(l10n.prepPlusStoreProductMissing);
+    } finally {
+      if (!usesStore) return;
+      _prepStoreCheckoutActive = false;
+      _prepCardResultSettled = false;
+      if (mounted) setState(() {});
+    }
   }
 
   Future<void> _buyWithPayPal(PrepAccessOfferModel offer) async {
@@ -1171,9 +1198,14 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
                       child: AppPrimaryButton(
                         label: confirmLabel,
                         isLoading: _isCheckoutBusy,
-                        onPressed: _isCheckoutBusy || sheetOffer == null
+                        onPressed: _isCheckoutBusy ||
+                                _prepStoreCheckoutActive ||
+                                sheetOffer == null
                             ? null
                             : () async {
+                                if (_prepStoreCheckoutActive || _checkingOut) {
+                                  return;
+                                }
                                 final offer = sheetOffer!;
                                 setState(
                                   () => _selectedOfferId = offer.offerId,
