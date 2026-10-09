@@ -1,3 +1,5 @@
+import 'package:craftquest_app/core/compliance/child_experience.dart';
+import 'package:craftquest_app/core/compliance/parental_gate_dialog.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -49,10 +51,25 @@ abstract final class ShareTextHelper {
     await Future<void>.delayed(const Duration(milliseconds: 250));
   }
 
+  static Future<bool> _allowExternalShare(BuildContext? gateContext) async {
+    if (!ChildExperience.isActive) {
+      return true;
+    }
+    if (gateContext == null || !gateContext.mounted) {
+      return false;
+    }
+    return showParentalGate(gateContext);
+  }
+
   static Future<ShareTextOutcome> shareText(
     String text, {
     Rect? sharePositionOrigin,
+    BuildContext? gateContext,
   }) async {
+    if (!await _allowExternalShare(gateContext)) {
+      return ShareTextOutcome.dismissed;
+    }
+
     final trimmed = text.trim();
     if (trimmed.isEmpty) {
       throw ArgumentError.value(text, 'text', 'must not be empty');
@@ -86,7 +103,11 @@ abstract final class ShareTextHelper {
     required List<XFile> files,
     String? subject,
     Rect? sharePositionOrigin,
+    BuildContext? gateContext,
   }) async {
+    if (!await _allowExternalShare(gateContext)) {
+      return ShareFileOutcome.dismissed;
+    }
     if (files.isEmpty) {
       throw ArgumentError('files must not be empty');
     }

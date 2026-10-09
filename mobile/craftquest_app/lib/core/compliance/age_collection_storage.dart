@@ -4,8 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Persiste la fecha de nacimiento recogida en la pantalla neutral de edad.
 class AgeCollectionStorage {
   static const collectedKey = 'age_collection_completed';
+  static const minorKey = 'age_collection_is_minor';
   static const _dobKey = 'age_collection_date_of_birth';
-  static const _minorKey = 'age_collection_is_minor';
 
   AgeCollectionStorage(this._cache);
 
@@ -36,7 +36,7 @@ class AgeCollectionStorage {
     final prefs = _cache.isReady
         ? _cache.prefs
         : await SharedPreferences.getInstance();
-    return prefs.getBool(_minorKey) ?? false;
+    return prefs.getBool(minorKey) ?? false;
   }
 
   Future<void> saveDateOfBirth(DateTime dateOfBirth) async {
@@ -50,14 +50,12 @@ class AgeCollectionStorage {
       age--;
     }
 
+    final isMinor = age < minimumAgeWithoutParentalConsent;
     await prefs.setBool(collectedKey, true);
     await prefs.setString(_dobKey, dateOfBirth.toIso8601String());
-    await prefs.setBool(
-      _minorKey,
-      age < minimumAgeWithoutParentalConsent,
-    );
+    await prefs.setBool(minorKey, isMinor);
     if (_cache.isReady) {
-      _cache.markAgeCollected();
+      _cache.markAgeCollected(isMinor: isMinor);
     }
   }
 
@@ -68,7 +66,7 @@ class AgeCollectionStorage {
         : await SharedPreferences.getInstance();
     await prefs.remove(collectedKey);
     await prefs.remove(_dobKey);
-    await prefs.remove(_minorKey);
+    await prefs.remove(minorKey);
     if (_cache.isReady) {
       _cache.clearAgeCollected();
     }

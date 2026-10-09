@@ -7,7 +7,6 @@ import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/locale/locale_controller.dart';
 import 'package:craftquest_app/core/network/dev_http_overrides.dart';
 import 'package:craftquest_app/core/network/network_connectivity_service.dart';
-import 'package:craftquest_app/core/services/push_notification_service.dart';
 import 'package:craftquest_app/features/offline_practice/data/offline_storage_bootstrap.dart';
 import 'package:craftquest_app/features/offline_practice/domain/offline_sync_manager.dart';
 import 'package:flutter/foundation.dart';
@@ -41,5 +40,4 @@ Future<void> main() async {
     );
   }
   runApp(const CraftQuestApp());
-  unawaited(getIt<PushNotificationService>().initializeDeferred());
 }

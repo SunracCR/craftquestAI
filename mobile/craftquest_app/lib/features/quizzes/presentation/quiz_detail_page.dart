@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:craftquest_app/core/compliance/child_experience.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/network/api_error_mapper.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
@@ -923,6 +924,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
           mimeType: 'application/pdf',
         );
         await file.saveTo(path);
+        if (!mounted) return;
         final shareOutcome = await ShareTextHelper.shareFiles(
           files: [
             XFile(
@@ -933,6 +935,7 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
           ],
           subject: l10n.exportQuizPdfReady,
           sharePositionOrigin: shareOrigin,
+          gateContext: context,
         );
         if (!mounted) return;
         switch (shareOutcome) {
@@ -1007,11 +1010,12 @@ class _QuizDetailPageState extends State<QuizDetailPage> with ScreenLoadGenerati
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
-              leading: const Icon(Icons.auto_awesome_rounded),
-              title: Text(l10n.aiGenerationFromQuizAction),
-              onTap: () => Navigator.pop(ctx, 'ai'),
-            ),
+            if (!ChildExperience.isActive)
+              ListTile(
+                leading: const Icon(Icons.auto_awesome_rounded),
+                title: Text(l10n.aiGenerationFromQuizAction),
+                onTap: () => Navigator.pop(ctx, 'ai'),
+              ),
             ListTile(
               leading: const Icon(Icons.table_chart_outlined),
               title: Text(l10n.importExcelAction),

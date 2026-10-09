@@ -75,11 +75,13 @@ class _ExcelImportPageState extends State<ExcelImportPage> {
         shareOutcome = await ShareTextHelper.shareFiles(
           files: [file],
           subject: l10n.excelImportTemplateReady,
+          gateContext: context,
         );
       } else {
         final dir = await getTemporaryDirectory();
         final path = '${dir.path}/craftquest_import_template.xlsx';
         await file.saveTo(path);
+        if (!mounted) return;
         shareOutcome = await ShareTextHelper.shareFiles(
           files: [
             XFile(
@@ -91,6 +93,7 @@ class _ExcelImportPageState extends State<ExcelImportPage> {
           ],
           subject: l10n.excelImportTemplateReady,
           sharePositionOrigin: shareOrigin,
+          gateContext: context,
         );
       }
       if (!mounted) return;

@@ -1,3 +1,4 @@
+import 'package:craftquest_app/core/compliance/child_experience.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
 import 'package:craftquest_app/features/ai_generation/presentation/ai_generation_hub_page.dart';
@@ -161,13 +162,15 @@ class _ContentSetupSheet extends StatelessWidget {
               title: l10n.createQuizImportQuestions,
               onTap: () => Navigator.pop(context, _ContentSetupChoice.import),
             ),
-            const SizedBox(height: AppSpacing.xs),
-            _SetupOptionTile(
-              icon: Icons.auto_awesome_rounded,
-              title: l10n.aiGenerationFromQuizAction,
-              subtitle: l10n.aiGenerationHubSubtitle,
-              onTap: () => Navigator.pop(context, _ContentSetupChoice.ai),
-            ),
+            if (!ChildExperience.isActive) ...[
+              const SizedBox(height: AppSpacing.xs),
+              _SetupOptionTile(
+                icon: Icons.auto_awesome_rounded,
+                title: l10n.aiGenerationFromQuizAction,
+                subtitle: l10n.aiGenerationHubSubtitle,
+                onTap: () => Navigator.pop(context, _ContentSetupChoice.ai),
+              ),
+            ],
             const SizedBox(height: AppSpacing.sm),
             TextButton(
               onPressed: () => Navigator.pop(context, _ContentSetupChoice.skip),

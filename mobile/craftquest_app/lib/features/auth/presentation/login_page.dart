@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:craftquest_app/core/security/web_auth_captcha.dart';
 import 'package:craftquest_app/core/compliance/age_collection_policy.dart';
 import 'package:craftquest_app/core/compliance/birth_date_correction.dart';
+import 'package:craftquest_app/core/compliance/child_experience.dart';
 import 'package:craftquest_app/core/compliance/legal_links.dart';
 import 'package:craftquest_app/core/auth/saved_login_credentials_storage.dart';
 import 'package:craftquest_app/core/di/injection.dart';
@@ -454,7 +455,8 @@ class _LoginPageState extends State<LoginPage> {
                           SizedBox(
                             height: compactHeight ? AppSpacing.sm : AppSpacing.md,
                           ),
-                          OAuthSignInButtons(enabled: !isLoading),
+                          if (!ChildExperience.isActive)
+                            OAuthSignInButtons(enabled: !isLoading),
                           const SizedBox(height: AppSpacing.sm),
                           Divider(
                             height: 1,

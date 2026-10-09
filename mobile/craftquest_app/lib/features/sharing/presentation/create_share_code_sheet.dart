@@ -1,4 +1,5 @@
 import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/utils/share_text_helper.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/widgets/app_snackbar.dart';
 import 'package:craftquest_app/core/widgets/share_icons.dart';
@@ -10,7 +11,6 @@ import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:share_plus/share_plus.dart';
 
 enum ShareAudience { anyone, group }
 
@@ -312,7 +312,10 @@ Future<void> showShareCodeResultDialog(
         if (shareMessage != null)
           TextButton.icon(
             onPressed: () async {
-              await Share.share(shareMessage);
+              await ShareTextHelper.shareText(
+                shareMessage,
+                gateContext: ctx,
+              );
             },
             icon: ShareIcons.adaptiveIcon(size: 18),
             label: Text(l10n.shareCodeShareLinkAction),

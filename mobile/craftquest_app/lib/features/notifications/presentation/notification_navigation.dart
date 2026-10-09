@@ -1,3 +1,4 @@
+import 'package:craftquest_app/core/compliance/child_experience.dart';
 import 'package:craftquest_app/features/ai_generation/presentation/ai_generation_hub_page.dart';
 import 'package:craftquest_app/features/billing/presentation/upgrade_plan_page.dart';
 import 'package:craftquest_app/features/notifications/data/models/notification_models.dart';
@@ -50,6 +51,9 @@ class NotificationNavigation {
       }
 
       if (route == 'ai/jobs') {
+        if (ChildExperience.isActive) {
+          return;
+        }
         await Navigator.of(context).push<void>(
           MaterialPageRoute<void>(
             builder: (_) => const AiGenerationHubPage(),
@@ -101,7 +105,7 @@ class NotificationNavigation {
               ),
             ),
           );
-        } else {
+        } else if (!ChildExperience.isActive) {
           await Navigator.of(context).push<void>(
             MaterialPageRoute<void>(
               builder: (_) => const AiGenerationHubPage(),

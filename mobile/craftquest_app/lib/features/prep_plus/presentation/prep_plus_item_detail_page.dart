@@ -736,9 +736,11 @@ class _PrepPlusItemDetailPageState extends State<PrepPlusItemDetailPage> {
       }
 
       final message = l10n.prepPlusShareLinkMessage(title, referral.shareUrl);
+      if (!shareContext.mounted) return;
       final outcome = await ShareTextHelper.shareText(
         message,
         sharePositionOrigin: shareOrigin,
+        gateContext: shareContext,
       );
       if (!mounted) return;
 

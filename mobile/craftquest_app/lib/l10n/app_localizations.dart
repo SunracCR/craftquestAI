@@ -8563,6 +8563,30 @@ abstract class AppLocalizations {
   /// **'Continuar'**
   String get ageScreenContinue;
 
+  /// No description provided for @birthDateDayLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Día'**
+  String get birthDateDayLabel;
+
+  /// No description provided for @birthDateMonthLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Mes'**
+  String get birthDateMonthLabel;
+
+  /// No description provided for @birthDateYearLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Año'**
+  String get birthDateYearLabel;
+
+  /// No description provided for @birthDateInvalid.
+  ///
+  /// In es, this message translates to:
+  /// **'Esa fecha no es válida.'**
+  String get birthDateInvalid;
+
   /// No description provided for @ageScreenMinorNotice.
   ///
   /// In es, this message translates to:

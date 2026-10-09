@@ -1,13 +1,15 @@
 import 'package:craftquest_app/core/compliance/age_signal_service.dart';
 import 'package:craftquest_app/core/compliance/age_collection_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Caché en memoria de flags de cumplimiento para evitar spinners en cascada al arrancar.
-class CompliancePrefCache {
+class CompliancePrefCache extends ChangeNotifier {
   SharedPreferences? _prefs;
   bool _ready = false;
 
   bool ageCollected = false;
+  bool isMinor = false;
   bool parentalBlocked = false;
   String? parentalConsentReason;
 
@@ -36,6 +38,7 @@ class CompliancePrefCache {
       return;
     }
     ageCollected = prefs.getBool(AgeCollectionStorage.collectedKey) ?? false;
+    isMinor = prefs.getBool(AgeCollectionStorage.minorKey) ?? false;
     parentalBlocked =
         prefs.getBool(AgeSignalService.prefsKeyRequiresParentalConsent) ??
             false;
@@ -43,12 +46,16 @@ class CompliancePrefCache {
         prefs.getString(AgeSignalService.prefsKeyLastConsentReason);
   }
 
-  void markAgeCollected() {
+  void markAgeCollected({required bool isMinor}) {
     ageCollected = true;
+    this.isMinor = isMinor;
+    notifyListeners();
   }
 
   void clearAgeCollected() {
     ageCollected = false;
+    isMinor = false;
+    notifyListeners();
   }
 
   void updateParentalBlocked({

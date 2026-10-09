@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:craftquest_app/core/auth/token_storage.dart';
+import 'package:craftquest_app/core/compliance/child_experience.dart';
 import 'package:craftquest_app/core/billing/membership_billing_refresh_coordinator.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/navigation/app_keys.dart';
@@ -29,7 +30,7 @@ class PushNotificationService {
   Future<void>? _registerInFlight;
 
   Future<void> initializeDeferred() async {
-    if (kIsWeb) {
+    if (kIsWeb || ChildExperience.isActive) {
       return;
     }
 
@@ -69,6 +70,10 @@ class PushNotificationService {
   }
 
   Future<void> onAuthenticated() async {
+    if (ChildExperience.isActive) {
+      await stopForChildExperience();
+      return;
+    }
     await initializeDeferred();
     if (!_firebaseReady) {
       _logPush('Skipping token registration: Firebase not ready');
@@ -81,6 +86,9 @@ class PushNotificationService {
       await _registerTokenWithBackend();
     }
   }
+
+  /// Quita el token de este dispositivo cuando la experiencia pasa a ser de menor.
+  Future<void> stopForChildExperience() => onLogout();
 
   Future<void> onLogout() async {
     final token = _currentToken;

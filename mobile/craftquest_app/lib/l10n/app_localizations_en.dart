@@ -5053,6 +5053,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ageScreenContinue => 'Continue';
 
   @override
+  String get birthDateDayLabel => 'Day';
+
+  @override
+  String get birthDateMonthLabel => 'Month';
+
+  @override
+  String get birthDateYearLabel => 'Year';
+
+  @override
+  String get birthDateInvalid => 'That date is not valid.';
+
+  @override
   String get ageScreenMinorNotice =>
       'Because you are underage, you will need a parent or guardian\'s consent to create an account.';
 

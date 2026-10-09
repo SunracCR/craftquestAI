@@ -1,4 +1,5 @@
 import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/utils/share_text_helper.dart';
 import 'package:craftquest_app/core/network/dio_error_mapper.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
@@ -19,7 +20,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'package:share_plus/share_plus.dart';
 
 class PrepPlusAdminItemEditPage extends StatefulWidget {
   const PrepPlusAdminItemEditPage({super.key, this.catalogItemId});
@@ -406,7 +406,7 @@ class _PrepPlusAdminItemEditPageState extends State<PrepPlusAdminItemEditPage> {
   Future<void> _sharePublicLink(String url) async {
     final l10n = AppLocalizations.of(context)!;
     final message = l10n.prepPlusShareLinkMessage(_itemDisplayTitle(l10n), url);
-    await Share.share(message);
+    await ShareTextHelper.shareText(message, gateContext: context);
   }
 
   Widget _buildShareLinkSection(AppLocalizations l10n) {

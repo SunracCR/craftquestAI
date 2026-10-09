@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:craftquest_app/core/security/web_auth_captcha.dart';
 import 'package:craftquest_app/core/compliance/age_collection_policy.dart';
 import 'package:craftquest_app/core/compliance/age_collection_storage.dart';
 import 'package:craftquest_app/core/compliance/birth_date_correction.dart';
+import 'package:craftquest_app/core/compliance/child_experience.dart';
 import 'package:craftquest_app/core/compliance/legal_links.dart';
+import 'package:craftquest_app/core/compliance/neutral_birth_date_fields.dart';
 import 'package:craftquest_app/core/di/injection.dart';
 import 'package:craftquest_app/core/theme/app_colors.dart';
 import 'package:craftquest_app/core/theme/app_spacing.dart';
@@ -17,7 +21,6 @@ import 'package:craftquest_app/features/auth/presentation/widgets/oauth_sign_in_
 import 'package:craftquest_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -64,19 +67,14 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
-  Future<void> _pickBirthDate() async {
-    final picked = await BirthDateCorrection.pickDate(
-      context,
-      initialDate: _birthDate,
-    );
+  Future<void> _onBirthDateChanged(DateTime? picked) async {
+    setState(() {
+      _birthDate = picked;
+      _isMinor = picked != null && BirthDateCorrection.isMinor(picked);
+    });
     if (picked == null) {
       return;
     }
-
-    setState(() {
-      _birthDate = picked;
-      _isMinor = BirthDateCorrection.isMinor(picked);
-    });
     await _ageStorage.saveDateOfBirth(picked);
   }
 
@@ -156,10 +154,6 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final locale = Localizations.localeOf(context).toString();
-    final formattedBirthDate = _birthDate == null
-        ? null
-        : DateFormat.yMMMMd(locale).format(_birthDate!);
     final showBirthDateFields =
         AgeCollectionPolicy.requiresRegistrationBirthDate;
 
@@ -203,32 +197,14 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               if (showBirthDateFields) ...[
                 const SizedBox(height: AppSpacing.md),
-                InputDecorator(
-                  decoration: InputDecoration(
-                    labelText: l10n.ageScreenBirthDateLabel,
-                  ),
-                  isEmpty: _birthDate == null,
-                  child: InkWell(
-                    onTap: _pickBirthDate,
-                    borderRadius: BorderRadius.circular(AppColors.radiusSm),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.calendar_today_outlined,
-                          size: 20,
-                          color:
-                              Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Expanded(
-                          child: Text(
-                            formattedBirthDate ?? '',
-                            style: Theme.of(context).textTheme.bodyLarge,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                Text(
+                  l10n.ageScreenBirthDateLabel,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                NeutralBirthDateFields(
+                  initialDate: _birthDate,
+                  onChanged: (date) => unawaited(_onBirthDateChanged(date)),
                 ),
                 if (_isMinor) ...[
                   const SizedBox(height: AppSpacing.md),
@@ -264,11 +240,13 @@ class _RegisterPageState extends State<RegisterPage> {
                 isLoading: _isSubmitting,
                 onPressed: _submit,
               ),
-              const SizedBox(height: AppSpacing.lg),
-              OAuthSignInButtons(
-                enabled: !_isSubmitting,
-                forceGoogleAccountSelection: true,
-              ),
+              if (!_isMinor && !ChildExperience.isActive) ...[
+                const SizedBox(height: AppSpacing.lg),
+                OAuthSignInButtons(
+                  enabled: !_isSubmitting,
+                  forceGoogleAccountSelection: true,
+                ),
+              ],
               const RegisterLegalDisclaimer(),
             ],
           ),

@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:craftquest_app/core/compliance/age_collection_controller.dart';
 import 'package:craftquest_app/core/compliance/age_collection_policy.dart';
 import 'package:craftquest_app/core/compliance/age_screen.dart';
+import 'package:craftquest_app/core/compliance/child_experience.dart';
 import 'package:craftquest_app/core/compliance/compliance_pref_cache.dart';
 import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/services/push_notification_service.dart';
 import 'package:craftquest_app/features/auth/presentation/account_link_launch.dart';
 import 'package:flutter/material.dart';
 
@@ -29,6 +33,7 @@ class _AgeCollectionGateState extends State<AgeCollectionGate> {
     _cache = getIt<CompliancePrefCache>();
     _controller.addListener(_onRecollectionRequested);
     _syncFromCache();
+    unawaited(_startPushIfAllowed());
   }
 
   @override
@@ -47,6 +52,21 @@ class _AgeCollectionGateState extends State<AgeCollectionGate> {
 
   void _onCompleted() {
     setState(() => _needsAge = false);
+    unawaited(_startPushIfAllowed());
+  }
+
+  Future<void> _startPushIfAllowed() async {
+    final waitingForAge =
+        AgeCollectionPolicy.requiresStartupAgeGate && _needsAge;
+    if (waitingForAge) {
+      return;
+    }
+    final push = getIt<PushNotificationService>();
+    if (ChildExperience.isActive) {
+      await push.stopForChildExperience();
+      return;
+    }
+    await push.initializeDeferred();
   }
 
   @override

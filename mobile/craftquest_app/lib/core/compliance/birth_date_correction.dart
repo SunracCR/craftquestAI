@@ -1,9 +1,12 @@
 import 'package:craftquest_app/core/compliance/age_collection_controller.dart';
 import 'package:craftquest_app/core/compliance/age_collection_policy.dart';
 import 'package:craftquest_app/core/compliance/age_collection_storage.dart';
+import 'package:craftquest_app/core/compliance/child_experience.dart';
+import 'package:craftquest_app/core/compliance/neutral_birth_date_fields.dart';
 import 'package:craftquest_app/core/di/injection.dart';
+import 'package:craftquest_app/core/services/push_notification_service.dart';
 import 'package:craftquest_app/features/auth/data/auth_repository.dart';
-import 'package:craftquest_app/l10n/app_localizations.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 /// Flujos reutilizables para corregir la fecha de nacimiento.
@@ -22,19 +25,12 @@ abstract final class BirthDateCorrection {
       calculateAge(birthDate) <
       AgeCollectionStorage.minimumAgeWithoutParentalConsent;
 
+  /// Pide día, mes y año. Si [initialDate] es nulo, los campos quedan vacíos.
   static Future<DateTime?> pickDate(
     BuildContext context, {
     DateTime? initialDate,
-  }) async {
-    final now = DateTime.now();
-    final initial = initialDate ?? DateTime(now.year - 16, now.month, now.day);
-    return showDatePicker(
-      context: context,
-      initialDate: initial,
-      firstDate: DateTime(now.year - 100),
-      lastDate: now,
-      helpText: AppLocalizations.of(context)!.ageScreenBirthDateLabel,
-    );
+  }) {
+    return showNeutralBirthDateDialog(context, initialDate: initialDate);
   }
 
   /// Guarda en el dispositivo y, si [syncToAccount], actualiza el perfil en API.
@@ -44,9 +40,22 @@ abstract final class BirthDateCorrection {
     bool syncToAccount = false,
   }) async {
     await getIt<AgeCollectionStorage>().saveDateOfBirth(birthDate);
+    await _syncPushWithAge();
     if (syncToAccount) {
       await getIt<AuthRepository>().updateProfile(dateOfBirth: birthDate);
     }
+  }
+
+  static Future<void> _syncPushWithAge() async {
+    final push = getIt<PushNotificationService>();
+    if (ChildExperience.isActive) {
+      await push.stopForChildExperience();
+      return;
+    }
+    if (kIsWeb) {
+      return;
+    }
+    await push.initializeDeferred();
   }
 
   /// Limpia el almacenamiento local y vuelve a la pantalla inicial de edad.

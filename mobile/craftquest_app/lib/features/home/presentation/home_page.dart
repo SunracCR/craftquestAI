@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:craftquest_app/core/compliance/child_experience.dart';
+import 'package:craftquest_app/core/compliance/compliance_pref_cache.dart';
 import 'package:craftquest_app/core/navigation/safe_navigation.dart';
 import 'package:craftquest_app/core/utils/user_role_labels.dart';
 import 'package:craftquest_app/core/di/injection.dart';
@@ -303,27 +305,40 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  AppSectionTitle(title: l10n.aiGenerationHubTitle),
-                  const SizedBox(height: AppSpacing.xs),
-                  AppSectionCard(
-                    variant: AppCardVariant.highlight,
-                    padding: EdgeInsets.zero,
-                    child: AppActionTile(
-                      icon: Icons.auto_awesome_rounded,
-                      label: l10n.aiGenerationHubAction,
-                      iconColor: AppColors.accentMint,
-                      iconBackgroundColor:
-                          AppColors.accentMint.withValues(alpha: 0.2),
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => const AiGenerationHubPage(),
+                  ListenableBuilder(
+                    listenable: getIt<CompliancePrefCache>(),
+                    builder: (context, _) {
+                      if (ChildExperience.isActive) {
+                        return const SizedBox.shrink();
+                      }
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          AppSectionTitle(title: l10n.aiGenerationHubTitle),
+                          const SizedBox(height: AppSpacing.xs),
+                          AppSectionCard(
+                            variant: AppCardVariant.highlight,
+                            padding: EdgeInsets.zero,
+                            child: AppActionTile(
+                              icon: Icons.auto_awesome_rounded,
+                              label: l10n.aiGenerationHubAction,
+                              iconColor: AppColors.accentMint,
+                              iconBackgroundColor:
+                                  AppColors.accentMint.withValues(alpha: 0.2),
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) => const AiGenerationHubPage(),
+                                  ),
+                                );
+                              },
+                            ),
                           ),
-                        );
-                      },
-                    ),
+                          const SizedBox(height: AppSpacing.lg),
+                        ],
+                      );
+                    },
                   ),
-                  const SizedBox(height: AppSpacing.lg),
                   AppSectionTitle(title: l10n.myQuizzesAction),
                   const SizedBox(height: AppSpacing.xs),
                   AppSectionCard(
